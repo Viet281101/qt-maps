@@ -4,11 +4,11 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Unit 01 environment validation; application code has not started.
+- Two-week first-demo push; environment validation is the immediate blocker and application code has not started.
 
 ## Current Goal
 
-- Review the installed Qt 5.13.2 environment evidence, resolve the OpenSSL 3 warning risk, then validate CMake/Ninja only after the owner approves moving beyond inspection.
+- Deliver the strongest stable management demo possible by 2026-11-03: a polished map-first Release application, a visible two-point route and navigation-style flow, and honest FPS/RAM/CPU evidence on the reference laptop.
 
 ## Completed
 
@@ -26,27 +26,26 @@ Update this file after every meaningful implementation change.
 - Confirmed geoservice plugins `osm` and `mapboxgl`, plus the position plugin `serialnmea`, are present on disk.
 - Ran `ldd` on Qt Core, Quick, Location, Positioning, and the xcb platform plugin; none reported a `not found` dependency.
 - Built and ran a temporary non-application SSL probe outside the repository with GCC 13.3.0. `QSslSocket::supportsSsl()` returned true, but Qt reported unresolved `EVP_PKEY_base_id` and `SSL_get_peer_certificate` symbols when using OpenSSL 3.0.13.
+- Owner set a two-week deadline ending 2026-11-03 for the first management demo and directed work to prioritize the most convincing stable vertical slice over the previously estimated long-form sequence.
+- Updated the project overview, AI workflow, progress tracker, and bilingual root documentation to describe the demo-first direction and distinguish complete, partial, simulated, and unavailable behavior. `README.md` is the professional English entry point and `README_VN.md` contains the Vietnamese version.
 
 ## In Progress
 
-- Waiting for owner review before writing the CMake project or application code. Ninja and ccache remain for the owner to install manually.
+- Documentation has been realigned around the first-demo deadline. Ninja and ccache remain for the owner to install manually; no application build has started yet.
 
 ## Next Up
 
-Each unit is intended to fit one to three four-hour sessions. Do not begin a unit until its dependencies and required owner approvals are satisfied.
+Before the first demo, execute the shortest stable vertical slice. Existing unit specifications remain authoritative for their completed implementations, but their full completion gates may be deferred and recorded during this milestone.
 
-1. **01 env-and-spike** — establish Qt 5.13.2 `gcc_64` through `aqtinstall`, validate CMake with Ninja, render a blank QML window and minimal raster map, capture an initial FPS/RAM baseline, and assess MapLibre Native feasibility.
-2. **02 perf-instrumentation** — implement the FPS overlay and CSV logger for total application-process-tree RAM/CPU with reproducible metadata.
-3. **03 raster-map-offline** — make the raster layer usable from bounded local data with explicit online/offline state and fallback behavior.
-4. **04 routing-service** — integrate a local proposed Valhalla process and return route geometry plus maneuvers without blocking the UI thread.
-5. **05 route-on-map** — select endpoints and render the route, summary, and maneuver list on the raster map.
-6. **06 navigation-mode** — replay simulated GPS/NMEA, follow and rotate the camera, advance maneuvers, and demonstrate re-routing.
-7. **07 vector-layer** — integrate the vector path approved by unit 01 and render the route/navigation UI against local vector data.
-8. **08 orthography-layer** — add a licensed, attributed orthography source for the approved demo region and zoom range.
-9. **09 search** — build and query the proposed SQLite FTS5 offline geocoding index and connect results to map selection.
-10. **10 packaging-and-final-benchmark** — package only if required, run all fixed Release scenarios, complete the soak test, and publish the final benchmark/report artifacts.
+1. **Unblock the build** — install the owner-approved Ninja/ccache packages manually, validate Qt Quick/QtLocation with CMake/Ninja, and record the real Release build/run commands.
+2. **Create the demo shell** — render the first real raster map and add a coherent map-first QML layout with status, route, navigation, layer, and performance presentation areas.
+3. **Complete the route vertical slice** — select two points, obtain a real route through the fastest viable approved integration, draw it, and show its summary and maneuvers. Clearly label any bounded fixture or online dependency used for the first demo.
+4. **Add navigation presentation** — replay a route or simulated position, follow the current position, show the next maneuver, and expose an obvious exit/recenter action.
+5. **Measure the demo** — show rendered-frame FPS and capture short Release-build CPU/RAM results for the application process tree with documented scope.
+6. **Add breadth without destabilizing the flow** — attempt offline fallback, vector, orthography, and search in that priority only after the end-to-end demo remains reproducible.
+7. **Freeze and rehearse** — fix demo blockers, prepare a deterministic scenario and fallback evidence, update the weekly report, and avoid risky dependency changes immediately before the demonstration.
 
-The order keeps measurement available before feature growth, establishes an offline raster fallback before dependent route UI, and validates navigation before introducing the higher-risk vector and orthography datasets. The MapLibre go/no-go investigation remains in unit 01 so unit 07 does not inherit an untested assumption.
+After the demo, resume the ten-unit plan and close every deferred verification gate rather than treating the demonstration slice as production completion.
 
 ## Open Questions
 
@@ -71,6 +70,7 @@ The order keeps measurement available before feature growth, establishes an offl
 
 ### Committed
 
+- Target the first management demo for 2026-11-03 and prioritize a stable, visually coherent vertical slice with measured performance until that date.
 - Use Qt 5.13.2 with C++ and QML/Qt Quick 2.13 on Linux. APIs introduced by Qt 5.15 or Qt 6 are forbidden.
 - Provision Qt 5.13.2 `gcc_64` through `aqtinstall` under `~/Qt`; the approved installation completed successfully.
 - Use CMake with Ninja as the primary build system and revalidate the decision after unit 01. The exact working build command remains **TBD after unit 01**.

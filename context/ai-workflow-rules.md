@@ -4,10 +4,14 @@
 
 Build QtMaps incrementally with a spec-driven workflow. Read `AGENTS.md` and its six context files in order before implementation or architectural decisions. Work from the current unit spec and record evidence instead of inferring behavior. A proposed technology remains proposed until its spike evidence is recorded and the owner approves the decision.
 
+Until the first management demo on 2026-11-03, optimize the sequence for the shortest stable end-to-end demo path. A thin vertical slice may cross existing feature-unit boundaries when that is necessary to demonstrate map rendering, routing, navigation presentation, and performance together. Keep each implementation increment independently verifiable, record any intentionally deferred completion criteria, and return to the full unit gates after the demo.
+
 ## Scoping Rules
 
-- Work on one feature unit at a time.
+- Normally work on one feature unit at a time. Before the first management demo, a documented vertical-slice increment may cross unit boundaries when it directly improves the agreed demo flow.
 - Prefer increments that can be verified within one to three four-hour sessions.
+- Prioritize visible, stable, end-to-end demo behavior over nationwide coverage, packaging, exhaustive edge-case coverage, and production hardening until the first demo.
+- Do not misrepresent fixtures, simulated position, online-only behavior, partial coverage, or unavailable features as completed offline production behavior.
 - Do not combine unrelated system boundaries in one implementation step.
 - Do not install packages, download large datasets, or change the build system without owner approval.
 - Do not add product behavior, dependencies, or technologies absent from the context without explaining the need and marking the addition Proposed.

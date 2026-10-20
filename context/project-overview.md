@@ -2,7 +2,7 @@
 
 ## Overview
 
-QtMaps is a Linux desktop mapping exercise for Vietnam, built by one developer with Qt 5.13.2, C++, QML, and Qt Quick 2.13. It is intended to demonstrate offline-first map rendering, car routing on national and provincial roads, and a Google Maps-like navigation view on modest integrated-graphics hardware. Development is organized into small, verifiable units that fit one to three four-hour sessions.
+QtMaps is a Linux desktop mapping exercise for Vietnam, built by one developer with Qt 5.13.2, C++, QML, and Qt Quick 2.13. It is intended to demonstrate offline-first map rendering, car routing on national and provincial roads, and a Google Maps-like navigation view on modest integrated-graphics hardware. Development is organized into small, verifiable increments, with the immediate priority being a convincing first management demo by 2026-11-03.
 
 ## Goals
 
@@ -10,6 +10,20 @@ QtMaps is a Linux desktop mapping exercise for Vietnam, built by one developer w
 2. Calculate a car route between two points, display the route and maneuver list, and simulate navigation with camera following, map rotation, GPS replay, and re-routing.
 3. Run the agreed demo flows on the reference laptop and publish reproducible Release-build FPS, total RAM, and total CPU measurements for the application and its child services.
 4. Maintain a weekly progress record that can be summarized for management without reconstructing work from commit history.
+
+## First Management Demo Milestone
+
+The first management demo is due on 2026-11-03. Until that milestone, work is demo-first: establish a stable, visually coherent end-to-end flow before expanding coverage or completing lower-visibility infrastructure.
+
+Priority order for this milestone:
+
+1. A reproducible Release build that opens a polished, map-first Qt Quick shell and renders a real map centered on the agreed Vietnam demo region.
+2. A visible two-point driving-route flow with route geometry, summary, maneuver presentation, and clear loading/error states.
+3. A navigation-style presentation with camera following or a clearly identified simulated route replay, next-maneuver banner, and current-position feedback.
+4. A switchable on-screen performance overlay and a short, reproducible record of FPS, total RAM, and total CPU on the reference laptop.
+5. Add offline behavior and additional raster, vector, or orthography layer capability in that order only when the preceding vertical slice remains stable.
+
+For this milestone, breadth, nationwide high-detail coverage, a complete data-generation pipeline, packaging, exhaustive automated tests, long soak tests, and production hardening may be deferred when they threaten the demonstrable vertical slice. Deferred work remains part of the overall project unless the owner explicitly removes it. The demo must identify real, simulated, fixture-backed, online, offline, degraded, and unavailable behavior accurately; an incomplete capability must not be presented as complete.
 
 ## Core User Flow
 
