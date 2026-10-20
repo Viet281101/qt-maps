@@ -18,10 +18,13 @@ Update this file after every meaningful implementation change.
 - Owner selected Qt 5.13.2 `gcc_64` through `aqtinstall` under `~/Qt` and committed the project to CMake with Ninja, subject to successful unit 01 validation.
 - Owner selected Vietnam zoom 0-10 for national raster/vector coverage, Hanoi and the surrounding Red River Delta for zoom 11-16 detail, with zoom 16 explicitly provisional.
 - Owner approved Ninja and ccache installation but required all `sudo apt` commands to be printed for manual execution.
+- Installed only `aqtinstall` 3.3.0 in `~/.local/share/aqtinstall-3.3.0`; Qt itself remains uninstalled.
+- Queried Qt 5.13.2 `gcc_64` successfully: the extra-module list matched the repository-derived preliminary list, and the base archives include `qtdeclarative` and `qtlocation`.
+- Owner selected nationwide routing data from one uncropped Geofabrik Vietnam extract as the initial scope, to be confirmed by graph-build time and peak-RAM measurements.
 
 ## In Progress
 
-- Read-only environment and Qt module research. No installation is authorized until the module list is presented and the owner approves proceeding.
+- Waiting for owner approval of the exact Qt installation command. No Qt installation has started.
 
 ## Next Up
 
@@ -44,21 +47,20 @@ The order keeps measurement available before feature growth, establishes an offl
 
 ### Required Before Installation
 
-1. Does `aqt list-qt linux desktop --modules 5.13.2 gcc_64` show the required QtLocation and QtPositioning modules, and what exact module names must be requested? The owner must review the output before approving the Qt download/install command.
-2. After installation, are the QtLocation `osm` and `mapboxgl` plugins actually present and loadable, and which system libraries does `ldd` report missing?
-3. Which routing-data scope should be used: Northern Vietnam or all of Vietnam?
+1. Does the base `qtlocation` archive provide loadable QtLocation and QtPositioning modules plus the `osm` and `mapboxgl` geoservice plugins on this machine, and which system libraries does `ldd` report missing after installation?
+2. What graph-build-time and peak-RAM thresholds should trigger reconsideration of the initial nationwide routing scope?
 
 ### Technical and Product
 
-4. Does Qt 5.13.2 compile cleanly with GCC 13.3.0, or is a compatible compiler/toolchain adjustment required?
-5. Does Qt 5.13.2 networking work with the system OpenSSL 3 environment for HTTPS tile access, or is an OpenSSL 1.1 compatibility arrangement required? This affects online HTTPS only; offline localhost HTTP remains a separate viable path.
-6. Can a maintained MapLibre Native Qt integration build and render reliably with Qt 5.13.2 on Intel HD Graphics 520, within the reference hardware budget?
-7. Is zoom 16 practical for the detailed Hanoi/Red River Delta dataset after storage, generation-time, visual-quality, and performance measurements?
-8. Which legally usable orthography source should be selected, and what license, attribution, region, zoom range, and storage cap apply?
-9. How complete and consistent are Vietnam OSM `ref` tags for national roads (QL) and provincial roads (DT/ĐT), and what routing behavior is acceptable where tags are missing?
-10. Which machine will management use to view the demo, and how does it differ from the reference laptop?
-11. Is a distributable installer/package required, or is a documented local Release build sufficient?
-12. What exact UI theme token values, icon source, minimum window size, panel dimensions, keyboard shortcuts, contrast target, and map-aware light/dark behavior should be committed?
+3. Does Qt 5.13.2 compile cleanly with GCC 13.3.0, or is a compatible compiler/toolchain adjustment required?
+4. Does Qt 5.13.2 networking work with the system OpenSSL 3 environment for HTTPS tile access, or is an OpenSSL 1.1 compatibility arrangement required? This affects online HTTPS only; offline localhost HTTP remains a separate viable path.
+5. Can a maintained MapLibre Native Qt integration build and render reliably with Qt 5.13.2 on Intel HD Graphics 520, within the reference hardware budget?
+6. Is zoom 16 practical for the detailed Hanoi/Red River Delta dataset after storage, generation-time, visual-quality, and performance measurements?
+7. Which legally usable orthography source should be selected, and what license, attribution, region, zoom range, and storage cap apply?
+8. How complete and consistent are Vietnam OSM `ref` tags for national roads (QL) and provincial roads (DT/ĐT), and what routing behavior is acceptable where tags are missing?
+9. Which machine will management use to view the demo, and how does it differ from the reference laptop?
+10. Is a distributable installer/package required, or is a documented local Release build sufficient?
+11. What exact UI theme token values, icon source, minimum window size, panel dimensions, keyboard shortcuts, contrast target, and map-aware light/dark behavior should be committed?
 
 ## Architecture Decisions
 
@@ -68,7 +70,8 @@ The order keeps measurement available before feature growth, establishes an offl
 - Provision Qt 5.13.2 `gcc_64` through `aqtinstall` under `~/Qt`, but do not install it until the owner reviews the module list and approves the command.
 - Use CMake with Ninja as the primary build system and revalidate the decision after unit 01. The exact working build command remains **TBD after unit 01**.
 - Use Qt 5-compatible CMake APIs only; Qt 6 APIs such as `qt_add_executable`, `qt_add_qml_module`, and `qt_standard_project_setup` are forbidden.
-- Use Vietnam zoom 0-10 for national raster/vector coverage and Hanoi plus the surrounding Red River Delta for zoom 11-16 detail. Zoom 16 remains an explicit initial assumption pending evidence. Routing coverage is Northern Vietnam or all of Vietnam, with the final choice still open.
+- Use Vietnam zoom 0-10 for national raster/vector coverage and Hanoi plus the surrounding Red River Delta for zoom 11-16 detail. Zoom 16 remains an explicit initial assumption pending evidence.
+- Initially build routing data for all of Vietnam from one uncropped Geofabrik Vietnam extract. Confirm this decision with graph-build-time and peak-RAM measurements; consider cutting the region only if agreed thresholds are exceeded.
 - Support raster, vector, and orthography layers; offline-first operation; two-point car routing; simulated navigation; performance measurement; and weekly reporting.
 - Measure FPS and combined RAM/CPU for the app and child services in Release mode with fixed scenarios.
 - Manage routing/tile-server child processes through `QProcess` and keep routing/I/O off the UI thread.
@@ -94,6 +97,7 @@ The order keeps measurement available before feature growth, establishes an offl
 - Reference machine: Dell Latitude 5480; Intel Core i5-6300U (2 cores/4 threads); 16 GiB RAM; 512 GB NVMe SSD.
 - Available: Linux, GCC/G++ 13.3.0, CMake 3.28.3, GNU Make 4.3.
 - Not currently available on `PATH`: qmake/Qt, Ninja, Clang, ccache. Ninja and ccache are approved for owner-executed installation.
+- `aqtinstall` 3.3.0 is available only inside `~/.local/share/aqtinstall-3.3.0`; this does not constitute a Qt installation.
 - Graphics: Intel HD Graphics 520 (Skylake GT2), Mesa 25.2.8, direct rendering enabled, OpenGL up to 4.6.
 
 ## Session Notes
@@ -101,3 +105,5 @@ The order keeps measurement available before feature growth, establishes an offl
 - No application code, library installation, Qt build, dataset download, push, or merge was performed during context setup.
 - `README.md` intentionally remains at the repository root with only the project title; no `docs/ai-playbook.md` exists because the original file was not a playbook.
 - The exact build and test commands remain **TBD after unit 01**.
+- The successful module query returned `debug_info qtcharts qtdatavis3d qtlottie qtnetworkauth qtpurchasing qtscript qtvirtualkeyboard qtwebengine qtwebglplugin`.
+- The successful base-archive query returned `icu qt3d qtbase qtconnectivity qtdeclarative qtgamepad qtgraphicaleffects qtimageformats qtlocation qtmultimedia qtquickcontrols qtquickcontrols2 qtremoteobjects qtscxml qtsensors qtserialbus qtserialport qtspeech qtsvg qttools qttranslations qtwayland qtwebchannel qtwebsockets qtwebview qtx11extras qtxmlpatterns`.

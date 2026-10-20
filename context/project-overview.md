@@ -27,7 +27,7 @@ QtMaps is a Linux desktop mapping exercise for Vietnam, built by one developer w
 
 - Raster and vector data cover Vietnam at zoom levels 0 through 10.
 - Higher-detail demo data covers Hanoi and its surrounding Red River Delta area at zoom levels 11 through 16. Zoom 16 is an initial assumption and remains subject to storage, generation-time, visual-quality, and performance evidence.
-- Routing data covers either Northern Vietnam or all of Vietnam. The final choice between those two owner-approved scopes remains open until unit 01 and data-pipeline constraints are better understood.
+- Routing data initially covers all of Vietnam using one uncropped Geofabrik Vietnam extract. This is an owner decision that must be validated with measured graph-build time and peak RAM; consider a regional cut only if those measurements exceed the agreed thresholds.
 - These coverage bounds were decided by the project owner; they are not inferred implementation defaults.
 
 ### Map Layers
@@ -67,7 +67,7 @@ QtMaps is a Linux desktop mapping exercise for Vietnam, built by one developer w
 - Linux desktop implementation with Qt 5.13.2, C++, QML, and Qt Quick 2.13.
 - The three map layer types, offline-first behavior, two-point car routing, offline search, navigation simulation, and re-routing described above.
 - A reproducible local data pipeline for the bounded datasets selected for the demo.
-- National raster/vector coverage at zoom 0-10, detailed Hanoi/Red River Delta coverage initially up to zoom 16, and routing coverage for Northern Vietnam or all of Vietnam.
+- National raster/vector coverage at zoom 0-10, detailed Hanoi/Red River Delta coverage initially up to zoom 16, and nationwide routing coverage from one uncropped Geofabrik Vietnam extract. The routing scope remains subject to measured graph-build time and peak RAM.
 - Performance instrumentation and benchmark reports on the reference laptop.
 - Packaging only if the packaging requirement is confirmed in `context/progress-tracker.md`.
 
