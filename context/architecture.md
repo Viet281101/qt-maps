@@ -11,9 +11,9 @@
 | Layer | Technology | Status | Role |
 | --- | --- | --- | --- |
 | Platform | Linux desktop | Committed | Development and target platform |
-| UI/runtime | Qt 5.13, QML, Qt Quick 2.13 | Committed | Application lifecycle and user interface |
+| UI/runtime | Qt 5.13.2, QML, Qt Quick 2.13 | Committed | Application lifecycle and user interface |
 | Language | C++ with C++14 as the proposed project level | Qt/C++ committed; language level proposed | Native application and service integration |
-| Build system | qmake or CMake | Open question | Must follow the option selected after unit 01; the current machine has CMake but no qmake |
+| Build system | CMake with Ninja | Committed; revalidate after unit 01 | Primary configure/generate/build path; the exact working command remains TBD until the spike succeeds |
 | Raster map | QtLocation `osm` plugin if present and compatible | Proposed; verify in unit 01 | Minimal raster display and fallback path |
 | Vector map | MapLibre Native with a Qt-compatible integration | Proposed; spike required | Vector rendering and navigation presentation |
 | Map source data | Geofabrik Vietnam OSM PBF | Proposed | Input for map, routing, and search datasets |
@@ -74,11 +74,21 @@ Large generated datasets, caches, routing graphs, and third-party artifacts must
 6. The application must own and cleanly terminate the child services it starts.
 7. Generated data, vendor internals, and third-party artifacts are not hand-edited as application source.
 8. Architecture entries retain their decision status until evidence is recorded and the project owner approves a change.
+9. Build files must use Qt 5 CMake integration only: `find_package(Qt5 ...)`, `CMAKE_AUTOMOC`/`CMAKE_AUTORCC`, `qt5_add_resources`, and `add_executable`. Qt 6-only APIs such as `qt_add_executable`, `qt_add_qml_module`, and `qt_standard_project_setup` are forbidden.
+
+## Environment Provisioning Decisions
+
+- Provision Qt 5.13.2 `gcc_64` with `aqtinstall` under `~/Qt`; this method, version, architecture, and destination were selected by the project owner.
+- Before installing Qt, run `aqt list-qt linux desktop --modules 5.13.2 gcc_64`, present the module list to the owner, and wait for explicit installation approval.
+- Qt Quick, QtLocation, QtPositioning, and the `osm`/`mapboxgl` geoservice plugins remain unverified until the downloaded installation is inspected and loaded.
+- After installation, use `ldd` to identify missing system libraries rather than assuming the archive is self-contained.
+- Qt 5.13.2 compatibility with OpenSSL 1.1 versus the host's OpenSSL 3 remains a spike question for online HTTPS. Offline localhost HTTP does not require TLS, so this risk does not by itself block the offline path.
+- The owner approved installation of Ninja and ccache, but the agent must only print the required `sudo apt` command; the owner runs it manually.
 
 ## Current Environment Baseline
 
 - Linux development machine: Dell Latitude 5480, Intel Core i5-6300U, 16 GiB RAM, and 512 GB NVMe SSD.
 - GCC/G++ 13.3.0, CMake 3.28.3, and GNU Make 4.3 are available.
-- qmake/Qt, Ninja, Clang, and ccache are not currently installed or not available on `PATH`.
+- qmake/Qt, Ninja, Clang, and ccache are not currently installed or not available on `PATH`; Ninja and ccache installation is owner-approved but not yet performed.
 - Intel HD Graphics 520 (Skylake GT2), Mesa 25.2.8, direct rendering enabled, and OpenGL up to 4.6.
-- No software installation is authorized before owner approval.
+- Qt installation remains unauthorized until the owner reviews the module list and exact command. Ninja and ccache installation is approved only for the owner to execute from the printed command.

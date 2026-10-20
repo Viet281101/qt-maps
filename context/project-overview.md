@@ -2,7 +2,7 @@
 
 ## Overview
 
-QtMaps is a Linux desktop mapping exercise for Vietnam, built by one developer with Qt 5.13, C++, QML, and Qt Quick 2.13. It is intended to demonstrate offline-first map rendering, car routing on national and provincial roads, and a Google Maps-like navigation view on modest integrated-graphics hardware. Development is organized into small, verifiable units that fit one to three four-hour sessions.
+QtMaps is a Linux desktop mapping exercise for Vietnam, built by one developer with Qt 5.13.2, C++, QML, and Qt Quick 2.13. It is intended to demonstrate offline-first map rendering, car routing on national and provincial roads, and a Google Maps-like navigation view on modest integrated-graphics hardware. Development is organized into small, verifiable units that fit one to three four-hour sessions.
 
 ## Goals
 
@@ -23,10 +23,17 @@ QtMaps is a Linux desktop mapping exercise for Vietnam, built by one developer w
 
 ## Features
 
+### Owner-Decided Coverage
+
+- Raster and vector data cover Vietnam at zoom levels 0 through 10.
+- Higher-detail demo data covers Hanoi and its surrounding Red River Delta area at zoom levels 11 through 16. Zoom 16 is an initial assumption and remains subject to storage, generation-time, visual-quality, and performance evidence.
+- Routing data covers either Northern Vietnam or all of Vietnam. The final choice between those two owner-approved scopes remains open until unit 01 and data-pipeline constraints are better understood.
+- These coverage bounds were decided by the project owner; they are not inferred implementation defaults.
+
 ### Map Layers
 
 - Raster tile rendering with local/offline operation and an online fallback only when configured and available.
-- Vector map rendering, subject to the MapLibre Native Qt 5.13 feasibility spike.
+- Vector map rendering, subject to the MapLibre Native Qt 5.13.2 feasibility spike.
 - Orthography rendering for a bounded demo area and zoom range from a source whose license permits the intended use.
 
 ### Routing and Navigation
@@ -57,9 +64,10 @@ QtMaps is a Linux desktop mapping exercise for Vietnam, built by one developer w
 
 ### In Scope
 
-- Linux desktop implementation with Qt 5.13, C++, QML, and Qt Quick 2.13.
+- Linux desktop implementation with Qt 5.13.2, C++, QML, and Qt Quick 2.13.
 - The three map layer types, offline-first behavior, two-point car routing, offline search, navigation simulation, and re-routing described above.
 - A reproducible local data pipeline for the bounded datasets selected for the demo.
+- National raster/vector coverage at zoom 0-10, detailed Hanoi/Red River Delta coverage initially up to zoom 16, and routing coverage for Northern Vietnam or all of Vietnam.
 - Performance instrumentation and benchmark reports on the reference laptop.
 - Packaging only if the packaging requirement is confirmed in `context/progress-tracker.md`.
 

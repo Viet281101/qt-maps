@@ -29,6 +29,14 @@
 - Reusable visual values come from the QML theme singleton described in `ui-context.md`; do not scatter duplicate color, spacing, font, or radius literals.
 - Bindings should be side-effect free. Use named functions for multi-step actions and avoid binding loops.
 
+## CMake
+
+- Use CMake with the Ninja generator. The exact configure/build commands remain TBD until unit 01 produces a passing build.
+- Target Qt 5 explicitly with `find_package(Qt5 REQUIRED COMPONENTS ...)` and `Qt5::` imported targets.
+- Use the Qt 5-compatible building blocks `CMAKE_AUTOMOC`, `CMAKE_AUTORCC`, `qt5_add_resources`, and `add_executable` as required by the project layout.
+- Do not use Qt 6-only CMake APIs, including `qt_add_executable`, `qt_add_qml_module`, `qt_standard_project_setup`, or other unverified `qt_*` convenience APIs introduced after Qt 5.13.
+- Keep generator-specific assumptions out of `CMakeLists.txt`; select Ninja with the configure command rather than embedding a machine-specific generator path.
+
 ## Naming
 
 - C++ types and QML component files: `PascalCase`.

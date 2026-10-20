@@ -22,3 +22,10 @@ meaningful implementation change.
 If implementation changes the architecture, scope, or
 standards documented in the context files, update the
 relevant file before continuing.
+
+QtMaps targets Qt 5.13 and uses CMake with Ninja. Do not use
+Qt 6 CMake APIs such as `qt_add_executable`,
+`qt_add_qml_module`, or `qt_standard_project_setup`. Use the
+Qt 5 pattern based on `find_package(Qt5 ...)`,
+`CMAKE_AUTOMOC`/`CMAKE_AUTORCC`, `qt5_add_resources`, and
+`add_executable`.
