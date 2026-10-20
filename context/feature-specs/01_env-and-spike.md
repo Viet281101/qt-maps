@@ -1,6 +1,6 @@
 # Unit 01: Environment and Feasibility Spike
 
-Read `AGENTS.md` before starting. The owner selected Qt 5.13.2 `gcc_64` through `aqtinstall` under `~/Qt` and CMake with Ninja. Do not install software or download a large dataset until the owner approves the exact command; print every `sudo apt` command for the owner to run manually.
+Read `AGENTS.md` before starting. The owner selected Qt 5.13.2 `gcc_64` through `aqtinstall` under `~/Qt` and CMake with Ninja. The approved Qt base installation is complete. Do not install further software or download a large dataset until the owner approves the exact command; print every `sudo apt` command for the owner to run manually.
 
 ## Goal
 
@@ -50,11 +50,11 @@ The initial baseline covers the blank QML window and raster-map proof in Release
 
 ## Verify When Done
 
-- [ ] The complete output of `aqt list-qt linux desktop --modules 5.13.2 gcc_64` is presented before installation, and owner approval of the exact install command is recorded.
-- [ ] `qmake --version` or the selected Qt equivalent proves Qt 5.13.2, and Qt Quick, QtLocation, and QtPositioning module availability is recorded.
-- [ ] The QtLocation plugin inventory states whether `osm` and `mapboxgl` are present and loadable.
+- [x] The complete output of `aqt list-qt linux desktop --modules 5.13.2 gcc_64` was presented before installation, and owner approval of the exact install command was recorded.
+- [x] `/home/viet/Qt/5.13.2/gcc_64/bin/qmake --version` proves Qt 5.13.2; Qt Quick, QtLocation, and QtPositioning libraries/QML directories are present.
+- [ ] The QtLocation plugin inventory confirms `osm` and `mapboxgl` files are present, but actual plugin loading remains unverified until the minimal QML probe.
 - [ ] Qt 5.13.2 plus GCC 13.3.0 compatibility has a passing minimal compilation or a reproducible blocker with a proposed next decision.
-- [ ] Qt 5.13.2 OpenSSL 1.1/system OpenSSL 3 HTTPS behavior has a passing probe or a reproducible blocker with no hidden fallback; localhost HTTP is tested separately.
+- [ ] Qt 5.13.2 OpenSSL 1.1/system OpenSSL 3 HTTPS behavior remains unresolved: a temporary probe returned `supportsSsl: true` with build OpenSSL 1.1.1b and runtime OpenSSL 3.0.13, while warning that `EVP_PKEY_base_id` and `SSL_get_peer_certificate` could not be resolved. A real HTTPS request and localhost HTTP remain to be tested.
 - [ ] CMake/Ninja is validated, the selected C++ level is recorded, and exact Release configure/build/test/run commands replace every build-command TBD in context.
 - [ ] The Release build displays a blank Qt Quick 2.13 window end to end.
 - [ ] The Release build displays a minimal raster map through an actually installed plugin, or a reproducible plugin/provider blocker is documented.
@@ -62,3 +62,12 @@ The initial baseline covers the blank QML window and raster-map proof in Release
 - [ ] The one-day MapLibre Native investigation records exact source/version, license, Qt requirements, build/render outcome, blockers/patch burden, and a go/no-go recommendation for Qt 5.13.2.
 - [ ] No package or tool was installed without approval, no full production dataset was downloaded, and `context/progress-tracker.md` reflects all evidence and remaining questions.
 - [ ] **BUILD PASS** is recorded with the real selected command, or the unit remains incomplete with its exact blocker.
+
+### Verified Environment Evidence
+
+- Qt was installed under `/home/viet/Qt/5.13.2/gcc_64` without changing `PATH` or shell startup files; `/home/viet/Qt` occupies 563 MiB according to `du -sh`.
+- Geoservices present: `esri`, `itemsoverlay`, `mapbox`, `mapboxgl`, `nokia`, and `osm`.
+- Position plugins present: `geoclue`, `geoclue2`, `positionpoll`, and `serialnmea`.
+- `qml/QtLocation` and `qml/QtPositioning` each contain a declarative plugin, `plugins.qmltypes`, and `qmldir`.
+- `ldd` reported no missing dependency for `libQt5Core`, `libQt5Quick`, `libQt5Location`, `libQt5Positioning`, or `plugins/platforms/libqxcb.so`; therefore no runtime-library `sudo apt install` command is currently justified by `ldd`.
+- A temporary SSL probe outside the repository compiled with GCC 13.3.0 and exited normally. This confirms a small Qt Core/Network compilation only, not Qt Quick/QtLocation compatibility or HTTPS correctness.

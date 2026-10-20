@@ -4,11 +4,11 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Unit 01 research; application code and installation have not started.
+- Unit 01 environment validation; application code has not started.
 
 ## Current Goal
 
-- Inventory the Qt 5.13.2 modules available through `aqtinstall`, present all installation commands for approval/manual execution, then perform the environment and feasibility spike.
+- Review the installed Qt 5.13.2 environment evidence, resolve the OpenSSL 3 warning risk, then validate CMake/Ninja only after the owner approves moving beyond inspection.
 
 ## Completed
 
@@ -18,13 +18,18 @@ Update this file after every meaningful implementation change.
 - Owner selected Qt 5.13.2 `gcc_64` through `aqtinstall` under `~/Qt` and committed the project to CMake with Ninja, subject to successful unit 01 validation.
 - Owner selected Vietnam zoom 0-10 for national raster/vector coverage, Hanoi and the surrounding Red River Delta for zoom 11-16 detail, with zoom 16 explicitly provisional.
 - Owner approved Ninja and ccache installation but required all `sudo apt` commands to be printed for manual execution.
-- Installed only `aqtinstall` 3.3.0 in `~/.local/share/aqtinstall-3.3.0`; Qt itself remains uninstalled.
+- Installed `aqtinstall` 3.3.0 in `~/.local/share/aqtinstall-3.3.0`.
 - Queried Qt 5.13.2 `gcc_64` successfully: the extra-module list matched the repository-derived preliminary list, and the base archives include `qtdeclarative` and `qtlocation`.
 - Owner selected nationwide routing data from one uncropped Geofabrik Vietnam extract as the initial scope, to be confirmed by graph-build time and peak-RAM measurements.
+- Installed the Qt 5.13.2 `gcc_64` base archives under `/home/viet/Qt/5.13.2/gcc_64`; `/home/viet/Qt` uses 563 MiB as reported by `du -sh`.
+- Confirmed qmake 3.1 reports Qt 5.13.2, and confirmed the QtLocation and QtPositioning libraries and QML import directories exist.
+- Confirmed geoservice plugins `osm` and `mapboxgl`, plus the position plugin `serialnmea`, are present on disk.
+- Ran `ldd` on Qt Core, Quick, Location, Positioning, and the xcb platform plugin; none reported a `not found` dependency.
+- Built and ran a temporary non-application SSL probe outside the repository with GCC 13.3.0. `QSslSocket::supportsSsl()` returned true, but Qt reported unresolved `EVP_PKEY_base_id` and `SSL_get_peer_certificate` symbols when using OpenSSL 3.0.13.
 
 ## In Progress
 
-- Waiting for owner approval of the exact Qt installation command. No Qt installation has started.
+- Waiting for owner review before writing the CMake project or application code. Ninja and ccache remain for the owner to install manually.
 
 ## Next Up
 
@@ -45,15 +50,15 @@ The order keeps measurement available before feature growth, establishes an offl
 
 ## Open Questions
 
-### Required Before Installation
+### Environment Validation
 
-1. Does the base `qtlocation` archive provide loadable QtLocation and QtPositioning modules plus the `osm` and `mapboxgl` geoservice plugins on this machine, and which system libraries does `ldd` report missing after installation?
-2. What graph-build-time and peak-RAM thresholds should trigger reconsideration of the initial nationwide routing scope?
+1. The QtLocation and QtPositioning libraries/QML imports and the `osm`, `mapboxgl`, and `serialnmea` plugin files are present. Can they load and render successfully in the minimal QML probes?
+2. Does Qt 5.13.2 complete a real HTTPS request reliably with OpenSSL 3 despite the two unresolved-symbol warnings, or is a supported OpenSSL 1.1 compatibility arrangement required?
+3. What graph-build-time and peak-RAM thresholds should trigger reconsideration of the initial nationwide routing scope?
 
 ### Technical and Product
 
-3. Does Qt 5.13.2 compile cleanly with GCC 13.3.0, or is a compatible compiler/toolchain adjustment required?
-4. Does Qt 5.13.2 networking work with the system OpenSSL 3 environment for HTTPS tile access, or is an OpenSSL 1.1 compatibility arrangement required? This affects online HTTPS only; offline localhost HTTP remains a separate viable path.
+4. Does a minimal Qt Quick/QtLocation target compile and run cleanly with GCC 13.3.0? The SSL console probe compiled successfully, but it does not validate QML/rendering.
 5. Can a maintained MapLibre Native Qt integration build and render reliably with Qt 5.13.2 on Intel HD Graphics 520, within the reference hardware budget?
 6. Is zoom 16 practical for the detailed Hanoi/Red River Delta dataset after storage, generation-time, visual-quality, and performance measurements?
 7. Which legally usable orthography source should be selected, and what license, attribution, region, zoom range, and storage cap apply?
@@ -67,7 +72,7 @@ The order keeps measurement available before feature growth, establishes an offl
 ### Committed
 
 - Use Qt 5.13.2 with C++ and QML/Qt Quick 2.13 on Linux. APIs introduced by Qt 5.15 or Qt 6 are forbidden.
-- Provision Qt 5.13.2 `gcc_64` through `aqtinstall` under `~/Qt`, but do not install it until the owner reviews the module list and approves the command.
+- Provision Qt 5.13.2 `gcc_64` through `aqtinstall` under `~/Qt`; the approved installation completed successfully.
 - Use CMake with Ninja as the primary build system and revalidate the decision after unit 01. The exact working build command remains **TBD after unit 01**.
 - Use Qt 5-compatible CMake APIs only; Qt 6 APIs such as `qt_add_executable`, `qt_add_qml_module`, and `qt_standard_project_setup` are forbidden.
 - Use Vietnam zoom 0-10 for national raster/vector coverage and Hanoi plus the surrounding Red River Delta for zoom 11-16 detail. Zoom 16 remains an explicit initial assumption pending evidence.
@@ -89,15 +94,14 @@ The order keeps measurement available before feature growth, establishes an offl
 
 - Legal orthography source and bounded coverage.
 - MapLibre Native compatibility with Qt 5.13.2 and the reference GPU/toolchain.
-- Qt 5.13.2 compatibility with GCC 13 and system OpenSSL 3 for online HTTPS; offline localhost HTTP is not blocked by this TLS question.
+- Qt 5.13.2 compatibility with GCC 13 for Qt Quick/QtLocation and with system OpenSSL 3 for real online HTTPS. A console probe compiled, but OpenSSL 3 produced unresolved-symbol warnings; offline localhost HTTP is not blocked by this TLS question.
 - Vietnam OSM national/provincial road-reference completeness.
 
 ## Environment Baseline
 
 - Reference machine: Dell Latitude 5480; Intel Core i5-6300U (2 cores/4 threads); 16 GiB RAM; 512 GB NVMe SSD.
-- Available: Linux, GCC/G++ 13.3.0, CMake 3.28.3, GNU Make 4.3.
-- Not currently available on `PATH`: qmake/Qt, Ninja, Clang, ccache. Ninja and ccache are approved for owner-executed installation.
-- `aqtinstall` 3.3.0 is available only inside `~/.local/share/aqtinstall-3.3.0`; this does not constitute a Qt installation.
+- Available: Linux, GCC/G++ 13.3.0, CMake 3.28.3, GNU Make 4.3, `aqtinstall` 3.3.0, and Qt 5.13.2 `gcc_64` under `/home/viet/Qt/5.13.2/gcc_64`.
+- Not currently available on `PATH`: qmake/Qt, Ninja, Clang, ccache. This is intentional for Qt; use its absolute path or `CMAKE_PREFIX_PATH`. Ninja and ccache are approved for owner-executed installation.
 - Graphics: Intel HD Graphics 520 (Skylake GT2), Mesa 25.2.8, direct rendering enabled, OpenGL up to 4.6.
 
 ## Session Notes
@@ -107,3 +111,5 @@ The order keeps measurement available before feature growth, establishes an offl
 - The exact build and test commands remain **TBD after unit 01**.
 - The successful module query returned `debug_info qtcharts qtdatavis3d qtlottie qtnetworkauth qtpurchasing qtscript qtvirtualkeyboard qtwebengine qtwebglplugin`.
 - The successful base-archive query returned `icu qt3d qtbase qtconnectivity qtdeclarative qtgamepad qtgraphicaleffects qtimageformats qtlocation qtmultimedia qtquickcontrols qtquickcontrols2 qtremoteobjects qtscxml qtsensors qtserialbus qtserialport qtspeech qtsvg qttools qttranslations qtwayland qtwebchannel qtwebsockets qtwebview qtx11extras qtxmlpatterns`.
+- The original install command hit certificate errors on randomly selected fallback mirrors twice. Retrying with `--base https://ftp.jaist.ac.jp/pub/qtproject/` completed with hash verification enabled and no extra modules.
+- Qt SSL probe: build version `OpenSSL 1.1.1b  26 Feb 2019`; runtime version `OpenSSL 3.0.13 30 Jan 2024`; `supportsSsl: true`; unresolved symbols `EVP_PKEY_base_id` and `SSL_get_peer_certificate`. This does not yet prove HTTPS works.
