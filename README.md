@@ -1,5 +1,7 @@
 # QtMaps
 
+[Tiếng Việt](README_VN.md) · [Project board](https://github.com/users/Viet281101/projects/6) · [First Management Demo milestone](https://github.com/Viet281101/qt-maps/milestone/1)
+
 QtMaps is a Linux desktop mapping application for Vietnam built with Qt 5.13.2, C++, and QML/Qt Quick 2.13. The project focuses on local and offline operation, car routing, and a navigation experience inspired by familiar modern mapping applications.
 
 ## Project Requirements
