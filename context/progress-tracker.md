@@ -36,6 +36,7 @@ Update this file after every meaningful implementation change.
 - Ran `ldd` on the installed `mapboxgl` and `osm` geoservice plugins and the `serialnmea` position plugin. None produced a `not found` line, so this check does not justify any runtime-library installation command.
 - Confirmed the owner-installed build tools are available: Ninja 1.11.1 and ccache 4.9.1.
 - Added the minimal Qt 5 CMake project and completed a Release build with GCC 13.3.0, Ninja 1.11.1, ccache 4.9.1, and C++14. The QML engine loaded a 960x640 Qt Quick 2.13 window, and `xwininfo` confirmed the X11 window existed.
+- Added a root `Makefile` as a thin wrapper around the authoritative CMake/Ninja workflow. `make requirements` verifies Qt 5.13.2, CMake, Ninja, ccache, G++, and Python 3 for the standard-library-only helper scripts; `make build` completed the validated Release configure/build path successfully. Python provisioning packages are intentionally not represented as application requirements because QtMaps is a Qt/C++ application and the current helper scripts have no third-party Python dependency.
 - `QGeoServiceProvider::availableServiceProviders()` returned `mapboxgl`, `here`, `osm`, `itemsoverlay`, `esri`, and `mapbox` (order varied between runs). Constructing `osm` and `mapboxgl` with experimental providers allowed returned a non-null mapping manager for both; provider and mapping errors were zero with empty error strings. This proves provider loading only, not raster or vector rendering.
 - Verified against the QtLocation `v5.13.2` source that the OSM plugin parameter is `osm.mapping.custom.host`; the plugin appends `%z/%x/%y.png` to that base URL. The same source confirms `osm.mapping.providersrepository.disabled`, `osm.mapping.prefetching_style=NoPrefetching`, and `osm.useragent`.
 - Reviewed the current OpenStreetMap Foundation standard raster-tile policy. It requires HTTPS and prohibits pre-seeding/bulk downloads and offline tile archives, so `tile.openstreetmap.org` will not be used as the source of a curl-downloaded localhost fixture. No tile was downloaded or generated during this research step.
@@ -147,6 +148,16 @@ After the demo, resume the ten-unit plan and close every deferred verification g
 - Qt SSL probe: build version `OpenSSL 1.1.1b  26 Feb 2019`; runtime version `OpenSSL 3.0.13 30 Jan 2024`; `supportsSsl: true`; unresolved symbols `EVP_PKEY_base_id` and `SSL_get_peer_certificate`. This does not yet prove HTTPS works.
 
 ## Unit 01 Working Commands
+
+The convenience wrapper exposes the validated workflow without replacing CMake:
+
+```bash
+make requirements
+make build
+make run
+```
+
+Use `make help` for the diagnostic-fixture and localhost style-server targets. Override machine-specific values when required, for example `make QT_PREFIX=/path/to/Qt/5.13.2/gcc_64 BUILD_DIR=build-release build`.
 
 Configure the Release build without modifying `PATH` or shell startup files:
 

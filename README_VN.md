@@ -1,7 +1,5 @@
 # QtMaps
 
-[English](README.md) · [Bảng tiến độ dự án](https://github.com/users/Viet281101/projects/6) · [Milestone demo đầu tiên](https://github.com/Viet281101/qt-maps/milestone/1)
-
 QtMaps là ứng dụng bản đồ desktop cho Việt Nam, được xây dựng bằng Qt 5.13.2, C++ và QML/Qt Quick 2.13 trên Linux. Dự án tập trung vào khả năng chạy local/offline, tìm đường ô tô và trình bày chế độ dẫn đường theo phong cách quen thuộc của các ứng dụng bản đồ hiện đại.
 
 ## Yêu cầu dự án
