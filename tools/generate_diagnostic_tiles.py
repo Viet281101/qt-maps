@@ -139,7 +139,7 @@ def parse_args():
     parser.add_argument("--output", type=Path, default=Path("generated/diagnostic-tiles"))
     parser.add_argument("--min-zoom", type=int, default=10)
     parser.add_argument("--max-zoom", type=int, default=14)
-    parser.add_argument("--radius", type=int, default=2, help="Tile radius; 2 generates a 5x5 set per zoom")
+    parser.add_argument("--radius", type=int, default=3, help="Tile radius; 3 generates a 7x7 set per zoom")
     return parser.parse_args()
 
 
