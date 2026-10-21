@@ -41,10 +41,12 @@ Update this file after every meaningful implementation change.
 - Reviewed the current OpenStreetMap Foundation standard raster-tile policy. It requires HTTPS and prohibits pre-seeding/bulk downloads and offline tile archives, so `tile.openstreetmap.org` will not be used as the source of a curl-downloaded localhost fixture. No tile was downloaded or generated during this research step.
 - Owner approved a locally generated diagnostic XYZ fixture for unit 01 and prohibited downloading tiles from `tile.openstreetmap.org` or any other public tile server in all cases, including small tests. Real map content is reserved for the unit 03 project pipeline using Geofabrik PBF, Planetiler, and a localhost tile server. The unit 01 fixture must be labeled as non-geographic diagnostic content.
 - Added `tools/generate_diagnostic_tiles.py`, which uses only Python standard-library `math`, `struct`, and `zlib` support and performs no network access. It applies the documented Web Mercator XYZ formula around Hanoi and generated 25 bordered, coordinate-labeled diagnostic tiles at each zoom from 10 through 14 (125 PNG files, 624 KiB total). The output under `generated/diagnostic-tiles/` is ignored and not committed; it is not real geographic map data.
+- Added the unit 01 diagnostic raster view using the Qt 5.13.2 OSM parameters `osm.mapping.custom.host=http://127.0.0.1:8765/`, `osm.mapping.providersrepository.disabled=true`, `osm.mapping.prefetching_style=NoPrefetching`, and a diagnostic `osm.useragent`. The view labels itself as not a real geographic map and supports mouse gestures plus deterministic arrow-key pan and `+`/`-` zoom controls.
+- Served the fixture with `python3 -m http.server 8765 --bind 127.0.0.1 --directory generated/diagnostic-tiles`. A clean zoom-12 load generated 20 localhost requests and zooming to approximately 13 generated 15 more; all 35 returned HTTP 200. Keyboard pan changed the captured window hash from `fea04a14...d552390` to `958e89cb...561c68` and produced additional localhost requests when the viewport moved beyond the deliberately bounded fixture; those out-of-coverage requests returned the expected 404.
 
 ## In Progress
 
-- [Issue #2](https://github.com/Viet281101/qt-maps/issues/2), Qt 5.13 Release build and raster-map validation, is the active delivery item. The Release CMake/Ninja Qt Quick and provider probe passes. The owner must now approve either the proposed locally generated diagnostic XYZ fixture or another explicitly licensed raster source before the localhost raster implementation continues.
+- [Issue #2](https://github.com/Viet281101/qt-maps/issues/2), Qt 5.13 Release build and raster-map validation, is the active delivery item. The Release build and diagnostic localhost raster render/pan/zoom proof pass. Next, probe the Qt 5.13.2 `mapboxgl` plugin against only locally available inputs, then capture the explicitly non-reportable diagnostic baseline.
 
 ## Next Up
 
@@ -67,7 +69,7 @@ After the demo, resume the ten-unit plan and close every deferred verification g
 1. The `osm` and `mapboxgl` providers load with non-null mapping managers and no provider/mapping error. Can `osm` render the localhost raster proof, and what style/URL requirements prevent or permit a bounded `mapboxgl` probe?
 2. **Deferred, low priority; does not block unit 01:** Does Qt 5.13.2 complete a real HTTPS request reliably with OpenSSL 3 despite the two unresolved-symbol warnings? The current spike assumes HTTP localhost for every tile and routing endpoint. Later options are (a) a local tile server that fetches HTTPS upstream and re-serves over HTTP localhost, or (b) a private OpenSSL 1.1 runtime only as a last resort because OpenSSL 1.1 is end-of-life. Do not modify OpenSSL or install `libssl1.1` while this question is deferred.
 3. What graph-build-time and peak-RAM thresholds should trigger reconsideration of the initial nationwide routing scope?
-4. Does the owner approve a locally generated diagnostic XYZ tile grid for the first localhost raster mechanics proof, knowing that it verifies rendering/pan/zoom but is not real geographic map content, or should the owner provide/approve a raster provider whose license explicitly permits the bounded local fixture?
+4. **Resolved:** the owner approved the locally generated diagnostic XYZ tile grid for the localhost raster mechanics proof. It is not real geographic map content and its measurements are not management-reportable.
 
 ### Technical and Product
 
@@ -149,4 +151,11 @@ The bounded provider-probe observation used:
 ```bash
 timeout --signal=TERM 8s ./build/qtmaps
 xwininfo -root -tree | rg -i 'QtMaps unit 01 probe|qtmaps'
+```
+
+Generate and serve the non-geographic diagnostic fixture:
+
+```bash
+python3 tools/generate_diagnostic_tiles.py
+python3 -m http.server 8765 --bind 127.0.0.1 --directory generated/diagnostic-tiles
 ```
