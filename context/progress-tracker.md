@@ -35,16 +35,18 @@ Update this file after every meaningful implementation change.
 - Owner deferred Qt 5.13.2 HTTPS compatibility work as a low-priority open risk that does not block unit 01. Until revisited, tile and routing endpoints are assumed to use HTTP on localhost. Possible later approaches are a local tile proxy that fetches HTTPS upstream and serves HTTP locally, or, only as a last resort, a private OpenSSL 1.1 runtime because OpenSSL 1.1 is end-of-life. Do not modify system OpenSSL or install `libssl1.1`.
 - Ran `ldd` on the installed `mapboxgl` and `osm` geoservice plugins and the `serialnmea` position plugin. None produced a `not found` line, so this check does not justify any runtime-library installation command.
 - Confirmed the owner-installed build tools are available: Ninja 1.11.1 and ccache 4.9.1.
+- Added the minimal Qt 5 CMake project and completed a Release build with GCC 13.3.0, Ninja 1.11.1, ccache 4.9.1, and C++14. The QML engine loaded a 960x640 Qt Quick 2.13 window, and `xwininfo` confirmed the X11 window existed.
+- `QGeoServiceProvider::availableServiceProviders()` returned `mapboxgl`, `here`, `osm`, `itemsoverlay`, `esri`, and `mapbox` (order varied between runs). Constructing `osm` and `mapboxgl` with experimental providers allowed returned a non-null mapping manager for both; provider and mapping errors were zero with empty error strings. This proves provider loading only, not raster or vector rendering.
 
 ## In Progress
 
-- [Issue #2](https://github.com/Viet281101/qt-maps/issues/2), Qt 5.13 Release build and raster-map validation, is the active delivery item. Ninja 1.11.1 and ccache 4.9.1 are verified; the next step is the minimal Release CMake/Ninja Qt Quick and QtLocation provider probe.
+- [Issue #2](https://github.com/Viet281101/qt-maps/issues/2), Qt 5.13 Release build and raster-map validation, is the active delivery item. The Release CMake/Ninja Qt Quick and provider probe passes; the next step is to verify the Qt 5.13 OSM custom-host parameter and select a policy-compliant, tightly bounded localhost raster fixture before any tile download.
 
 ## Next Up
 
 Before the first demo, execute the shortest stable vertical slice. Existing unit specifications remain authoritative for their completed implementations, but their full completion gates may be deferred and recorded during this milestone.
 
-1. **Unblock the build** — install the owner-approved Ninja/ccache packages manually, validate Qt Quick/QtLocation with CMake/Ninja, and record the real Release build/run commands.
+1. **Render the first raster proof** — preserve the validated Release CMake/Ninja path, verify the Qt 5.13 OSM custom-host parameter, and use an owner-approved, policy-compliant, tightly bounded tile fixture through HTTP localhost.
 2. **Create the demo shell** — render the first real raster map and add a coherent map-first QML layout with status, route, navigation, layer, and performance presentation areas.
 3. **Complete the route vertical slice** — select two points, obtain a real route through the fastest viable approved integration, draw it, and show its summary and maneuvers. Clearly label any bounded fixture or online dependency used for the first demo.
 4. **Add navigation presentation** — replay a route or simulated position, follow the current position, show the next maneuver, and expose an obvious exit/recenter action.
@@ -58,13 +60,13 @@ After the demo, resume the ten-unit plan and close every deferred verification g
 
 ### Environment Validation
 
-1. The QtLocation and QtPositioning libraries/QML imports and the `osm`, `mapboxgl`, and `serialnmea` plugin files are present. Can they load and render successfully in the minimal QML probes?
+1. The `osm` and `mapboxgl` providers load with non-null mapping managers and no provider/mapping error. Can `osm` render the localhost raster proof, and what style/URL requirements prevent or permit a bounded `mapboxgl` probe?
 2. **Deferred, low priority; does not block unit 01:** Does Qt 5.13.2 complete a real HTTPS request reliably with OpenSSL 3 despite the two unresolved-symbol warnings? The current spike assumes HTTP localhost for every tile and routing endpoint. Later options are (a) a local tile server that fetches HTTPS upstream and re-serves over HTTP localhost, or (b) a private OpenSSL 1.1 runtime only as a last resort because OpenSSL 1.1 is end-of-life. Do not modify OpenSSL or install `libssl1.1` while this question is deferred.
 3. What graph-build-time and peak-RAM thresholds should trigger reconsideration of the initial nationwide routing scope?
 
 ### Technical and Product
 
-4. Does a minimal Qt Quick/QtLocation target compile and run cleanly with GCC 13.3.0? The SSL console probe compiled successfully, but it does not validate QML/rendering.
+4. **Confirmed for the minimal provider probe:** Qt Quick/QtLocation compiles and runs with GCC 13.3.0 in Release mode. Raster rendering remains to be verified separately.
 5. Can a maintained MapLibre Native Qt integration build and render reliably with Qt 5.13.2 on Intel HD Graphics 520, within the reference hardware budget?
 6. Is zoom 16 practical for the detailed Hanoi/Red River Delta dataset after storage, generation-time, visual-quality, and performance measurements?
 7. Which legally usable orthography source should be selected, and what license, attribution, region, zoom range, and storage cap apply?
@@ -80,7 +82,7 @@ After the demo, resume the ten-unit plan and close every deferred verification g
 - Target the first management demo for 2026-11-03 and prioritize a stable, visually coherent vertical slice with measured performance until that date.
 - Use Qt 5.13.2 with C++ and QML/Qt Quick 2.13 on Linux. APIs introduced by Qt 5.15 or Qt 6 are forbidden.
 - Provision Qt 5.13.2 `gcc_64` through `aqtinstall` under `~/Qt`; the approved installation completed successfully.
-- Use CMake with Ninja as the primary build system and revalidate the decision after unit 01. The exact working build command remains **TBD after unit 01**.
+- Use CMake with Ninja as the primary build system and revalidate the decision after unit 01. The validated Release commands are recorded under Unit 01 Working Commands.
 - Use Qt 5-compatible CMake APIs only; Qt 6 APIs such as `qt_add_executable`, `qt_add_qml_module`, and `qt_standard_project_setup` are forbidden.
 - Use Vietnam zoom 0-10 for national raster/vector coverage and Hanoi plus the surrounding Red River Delta for zoom 11-16 detail. Zoom 16 remains an explicit initial assumption pending evidence.
 - Initially build routing data for all of Vietnam from one uncropped Geofabrik Vietnam extract. Confirm this decision with graph-build-time and peak-RAM measurements; consider cutting the region only if agreed thresholds are exceeded.
@@ -115,8 +117,30 @@ After the demo, resume the ten-unit plan and close every deferred verification g
 
 - No application code, library installation, Qt build, dataset download, push, or merge was performed during context setup.
 - `README.md` intentionally remains at the repository root with only the project title; no `docs/ai-playbook.md` exists because the original file was not a playbook.
-- The exact build and test commands remain **TBD after unit 01**.
+- The Release configure, build, and run commands are validated below. No automated test target exists yet; the current verification is the bounded runtime/provider probe and X11-window inspection.
 - The successful module query returned `debug_info qtcharts qtdatavis3d qtlottie qtnetworkauth qtpurchasing qtscript qtvirtualkeyboard qtwebengine qtwebglplugin`.
 - The successful base-archive query returned `icu qt3d qtbase qtconnectivity qtdeclarative qtgamepad qtgraphicaleffects qtimageformats qtlocation qtmultimedia qtquickcontrols qtquickcontrols2 qtremoteobjects qtscxml qtsensors qtserialbus qtserialport qtspeech qtsvg qttools qttranslations qtwayland qtwebchannel qtwebsockets qtwebview qtx11extras qtxmlpatterns`.
 - The original install command hit certificate errors on randomly selected fallback mirrors twice. Retrying with `--base https://ftp.jaist.ac.jp/pub/qtproject/` completed with hash verification enabled and no extra modules.
 - Qt SSL probe: build version `OpenSSL 1.1.1b  26 Feb 2019`; runtime version `OpenSSL 3.0.13 30 Jan 2024`; `supportsSsl: true`; unresolved symbols `EVP_PKEY_base_id` and `SSL_get_peer_certificate`. This does not yet prove HTTPS works.
+
+## Unit 01 Working Commands
+
+Configure the Release build without modifying `PATH` or shell startup files:
+
+```bash
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/home/viet/Qt/5.13.2/gcc_64 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+```
+
+Build and run:
+
+```bash
+cmake --build build --parallel
+./build/qtmaps
+```
+
+The bounded provider-probe observation used:
+
+```bash
+timeout --signal=TERM 8s ./build/qtmaps
+xwininfo -root -tree | rg -i 'QtMaps unit 01 probe|qtmaps'
+```

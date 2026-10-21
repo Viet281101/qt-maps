@@ -66,6 +66,6 @@ Before moving to the next unit:
 2. No invariant in `context/architecture.md` is violated.
 3. Relevant automated checks and documented manual scenarios pass.
 4. `context/progress-tracker.md` contains the result, evidence, new decisions, and remaining risks.
-5. **BUILD PASS** is recorded using the actual project build command. The command is **TBD after unit 01** and must not be fabricated before then.
+5. **BUILD PASS** is recorded using the validated Release configure/build commands in `context/code-standards.md` and `context/progress-tracker.md`.
 6. A unit that affects rendering records the latest Release-build FPS, total RAM, and total CPU results using the current fixed scenario and includes child processes.
 7. Generated artifacts and licenses/attributions are accounted for, and no protected artifact was hand-edited.

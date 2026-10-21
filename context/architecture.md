@@ -13,7 +13,7 @@
 | Platform | Linux desktop | Committed | Development and target platform |
 | UI/runtime | Qt 5.13.2, QML, Qt Quick 2.13 | Committed | Application lifecycle and user interface |
 | Language | C++ with C++14 as the proposed project level | Qt/C++ committed; language level proposed | Native application and service integration |
-| Build system | CMake with Ninja | Committed; revalidate after unit 01 | Primary configure/generate/build path; the exact working command remains TBD until the spike succeeds |
+| Build system | CMake with Ninja | Committed; minimal Release path validated, revalidate after unit 01 | Primary configure/generate/build path; exact commands are recorded in `progress-tracker.md` and `code-standards.md` |
 | Raster map | QtLocation `osm` plugin if present and compatible | Proposed; verify in unit 01 | Minimal raster display and fallback path |
 | Vector map | MapLibre Native with a Qt-compatible integration | Proposed; spike required | Vector rendering and navigation presentation |
 | Map source data | Geofabrik Vietnam OSM PBF | Proposed | Input for map, routing, and search datasets |
