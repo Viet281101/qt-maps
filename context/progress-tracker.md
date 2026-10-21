@@ -37,16 +37,18 @@ Update this file after every meaningful implementation change.
 - Confirmed the owner-installed build tools are available: Ninja 1.11.1 and ccache 4.9.1.
 - Added the minimal Qt 5 CMake project and completed a Release build with GCC 13.3.0, Ninja 1.11.1, ccache 4.9.1, and C++14. The QML engine loaded a 960x640 Qt Quick 2.13 window, and `xwininfo` confirmed the X11 window existed.
 - `QGeoServiceProvider::availableServiceProviders()` returned `mapboxgl`, `here`, `osm`, `itemsoverlay`, `esri`, and `mapbox` (order varied between runs). Constructing `osm` and `mapboxgl` with experimental providers allowed returned a non-null mapping manager for both; provider and mapping errors were zero with empty error strings. This proves provider loading only, not raster or vector rendering.
+- Verified against the QtLocation `v5.13.2` source that the OSM plugin parameter is `osm.mapping.custom.host`; the plugin appends `%z/%x/%y.png` to that base URL. The same source confirms `osm.mapping.providersrepository.disabled`, `osm.mapping.prefetching_style=NoPrefetching`, and `osm.useragent`.
+- Reviewed the current OpenStreetMap Foundation standard raster-tile policy. It requires HTTPS and prohibits pre-seeding/bulk downloads and offline tile archives, so `tile.openstreetmap.org` will not be used as the source of a curl-downloaded localhost fixture. No tile was downloaded or generated during this research step.
 
 ## In Progress
 
-- [Issue #2](https://github.com/Viet281101/qt-maps/issues/2), Qt 5.13 Release build and raster-map validation, is the active delivery item. The Release CMake/Ninja Qt Quick and provider probe passes; the next step is to verify the Qt 5.13 OSM custom-host parameter and select a policy-compliant, tightly bounded localhost raster fixture before any tile download.
+- [Issue #2](https://github.com/Viet281101/qt-maps/issues/2), Qt 5.13 Release build and raster-map validation, is the active delivery item. The Release CMake/Ninja Qt Quick and provider probe passes. The owner must now approve either the proposed locally generated diagnostic XYZ fixture or another explicitly licensed raster source before the localhost raster implementation continues.
 
 ## Next Up
 
 Before the first demo, execute the shortest stable vertical slice. Existing unit specifications remain authoritative for their completed implementations, but their full completion gates may be deferred and recorded during this milestone.
 
-1. **Render the first raster proof** — preserve the validated Release CMake/Ninja path, verify the Qt 5.13 OSM custom-host parameter, and use an owner-approved, policy-compliant, tightly bounded tile fixture through HTTP localhost.
+1. **Render the first raster proof** — after owner approval, preserve the validated Release CMake/Ninja path and use a policy-compliant, tightly bounded tile fixture through HTTP localhost. The proposed first fixture is a locally generated XYZ coordinate grid, explicitly labeled as diagnostic rather than real map data.
 2. **Create the demo shell** — render the first real raster map and add a coherent map-first QML layout with status, route, navigation, layer, and performance presentation areas.
 3. **Complete the route vertical slice** — select two points, obtain a real route through the fastest viable approved integration, draw it, and show its summary and maneuvers. Clearly label any bounded fixture or online dependency used for the first demo.
 4. **Add navigation presentation** — replay a route or simulated position, follow the current position, show the next maneuver, and expose an obvious exit/recenter action.
@@ -63,17 +65,18 @@ After the demo, resume the ten-unit plan and close every deferred verification g
 1. The `osm` and `mapboxgl` providers load with non-null mapping managers and no provider/mapping error. Can `osm` render the localhost raster proof, and what style/URL requirements prevent or permit a bounded `mapboxgl` probe?
 2. **Deferred, low priority; does not block unit 01:** Does Qt 5.13.2 complete a real HTTPS request reliably with OpenSSL 3 despite the two unresolved-symbol warnings? The current spike assumes HTTP localhost for every tile and routing endpoint. Later options are (a) a local tile server that fetches HTTPS upstream and re-serves over HTTP localhost, or (b) a private OpenSSL 1.1 runtime only as a last resort because OpenSSL 1.1 is end-of-life. Do not modify OpenSSL or install `libssl1.1` while this question is deferred.
 3. What graph-build-time and peak-RAM thresholds should trigger reconsideration of the initial nationwide routing scope?
+4. Does the owner approve a locally generated diagnostic XYZ tile grid for the first localhost raster mechanics proof, knowing that it verifies rendering/pan/zoom but is not real geographic map content, or should the owner provide/approve a raster provider whose license explicitly permits the bounded local fixture?
 
 ### Technical and Product
 
-4. **Confirmed for the minimal provider probe:** Qt Quick/QtLocation compiles and runs with GCC 13.3.0 in Release mode. Raster rendering remains to be verified separately.
-5. Can a maintained MapLibre Native Qt integration build and render reliably with Qt 5.13.2 on Intel HD Graphics 520, within the reference hardware budget?
-6. Is zoom 16 practical for the detailed Hanoi/Red River Delta dataset after storage, generation-time, visual-quality, and performance measurements?
-7. Which legally usable orthography source should be selected, and what license, attribution, region, zoom range, and storage cap apply?
-8. How complete and consistent are Vietnam OSM `ref` tags for national roads (QL) and provincial roads (DT/ĐT), and what routing behavior is acceptable where tags are missing?
-9. Which machine will management use to view the demo, and how does it differ from the reference laptop?
-10. Is a distributable installer/package required, or is a documented local Release build sufficient?
-11. What exact UI theme token values, icon source, minimum window size, panel dimensions, keyboard shortcuts, contrast target, and map-aware light/dark behavior should be committed?
+5. **Confirmed for the minimal provider probe:** Qt Quick/QtLocation compiles and runs with GCC 13.3.0 in Release mode. Raster rendering remains to be verified separately.
+6. Can a maintained MapLibre Native Qt integration build and render reliably with Qt 5.13.2 on Intel HD Graphics 520, within the reference hardware budget?
+7. Is zoom 16 practical for the detailed Hanoi/Red River Delta dataset after storage, generation-time, visual-quality, and performance measurements?
+8. Which legally usable orthography source should be selected, and what license, attribution, region, zoom range, and storage cap apply?
+9. How complete and consistent are Vietnam OSM `ref` tags for national roads (QL) and provincial roads (DT/ĐT), and what routing behavior is acceptable where tags are missing?
+10. Which machine will management use to view the demo, and how does it differ from the reference laptop?
+11. Is a distributable installer/package required, or is a documented local Release build sufficient?
+12. What exact UI theme token values, icon source, minimum window size, panel dimensions, keyboard shortcuts, contrast target, and map-aware light/dark behavior should be committed?
 
 ## Architecture Decisions
 
