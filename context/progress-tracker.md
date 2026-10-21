@@ -4,7 +4,7 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Two-week first-demo push; environment validation is the immediate blocker and application code has not started.
+- Unit 01 environment and feasibility spike on `feat/01-env-and-spike`; validate the Release CMake/Ninja path and the smallest Qt Quick/QtLocation proofs before expanding the demo.
 
 ## Current Goal
 
@@ -31,10 +31,12 @@ Update this file after every meaningful implementation change.
 - Linked the public [QtMaps Project board](https://github.com/users/Viet281101/projects/6) and repository in both directions, set the repository homepage to the board, and added Qt/QML/OSM/offline-map/routing topics for discoverability.
 - Created the [First Management Demo milestone](https://github.com/Viet281101/qt-maps/milestone/1), the [demo tracking issue](https://github.com/Viet281101/qt-maps/issues/1), eleven scoped sub-issues with acceptance criteria, P0/P1 labels, area labels, and Project fields for Priority and Demo Phase.
 - Opened [PR #17](https://github.com/Viet281101/qt-maps/pull/17) to review the complete context and demo-first documentation baseline before merging it into `main`.
+- Merged the context baseline from PR #17 into `main` and created `feat/01-env-and-spike` from that merge.
+- Owner deferred Qt 5.13.2 HTTPS compatibility work as a low-priority open risk that does not block unit 01. Until revisited, tile and routing endpoints are assumed to use HTTP on localhost. Possible later approaches are a local tile proxy that fetches HTTPS upstream and serves HTTP locally, or, only as a last resort, a private OpenSSL 1.1 runtime because OpenSSL 1.1 is end-of-life. Do not modify system OpenSSL or install `libssl1.1`.
 
 ## In Progress
 
-- [Issue #2](https://github.com/Viet281101/qt-maps/issues/2), Qt 5.13 Release build and raster-map validation, is the active delivery item. Ninja and ccache remain for the owner to install manually; no application build has started yet. The documentation baseline awaits review in PR #17.
+- [Issue #2](https://github.com/Viet281101/qt-maps/issues/2), Qt 5.13 Release build and raster-map validation, is the active delivery item. The owner reports that Ninja and ccache were installed manually; their versions must be verified before CMake configuration. No application build has started yet.
 
 ## Next Up
 
@@ -55,7 +57,7 @@ After the demo, resume the ten-unit plan and close every deferred verification g
 ### Environment Validation
 
 1. The QtLocation and QtPositioning libraries/QML imports and the `osm`, `mapboxgl`, and `serialnmea` plugin files are present. Can they load and render successfully in the minimal QML probes?
-2. Does Qt 5.13.2 complete a real HTTPS request reliably with OpenSSL 3 despite the two unresolved-symbol warnings, or is a supported OpenSSL 1.1 compatibility arrangement required?
+2. **Deferred, low priority; does not block unit 01:** Does Qt 5.13.2 complete a real HTTPS request reliably with OpenSSL 3 despite the two unresolved-symbol warnings? The current spike assumes HTTP localhost for every tile and routing endpoint. Later options are (a) a local tile server that fetches HTTPS upstream and re-serves over HTTP localhost, or (b) a private OpenSSL 1.1 runtime only as a last resort because OpenSSL 1.1 is end-of-life. Do not modify OpenSSL or install `libssl1.1` while this question is deferred.
 3. What graph-build-time and peak-RAM thresholds should trigger reconsideration of the initial nationwide routing scope?
 
 ### Technical and Product
