@@ -89,6 +89,6 @@ Large generated datasets, caches, routing graphs, and third-party artifacts must
 
 - Linux development machine: Dell Latitude 5480, Intel Core i5-6300U, 16 GiB RAM, and 512 GB NVMe SSD.
 - GCC/G++ 13.3.0, CMake 3.28.3, and GNU Make 4.3 are available.
-- qmake/Qt, Ninja, Clang, and ccache are not currently installed or not available on `PATH`; Ninja and ccache installation is owner-approved but not yet performed.
+- qmake/Qt and Clang are not available on `PATH`; Qt is intentionally addressed by absolute path or `CMAKE_PREFIX_PATH`. Owner-installed Ninja 1.11.1 and ccache 4.9.1 are available on `PATH`.
 - Intel HD Graphics 520 (Skylake GT2), Mesa 25.2.8, direct rendering enabled, and OpenGL up to 4.6.
-- Qt installation remains unauthorized until the owner reviews the module list and exact command. Ninja and ccache installation is approved only for the owner to execute from the printed command.
+- Qt 5.13.2 installation under `/home/viet/Qt/5.13.2/gcc_64` is complete and owner-approved. The owner manually installed Ninja and ccache; no agent-run `sudo` command was used.

@@ -34,10 +34,11 @@ Update this file after every meaningful implementation change.
 - Merged the context baseline from PR #17 into `main` and created `feat/01-env-and-spike` from that merge.
 - Owner deferred Qt 5.13.2 HTTPS compatibility work as a low-priority open risk that does not block unit 01. Until revisited, tile and routing endpoints are assumed to use HTTP on localhost. Possible later approaches are a local tile proxy that fetches HTTPS upstream and serves HTTP locally, or, only as a last resort, a private OpenSSL 1.1 runtime because OpenSSL 1.1 is end-of-life. Do not modify system OpenSSL or install `libssl1.1`.
 - Ran `ldd` on the installed `mapboxgl` and `osm` geoservice plugins and the `serialnmea` position plugin. None produced a `not found` line, so this check does not justify any runtime-library installation command.
+- Confirmed the owner-installed build tools are available: Ninja 1.11.1 and ccache 4.9.1.
 
 ## In Progress
 
-- [Issue #2](https://github.com/Viet281101/qt-maps/issues/2), Qt 5.13 Release build and raster-map validation, is the active delivery item. The owner reports that Ninja and ccache were installed manually; their versions must be verified before CMake configuration. No application build has started yet.
+- [Issue #2](https://github.com/Viet281101/qt-maps/issues/2), Qt 5.13 Release build and raster-map validation, is the active delivery item. Ninja 1.11.1 and ccache 4.9.1 are verified; the next step is the minimal Release CMake/Ninja Qt Quick and QtLocation provider probe.
 
 ## Next Up
 
@@ -107,7 +108,7 @@ After the demo, resume the ten-unit plan and close every deferred verification g
 
 - Reference machine: Dell Latitude 5480; Intel Core i5-6300U (2 cores/4 threads); 16 GiB RAM; 512 GB NVMe SSD.
 - Available: Linux, GCC/G++ 13.3.0, CMake 3.28.3, GNU Make 4.3, `aqtinstall` 3.3.0, and Qt 5.13.2 `gcc_64` under `/home/viet/Qt/5.13.2/gcc_64`.
-- Not currently available on `PATH`: qmake/Qt, Ninja, Clang, ccache. This is intentional for Qt; use its absolute path or `CMAKE_PREFIX_PATH`. Ninja and ccache are approved for owner-executed installation.
+- Not currently available on `PATH`: qmake/Qt and Clang. This is intentional for Qt; use its absolute path or `CMAKE_PREFIX_PATH`. Ninja 1.11.1 and ccache 4.9.1 are available on `PATH` after owner-executed installation.
 - Graphics: Intel HD Graphics 520 (Skylake GT2), Mesa 25.2.8, direct rendering enabled, OpenGL up to 4.6.
 
 ## Session Notes
