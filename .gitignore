@@ -58,6 +58,6 @@ compile_commands.json
 # aqtinstall local query/install log
 aqtinstall.log
 
-# Generated unit 01 diagnostic XYZ tiles (not real geographic map data)
-/generated/diagnostic-tiles/
+# Generated unit 01 diagnostic tiles/caches (not real geographic map data)
+/generated/
 __pycache__/
