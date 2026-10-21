@@ -2,6 +2,8 @@
 
 Read `AGENTS.md` before starting. The owner selected Qt 5.13.2 `gcc_64` through `aqtinstall` under `~/Qt` and CMake with Ninja. The approved Qt base installation is complete. Do not install further software or download a large dataset until the owner approves the exact command; print every `sudo apt` command for the owner to run manually.
 
+**Status (owner accepted 2026-10-21): the environment portion of unit 01 is complete.** Qt 5.13.2 provisioning, dependency inspection, the CMake/Ninja Release path, provider loading, diagnostic localhost raster rendering, and an exploratory RSS/CPU measurement are verified. Reliable rendered-frame FPS is transferred to unit 02. Local vector rendering and MapLibre Native feasibility are transferred to `01b_vector-feasibility-spike.md`; these transfers are explicit scope changes, not evidence that the unfinished checks passed.
+
 ## Goal
 
 Establish a reproducible Qt 5.13.2 development environment on the reference laptop, validate the committed CMake/Ninja path, prove the smallest Qt Quick and raster-map render paths, capture an honest initial performance baseline, and produce enough evidence to decide whether MapLibre Native is feasible with Qt 5.13.2.
@@ -58,10 +60,10 @@ The initial baseline covers the blank QML window and raster-map proof in Release
 - [x] CMake/Ninja Release configure and build are validated with C++14 and exact configure/build/run commands are recorded. C++14 remains Proposed pending owner confirmation, and no automated test target exists yet.
 - [x] The Release build displays a blank 960x640 Qt Quick 2.13 window end to end; `xwininfo` confirmed the X11 window.
 - [x] The Release build displays the explicitly non-geographic diagnostic XYZ raster through the installed `osm` plugin over HTTP localhost. Mouse/keyboard zoom and deterministic keyboard pan work; this is a mechanics proof, not a real map proof.
-- [ ] `docs/benchmarks/unit-01-diagnostic-baseline.md` records Release diagnostic-raster RSS/CPU with duration, `/proc` method, 960x640 viewport, localhost-only network, power/governor/thermal state, and both QtMaps and HTTP-server processes. FPS remains unavailable pending the rendered-frame instrumentation in unit 02, so this gate is not fully complete.
-- [ ] The one-day MapLibre Native investigation records exact source/version, license, Qt requirements, build/render outcome, blockers/patch burden, and a go/no-go recommendation for Qt 5.13.2.
+- [ ] **Transferred to unit 02:** `docs/benchmarks/unit-01-diagnostic-baseline.md` records Release diagnostic-raster RSS/CPU with duration, `/proc` method, 960x640 viewport, localhost-only network, power/governor/thermal state, and both QtMaps and HTTP-server processes. Reliable rendered-frame FPS requires the unit 02 instrumentation and was not inferred during unit 01.
+- [ ] **Transferred to unit 01b:** the time-boxed local vector and MapLibre Native investigation must record exact source/version, license, Qt requirements, build/render outcome, blockers/patch burden, and a go/no-go recommendation for Qt 5.13.2.
 - [x] No package or tool was installed without approval, no public or production map dataset was downloaded, and `context/progress-tracker.md` reflects all evidence and remaining questions.
-- [x] **BUILD PASS** is recorded with the real selected command. The unit remains incomplete for the separately identified FPS and MapLibre Native evidence gaps.
+- [x] **BUILD PASS** is recorded with the real selected command. The owner accepted the environment portion as complete and explicitly transferred the remaining FPS and vector-feasibility work.
 
 ### Verified Environment Evidence
 
