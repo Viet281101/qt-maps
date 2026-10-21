@@ -70,4 +70,5 @@ The initial baseline covers the blank QML window and raster-map proof in Release
 - Position plugins present: `geoclue`, `geoclue2`, `positionpoll`, and `serialnmea`.
 - `qml/QtLocation` and `qml/QtPositioning` each contain a declarative plugin, `plugins.qmltypes`, and `qmldir`.
 - `ldd` reported no missing dependency for `libQt5Core`, `libQt5Quick`, `libQt5Location`, `libQt5Positioning`, or `plugins/platforms/libqxcb.so`; therefore no runtime-library `sudo apt install` command is currently justified by `ldd`.
+- `ldd` reported no `not found` line for `plugins/geoservices/libqtgeoservices_mapboxgl.so`, `plugins/geoservices/libqtgeoservices_osm.so`, or `plugins/position/libqtposition_serialnmea.so`; therefore the plugin-level check also requires no runtime-library installation command.
 - A temporary SSL probe outside the repository compiled with GCC 13.3.0 and exited normally. This confirms a small Qt Core/Network compilation only, not Qt Quick/QtLocation compatibility or HTTPS correctness.
