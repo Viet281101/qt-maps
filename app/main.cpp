@@ -29,6 +29,7 @@ void probeProvider(const QString &providerName)
 int main(int argc, char *argv[])
 {
     QGuiApplication application(argc, argv);
+    const bool useMapboxGlProbe = application.arguments().contains(QStringLiteral("--mapboxgl-probe"));
 
     const QStringList providers = QGeoServiceProvider::availableServiceProviders();
     qInfo().noquote() << "availableServiceProviders=" << providers.join(QLatin1Char(','));
@@ -36,9 +37,13 @@ int main(int argc, char *argv[])
     probeProvider(QStringLiteral("mapboxgl"));
 
     QQmlApplicationEngine engine;
-    engine.load(QUrl(QStringLiteral("qrc:/qml/Main.qml")));
+    const QUrl qmlUrl(useMapboxGlProbe
+                          ? QStringLiteral("qrc:/qml/MapboxGlProbe.qml")
+                          : QStringLiteral("qrc:/qml/Main.qml"));
+    qInfo().noquote() << "probeMode=" << (useMapboxGlProbe ? "mapboxgl-style-only" : "osm-diagnostic-raster");
+    engine.load(qmlUrl);
     if (engine.rootObjects().isEmpty()) {
-        qCritical() << "Failed to load qrc:/qml/Main.qml";
+        qCritical() << "Failed to load" << qmlUrl;
         return 1;
     }
 
