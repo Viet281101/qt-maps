@@ -39,6 +39,7 @@ Update this file after every meaningful implementation change.
 - `QGeoServiceProvider::availableServiceProviders()` returned `mapboxgl`, `here`, `osm`, `itemsoverlay`, `esri`, and `mapbox` (order varied between runs). Constructing `osm` and `mapboxgl` with experimental providers allowed returned a non-null mapping manager for both; provider and mapping errors were zero with empty error strings. This proves provider loading only, not raster or vector rendering.
 - Verified against the QtLocation `v5.13.2` source that the OSM plugin parameter is `osm.mapping.custom.host`; the plugin appends `%z/%x/%y.png` to that base URL. The same source confirms `osm.mapping.providersrepository.disabled`, `osm.mapping.prefetching_style=NoPrefetching`, and `osm.useragent`.
 - Reviewed the current OpenStreetMap Foundation standard raster-tile policy. It requires HTTPS and prohibits pre-seeding/bulk downloads and offline tile archives, so `tile.openstreetmap.org` will not be used as the source of a curl-downloaded localhost fixture. No tile was downloaded or generated during this research step.
+- Owner approved a locally generated diagnostic XYZ fixture for unit 01 and prohibited downloading tiles from `tile.openstreetmap.org` or any other public tile server in all cases, including small tests. Real map content is reserved for the unit 03 project pipeline using Geofabrik PBF, Planetiler, and a localhost tile server. The unit 01 fixture must be labeled as non-geographic diagnostic content.
 
 ## In Progress
 
@@ -92,6 +93,7 @@ After the demo, resume the ten-unit plan and close every deferred verification g
 - Support raster, vector, and orthography layers; offline-first operation; two-point car routing; simulated navigation; performance measurement; and weekly reporting.
 - Measure FPS and combined RAM/CPU for the app and child services in Release mode with fixed scenarios.
 - Manage routing/tile-server child processes through `QProcess` and keep routing/I/O off the UI thread.
+- Never download tiles from `tile.openstreetmap.org` or another public tile server. Generate only non-geographic diagnostic tiles in unit 01; obtain real map tiles exclusively from the project-owned Geofabrik PBF/Planetiler/localhost pipeline beginning in unit 03.
 
 ### Proposed
 

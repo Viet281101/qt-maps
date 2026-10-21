@@ -75,6 +75,7 @@ Large generated datasets, caches, routing graphs, and third-party artifacts must
 7. Generated data, vendor internals, and third-party artifacts are not hand-edited as application source.
 8. Architecture entries retain their decision status until evidence is recorded and the project owner approves a change.
 9. Build files must use Qt 5 CMake integration only: `find_package(Qt5 ...)`, `CMAKE_AUTOMOC`/`CMAKE_AUTORCC`, `qt5_add_resources`, and `add_executable`. Qt 6-only APIs such as `qt_add_executable`, `qt_add_qml_module`, and `qt_standard_project_setup` are forbidden.
+10. QtMaps must not download raster or vector tiles from `tile.openstreetmap.org` or any other public tile server, including small test downloads. Real map tiles must come from the project data pipeline based on the approved Geofabrik PBF, Planetiler, and a localhost tile service in unit 03. Unit 01 may use only clearly labeled, locally generated diagnostic tiles that contain no geographic map data.
 
 ## Environment Provisioning Decisions
 
