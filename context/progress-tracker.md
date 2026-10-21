@@ -1,0 +1,118 @@
+# Progress Tracker
+
+Update this file after every meaningful implementation change.
+
+## Current Phase
+
+- Two-week first-demo push; environment validation is the immediate blocker and application code has not started.
+
+## Current Goal
+
+- Deliver the strongest stable management demo possible by 2026-11-03: a polished map-first Release application, a visible two-point route and navigation-style flow, and honest FPS/RAM/CPU evidence on the reference laptop.
+
+## Completed
+
+- Surveyed the repository and converted the web-oriented context templates into QtMaps project documentation.
+- Recorded the current compiler, build tools, GPU, Mesa, direct-rendering, and OpenGL baseline.
+- Defined the first ten dependency-ordered units and detailed specs for units 01 and 02.
+- Owner selected Qt 5.13.2 `gcc_64` through `aqtinstall` under `~/Qt` and committed the project to CMake with Ninja, subject to successful unit 01 validation.
+- Owner selected Vietnam zoom 0-10 for national raster/vector coverage, Hanoi and the surrounding Red River Delta for zoom 11-16 detail, with zoom 16 explicitly provisional.
+- Owner approved Ninja and ccache installation but required all `sudo apt` commands to be printed for manual execution.
+- Installed `aqtinstall` 3.3.0 in `~/.local/share/aqtinstall-3.3.0`.
+- Queried Qt 5.13.2 `gcc_64` successfully: the extra-module list matched the repository-derived preliminary list, and the base archives include `qtdeclarative` and `qtlocation`.
+- Owner selected nationwide routing data from one uncropped Geofabrik Vietnam extract as the initial scope, to be confirmed by graph-build time and peak-RAM measurements.
+- Installed the Qt 5.13.2 `gcc_64` base archives under `/home/viet/Qt/5.13.2/gcc_64`; `/home/viet/Qt` uses 563 MiB as reported by `du -sh`.
+- Confirmed qmake 3.1 reports Qt 5.13.2, and confirmed the QtLocation and QtPositioning libraries and QML import directories exist.
+- Confirmed geoservice plugins `osm` and `mapboxgl`, plus the position plugin `serialnmea`, are present on disk.
+- Ran `ldd` on Qt Core, Quick, Location, Positioning, and the xcb platform plugin; none reported a `not found` dependency.
+- Built and ran a temporary non-application SSL probe outside the repository with GCC 13.3.0. `QSslSocket::supportsSsl()` returned true, but Qt reported unresolved `EVP_PKEY_base_id` and `SSL_get_peer_certificate` symbols when using OpenSSL 3.0.13.
+- Owner set a two-week deadline ending 2026-11-03 for the first management demo and directed work to prioritize the most convincing stable vertical slice over the previously estimated long-form sequence.
+- Updated the project overview, AI workflow, progress tracker, and bilingual root documentation to describe the demo-first direction and distinguish complete, partial, simulated, and unavailable behavior. `README.md` is the professional English entry point and `README_VN.md` contains the Vietnamese version.
+- Linked the public [QtMaps Project board](https://github.com/users/Viet281101/projects/6) and repository in both directions, set the repository homepage to the board, and added Qt/QML/OSM/offline-map/routing topics for discoverability.
+- Created the [First Management Demo milestone](https://github.com/Viet281101/qt-maps/milestone/1), the [demo tracking issue](https://github.com/Viet281101/qt-maps/issues/1), eleven scoped sub-issues with acceptance criteria, P0/P1 labels, area labels, and Project fields for Priority and Demo Phase.
+- Opened [PR #17](https://github.com/Viet281101/qt-maps/pull/17) to review the complete context and demo-first documentation baseline before merging it into `main`.
+
+## In Progress
+
+- [Issue #2](https://github.com/Viet281101/qt-maps/issues/2), Qt 5.13 Release build and raster-map validation, is the active delivery item. Ninja and ccache remain for the owner to install manually; no application build has started yet. The documentation baseline awaits review in PR #17.
+
+## Next Up
+
+Before the first demo, execute the shortest stable vertical slice. Existing unit specifications remain authoritative for their completed implementations, but their full completion gates may be deferred and recorded during this milestone.
+
+1. **Unblock the build** — install the owner-approved Ninja/ccache packages manually, validate Qt Quick/QtLocation with CMake/Ninja, and record the real Release build/run commands.
+2. **Create the demo shell** — render the first real raster map and add a coherent map-first QML layout with status, route, navigation, layer, and performance presentation areas.
+3. **Complete the route vertical slice** — select two points, obtain a real route through the fastest viable approved integration, draw it, and show its summary and maneuvers. Clearly label any bounded fixture or online dependency used for the first demo.
+4. **Add navigation presentation** — replay a route or simulated position, follow the current position, show the next maneuver, and expose an obvious exit/recenter action.
+5. **Measure the demo** — show rendered-frame FPS and capture short Release-build CPU/RAM results for the application process tree with documented scope.
+6. **Add breadth without destabilizing the flow** — attempt offline fallback, vector, orthography, and search in that priority only after the end-to-end demo remains reproducible.
+7. **Freeze and rehearse** — fix demo blockers, prepare a deterministic scenario and fallback evidence, update the weekly report, and avoid risky dependency changes immediately before the demonstration.
+
+After the demo, resume the ten-unit plan and close every deferred verification gate rather than treating the demonstration slice as production completion.
+
+## Open Questions
+
+### Environment Validation
+
+1. The QtLocation and QtPositioning libraries/QML imports and the `osm`, `mapboxgl`, and `serialnmea` plugin files are present. Can they load and render successfully in the minimal QML probes?
+2. Does Qt 5.13.2 complete a real HTTPS request reliably with OpenSSL 3 despite the two unresolved-symbol warnings, or is a supported OpenSSL 1.1 compatibility arrangement required?
+3. What graph-build-time and peak-RAM thresholds should trigger reconsideration of the initial nationwide routing scope?
+
+### Technical and Product
+
+4. Does a minimal Qt Quick/QtLocation target compile and run cleanly with GCC 13.3.0? The SSL console probe compiled successfully, but it does not validate QML/rendering.
+5. Can a maintained MapLibre Native Qt integration build and render reliably with Qt 5.13.2 on Intel HD Graphics 520, within the reference hardware budget?
+6. Is zoom 16 practical for the detailed Hanoi/Red River Delta dataset after storage, generation-time, visual-quality, and performance measurements?
+7. Which legally usable orthography source should be selected, and what license, attribution, region, zoom range, and storage cap apply?
+8. How complete and consistent are Vietnam OSM `ref` tags for national roads (QL) and provincial roads (DT/ĐT), and what routing behavior is acceptable where tags are missing?
+9. Which machine will management use to view the demo, and how does it differ from the reference laptop?
+10. Is a distributable installer/package required, or is a documented local Release build sufficient?
+11. What exact UI theme token values, icon source, minimum window size, panel dimensions, keyboard shortcuts, contrast target, and map-aware light/dark behavior should be committed?
+
+## Architecture Decisions
+
+### Committed
+
+- Target the first management demo for 2026-11-03 and prioritize a stable, visually coherent vertical slice with measured performance until that date.
+- Use Qt 5.13.2 with C++ and QML/Qt Quick 2.13 on Linux. APIs introduced by Qt 5.15 or Qt 6 are forbidden.
+- Provision Qt 5.13.2 `gcc_64` through `aqtinstall` under `~/Qt`; the approved installation completed successfully.
+- Use CMake with Ninja as the primary build system and revalidate the decision after unit 01. The exact working build command remains **TBD after unit 01**.
+- Use Qt 5-compatible CMake APIs only; Qt 6 APIs such as `qt_add_executable`, `qt_add_qml_module`, and `qt_standard_project_setup` are forbidden.
+- Use Vietnam zoom 0-10 for national raster/vector coverage and Hanoi plus the surrounding Red River Delta for zoom 11-16 detail. Zoom 16 remains an explicit initial assumption pending evidence.
+- Initially build routing data for all of Vietnam from one uncropped Geofabrik Vietnam extract. Confirm this decision with graph-build-time and peak-RAM measurements; consider cutting the region only if agreed thresholds are exceeded.
+- Support raster, vector, and orthography layers; offline-first operation; two-point car routing; simulated navigation; performance measurement; and weekly reporting.
+- Measure FPS and combined RAM/CPU for the app and child services in Release mode with fixed scenarios.
+- Manage routing/tile-server child processes through `QProcess` and keep routing/I/O off the UI thread.
+
+### Proposed
+
+- Prefer MapLibre Native with a Qt-compatible integration for vector rendering and navigation; use QtLocation `osm` as the raster path. MapLibre compatibility requires a one-day spike before commitment.
+- Use Geofabrik Vietnam PBF, Planetiler-generated vector MBTiles, raster tiles, and either Martin/mbtileserver or direct `QSqlDatabase` MBTiles access.
+- Use Valhalla locally for routing, maneuvers, and map matching, with car costing oriented toward `trunk`, `primary`, and `secondary` roads.
+- Build offline geocoding with SQLite FTS5.
+- Use C++14 as the project language level, subject to toolchain confirmation in unit 01.
+- Planning performance thresholds are an average of at least 30 FPS, idle CPU at most 25%, interactive CPU at most 150%, and process-tree resident memory at most 2 GiB after 30 minutes on the reference laptop. Final thresholds wait for the baseline.
+
+### Investigation Required
+
+- Legal orthography source and bounded coverage.
+- MapLibre Native compatibility with Qt 5.13.2 and the reference GPU/toolchain.
+- Qt 5.13.2 compatibility with GCC 13 for Qt Quick/QtLocation and with system OpenSSL 3 for real online HTTPS. A console probe compiled, but OpenSSL 3 produced unresolved-symbol warnings; offline localhost HTTP is not blocked by this TLS question.
+- Vietnam OSM national/provincial road-reference completeness.
+
+## Environment Baseline
+
+- Reference machine: Dell Latitude 5480; Intel Core i5-6300U (2 cores/4 threads); 16 GiB RAM; 512 GB NVMe SSD.
+- Available: Linux, GCC/G++ 13.3.0, CMake 3.28.3, GNU Make 4.3, `aqtinstall` 3.3.0, and Qt 5.13.2 `gcc_64` under `/home/viet/Qt/5.13.2/gcc_64`.
+- Not currently available on `PATH`: qmake/Qt, Ninja, Clang, ccache. This is intentional for Qt; use its absolute path or `CMAKE_PREFIX_PATH`. Ninja and ccache are approved for owner-executed installation.
+- Graphics: Intel HD Graphics 520 (Skylake GT2), Mesa 25.2.8, direct rendering enabled, OpenGL up to 4.6.
+
+## Session Notes
+
+- No application code, library installation, Qt build, dataset download, push, or merge was performed during context setup.
+- `README.md` intentionally remains at the repository root with only the project title; no `docs/ai-playbook.md` exists because the original file was not a playbook.
+- The exact build and test commands remain **TBD after unit 01**.
+- The successful module query returned `debug_info qtcharts qtdatavis3d qtlottie qtnetworkauth qtpurchasing qtscript qtvirtualkeyboard qtwebengine qtwebglplugin`.
+- The successful base-archive query returned `icu qt3d qtbase qtconnectivity qtdeclarative qtgamepad qtgraphicaleffects qtimageformats qtlocation qtmultimedia qtquickcontrols qtquickcontrols2 qtremoteobjects qtscxml qtsensors qtserialbus qtserialport qtspeech qtsvg qttools qttranslations qtwayland qtwebchannel qtwebsockets qtwebview qtx11extras qtxmlpatterns`.
+- The original install command hit certificate errors on randomly selected fallback mirrors twice. Retrying with `--base https://ftp.jaist.ac.jp/pub/qtproject/` completed with hash verification enabled and no extra modules.
+- Qt SSL probe: build version `OpenSSL 1.1.1b  26 Feb 2019`; runtime version `OpenSSL 3.0.13 30 Jan 2024`; `supportsSsl: true`; unresolved symbols `EVP_PKEY_base_id` and `SSL_get_peer_certificate`. This does not yet prove HTTPS works.
