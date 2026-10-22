@@ -69,3 +69,14 @@ Before moving to the next unit:
 5. **BUILD PASS** is recorded using the validated Release configure/build commands in `context/code-standards.md` and `context/progress-tracker.md`.
 6. A unit that affects rendering records the latest Release-build FPS, total RAM, and total CPU results using the current fixed scenario and includes child processes.
 7. Generated artifacts and licenses/attributions are accounted for, and no protected artifact was hand-edited.
+
+## Pull Request Tracking Gate
+
+After creating a pull request for QtMaps:
+
+1. Identify the canonical tracking issue before editing GitHub metadata. Add `Refs #N` to the pull request description while acceptance criteria remain open; use a closing keyword only when the pull request fully satisfies the issue and closing it on merge is intended.
+2. Assign the active delivery milestone to the pull request.
+3. Add the pull request to [Project #6, QtMaps — First Demo](https://github.com/users/Viet281101/projects/6) without creating a duplicate item.
+4. Align the pull request's Priority and Demo Phase project fields with its primary tracking issue. Set Status to `In Progress` while the pull request is open and to `Done` only after the work is merged or otherwise completed.
+5. Move the primary tracking issue to `In Progress` when implementation or review has started, while leaving the issue open until all of its acceptance criteria are satisfied.
+6. Verify the live pull request description, milestone, Project item, and Project fields after all mutations. Record the pull request, linked issue, milestone, and Project status in `context/progress-tracker.md`.

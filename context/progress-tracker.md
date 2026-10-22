@@ -4,7 +4,7 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Unit 02 performance instrumentation is complete locally on `feat/02-perf-instrumentation` and awaits owner review. Do not begin unit 01b on this branch.
+- Unit 02 performance instrumentation is complete on `feat/02-perf-instrumentation`, owner review is complete, and [PR #19](https://github.com/Viet281101/qt-maps/pull/19) is open for merge. Do not begin unit 01b on this branch.
 
 ## Current Goal
 
@@ -59,10 +59,12 @@ Update this file after every meaningful implementation change.
 - Recorded short instrumentation-on/off validation runs in `docs/benchmarks/unit-02-performance-results.md`. External-sampler overhead was +2.375 CPU percentage points and +2.963 MiB average RSS for the blank window, and +2.375 CPU points and +2.147 MiB for diagnostic raster pan/zoom. These short diagnostic results are not management-facing product benchmarks.
 - Completed three fresh-cache raster runs per render loop. Median default-loop values were 3.618 completed-swap FPS, 3.000 interval 1% low, 3.167% CPU, and 155.076 MiB average RSS; basic-loop medians were 3.741 FPS, 3.000 interval 1% low, 3.399% CPU, and 151.414 MiB average RSS. The on-demand scripted workload does not justify changing the Qt default render loop. Local fixture requests returned HTTP 200 at zooms 12 and 13.
 - Enabled CMake compile-command export and pointed VS Code C/C++ IntelliSense at `build/compile_commands.json` on 2026-10-23. This supplies the selected Qt 5.13.2 include paths, compiler flags, project headers, and target definitions without hard-coding machine-specific Qt subdirectories in `includePath`; the existing project cSpell additions were preserved.
+- Added a repository-level pull-request tracking gate on 2026-10-23. Every new PR must reference its canonical issue without prematurely closing incomplete acceptance criteria, use the active milestone, join Project #6 without duplication, align Priority and Demo Phase with the issue, and have its live metadata verified after creation.
+- Applied the tracking gate to PR #19 on 2026-10-23: its description references Issue #7, its milestone is `First Management Demo`, and its Project #6 item is `In Progress` with Priority `P0` and Demo Phase `Week 2`. Issue #7 is also `In Progress` and remains open because the real navigation-scenario acceptance evidence is not yet complete.
 
 ## In Progress
 
-- No implementation is in progress after the Unit 02 completion gate. The branch is ready for review; generated CSV files remain outside source control.
+- No implementation is in progress after the Unit 02 completion gate. Owner review is complete and PR #19 is open for merge; generated CSV files remain outside source control.
 
 ## Next Up
 
@@ -70,7 +72,7 @@ Before the first demo, execute the shortest stable vertical slice. Existing unit
 
 Immediate feature-unit backlog order:
 
-1. **Review and merge Unit 02:** inspect `feat/02-perf-instrumentation`, preserve the recorded limitations, and merge only after owner acceptance.
+1. **Merge Unit 02:** merge PR #19 after its required issue, milestone, and Project metadata have been verified, preserving the recorded limitations.
 2. **Unit 01b — Local vector and MapLibre Native feasibility:** use the Unit 02 instrumentation to prove or disprove the Qt 5.13.2 `mapboxgl` local vector path, bearing/tilt, dense-urban performance, and MapLibre switch criteria.
 3. Resume the demo vertical slice and unit 03 real-data pipeline using the owner-reviewed outcomes.
 
