@@ -31,7 +31,8 @@
 
 ## CMake
 
-- Use CMake with the Ninja generator. The exact configure/build commands remain TBD until unit 01 produces a passing build.
+- Use CMake with the Ninja generator. The validated Release configure command is `cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/home/viet/Qt/5.13.2/gcc_64 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache`; build with `cmake --build build --parallel`.
+- The root `Makefile` is a convenience wrapper around the validated CMake/Ninja workflow, not a second build system. Keep CMake authoritative and expose machine-specific paths through overridable variables such as `QT_PREFIX`, `BUILD_DIR`, and `BUILD_TYPE`.
 - Target Qt 5 explicitly with `find_package(Qt5 REQUIRED COMPONENTS ...)` and `Qt5::` imported targets.
 - Use the Qt 5-compatible building blocks `CMAKE_AUTOMOC`, `CMAKE_AUTORCC`, `qt5_add_resources`, and `add_executable` as required by the project layout.
 - Do not use Qt 6-only CMake APIs, including `qt_add_executable`, `qt_add_qml_module`, `qt_standard_project_setup`, or other unverified `qt_*` convenience APIs introduced after Qt 5.13.

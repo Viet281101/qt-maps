@@ -13,9 +13,9 @@
 | Platform | Linux desktop | Committed | Development and target platform |
 | UI/runtime | Qt 5.13.2, QML, Qt Quick 2.13 | Committed | Application lifecycle and user interface |
 | Language | C++ with C++14 as the proposed project level | Qt/C++ committed; language level proposed | Native application and service integration |
-| Build system | CMake with Ninja | Committed; revalidate after unit 01 | Primary configure/generate/build path; the exact working command remains TBD until the spike succeeds |
-| Raster map | QtLocation `osm` plugin if present and compatible | Proposed; verify in unit 01 | Minimal raster display and fallback path |
-| Vector map | MapLibre Native with a Qt-compatible integration | Proposed; spike required | Vector rendering and navigation presentation |
+| Build system | CMake with Ninja | Committed; Release path validated in accepted unit 01 environment scope | Primary configure/generate/build path; exact commands are recorded in `progress-tracker.md` and `code-standards.md` |
+| Raster map | QtLocation `osm` plugin | Diagnostic localhost path verified; production data path pending unit 03 | Minimal raster display and fallback path |
+| Vector map | Installed QtLocation `mapboxgl` plugin first; MapLibre Native as a conditional alternative | Spike required in unit 01b | Local vector rendering, camera behavior, and navigation presentation |
 | Map source data | Geofabrik Vietnam OSM PBF | Proposed | Input for map, routing, and search datasets |
 | Vector pipeline | Planetiler to MBTiles | Proposed | Generate vector tiles |
 | Tile access | Direct MBTiles through `QSqlDatabase`, or Martin/mbtileserver child process | Proposed | Serve or read local tiles |
@@ -75,12 +75,13 @@ Large generated datasets, caches, routing graphs, and third-party artifacts must
 7. Generated data, vendor internals, and third-party artifacts are not hand-edited as application source.
 8. Architecture entries retain their decision status until evidence is recorded and the project owner approves a change.
 9. Build files must use Qt 5 CMake integration only: `find_package(Qt5 ...)`, `CMAKE_AUTOMOC`/`CMAKE_AUTORCC`, `qt5_add_resources`, and `add_executable`. Qt 6-only APIs such as `qt_add_executable`, `qt_add_qml_module`, and `qt_standard_project_setup` are forbidden.
+10. QtMaps must not download raster or vector tiles from `tile.openstreetmap.org` or any other public tile server, including small test downloads. Real map tiles must come from the project data pipeline based on an owner-approved Geofabrik PBF, Planetiler configuration, and localhost tile service. Unit 01 may use only clearly labeled, locally generated diagnostic tiles that contain no geographic map data; unit 01b may generate a bounded real-data spike only after its explicit download/tool approval gate.
 
 ## Environment Provisioning Decisions
 
 - Provision Qt 5.13.2 `gcc_64` with `aqtinstall` under `~/Qt`; this method, version, architecture, and destination were selected by the project owner.
 - Before installing Qt, run `aqt list-qt linux desktop --modules 5.13.2 gcc_64`, present the module list to the owner, and wait for explicit installation approval.
-- Qt Quick, QtLocation, QtPositioning, and the `osm`/`mapboxgl` geoservice plugins remain unverified until the downloaded installation is inspected and loaded.
+- Qt Quick, QtLocation, QtPositioning, and the `osm`/`mapboxgl` geoservice plugins were inspected and loaded in unit 01. This confirms the installed environment and bounded provider/raster probes, not production vector feasibility.
 - After installation, use `ldd` to identify missing system libraries rather than assuming the archive is self-contained.
 - Qt 5.13.2 compatibility with OpenSSL 1.1 versus the host's OpenSSL 3 remains a spike question for online HTTPS. Offline localhost HTTP does not require TLS, so this risk does not by itself block the offline path.
 - The owner approved installation of Ninja and ccache, but the agent must only print the required `sudo apt` command; the owner runs it manually.
@@ -89,6 +90,6 @@ Large generated datasets, caches, routing graphs, and third-party artifacts must
 
 - Linux development machine: Dell Latitude 5480, Intel Core i5-6300U, 16 GiB RAM, and 512 GB NVMe SSD.
 - GCC/G++ 13.3.0, CMake 3.28.3, and GNU Make 4.3 are available.
-- qmake/Qt, Ninja, Clang, and ccache are not currently installed or not available on `PATH`; Ninja and ccache installation is owner-approved but not yet performed.
+- qmake/Qt and Clang are not available on `PATH`; Qt is intentionally addressed by absolute path or `CMAKE_PREFIX_PATH`. Owner-installed Ninja 1.11.1 and ccache 4.9.1 are available on `PATH`.
 - Intel HD Graphics 520 (Skylake GT2), Mesa 25.2.8, direct rendering enabled, and OpenGL up to 4.6.
-- Qt installation remains unauthorized until the owner reviews the module list and exact command. Ninja and ccache installation is approved only for the owner to execute from the printed command.
+- Qt 5.13.2 installation under `/home/viet/Qt/5.13.2/gcc_64` is complete and owner-approved. The owner manually installed Ninja and ccache; no agent-run `sudo` command was used.

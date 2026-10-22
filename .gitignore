@@ -27,7 +27,6 @@ qrc_*.cpp
 ui_*.h
 *.qmlc
 *.jsc
-Makefile*
 *build-*
 build/
 *.qm
@@ -57,3 +56,7 @@ compile_commands.json
 
 # aqtinstall local query/install log
 aqtinstall.log
+
+# Generated unit 01 diagnostic tiles/caches (not real geographic map data)
+/generated/
+__pycache__/

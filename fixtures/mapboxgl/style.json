@@ -1,0 +1,14 @@
+{
+  "version": 8,
+  "name": "QtMaps unit 01 localhost style-only probe",
+  "sources": {},
+  "layers": [
+    {
+      "id": "diagnostic-background",
+      "type": "background",
+      "paint": {
+        "background-color": "#264653"
+      }
+    }
+  ]
+}
