@@ -22,7 +22,7 @@
 | Routing | Valhalla child process | Proposed | Offline route, maneuvers, and map matching |
 | Search | SQLite FTS5 index | Proposed | Offline geocoding/search |
 | Position simulation | QtPositioning and route/NMEA replay | Proposed | Simulated GPS for navigation |
-| Performance | Frame signal instrumentation plus CSV process logger | Committed capability; implementation pending | Capture FPS, RAM, and CPU for the app process tree |
+| Performance | `QQuickWindow::frameSwapped` metrics plus Linux `/proc` process-tree CSV logger | Implemented and verified in unit 02 | Capture FPS, RAM, and CPU for the app process tree |
 
 No engine or library marked Proposed or Spike required becomes committed merely by appearing in this table.
 
@@ -63,6 +63,7 @@ Large generated datasets, caches, routing graphs, and third-party artifacts must
 - Service endpoints default to loopback-only access unless a later requirement explicitly changes this boundary.
 - Thread and worker counts must be configurable and conservatively limited for the two-core/four-thread reference CPU.
 - Performance totals include the main process and every child service started by it.
+- Unit 02 performance collection uses bounded GUI-thread frame counters plus a dedicated worker thread for `/proc` enumeration, parsing, directory creation, and CSV writes. `PerformanceMonitor` owns the worker, requests cancellation, flushes output, and performs a bounded shutdown.
 
 ## Invariants
 

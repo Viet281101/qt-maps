@@ -6,6 +6,8 @@ QtMaps uses a map-first, familiar navigation layout inspired by common desktop m
 
 Exact colors, fonts, radii, spacing, icon set, component dimensions, and accessibility contrast targets have not been selected. They remain TODO items in `progress-tracker.md`; do not invent final values during implementation.
 
+Unit 02 may introduce a minimal `qml/theme/Theme.qml` singleton so the performance overlay consumes semantic tokens. Values used by that diagnostic overlay are provisional implementation tokens, not the final visual-system decision, and must remain isolated behind the singleton.
+
 ## QML Theme Singleton
 
 Reusable visual tokens belong in a QML singleton, planned as `qml/theme/Theme.qml`. Components consume semantic properties rather than duplicating literals.

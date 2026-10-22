@@ -1,10 +1,13 @@
 {
+  "C_Cpp.default.compileCommands": "${workspaceFolder}/build/compile_commands.json",
   "cSpell.words": [
     "AUTOMOC",
     "AUTORCC",
     "Geofabrik",
     "mapboxgl",
     "NMEA",
+    "qobject",
+    "QTMAPS",
     "serialnmea"
   ]
 }
