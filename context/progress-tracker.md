@@ -4,7 +4,7 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Unit 01b local-vector and MapLibre Native feasibility is in progress locally on `feat/01b-vector-feasibility-spike`, branched from Unit 02 because it directly depends on instrumentation not yet in `main`. The real bounded-Hanoi proof and three-run Qt 5.13.2 `mapboxgl` benchmark are complete. The required MapLibre comparison is paused at the explicit Qt 5.15 installation gate; no package has been installed and the project baseline has not changed. Neither the Unit 01b branch nor its commits have been pushed.
+- Unit 01b local-vector and MapLibre Native feasibility is complete locally on `feat/01b-vector-feasibility-spike`, branched from Unit 02 because it directly depends on instrumentation not yet in `main`. Both renderers passed the bounded real-Hanoi proof and three-run comparison. The evidence recommends Qt 5.15.13 plus MapLibre Native Qt v3.0.0 for the demo, with raster tiles as the fallback, but the project-wide baseline remains Qt 5.13.2 until the owner approves the migration. Neither the Unit 01b branch nor its commits have been pushed.
 
 ## Current Goal
 
@@ -74,10 +74,17 @@ Update this file after every meaningful implementation change.
 - Verified the real Release probe end to end: roads and buildings rendered; `HÀ NỘI` displayed with diacritics; OSM/ODbL attribution was visible; requested/observed bearing and tilt matched; and the post-fix socket trace contained only AF_INET connections to `127.0.0.1:8766`.
 - Completed three real-data Qt 5.13.2 `mapboxgl` runs using the default render loop, three-second warm-up, 15-second recording, one-second samples, 960x640 window, and Unit 02 instrumentation. Median values were 24.362 average FPS, 5.000 interval 1% low, 6.600% CPU with 100% equal to one logical core, 177.087 MiB mean RSS, and 177.879 MiB max RSS. The app process tree excluded the separately launched Python static server.
 - Downloaded and SHA-256-verified Qt Online Installer 4.11.0 under ignored `generated/unit-01b/tools/`, but left it non-executable and did not run it. System Qt 5.15.13 packages are also available; owner approval is required before either installation route.
+- Dry-ran the six owner-approved, non-metapackage Qt 5.15.13 development packages with `--no-install-recommends`: 0 upgraded, 32 newly installed, 0 removed, and 1 held back. The dependency set was limited to required Qt runtime/tooling libraries plus `libegl-dev`, `libglu1-mesa-dev`, and `libxext-dev`; no unrelated upgrade or removal occurred. The installation completed using 66.6 MB of additional system disk.
+- Verified side-by-side Qt selection without changing shell startup files or global `PATH`: Qt 5.13.2 remains at `/home/viet/Qt/5.13.2/gcc_64`, while Qt 5.15.13 is selected explicitly with `/usr/lib/qt5/bin/qmake` and `CMAKE_PREFIX_PATH=/usr`. The comparison used isolated extracted QML runtime and SQLite plugin payloads under ignored `generated/unit-01b/` because they were not part of the approved system package command.
+- Rechecked graphics before benchmarking. `glxinfo -B` reported direct rendering on the real Mesa Intel HD Graphics 520 driver, not llvmpipe. `QSG_INFO=1` reported the threaded Qt Quick render loop with a 16.66 ms vsync animation driver.
+- Built the signed MapLibre Native Qt v3.0.0 tag at commit `d929c783737120787b43417d9ef05da88da75dfd` with Qt 5.15.13, GCC 13.3.0, Release configuration, and exactly `make -j2`. The build took 16:01.44 wall-clock, peaked at 1,149,676 KiB RSS, and produced a 92 MiB build tree plus a 12 MiB install tree. Ubuntu does not package `qtlocation5-private-dev`; the isolated build used MD5-verified QtLocation 5.15.13 private headers without copying them into `/usr`.
+- Generalized the existing vector probe so both Qt 5.13.2 `mapboxgl` and Qt 5.15.13 MapLibre use the same localhost style, glyphs, sprite, Hanoi tiles, camera sequence, and Unit 02 instrumentation. The MapLibre run rendered real roads/buildings, displayed `HÀ NỘI` with diacritics, matched requested bearing/tilt values, and its socket trace contained only connections to `127.0.0.1:8766`.
+- Completed three comparable real-data runs for each renderer. Qt 5.13.2 `mapboxgl` medians were 24.362 average FPS, 5.000 interval 1% low, 6.600% CPU, and 177.087 MiB mean RSS. Qt 5.15.13 MapLibre medians were 33.769 average FPS, 5.000 interval 1% low, 10.440% CPU, and 209.778 MiB mean RSS. CPU uses one logical core as 100%; the separately launched localhost server is excluded from both app-process-tree measurements.
+- Traced the 4-to-6 FPS interval lows to the on-demand scene and the coarse 14-to-15-sample interval-percentile definition: the minimum one-second samples occurred during no-action phases at low CPU and recovered during camera motion. This is frame pacing/measurement behavior rather than sustained tile loading or GPU saturation; unit 03 should add a continuous-motion scenario before treating it as perceived stutter.
 
 ## In Progress
 
-- Unit 01b is paused before any Qt 5.15 or MapLibre installation, as required. The owner must choose and approve either Ubuntu Qt 5.15.13 development packages or the downloaded Qt Online Installer route. After a supported kit exists, build an isolated MapLibre Native Qt v3.0.0 probe, retain the current probe, and run the same three real-data scenarios before recommending a renderer or project-wide Qt migration.
+- Unit 01b implementation and evidence are complete locally. Owner review is required before changing the project baseline from Qt 5.13.2/QtLocation `mapboxgl` to Qt 5.15.13/MapLibre Native Qt v3.0.0, adopting the dynamic-link packaging approach, or starting unit 03 from that renderer decision.
 
 ## Next Up
 
@@ -86,9 +93,8 @@ Before the first demo, execute the shortest stable vertical slice. Existing unit
 Immediate feature-unit backlog order:
 
 1. **Review Unit 02 and current local commits:** Unit 02 remains unmerged in PR #19, while Unit 01b intentionally inherits its instrumentation. Do not push or merge either branch without owner review.
-2. **Approve the Unit 01b Qt route:** choose Ubuntu Qt 5.15.13 development packages or the isolated Qt Online Installer route; no installation starts without approval.
-3. **Finish Unit 01b after approval:** build the isolated MapLibre v3.0.0 comparison, run the same three Release scenarios, and make the owner-reviewed renderer/Qt go-or-no-go decision.
-4. Resume the demo vertical slice and unit 03 production data pipeline using the reviewed outcome.
+2. **Review the Unit 01b recommendation:** approve or reject Qt 5.15.13 plus MapLibre Native Qt v3.0.0 as the demo baseline, the LGPL-compatible dynamic-link packaging plan, and a continuous-motion benchmark gate.
+3. **Start the minimum unit 03 pipeline after approval:** make the bounded Hanoi data generation and localhost service reproducible, define the renderer/backend contract, preserve a raster fallback, and add a continuous navigation workload before UI contracts are frozen.
 
 The demo delivery sequence remains:
 
@@ -114,8 +120,8 @@ After the demo, resume the ten-unit plan and close every deferred verification g
 ### Technical and Product
 
 5. **Resolved for unit 01 environment scope:** Qt Quick/QtLocation compiles and runs with GCC 13.3.0 in Release mode, and the `osm` plugin renders the diagnostic localhost raster.
-6. **Partially resolved in unit 01b:** the installed Qt 5.13.2 `mapboxgl` plugin renders bounded real Hanoi data, Vietnamese labels, and tested bearing/tilt with median 24.362 average FPS, 5.000 interval 1% low, 6.600% app CPU, and 177.087 MiB app RSS. MapLibre remains unmeasured, so renderer selection is open.
-7. **Unit 01b installation gate:** approve either the documented Ubuntu Qt 5.15.13 package command or the isolated Qt Online Installer route. Then verify/build MapLibre Native Qt v3.0.0 and collect the same three-run comparison. Do not change the project baseline merely to run the isolated probe.
+6. **Resolved by measurement; owner decision pending:** Qt 5.13.2 `mapboxgl` and Qt 5.15.13 MapLibre both render the bounded real Hanoi data, Vietnamese labels, and tested bearing/tilt. Their median average FPS values were 24.362 and 33.769 respectively; median app CPU was 6.600% and 10.440%, and median mean RSS was 177.087 MiB and 209.778 MiB. The evidence recommends MapLibre, but this does not itself authorize a project-wide migration.
+7. **Unit 01b decision gate:** approve or reject Qt 5.15.13/MapLibre as the demo baseline, the LGPL-compatible dynamic-link packaging approach, and the continuous-motion benchmark required before UI performance is considered stable.
 8. Is zoom 16 practical for the detailed Hanoi/Red River Delta dataset after storage, generation-time, visual-quality, and performance measurements?
 9. Which legally usable orthography source should be selected, and what license, attribution, region, zoom range, and storage cap apply?
 10. How complete and consistent are Vietnam OSM `ref` tags for national roads (QL) and provincial roads (DT/ĐT), and what routing behavior is acceptable where tags are missing?
@@ -141,8 +147,8 @@ After the demo, resume the ten-unit plan and close every deferred verification g
 
 ### Proposed
 
-- Evaluate the installed QtLocation `mapboxgl` plugin for the bounded local-vector path in unit 01b. Consider MapLibre Native with a Qt-compatible integration only if the documented switch criteria are triggered; neither vector backend is committed yet. Use QtLocation `osm` as the verified diagnostic raster path.
-- Evaluate MapLibre Native Qt v3.0.0 with Qt 5.15.x as the lowest-migration probe path. Compare it against the existing Qt 5.13.2 `mapboxgl` probe before proposing any project-wide Qt or renderer change; Qt 6.5+ remains an alternative requiring a broader application migration.
+- Adopt Qt 5.15.13 plus MapLibre Native Qt v3.0.0 as the demo vector-rendering baseline, subject to owner approval. The measured implementation exceeds the provisional 30 FPS target while retaining acceptable CPU/RSS headroom. Preserve QtLocation raster tiles as a fallback and keep the Qt 5.13.2 probe as reproducible comparison evidence.
+- Use dynamic linking and an explicit LGPL-compatible packaging plan for MapLibre/Qt dependencies. Do not copy the private-header build overlay into the application or treat it as a runtime dependency. Qt 6.5+ remains a later migration option rather than a requirement for the first demo.
 - Use Geofabrik Vietnam PBF, Planetiler-generated vector MBTiles, raster tiles, and either Martin/mbtileserver or direct `QSqlDatabase` MBTiles access.
 - Use Valhalla locally for routing, maneuvers, and map matching, with car costing oriented toward `trunk`, `primary`, and `secondary` roads.
 - Build offline geocoding with SQLite FTS5.
@@ -152,15 +158,15 @@ After the demo, resume the ten-unit plan and close every deferred verification g
 ### Investigation Required
 
 - Legal orthography source and bounded coverage.
-- MapLibre Native Qt v3.0.0 compatibility with the selected Qt 5.15 kit, its prebuilt Qt 5.15.2 artifact, and the reference Intel HD 520/Mesa stack.
+- Long-duration MapLibre stability, continuous-motion frame pacing, reproducible package construction, and deployment on the eventual management-demo machine.
 - Qt 5.13.2 compatibility with GCC 13 for Qt Quick/QtLocation and with system OpenSSL 3 for real online HTTPS. A console probe compiled, but OpenSSL 3 produced unresolved-symbol warnings; offline localhost HTTP is not blocked by this TLS question.
 - Vietnam OSM national/provincial road-reference completeness.
 
 ## Environment Baseline
 
 - Reference machine: Dell Latitude 5480; Intel Core i5-6300U (2 cores/4 threads); 16 GiB RAM; 512 GB NVMe SSD.
-- Available: Linux, GCC/G++ 13.3.0, CMake 3.28.3, GNU Make 4.3, `aqtinstall` 3.3.0, and Qt 5.13.2 `gcc_64` under `/home/viet/Qt/5.13.2/gcc_64`.
-- Not currently available on `PATH`: qmake/Qt and Clang. This is intentional for Qt; use its absolute path or `CMAKE_PREFIX_PATH`. Ninja 1.11.1 and ccache 4.9.1 are available on `PATH` after owner-executed installation.
+- Available: Linux, GCC/G++ 13.3.0, CMake 3.28.3, GNU Make 4.3, `aqtinstall` 3.3.0, Qt 5.13.2 `gcc_64` under `/home/viet/Qt/5.13.2/gcc_64`, and the explicitly approved Qt 5.15.13 development packages under `/usr`.
+- Select Qt 5.13.2 with `/home/viet/Qt/5.13.2/gcc_64/bin/qmake` or `CMAKE_PREFIX_PATH=/home/viet/Qt/5.13.2/gcc_64`; select Qt 5.15.13 with `/usr/lib/qt5/bin/qmake` or `CMAKE_PREFIX_PATH=/usr`. `/usr/bin/qmake` now resolves to Qt 5.15.13 as a package-managed alternative, but no shell startup file or global `PATH` value was changed. Ninja 1.11.1 and ccache 4.9.1 remain available on `PATH`; Clang is not required by the validated path.
 - Graphics: Intel HD Graphics 520 (Skylake GT2), Mesa 25.2.8, direct rendering enabled, OpenGL up to 4.6.
 
 ## Session Notes
