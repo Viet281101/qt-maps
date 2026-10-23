@@ -73,8 +73,12 @@ int main(int argc, char *argv[])
 
     const QStringList providers = QGeoServiceProvider::availableServiceProviders();
     qInfo().noquote() << "availableServiceProviders=" << providers.join(QLatin1Char(','));
-    probeProvider(QStringLiteral("osm"));
-    probeProvider(QStringLiteral("mapboxgl"));
+    if (useMapboxGlProbe) {
+        qInfo() << "providerConstructionProbe=skipped for localhost-only vector mode";
+    } else {
+        probeProvider(QStringLiteral("osm"));
+        probeProvider(QStringLiteral("mapboxgl"));
+    }
 
     QQmlApplicationEngine engine;
     qtmaps::map::CameraProbeController cameraProbeController;

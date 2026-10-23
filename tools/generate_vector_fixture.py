@@ -21,10 +21,12 @@ EXTENT = 4096
 
 PIXEL_GLYPHS = {
     "A": ("01110", "10001", "10001", "11111", "10001", "10001", "10001"),
+    "À": ("00100", "01000", "01110", "10001", "11111", "10001", "10001", "10001"),
     "H": ("10001", "10001", "10001", "11111", "10001", "10001", "10001"),
     "I": ("11111", "00100", "00100", "00100", "00100", "00100", "11111"),
     "N": ("10001", "11001", "11001", "10101", "10011", "10011", "10001"),
     "O": ("01110", "10001", "10001", "10001", "10001", "10001", "01110"),
+    "Ộ": ("00100", "01110", "10001", "10001", "10001", "10001", "01110", "00100"),
 }
 
 
@@ -219,13 +221,20 @@ def glyph_message(codepoint, character):
 
 
 def write_glyphs(output):
-    fontstack = field_bytes(1, b"QtMapsSans") + field_bytes(2, b"0-255")
-    for character in " AHINO":
-        fontstack += field_bytes(3, glyph_message(ord(character), character))
-    glyphs = field_bytes(1, fontstack)
-    path = output / "fonts" / "QtMapsSans" / "0-255.pbf"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(glyphs)
+    characters = sorted(set(" AHINOÀỘ"), key=ord)
+    ranges = {}
+    for character in characters:
+        start = ord(character) // 256 * 256
+        ranges.setdefault(start, []).append(character)
+    for start, range_characters in ranges.items():
+        range_name = f"{start}-{start + 255}"
+        fontstack = field_bytes(1, b"QtMapsSans") + field_bytes(2, range_name.encode("ascii"))
+        for character in range_characters:
+            fontstack += field_bytes(3, glyph_message(ord(character), character))
+        glyphs = field_bytes(1, fontstack)
+        path = output / "fonts" / "QtMapsSans" / f"{range_name}.pbf"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(glyphs)
 
 
 def write_style(output, real_data=False):
@@ -276,11 +285,13 @@ def write_style(output, real_data=False):
                 "type": "symbol",
                 "source": "qtmaps",
                 "source-layer": source_layers["labels"],
-                "filter": ["==", "class", "city"] if real_data else ["==", "kind", "label"],
+                "filter": ["all", ["==", "class", "city"], ["==", "name", "Hà Nội"]]
+                if real_data
+                else ["==", "kind", "label"],
                 "layout": {
                     "icon-image": "marker",
                     "icon-size": 0.75,
-                    "text-field": "HANOI" if real_data else "{name}",
+                    "text-field": "HÀ NỘI" if real_data else "{name}",
                     "text-font": ["QtMapsSans"],
                     "text-size": 16,
                     "text-offset": [0, 1.2],
