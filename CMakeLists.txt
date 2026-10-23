@@ -55,6 +55,13 @@ add_library(qtmaps_perf STATIC
 target_include_directories(qtmaps_perf PUBLIC "${CMAKE_SOURCE_DIR}/src")
 target_link_libraries(qtmaps_perf PUBLIC Qt5::Core Qt5::Quick)
 
+add_library(qtmaps_map_probe STATIC
+    src/map/CameraProbeController.cpp
+    src/map/CameraProbeController.h
+)
+target_include_directories(qtmaps_map_probe PUBLIC "${CMAKE_SOURCE_DIR}/src")
+target_link_libraries(qtmaps_map_probe PUBLIC Qt5::Core)
+
 qt5_add_resources(QTMAPS_RESOURCES resources.qrc)
 
 add_executable(qtmaps
@@ -63,6 +70,7 @@ add_executable(qtmaps
 )
 
 target_link_libraries(qtmaps PRIVATE
+    qtmaps_map_probe
     qtmaps_perf
     Qt5::Core
     Qt5::Gui
@@ -78,4 +86,8 @@ if(BUILD_TESTING)
     add_executable(qtmaps_perf_tests tests/perf/tst_Performance.cpp)
     target_link_libraries(qtmaps_perf_tests PRIVATE qtmaps_perf Qt5::Test)
     add_test(NAME qtmaps_perf_tests COMMAND qtmaps_perf_tests)
+
+    add_executable(qtmaps_map_probe_tests tests/map/tst_CameraProbeController.cpp)
+    target_link_libraries(qtmaps_map_probe_tests PRIVATE qtmaps_map_probe Qt5::Test)
+    add_test(NAME qtmaps_map_probe_tests COMMAND qtmaps_map_probe_tests)
 endif()

@@ -11,8 +11,8 @@ PYTHON ?= python3
 QMAKE := $(QT_PREFIX)/bin/qmake
 QTMAPS := $(BUILD_DIR)/qtmaps
 
-.PHONY: help requirements configure build test run diagnostic-tiles \
-	serve-diagnostic-tiles serve-mapboxgl-style run-mapboxgl-probe clean
+.PHONY: help requirements configure build test run diagnostic-tiles vector-fixture \
+	serve-diagnostic-tiles serve-vector-fixture run-mapboxgl-probe clean
 
 help:
 	@echo "QtMaps development targets"
@@ -23,8 +23,9 @@ help:
 	@echo "  make run                   Build and run (fixture server must be separate)"
 	@echo "  make diagnostic-tiles      Generate the non-geographic XYZ fixture"
 	@echo "  make serve-diagnostic-tiles Serve the fixture on 127.0.0.1:8765"
-	@echo "  make serve-mapboxgl-style  Serve the style probe on 127.0.0.1:8766"
-	@echo "  make run-mapboxgl-probe    Run probe (style server must be separate)"
+	@echo "  make vector-fixture        Generate the synthetic local MVT/style/glyph/sprite fixture"
+	@echo "  make serve-vector-fixture  Serve the vector fixture on 127.0.0.1:8766"
+	@echo "  make run-mapboxgl-probe    Run probe (vector fixture server must be separate)"
 	@echo "  make clean                 Clean compiled outputs through CMake"
 	@echo
 	@echo "Overrides: QT_PREFIX, BUILD_DIR, BUILD_TYPE, CMAKE, PYTHON"
@@ -64,11 +65,17 @@ diagnostic-tiles:
 serve-diagnostic-tiles: diagnostic-tiles
 	"$(PYTHON)" -m http.server 8765 --bind 127.0.0.1 --directory generated/diagnostic-tiles
 
-serve-mapboxgl-style:
-	"$(PYTHON)" -m http.server 8766 --bind 127.0.0.1 --directory fixtures/mapboxgl
+vector-fixture:
+	"$(PYTHON)" tools/generate_vector_fixture.py
+
+serve-vector-fixture: vector-fixture
+	"$(PYTHON)" -m http.server 8766 --bind 127.0.0.1 --directory generated/vector-fixture
 
 run-mapboxgl-probe: build
-	"$(QTMAPS)" --mapboxgl-probe
+	"$(QTMAPS)" --mapboxgl-probe \
+		--dataset-id synthetic-vector-mechanics-v1 \
+		--dataset-coverage "synthetic local MVT around Hanoi coordinates; not geographic data" \
+		--network-mode localhost-only
 
 clean:
 	@if test -d "$(BUILD_DIR)"; then \

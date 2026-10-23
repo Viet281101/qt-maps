@@ -12,6 +12,7 @@
 
 #include <algorithm>
 
+#include "map/CameraProbeController.h"
 #include "perf/PerformanceMonitor.h"
 
 #ifndef QTMAPS_BUILD_ID
@@ -49,7 +50,8 @@ int main(int argc, char *argv[])
     parser.setApplicationDescription(QStringLiteral("QtMaps Qt 5.13 diagnostic application"));
     parser.addHelpOption();
     parser.addVersionOption();
-    parser.addOption({QStringLiteral("mapboxgl-probe"), QStringLiteral("Run the Mapbox GL style-only probe")});
+    parser.addOption({QStringLiteral("mapboxgl-probe"), QStringLiteral("Run the Mapbox GL local-resource probe")});
+    parser.addOption({QStringLiteral("vector-style-url"), QStringLiteral("Mapbox GL local style URL"), QStringLiteral("url"), QStringLiteral("http://127.0.0.1:8766/style.json")});
     parser.addOption({QStringLiteral("blank-probe"), QStringLiteral("Run the blank-window performance probe")});
     parser.addOption({QStringLiteral("disable-instrumentation"), QStringLiteral("Disable frame and process instrumentation")});
     parser.addOption({QStringLiteral("automated-pan-zoom"), QStringLiteral("Run the deterministic raster pan/zoom sequence")});
@@ -74,6 +76,7 @@ int main(int argc, char *argv[])
     probeProvider(QStringLiteral("mapboxgl"));
 
     QQmlApplicationEngine engine;
+    qtmaps::map::CameraProbeController cameraProbeController;
     qtmaps::perf::PerformanceMonitor performanceMonitor;
     QVariantMap metadata;
     metadata.insert(QStringLiteral("scenario"), parser.value(QStringLiteral("scenario")));
@@ -91,16 +94,22 @@ int main(int argc, char *argv[])
     performanceMonitor.setSamplingInterval(parser.value(QStringLiteral("benchmark-interval")).toInt());
     performanceMonitor.setWarmupSeconds(parser.value(QStringLiteral("benchmark-warmup")).toInt());
     engine.rootContext()->setContextProperty(QStringLiteral("performanceMonitor"), &performanceMonitor);
+    engine.rootContext()->setContextProperty(QStringLiteral("cameraProbeController"),
+                                             &cameraProbeController);
     engine.rootContext()->setContextProperty(QStringLiteral("instrumentationEnabled"), instrumentationEnabled);
     engine.rootContext()->setContextProperty(QStringLiteral("benchmarkAutomation"),
                                              parser.isSet(QStringLiteral("automated-pan-zoom")));
+    engine.rootContext()->setContextProperty(QStringLiteral("vectorStyleUrl"),
+                                             parser.value(QStringLiteral("vector-style-url")));
+    engine.rootContext()->setContextProperty(QStringLiteral("datasetLabel"),
+                                             parser.value(QStringLiteral("dataset-id")));
 
     const QUrl qmlUrl(useMapboxGlProbe
                           ? QStringLiteral("qrc:/qml/MapboxGlProbe.qml")
                           : useBlankProbe ? QStringLiteral("qrc:/qml/BlankProbe.qml")
                                           : QStringLiteral("qrc:/qml/Main.qml"));
     qInfo().noquote() << "probeMode="
-                      << (useMapboxGlProbe ? "mapboxgl-style-only"
+                      << (useMapboxGlProbe ? "mapboxgl-local-resources"
                                           : useBlankProbe ? "blank-performance"
                                                           : "osm-diagnostic-raster");
     engine.load(qmlUrl);
