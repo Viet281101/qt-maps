@@ -51,7 +51,8 @@ int main(int argc, char *argv[])
     parser.addHelpOption();
     parser.addVersionOption();
     parser.addOption({QStringLiteral("mapboxgl-probe"), QStringLiteral("Run the Mapbox GL local-resource probe")});
-    parser.addOption({QStringLiteral("vector-style-url"), QStringLiteral("Mapbox GL local style URL"), QStringLiteral("url"), QStringLiteral("http://127.0.0.1:8766/style.json")});
+    parser.addOption({QStringLiteral("maplibre-probe"), QStringLiteral("Run the MapLibre local-resource probe")});
+    parser.addOption({QStringLiteral("vector-style-url"), QStringLiteral("Local vector style URL"), QStringLiteral("url"), QStringLiteral("http://127.0.0.1:8766/style.json")});
     parser.addOption({QStringLiteral("real-vector-data"), QStringLiteral("Label the vector probe as real OSM-derived data with attribution")});
     parser.addOption({QStringLiteral("blank-probe"), QStringLiteral("Run the blank-window performance probe")});
     parser.addOption({QStringLiteral("disable-instrumentation"), QStringLiteral("Disable frame and process instrumentation")});
@@ -68,12 +69,14 @@ int main(int argc, char *argv[])
     parser.process(application);
 
     const bool useMapboxGlProbe = parser.isSet(QStringLiteral("mapboxgl-probe"));
+    const bool useMapLibreProbe = parser.isSet(QStringLiteral("maplibre-probe"));
+    const bool useVectorProbe = useMapboxGlProbe || useMapLibreProbe;
     const bool useBlankProbe = parser.isSet(QStringLiteral("blank-probe"));
     const bool instrumentationEnabled = !parser.isSet(QStringLiteral("disable-instrumentation"));
 
     const QStringList providers = QGeoServiceProvider::availableServiceProviders();
     qInfo().noquote() << "availableServiceProviders=" << providers.join(QLatin1Char(','));
-    if (useMapboxGlProbe) {
+    if (useVectorProbe) {
         qInfo() << "providerConstructionProbe=skipped for localhost-only vector mode";
     } else {
         probeProvider(QStringLiteral("osm"));
@@ -106,17 +109,25 @@ int main(int argc, char *argv[])
                                              parser.isSet(QStringLiteral("automated-pan-zoom")));
     engine.rootContext()->setContextProperty(QStringLiteral("vectorStyleUrl"),
                                              parser.value(QStringLiteral("vector-style-url")));
+    engine.rootContext()->setContextProperty(QStringLiteral("vectorPluginName"),
+                                             useMapLibreProbe ? QStringLiteral("maplibre")
+                                                                : QStringLiteral("mapboxgl"));
+    engine.rootContext()->setContextProperty(
+        QStringLiteral("vectorStyleParameterName"),
+        useMapLibreProbe ? QStringLiteral("maplibre.map.styles")
+                           : QStringLiteral("mapboxgl.mapping.additional_style_urls"));
     engine.rootContext()->setContextProperty(QStringLiteral("datasetLabel"),
                                              parser.value(QStringLiteral("dataset-id")));
     engine.rootContext()->setContextProperty(QStringLiteral("vectorDataReal"),
                                              parser.isSet(QStringLiteral("real-vector-data")));
 
-    const QUrl qmlUrl(useMapboxGlProbe
+    const QUrl qmlUrl(useVectorProbe
                           ? QStringLiteral("qrc:/qml/MapboxGlProbe.qml")
                           : useBlankProbe ? QStringLiteral("qrc:/qml/BlankProbe.qml")
                                           : QStringLiteral("qrc:/qml/Main.qml"));
     qInfo().noquote() << "probeMode="
-                      << (useMapboxGlProbe ? "mapboxgl-local-resources"
+                      << (useMapLibreProbe ? "maplibre-local-resources"
+                                          : useMapboxGlProbe ? "mapboxgl-local-resources"
                                           : useBlankProbe ? "blank-performance"
                                                           : "osm-diagnostic-raster");
     engine.load(qmlUrl);

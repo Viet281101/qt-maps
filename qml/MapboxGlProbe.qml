@@ -14,12 +14,12 @@ Window {
     property int automationStep: 0
 
     Plugin {
-        id: mapboxGlPlugin
-        name: "mapboxgl"
+        id: vectorPlugin
+        name: vectorPluginName
         allowExperimental: true
 
         PluginParameter {
-            name: "mapboxgl.mapping.additional_style_urls"
+            name: vectorStyleParameterName
             value: vectorStyleUrl
         }
         PluginParameter {
@@ -31,11 +31,11 @@ Window {
     Map {
         id: map
         anchors.fill: parent
-        plugin: mapboxGlPlugin
+        plugin: vectorPlugin
         center: QtPositioning.coordinate(21.0278, 105.8342)
         zoomLevel: 14
-        bearing: cameraProbeController.requestedBearing
-        tilt: cameraProbeController.requestedTilt
+        bearing: cameraProbeController ? cameraProbeController.requestedBearing : 0
+        tilt: cameraProbeController ? cameraProbeController.requestedTilt : 0
         gesture.enabled: true
         focus: true
 
@@ -54,16 +54,16 @@ Window {
 
         function selectLocalStyle() {
             if (supportedMapTypes.length === 0) {
-                console.warn("mapboxgl supportedMapTypes is empty")
+                console.warn(vectorPluginName + " supportedMapTypes is empty")
                 return
             }
             activeMapType = supportedMapTypes[0]
-            console.log("mapboxgl activeMapType=" + activeMapType.name
+            console.log(vectorPluginName + " activeMapType=" + activeMapType.name
                         + " description=" + activeMapType.description)
         }
 
         onMapReadyChanged: {
-            console.log("mapboxgl mapReady=" + mapReady
+            console.log(vectorPluginName + " mapReady=" + mapReady
                         + " error=" + error + " errorString=" + errorString)
             if (mapReady)
                 selectLocalStyle()
@@ -128,7 +128,8 @@ Window {
             anchors.centerIn: parent
             color: "white"
             text: qsTr("Dataset: %1\nCamera: %2 — C: next, N: north")
-                      .arg(datasetLabel).arg(cameraProbeController.stepName)
+                      .arg(datasetLabel)
+                      .arg(cameraProbeController ? cameraProbeController.stepName : "stopped")
         }
     }
 
