@@ -4,7 +4,7 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Unit 01b local-vector and MapLibre Native feasibility is in progress locally on `feat/01b-vector-feasibility-spike`, branched from Unit 02 because it directly depends on the instrumentation that is not yet in `main`. The synthetic mechanics proof is complete; real-data generation and the official benchmark are paused at the explicit download/tool approval gate. Neither the Unit 01b branch nor its commits have been pushed.
+- Unit 01b local-vector and MapLibre Native feasibility is in progress locally on `feat/01b-vector-feasibility-spike`, branched from Unit 02 because it directly depends on instrumentation not yet in `main`. The real bounded-Hanoi proof and three-run Qt 5.13.2 `mapboxgl` benchmark are complete. The required MapLibre comparison is paused at the explicit Qt 5.15 installation gate; no package has been installed and the project baseline has not changed. Neither the Unit 01b branch nor its commits have been pushed.
 
 ## Current Goal
 
@@ -66,10 +66,18 @@ Update this file after every meaningful implementation change.
 - Added a no-network synthetic local-vector mechanics fixture and Qt 5.13.2 `mapboxgl` probe. The Release app visibly rendered local MVT fill/line geometry, the project-owned sprite, and the limited `HANOI` glyph label; loopback logs returned HTTP 200 for style, vector, glyph, and sprite resources. The banner and metadata explicitly identify this as synthetic non-geographic evidence.
 - Added and tested a reusable camera probe controller. Requested and observed values matched at 45-degree bearing/30-degree tilt and 315-degree bearing/45-degree tilt; the installed plugin reported a 0-to-60-degree tilt range. `make test` now passes 2/2 CTest targets, including Qt Test coverage for bearing normalization, tilt bounds, sequence advancement, and reset.
 - Recorded the pre-approval evidence, one explicitly non-official `qtmaps-perf-v1` smoke run, exact candidate downloads/checksums/licenses/destinations/cleanup, and the MapLibre comparison in `docs/benchmarks/unit-01b-vector-feasibility.md`. MapLibre Native Qt v3.0.0 supports Qt 5.15 desktop but not QtLocation on Qt 5.13; current upstream no longer supports Qt 5, so a switch remains a high-burden conditional fallback rather than the default path.
+- Downloaded and SHA-256-verified the owner-approved Planetiler v0.10.2 jar under ignored `generated/unit-01b/tools/`; its digest is `f310bd0413e2e4512b27f4046d418664e8e1d3bf31603c2a70e23de06c167e4d` and its size is 93,278,824 bytes. `git status` confirmed that no downloaded artifact entered source control.
+- Added a real-data presentation mode for the existing local-vector probe. It emits a minimal style for Planetiler's built-in OpenMapTiles `building`, `transportation`, and `place` layers, keeps all resources on loopback, and displays OpenStreetMap/ODbL attribution without changing the synthetic-fixture behavior.
+- Inventoried the available Qt kits after the owner widened the feasibility scope: `/home/viet/Qt/5.13.2/gcc_64` provides Qt 5.13.2, and the system provides Qt 6.4.2 development libraries. No Qt 5.15 kit is installed; the system Qt 6 kit is below MapLibre Native Qt's current 6.5+ support floor. Qt 5.15.x plus MapLibre Native Qt v3.0.0 is the proposed minimum-migration comparison, pending installation approval.
+- Downloaded and MD5-verified the owner-approved 331,337,283-byte Geofabrik Vietnam PBF under ignored `generated/unit-01b/source/`. Its digest is `5f7388bb0dc809212fddf9cea071e513`; no PBF, jar, tile, installer, log, screenshot, or CSV entered source control.
+- Added the bounded `tools/data-pipeline/unit01b-hanoi.yml` schema and generated 226 real MVT tiles for `105.78,20.97,105.90,21.10`, zooms 12-15. Planetiler completed in 62.94 seconds with a 6 GiB heap limit, two workers, 2,635,164 KiB peak RSS, and 14,463,231 tile bytes.
+- Verified the real Release probe end to end: roads and buildings rendered; `HÀ NỘI` displayed with diacritics; OSM/ODbL attribution was visible; requested/observed bearing and tilt matched; and the post-fix socket trace contained only AF_INET connections to `127.0.0.1:8766`.
+- Completed three real-data Qt 5.13.2 `mapboxgl` runs using the default render loop, three-second warm-up, 15-second recording, one-second samples, 960x640 window, and Unit 02 instrumentation. Median values were 24.362 average FPS, 5.000 interval 1% low, 6.600% CPU with 100% equal to one logical core, 177.087 MiB mean RSS, and 177.879 MiB max RSS. The app process tree excluded the separately launched Python static server.
+- Downloaded and SHA-256-verified Qt Online Installer 4.11.0 under ignored `generated/unit-01b/tools/`, but left it non-executable and did not run it. System Qt 5.15.13 packages are also available; owner approval is required before either installation route.
 
 ## In Progress
 
-- Unit 01b needs owner approval before downloading the 315 MB Geofabrik Vietnam PBF or 93,278,824-byte Planetiler v0.10.2 jar. No listed command has been executed. After approval, validate a minimal roads/buildings/place-label schema, generate only the proposed dense-Hanoi bound, then collect three Release runs. Generated assets and CSV files remain outside source control.
+- Unit 01b is paused before any Qt 5.15 or MapLibre installation, as required. The owner must choose and approve either Ubuntu Qt 5.15.13 development packages or the downloaded Qt Online Installer route. After a supported kit exists, build an isolated MapLibre Native Qt v3.0.0 probe, retain the current probe, and run the same three real-data scenarios before recommending a renderer or project-wide Qt migration.
 
 ## Next Up
 
@@ -78,8 +86,8 @@ Before the first demo, execute the shortest stable vertical slice. Existing unit
 Immediate feature-unit backlog order:
 
 1. **Review Unit 02 and current local commits:** Unit 02 remains unmerged in PR #19, while Unit 01b intentionally inherits its instrumentation. Do not push or merge either branch without owner review.
-2. **Approve or reject Unit 01b inputs:** review the exact Geofabrik and Planetiler commands in `docs/benchmarks/unit-01b-vector-feasibility.md`.
-3. **Finish Unit 01b after approval:** validate the bounded schema, render real local Hanoi vector geometry/labels, run three Release scenarios, and make the owner-reviewed go/no-go decision.
+2. **Approve the Unit 01b Qt route:** choose Ubuntu Qt 5.15.13 development packages or the isolated Qt Online Installer route; no installation starts without approval.
+3. **Finish Unit 01b after approval:** build the isolated MapLibre v3.0.0 comparison, run the same three Release scenarios, and make the owner-reviewed renderer/Qt go-or-no-go decision.
 4. Resume the demo vertical slice and unit 03 production data pipeline using the reviewed outcome.
 
 The demo delivery sequence remains:
@@ -98,7 +106,7 @@ After the demo, resume the ten-unit plan and close every deferred verification g
 
 ### Environment Validation
 
-1. **Transferred to unit 01b:** `osm` renders the localhost diagnostic raster, and `mapboxgl` loads/renders a localhost HTTP background style. Whether `mapboxgl` renders local vector tiles with a matching local style, glyphs, and sprites remains unverified. The exact vector source/glyph/sprite URL rules for Qt 5.13.2 are also open.
+1. **Resolved in unit 01b:** Qt 5.13.2 `mapboxgl` renders local real vector tiles with a matching localhost style, project-owned glyphs/sprite, Vietnamese diacritics, and no non-localhost AF_INET connection after the provider diagnostic fix.
 2. **Deferred, low priority; does not block unit 01:** Does Qt 5.13.2 complete a real HTTPS request reliably with OpenSSL 3 despite the two unresolved-symbol warnings? The current spike assumes HTTP localhost for every tile and routing endpoint. Later options are (a) a local tile server that fetches HTTPS upstream and re-serves over HTTP localhost, or (b) a private OpenSSL 1.1 runtime only as a last resort because OpenSSL 1.1 is end-of-life. Do not modify OpenSSL or install `libssl1.1` while this question is deferred.
 3. What graph-build-time and peak-RAM thresholds should trigger reconsideration of the initial nationwide routing scope?
 4. **Resolved for instrumentation semantics:** Unit 02 now measures completed swaps and an interval-based 1% low, excludes warm-up and hidden/minimized intervals from summaries, and records process-tree RSS/CPU. The current fixture is render-on-demand and remains non-geographic; its short results are tooling evidence, not management-reportable map performance. Dense active-motion evidence transfers to unit 01b with real local vector data.
@@ -106,8 +114,8 @@ After the demo, resume the ten-unit plan and close every deferred verification g
 ### Technical and Product
 
 5. **Resolved for unit 01 environment scope:** Qt Quick/QtLocation compiles and runs with GCC 13.3.0 in Release mode, and the `osm` plugin renders the diagnostic localhost raster.
-6. **Partially resolved in unit 01b:** the installed Qt 5.13.2 `mapboxgl` plugin renders a complete synthetic loopback MVT/style/glyph/sprite resource set and retains the tested bearing/tilt values. Real bounded-Hanoi correctness and three-run performance remain unverified. MapLibre Native Qt v3.0.0 does not support QtLocation below Qt 5.15, and current upstream no longer supports Qt 5, making a Qt 5.13 QML integration a high-risk fallback.
-7. **Unit 01b approval gate:** approve or reject Geofabrik `vietnam-latest.osm.pbf` (315 MB) and Planetiler v0.10.2 `planetiler.jar` (93,278,824 bytes), with the exact commands, integrity checks, licenses, destinations, and cleanup recorded in the Unit 01b evidence. The proposed bound is `105.78,20.97,105.90,21.10`, zooms 12-15, two worker threads, project-owned minimal style/sprite/glyph resources, and loopback-only serving. Nothing has been downloaded or installed.
+6. **Partially resolved in unit 01b:** the installed Qt 5.13.2 `mapboxgl` plugin renders bounded real Hanoi data, Vietnamese labels, and tested bearing/tilt with median 24.362 average FPS, 5.000 interval 1% low, 6.600% app CPU, and 177.087 MiB app RSS. MapLibre remains unmeasured, so renderer selection is open.
+7. **Unit 01b installation gate:** approve either the documented Ubuntu Qt 5.15.13 package command or the isolated Qt Online Installer route. Then verify/build MapLibre Native Qt v3.0.0 and collect the same three-run comparison. Do not change the project baseline merely to run the isolated probe.
 8. Is zoom 16 practical for the detailed Hanoi/Red River Delta dataset after storage, generation-time, visual-quality, and performance measurements?
 9. Which legally usable orthography source should be selected, and what license, attribution, region, zoom range, and storage cap apply?
 10. How complete and consistent are Vietnam OSM `ref` tags for national roads (QL) and provincial roads (DT/ĐT), and what routing behavior is acceptable where tags are missing?
@@ -120,7 +128,7 @@ After the demo, resume the ten-unit plan and close every deferred verification g
 ### Committed
 
 - Target the first management demo for 2026-11-03 and prioritize a stable, visually coherent vertical slice with measured performance until that date.
-- Use Qt 5.13.2 with C++ and QML/Qt Quick 2.13 on Linux. APIs introduced by Qt 5.15 or Qt 6 are forbidden.
+- Keep Qt 5.13.2 with C++ and QML/Qt Quick 2.13 as the current implementation baseline. The owner has removed the hard Qt 5.13 ceiling for feasibility work; a move to Qt 5.15 or Qt 6 remains uncommitted until the Unit 01b evidence is reviewed.
 - Provision Qt 5.13.2 `gcc_64` through `aqtinstall` under `~/Qt`; the approved installation completed successfully.
 - Use CMake with Ninja as the primary build system. Unit 01 validated the Release path; the exact commands are recorded under Unit 01 Working Commands.
 - Use Qt 5-compatible CMake APIs only; Qt 6 APIs such as `qt_add_executable`, `qt_add_qml_module`, and `qt_standard_project_setup` are forbidden.
@@ -134,6 +142,7 @@ After the demo, resume the ten-unit plan and close every deferred verification g
 ### Proposed
 
 - Evaluate the installed QtLocation `mapboxgl` plugin for the bounded local-vector path in unit 01b. Consider MapLibre Native with a Qt-compatible integration only if the documented switch criteria are triggered; neither vector backend is committed yet. Use QtLocation `osm` as the verified diagnostic raster path.
+- Evaluate MapLibre Native Qt v3.0.0 with Qt 5.15.x as the lowest-migration probe path. Compare it against the existing Qt 5.13.2 `mapboxgl` probe before proposing any project-wide Qt or renderer change; Qt 6.5+ remains an alternative requiring a broader application migration.
 - Use Geofabrik Vietnam PBF, Planetiler-generated vector MBTiles, raster tiles, and either Martin/mbtileserver or direct `QSqlDatabase` MBTiles access.
 - Use Valhalla locally for routing, maneuvers, and map matching, with car costing oriented toward `trunk`, `primary`, and `secondary` roads.
 - Build offline geocoding with SQLite FTS5.
@@ -143,7 +152,7 @@ After the demo, resume the ten-unit plan and close every deferred verification g
 ### Investigation Required
 
 - Legal orthography source and bounded coverage.
-- MapLibre Native compatibility with Qt 5.13.2 and the reference GPU/toolchain.
+- MapLibre Native Qt v3.0.0 compatibility with the selected Qt 5.15 kit, its prebuilt Qt 5.15.2 artifact, and the reference Intel HD 520/Mesa stack.
 - Qt 5.13.2 compatibility with GCC 13 for Qt Quick/QtLocation and with system OpenSSL 3 for real online HTTPS. A console probe compiled, but OpenSSL 3 produced unresolved-symbol warnings; offline localhost HTTP is not blocked by this TLS question.
 - Vietnam OSM national/provincial road-reference completeness.
 
