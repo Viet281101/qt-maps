@@ -11,7 +11,7 @@
 | Layer | Technology | Status | Role |
 | --- | --- | --- | --- |
 | Platform | Linux desktop | Committed | Development and target platform |
-| UI/runtime | Qt 5.13.2, QML, Qt Quick 2.13 | Committed | Application lifecycle and user interface |
+| UI/runtime | Qt 5.13.2, QML, Qt Quick 2.13 | Current implementation baseline; Qt >= 5.15 evaluation permitted, migration not approved | Application lifecycle and user interface |
 | Language | C++ with C++14 as the proposed project level | Qt/C++ committed; language level proposed | Native application and service integration |
 | Build system | CMake with Ninja | Committed; Release path validated in accepted unit 01 environment scope | Primary configure/generate/build path; exact commands are recorded in `progress-tracker.md` and `code-standards.md` |
 | Raster map | QtLocation `osm` plugin | Diagnostic localhost path verified; production data path pending unit 03 | Minimal raster display and fallback path |
@@ -67,7 +67,7 @@ Large generated datasets, caches, routing graphs, and third-party artifacts must
 
 ## Invariants
 
-1. Production code must not require an API introduced after Qt 5.13, and QML imports must not declare a version newer than 2.13 for Qt Quick modules.
+1. Current production code must remain compatible with the committed Qt 5.13 baseline until an owner-reviewed migration is approved. Unit 01b may build isolated Qt 5.15-or-newer feasibility probes without changing the application target.
 2. The UI thread must never perform blocking routing, network, database, filesystem, or child-process waits.
 3. The agreed demo must operate fully offline after its required datasets have been provisioned.
 4. Only Release builds may produce performance results presented as project benchmarks.
@@ -75,7 +75,7 @@ Large generated datasets, caches, routing graphs, and third-party artifacts must
 6. The application must own and cleanly terminate the child services it starts.
 7. Generated data, vendor internals, and third-party artifacts are not hand-edited as application source.
 8. Architecture entries retain their decision status until evidence is recorded and the project owner approves a change.
-9. Build files must use Qt 5 CMake integration only: `find_package(Qt5 ...)`, `CMAKE_AUTOMOC`/`CMAKE_AUTORCC`, `qt5_add_resources`, and `add_executable`. Qt 6-only APIs such as `qt_add_executable`, `qt_add_qml_module`, and `qt_standard_project_setup` are forbidden.
+9. The current application build remains on the validated Qt 5 CMake integration (`find_package(Qt5 ...)`, `CMAKE_AUTOMOC`/`CMAKE_AUTORCC`, `qt5_add_resources`, and `add_executable`). The owner permitted Qt 5.15-or-newer evaluation on 2026-10-23, but changing the whole-project target or adopting Qt 6-only APIs still requires a separate reviewed migration decision.
 10. QtMaps must not download raster or vector tiles from `tile.openstreetmap.org` or any other public tile server, including small test downloads. Real map tiles must come from the project data pipeline based on an owner-approved Geofabrik PBF, Planetiler configuration, and localhost tile service. Unit 01 may use only clearly labeled, locally generated diagnostic tiles that contain no geographic map data; unit 01b may generate a bounded real-data spike only after its explicit download/tool approval gate.
 
 ## Environment Provisioning Decisions
