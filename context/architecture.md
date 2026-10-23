@@ -15,7 +15,7 @@
 | Language | C++ with C++14 as the proposed project level | Qt/C++ committed; language level proposed | Native application and service integration |
 | Build system | CMake with Ninja | Committed; Release path validated in accepted unit 01 environment scope | Primary configure/generate/build path; exact commands are recorded in `progress-tracker.md` and `code-standards.md` |
 | Raster map | QtLocation `osm` plugin | Diagnostic localhost path verified; production data path pending unit 03 | Minimal raster display and fallback path |
-| Vector map | Installed QtLocation `mapboxgl` plugin first; MapLibre Native as a conditional alternative | Spike required in unit 01b | Local vector rendering, camera behavior, and navigation presentation |
+| Vector map | MapLibre Native Qt v3.0.0 on Qt 5.15.13 recommended; Qt 5.13.2 `mapboxgl` retained as rollback | Unit 01b evidence complete; owner approval required before commitment | Local vector rendering, camera behavior, and navigation presentation |
 | Map source data | Geofabrik Vietnam OSM PBF | Proposed | Input for map, routing, and search datasets |
 | Vector pipeline | Planetiler to MBTiles | Proposed | Generate vector tiles |
 | Tile access | Direct MBTiles through `QSqlDatabase`, or Martin/mbtileserver child process | Proposed | Serve or read local tiles |
@@ -85,12 +85,13 @@ Large generated datasets, caches, routing graphs, and third-party artifacts must
 - Qt Quick, QtLocation, QtPositioning, and the `osm`/`mapboxgl` geoservice plugins were inspected and loaded in unit 01. This confirms the installed environment and bounded provider/raster probes, not production vector feasibility.
 - After installation, use `ldd` to identify missing system libraries rather than assuming the archive is self-contained.
 - Qt 5.13.2 compatibility with OpenSSL 1.1 versus the host's OpenSSL 3 remains a spike question for online HTTPS. Offline localhost HTTP does not require TLS, so this risk does not by itself block the offline path.
-- The owner approved installation of Ninja and ccache, but the agent must only print the required `sudo apt` command; the owner runs it manually.
+- Ninja and ccache were installed manually by the owner. Later system-package changes require an explicit package list, dry-run impact review, and owner approval before authentication or installation.
+- The owner approved the minimal system Qt 5.15.13 development packages for the isolated MapLibre comparison on 2026-10-24. Ubuntu does not package Qt 5 Location private headers, so the successful v3.0.0 build used a verified Qt 5.15.13 source-header overlay under ignored `generated/`; it did not modify `/usr` beyond the approved apt packages.
 
 ## Current Environment Baseline
 
 - Linux development machine: Dell Latitude 5480, Intel Core i5-6300U, 16 GiB RAM, and 512 GB NVMe SSD.
 - GCC/G++ 13.3.0, CMake 3.28.3, and GNU Make 4.3 are available.
-- qmake/Qt and Clang are not available on `PATH`; Qt is intentionally addressed by absolute path or `CMAKE_PREFIX_PATH`. Owner-installed Ninja 1.11.1 and ccache 4.9.1 are available on `PATH`.
+- Package-managed `/usr/bin/qmake` currently selects Qt 5.15.13; the project still selects each Qt kit by absolute qmake path or `CMAKE_PREFIX_PATH` rather than relying on `PATH`. Clang is not required. Owner-installed Ninja 1.11.1 and ccache 4.9.1 are available on `PATH`.
 - Intel HD Graphics 520 (Skylake GT2), Mesa 25.2.8, direct rendering enabled, and OpenGL up to 4.6.
-- Qt 5.13.2 installation under `/home/viet/Qt/5.13.2/gcc_64` is complete and owner-approved. The owner manually installed Ninja and ccache; no agent-run `sudo` command was used.
+- Qt 5.13.2 under `/home/viet/Qt/5.13.2/gcc_64` remains usable as the application baseline. System Qt 5.15.13 development libraries are installed for the MapLibre comparison; select either kit with an explicit `CMAKE_PREFIX_PATH` and do not modify global `PATH`.
