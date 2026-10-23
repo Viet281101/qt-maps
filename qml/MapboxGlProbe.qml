@@ -101,13 +101,15 @@ Window {
         anchors.right: parent.right
         anchors.top: parent.top
         height: 40
-        color: "#d97706"
+        color: vectorDataReal ? "#166534" : "#d97706"
 
         Text {
             anchors.centerIn: parent
-            color: "#111111"
+            color: vectorDataReal ? "white" : "#111111"
             font.bold: true
-            text: qsTr("LOCAL VECTOR SPIKE — SYNTHETIC FIXTURE, NOT REAL MAP DATA")
+            text: vectorDataReal
+                  ? qsTr("LOCAL VECTOR SPIKE — REAL OSM DATA — © OpenStreetMap contributors, ODbL 1.0")
+                  : qsTr("LOCAL VECTOR SPIKE — SYNTHETIC FIXTURE, NOT REAL MAP DATA")
         }
     }
 

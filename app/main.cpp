@@ -52,6 +52,7 @@ int main(int argc, char *argv[])
     parser.addVersionOption();
     parser.addOption({QStringLiteral("mapboxgl-probe"), QStringLiteral("Run the Mapbox GL local-resource probe")});
     parser.addOption({QStringLiteral("vector-style-url"), QStringLiteral("Mapbox GL local style URL"), QStringLiteral("url"), QStringLiteral("http://127.0.0.1:8766/style.json")});
+    parser.addOption({QStringLiteral("real-vector-data"), QStringLiteral("Label the vector probe as real OSM-derived data with attribution")});
     parser.addOption({QStringLiteral("blank-probe"), QStringLiteral("Run the blank-window performance probe")});
     parser.addOption({QStringLiteral("disable-instrumentation"), QStringLiteral("Disable frame and process instrumentation")});
     parser.addOption({QStringLiteral("automated-pan-zoom"), QStringLiteral("Run the deterministic raster pan/zoom sequence")});
@@ -103,6 +104,8 @@ int main(int argc, char *argv[])
                                              parser.value(QStringLiteral("vector-style-url")));
     engine.rootContext()->setContextProperty(QStringLiteral("datasetLabel"),
                                              parser.value(QStringLiteral("dataset-id")));
+    engine.rootContext()->setContextProperty(QStringLiteral("vectorDataReal"),
+                                             parser.isSet(QStringLiteral("real-vector-data")));
 
     const QUrl qmlUrl(useMapboxGlProbe
                           ? QStringLiteral("qrc:/qml/MapboxGlProbe.qml")

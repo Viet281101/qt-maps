@@ -11,7 +11,7 @@ PYTHON ?= python3
 QMAKE := $(QT_PREFIX)/bin/qmake
 QTMAPS := $(BUILD_DIR)/qtmaps
 
-.PHONY: help requirements configure build test run diagnostic-tiles vector-fixture \
+.PHONY: help requirements configure build test run diagnostic-tiles vector-fixture vector-real-style \
 	serve-diagnostic-tiles serve-vector-fixture run-mapboxgl-probe clean
 
 help:
@@ -24,6 +24,7 @@ help:
 	@echo "  make diagnostic-tiles      Generate the non-geographic XYZ fixture"
 	@echo "  make serve-diagnostic-tiles Serve the fixture on 127.0.0.1:8765"
 	@echo "  make vector-fixture        Generate the synthetic local MVT/style/glyph/sprite fixture"
+	@echo "  make vector-real-style     Generate local style/glyph/sprite resources for real Planetiler tiles"
 	@echo "  make serve-vector-fixture  Serve the vector fixture on 127.0.0.1:8766"
 	@echo "  make run-mapboxgl-probe    Run probe (vector fixture server must be separate)"
 	@echo "  make clean                 Clean compiled outputs through CMake"
@@ -67,6 +68,9 @@ serve-diagnostic-tiles: diagnostic-tiles
 
 vector-fixture:
 	"$(PYTHON)" tools/generate_vector_fixture.py
+
+vector-real-style:
+	"$(PYTHON)" tools/generate_vector_fixture.py --real-style-only --output generated/unit-01b/site
 
 serve-vector-fixture: vector-fixture
 	"$(PYTHON)" -m http.server 8766 --bind 127.0.0.1 --directory generated/vector-fixture
