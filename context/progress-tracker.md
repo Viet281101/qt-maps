@@ -4,7 +4,7 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Unit 02 performance instrumentation is complete on `feat/02-perf-instrumentation`, owner review is complete, and [PR #19](https://github.com/Viet281101/qt-maps/pull/19) is open for merge. Do not begin unit 01b on this branch.
+- Unit 01b local-vector and MapLibre Native feasibility is in progress locally on `feat/01b-vector-feasibility-spike`, branched from Unit 02 because it directly depends on the instrumentation that is not yet in `main`. The synthetic mechanics proof is complete; real-data generation and the official benchmark are paused at the explicit download/tool approval gate. Neither the Unit 01b branch nor its commits have been pushed.
 
 ## Current Goal
 
@@ -62,10 +62,14 @@ Update this file after every meaningful implementation change.
 - Added a repository-level pull-request tracking gate on 2026-10-23. Every new PR must reference its canonical issue without prematurely closing incomplete acceptance criteria, use the active milestone, join Project #6 without duplication, align Priority and Demo Phase with the issue, and have its live metadata verified after creation.
 - Applied the tracking gate to PR #19 on 2026-10-23: its description references Issue #7, its milestone is `First Management Demo`, and its Project #6 item is `In Progress` with Priority `P0` and Demo Phase `Week 2`. Issue #7 is also `In Progress` and remains open because the real navigation-scenario acceptance evidence is not yet complete.
 - Added repository and Project identity guardrails on 2026-10-23. Project #6, whose verified live title is `QtMaps`, must not be renamed or replaced; the `qt-maps` repository may be renamed only after an explicit owner request plus a documented necessity and impact review. Every repository or GitHub metadata change now requires a proportional impact check, clean-scope review, and verification of the resulting local or live state before work continues.
+- Revalidated the clean Unit 02 branch before starting Unit 01b on 2026-10-23. `make test` passed 1/1 existing CTest target and `git diff --check` passed; there was no uncommitted Unit 02 diff to split into new commits. Existing published Unit 02 history was preserved rather than rewritten.
+- Added a no-network synthetic local-vector mechanics fixture and Qt 5.13.2 `mapboxgl` probe. The Release app visibly rendered local MVT fill/line geometry, the project-owned sprite, and the limited `HANOI` glyph label; loopback logs returned HTTP 200 for style, vector, glyph, and sprite resources. The banner and metadata explicitly identify this as synthetic non-geographic evidence.
+- Added and tested a reusable camera probe controller. Requested and observed values matched at 45-degree bearing/30-degree tilt and 315-degree bearing/45-degree tilt; the installed plugin reported a 0-to-60-degree tilt range. `make test` now passes 2/2 CTest targets, including Qt Test coverage for bearing normalization, tilt bounds, sequence advancement, and reset.
+- Recorded the pre-approval evidence, one explicitly non-official `qtmaps-perf-v1` smoke run, exact candidate downloads/checksums/licenses/destinations/cleanup, and the MapLibre comparison in `docs/benchmarks/unit-01b-vector-feasibility.md`. MapLibre Native Qt v3.0.0 supports Qt 5.15 desktop but not QtLocation on Qt 5.13; current upstream no longer supports Qt 5, so a switch remains a high-burden conditional fallback rather than the default path.
 
 ## In Progress
 
-- No implementation is in progress after the Unit 02 completion gate. Owner review is complete and PR #19 is open for merge; generated CSV files remain outside source control.
+- Unit 01b needs owner approval before downloading the 315 MB Geofabrik Vietnam PBF or 93,278,824-byte Planetiler v0.10.2 jar. No listed command has been executed. After approval, validate a minimal roads/buildings/place-label schema, generate only the proposed dense-Hanoi bound, then collect three Release runs. Generated assets and CSV files remain outside source control.
 
 ## Next Up
 
@@ -73,9 +77,10 @@ Before the first demo, execute the shortest stable vertical slice. Existing unit
 
 Immediate feature-unit backlog order:
 
-1. **Merge Unit 02:** merge PR #19 after its required issue, milestone, and Project metadata have been verified, preserving the recorded limitations.
-2. **Unit 01b — Local vector and MapLibre Native feasibility:** use the Unit 02 instrumentation to prove or disprove the Qt 5.13.2 `mapboxgl` local vector path, bearing/tilt, dense-urban performance, and MapLibre switch criteria.
-3. Resume the demo vertical slice and unit 03 real-data pipeline using the owner-reviewed outcomes.
+1. **Review Unit 02 and current local commits:** Unit 02 remains unmerged in PR #19, while Unit 01b intentionally inherits its instrumentation. Do not push or merge either branch without owner review.
+2. **Approve or reject Unit 01b inputs:** review the exact Geofabrik and Planetiler commands in `docs/benchmarks/unit-01b-vector-feasibility.md`.
+3. **Finish Unit 01b after approval:** validate the bounded schema, render real local Hanoi vector geometry/labels, run three Release scenarios, and make the owner-reviewed go/no-go decision.
+4. Resume the demo vertical slice and unit 03 production data pipeline using the reviewed outcome.
 
 The demo delivery sequence remains:
 
@@ -101,8 +106,8 @@ After the demo, resume the ten-unit plan and close every deferred verification g
 ### Technical and Product
 
 5. **Resolved for unit 01 environment scope:** Qt Quick/QtLocation compiles and runs with GCC 13.3.0 in Release mode, and the `osm` plugin renders the diagnostic localhost raster.
-6. **Transferred to unit 01b:** Can the installed Qt 5.13.2 `mapboxgl` plugin render the complete local vector resource set, honor `Map.bearing`/`Map.tilt`, and meet dense-urban performance needs? If not, can a maintained MapLibre Native Qt integration build and render reliably with Qt 5.13.2 on Intel HD Graphics 520 within an acceptable integration budget?
-7. **Unit 01b approval gate:** Which exact Planetiler version/distribution and runtime, Hanoi generation bound, MVT schema/style, glyph/font and sprite sources, loopback tile server, and MapLibre Native repository/tag should be approved? Nothing in this list has been downloaded or installed.
+6. **Partially resolved in unit 01b:** the installed Qt 5.13.2 `mapboxgl` plugin renders a complete synthetic loopback MVT/style/glyph/sprite resource set and retains the tested bearing/tilt values. Real bounded-Hanoi correctness and three-run performance remain unverified. MapLibre Native Qt v3.0.0 does not support QtLocation below Qt 5.15, and current upstream no longer supports Qt 5, making a Qt 5.13 QML integration a high-risk fallback.
+7. **Unit 01b approval gate:** approve or reject Geofabrik `vietnam-latest.osm.pbf` (315 MB) and Planetiler v0.10.2 `planetiler.jar` (93,278,824 bytes), with the exact commands, integrity checks, licenses, destinations, and cleanup recorded in the Unit 01b evidence. The proposed bound is `105.78,20.97,105.90,21.10`, zooms 12-15, two worker threads, project-owned minimal style/sprite/glyph resources, and loopback-only serving. Nothing has been downloaded or installed.
 8. Is zoom 16 practical for the detailed Hanoi/Red River Delta dataset after storage, generation-time, visual-quality, and performance measurements?
 9. Which legally usable orthography source should be selected, and what license, attribution, region, zoom range, and storage cap apply?
 10. How complete and consistent are Vietnam OSM `ref` tags for national roads (QL) and provincial roads (DT/ĐT), and what routing behavior is acceptable where tags are missing?
