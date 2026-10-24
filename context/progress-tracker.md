@@ -34,7 +34,7 @@ Deliver a stable management demo by 2026-11-03: polished map-first Release UI, v
 - Implemented completed-swap FPS, interval 1% low, process-tree RSS/CPU, `qtmaps-perf-v1` CSV logging, F3 overlay, warm-up exclusion, and bounded worker shutdown.
 - Unit tests cover summaries, CPU/RSS aggregation, child-process churn, CSV handling, recording control, and error paths.
 - Latest accepted Unit 02 build passed the Qt 5.13.2 Release test path; detailed diagnostic results are in `docs/benchmarks/unit-02-performance-results.md`.
-- PR #19 references Issue #7, uses the `First Management Demo` milestone, and is `In Progress` in Project #6. It remains unmerged.
+- PR #19 was squash-merged into `main` as `39f6b0f`; Issue #7 remains `In Progress` for the follow-on navigation measurements.
 
 ### Unit 01b — vector feasibility
 
@@ -61,6 +61,8 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
 - Real-data runtime verification shows Vietnamese labels, buildings/roads, marker, attribution, bearing, and 45-degree tilt. The 5.47 km route is explicitly simulated; each 120-second run covers approximately 1.33 km at 40 km/h.
 - Commit review found and fixed a 3,600-frame buffer that had truncated the original 120-second statistics plus a missing style tile-URL contract check. The final runs retain 7,168-7,179 frames and reject non-local style URLs.
 - Corrected three-run schema-v3 medians are: cold 60.011 FPS, p50/p95/p99 16.642/17.969/19.322 ms, 17.569% CPU, 208.934 MiB mean RSS; warm 60.012 FPS, 16.646/17.922/19.248 ms, 17.102% CPU, 202.294 MiB mean RSS. Both have zero frames over 100 ms and pass the proposed p50/p95 review thresholds. Full evidence: `docs/benchmarks/unit-03-local-map-data-pipeline.md`.
+- PR #20 is open against `main`, closes Issue #14, references Issues #7/#11/#6, and is assigned to `Viet281101`. It uses the `First Management Demo` milestone and the `feature`, `demo`, `priority:P1`, `spike`, and `area:map` labels.
+- PR #20 and its primary Issue #14 are tracked in Project #6 (`QtMaps`); the PR fields are Status `In Progress`, Priority `P1`, and Demo Phase `Week 1`. Repository merge settings allow squash merge only.
 
 ## Active Decisions
 
@@ -77,12 +79,12 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
 
 ## In Progress
 
-- Unit 03 is stopped for owner review as required. No routing or final UI implementation has started.
+- Unit 03 is under review in PR #20. No routing or final UI implementation has started.
 
 ## Next Up
 
-1. Review Unit 02/PR #19 and the local Unit 01b commits; do not push or merge without owner approval.
-2. Obtain owner approval for Unit 03 and the proposed Valhalla routing direction plus graph-build time/peak-RAM thresholds.
+1. Review PR #20 and merge it with GitHub `Squash and merge` only after approval.
+2. Obtain owner approval for the proposed Valhalla routing direction plus graph-build time/peak-RAM thresholds.
 3. Implement the minimum two-point routing backend and route/maneuver model before final route-planning and navigation UI polish.
 
 ## Open Questions and Risks
@@ -123,4 +125,4 @@ Licensing and packaging evidence:
 - **BUILD PASS:** default Qt 5.15.13 Release `make test` in `build-qt515`: 3/3 executables passed, including manifest corruption, service lifecycle/bounded failure/port conflict, fallback, and navigation-route coverage; `ldd` resolves Qt Core from the system Qt 5.15 runtime.
 - Last pre-Unit03 isolated Qt 5.13.2 comparison: 2/2 passed and `ldd` resolved Qt Core from `/home/viet/Qt/5.13.2/gcc_64`; Unit 03 is intentionally not gated or rerun on the comparison kit.
 - Unit 03 corrected benchmark: three cold plus three warm-cache real-data runs reported `mapReady=true`, 7,168-7,179 interaction frames, no CSV errors, and only loopback IP connections.
-- The reviewed Unit 03 branch is published at `origin/feat/03-local-map-data-pipeline`; no merge or pull request was performed. The pre-existing `.vscode/settings.json` change is user-owned and excluded from every commit.
+- Local `main` and `origin/main` both resolve to `39f6b0f`, the squash merge of PR #19. Unit 03 is published at `origin/feat/03-local-map-data-pipeline` and open as PR #20; it has not been merged. The pre-existing `.vscode/settings.json` change is user-owned and excluded from every commit.
