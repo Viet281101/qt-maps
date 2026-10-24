@@ -105,6 +105,13 @@ add_library(qtmaps_routing STATIC
 target_include_directories(qtmaps_routing PUBLIC "${CMAKE_SOURCE_DIR}/src")
 target_link_libraries(qtmaps_routing PUBLIC Qt5::Core Qt5::Network Qt5::Positioning)
 
+add_library(qtmaps_app_core STATIC
+    src/core/ApplicationShutdownCoordinator.cpp
+    src/core/ApplicationShutdownCoordinator.h
+)
+target_include_directories(qtmaps_app_core PUBLIC "${CMAKE_SOURCE_DIR}/src")
+target_link_libraries(qtmaps_app_core PUBLIC qtmaps_routing Qt5::Core)
+
 qt5_add_resources(QTMAPS_RESOURCES resources.qrc)
 
 add_executable(qtmaps
@@ -113,6 +120,7 @@ add_executable(qtmaps
 )
 
 target_link_libraries(qtmaps PRIVATE
+    qtmaps_app_core
     qtmaps_map_probe
     qtmaps_perf
     qtmaps_routing
@@ -159,6 +167,7 @@ if(BUILD_TESTING)
     target_compile_definitions(qtmaps_valhalla_runtime_tests PRIVATE
         QTMAPS_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
     target_link_libraries(qtmaps_valhalla_runtime_tests PRIVATE
+        qtmaps_app_core
         qtmaps_routing
         Qt5::Network
         Qt5::Test

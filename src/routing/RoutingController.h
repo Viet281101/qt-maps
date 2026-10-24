@@ -56,12 +56,17 @@ public:
     Q_INVOKABLE void focusManeuver(int index);
     void startBackend(const QString &program, const QString &configPath, quint16 port);
     void stopBackend();
+    void forceStopBackend();
+    bool backendRunning() const;
+    qint64 backendProcessId() const;
 
 signals:
     void endpointsChanged();
     void routeChanged();
     void stateChanged();
     void focusCoordinateRequested(const QGeoCoordinate &coordinate, double zoomLevel);
+    void backendReady();
+    void backendStopped();
 
 private:
     static bool parseLocation(const QString &input, QGeoCoordinate *coordinate,

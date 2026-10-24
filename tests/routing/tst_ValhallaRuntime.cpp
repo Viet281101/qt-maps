@@ -1,14 +1,17 @@
 #include <QtTest>
 
+#include "core/ApplicationShutdownCoordinator.h"
 #include "routing/ValhallaRouteClient.h"
 #include "routing/ValhallaServiceManager.h"
 #include "routing/RoutingController.h"
 
 #include <QCoreApplication>
+#include <QElapsedTimer>
 #include <QFile>
 #include <QFileInfo>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QProcess>
 #include <QSignalSpy>
 #include <QTcpServer>
 #include <QTcpSocket>
@@ -16,11 +19,17 @@
 #include <QTimer>
 #include <QUrlQuery>
 
+#if defined(Q_OS_LINUX)
+#include <cerrno>
+#include <csignal>
+#endif
+
 using qtmaps::routing::Route;
 using qtmaps::routing::RouteSource;
 using qtmaps::routing::RoutingController;
 using qtmaps::routing::ValhallaRouteClient;
 using qtmaps::routing::ValhallaServiceManager;
+using qtmaps::core::ApplicationShutdownCoordinator;
 
 namespace {
 
@@ -80,6 +89,11 @@ private:
 
 int runFakeValhallaService(int argc, char **argv, const QJsonObject &config)
 {
+#if defined(Q_OS_LINUX)
+    if (config.value(QStringLiteral("fake_ignore_interrupt")).toBool()) {
+        std::signal(SIGINT, SIG_IGN);
+    }
+#endif
     QCoreApplication application(argc, argv);
     QFile fixture(QStringLiteral(":/fixtures/routing/hanoi_hoan_kiem_to_thai_ha.json"));
     if (!fixture.open(QIODevice::ReadOnly)) {
@@ -119,6 +133,38 @@ int runFakeValhallaService(int argc, char **argv, const QJsonObject &config)
             QObject::connect(socket, &QTcpSocket::disconnected, socket, &QObject::deleteLater);
         }
     });
+    return application.exec();
+}
+
+int runShutdownCoordinatorProbe(int argc, char **argv, bool waitForParentDeath)
+{
+    QCoreApplication application(argc, argv);
+    bool portOk = false;
+    const quint16 port = QString::fromLocal8Bit(argv[3]).toUShort(&portOk);
+    if (!portOk) {
+        return 4;
+    }
+    RoutingController controller;
+    ApplicationShutdownCoordinator coordinator(&controller);
+    QObject::connect(&controller, &RoutingController::backendReady, &application, [&]() {
+        if (waitForParentDeath) {
+            QFile pidFile(QString::fromLocal8Bit(argv[4]));
+            if (!pidFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+                application.exit(5);
+                return;
+            }
+            pidFile.write(QByteArray::number(controller.backendProcessId()));
+            pidFile.close();
+        } else {
+            QTimer::singleShot(0, &coordinator,
+                               &ApplicationShutdownCoordinator::requestQuit);
+        }
+    });
+    QObject::connect(&coordinator, &ApplicationShutdownCoordinator::shutdownReady,
+                     &application, &QCoreApplication::quit);
+    QTimer::singleShot(8000, &application, [&application]() { application.exit(6); });
+    controller.startBackend(QCoreApplication::applicationFilePath(),
+                            QString::fromLocal8Bit(argv[2]), port);
     return application.exec();
 }
 
@@ -184,6 +230,115 @@ private slots:
         QCOMPARE(unsafeService.state(), ValhallaServiceManager::State::Error);
         QVERIFY(unsafeService.errorMessage().contains(QStringLiteral("listen only")));
     }
+
+    void applicationShutdownCoordinatorStopsChildBeforeExit()
+    {
+        QTemporaryDir temporary;
+        QVERIFY(temporary.isValid());
+        const quint16 port = unusedLoopbackPort();
+        QVERIFY(port != 0);
+        QJsonObject serviceConfig;
+        serviceConfig.insert(QStringLiteral("listen"),
+                             QStringLiteral("tcp://127.0.0.1:%1").arg(port));
+        QJsonObject httpd;
+        httpd.insert(QStringLiteral("service"), serviceConfig);
+        QJsonObject config;
+        config.insert(QStringLiteral("fake_service_port"), static_cast<int>(port));
+        config.insert(QStringLiteral("httpd"), httpd);
+        const QString configPath = temporary.path() + QStringLiteral("/shutdown.json");
+        writeFile(configPath, QJsonDocument(config).toJson(QJsonDocument::Compact));
+
+        QProcess probe;
+        probe.start(QCoreApplication::applicationFilePath(),
+                    {QStringLiteral("--shutdown-coordinator-probe"), configPath,
+                     QString::number(port)});
+        QVERIFY(probe.waitForStarted(2000));
+        QVERIFY2(probe.waitForFinished(5000), qPrintable(probe.errorString()));
+        QCOMPARE(probe.exitStatus(), QProcess::NormalExit);
+        QCOMPARE(probe.exitCode(), 0);
+
+        QTcpServer releasedPort;
+        QVERIFY2(releasedPort.listen(QHostAddress::LocalHost, port),
+                 qPrintable(releasedPort.errorString()));
+    }
+
+    void applicationShutdownCoordinatorForceKillsUnresponsiveChild()
+    {
+        QTemporaryDir temporary;
+        QVERIFY(temporary.isValid());
+        const quint16 port = unusedLoopbackPort();
+        QVERIFY(port != 0);
+        QJsonObject serviceConfig;
+        serviceConfig.insert(QStringLiteral("listen"),
+                             QStringLiteral("tcp://127.0.0.1:%1").arg(port));
+        QJsonObject httpd;
+        httpd.insert(QStringLiteral("service"), serviceConfig);
+        QJsonObject config;
+        config.insert(QStringLiteral("fake_service_port"), static_cast<int>(port));
+        config.insert(QStringLiteral("fake_ignore_interrupt"), true);
+        config.insert(QStringLiteral("httpd"), httpd);
+        const QString configPath = temporary.path() + QStringLiteral("/forced-shutdown.json");
+        writeFile(configPath, QJsonDocument(config).toJson(QJsonDocument::Compact));
+
+        QElapsedTimer elapsed;
+        elapsed.start();
+        QProcess probe;
+        probe.start(QCoreApplication::applicationFilePath(),
+                    {QStringLiteral("--shutdown-coordinator-probe"), configPath,
+                     QString::number(port)});
+        QVERIFY(probe.waitForStarted(2000));
+        QVERIFY2(probe.waitForFinished(6000), qPrintable(probe.errorString()));
+        QCOMPARE(probe.exitStatus(), QProcess::NormalExit);
+        QCOMPARE(probe.exitCode(), 0);
+        QVERIFY(elapsed.elapsed() >= 1900);
+        QVERIFY(elapsed.elapsed() < 5000);
+
+        QTcpServer releasedPort;
+        QVERIFY2(releasedPort.listen(QHostAddress::LocalHost, port),
+                 qPrintable(releasedPort.errorString()));
+    }
+
+#if defined(Q_OS_LINUX)
+    void parentDeathSignalStopsManagedChild()
+    {
+        QTemporaryDir temporary;
+        QVERIFY(temporary.isValid());
+        const quint16 port = unusedLoopbackPort();
+        QVERIFY(port != 0);
+        QJsonObject serviceConfig;
+        serviceConfig.insert(QStringLiteral("listen"),
+                             QStringLiteral("tcp://127.0.0.1:%1").arg(port));
+        QJsonObject httpd;
+        httpd.insert(QStringLiteral("service"), serviceConfig);
+        QJsonObject config;
+        config.insert(QStringLiteral("fake_service_port"), static_cast<int>(port));
+        config.insert(QStringLiteral("httpd"), httpd);
+        const QString configPath = temporary.path() + QStringLiteral("/pdeath.json");
+        const QString pidPath = temporary.path() + QStringLiteral("/child.pid");
+        writeFile(configPath, QJsonDocument(config).toJson(QJsonDocument::Compact));
+
+        QProcess probe;
+        probe.start(QCoreApplication::applicationFilePath(),
+                    {QStringLiteral("--pdeathsig-probe"), configPath,
+                     QString::number(port), pidPath});
+        QVERIFY(probe.waitForStarted(2000));
+        QTRY_VERIFY_WITH_TIMEOUT(QFileInfo::exists(pidPath), 3000);
+        QFile pidFile(pidPath);
+        QVERIFY(pidFile.open(QIODevice::ReadOnly));
+        bool pidOk = false;
+        const qint64 childPid = pidFile.readAll().trimmed().toLongLong(&pidOk);
+        QVERIFY(pidOk);
+        QVERIFY(childPid > 1);
+
+        probe.kill();
+        QVERIFY(probe.waitForFinished(2000));
+        QTRY_VERIFY_WITH_TIMEOUT(
+            (::kill(static_cast<pid_t>(childPid), 0) == -1 && errno == ESRCH), 3000);
+        QTcpServer releasedPort;
+        QVERIFY2(releasedPort.listen(QHostAddress::LocalHost, port),
+                 qPrintable(releasedPort.errorString()));
+    }
+#endif
 
     void clientRequestsVietnameseKilometerRouteAsynchronously()
     {
@@ -328,6 +483,12 @@ private slots:
 
 int main(int argc, char **argv)
 {
+    if (argc == 4 && QByteArray(argv[1]) == QByteArrayLiteral("--shutdown-coordinator-probe")) {
+        return runShutdownCoordinatorProbe(argc, argv, false);
+    }
+    if (argc == 5 && QByteArray(argv[1]) == QByteArrayLiteral("--pdeathsig-probe")) {
+        return runShutdownCoordinatorProbe(argc, argv, true);
+    }
     if (argc == 3) {
         QFile configFile(QString::fromLocal8Bit(argv[1]));
         if (configFile.open(QIODevice::ReadOnly)) {

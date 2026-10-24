@@ -76,12 +76,29 @@ snapshot after the route sample used 352,212 KiB RSS.
 
 The Qt runtime implementation owns this executable with `QProcess`, probes
 `/status` asynchronously with a bounded startup timeout, requests a graceful
-SIGINT shutdown then uses a bounded forced-kill fallback, and exposes explicit stopped/starting/ready/
-stopping/error states. The route client accepts only literal HTTP loopback
+SIGINT shutdown through an application-level coordinator, then uses a forced
+kill after a two-second bound before allowing the application to exit. On
+Linux the child installs `PR_SET_PDEATHSIG=SIGTERM` before exec. The service
+exposes explicit stopped/starting/ready/stopping/error states. The route client accepts only literal HTTP loopback
 endpoints, uses asynchronous `QNetworkAccessManager`, has cancellation and a
 bounded request timeout, and requests `costing=auto`, kilometre units, and
 `vi-VN`. Focused Qt Tests cover lifecycle, readiness, clean stop, unsafe
-configuration, request contract, loopback enforcement, success, and timeout.
+configuration, application-level graceful and forced shutdown, parent-death
+cleanup, request contract, loopback enforcement, success, and timeout.
+
+### Shutdown verification
+
+The application exit path now disables implicit last-window quit, asks the
+coordinator to stop routing, and calls `QCoreApplication::quit()` only after
+the child reaches `Stopped`. A fake child that ignores `SIGINT` verifies the
+two-second hard-kill fallback without blocking the GUI thread.
+
+The real Release app was also started with the bounded Hanoi package and
+native Valhalla service, then the QtMaps PID was sent `SIGKILL`. Before the
+kill, Valhalla was its direct child and owned `127.0.0.1:18002`. Linux
+`PR_SET_PDEATHSIG=SIGTERM` removed the child and released the port in 31 ms.
+The inspected PIDs were 14740 for QtMaps and 14767 for `valhalla_service`;
+these are transient verification identifiers, not runtime configuration.
 
 ## Real routes and latency
 

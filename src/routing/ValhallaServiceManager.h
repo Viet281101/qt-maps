@@ -29,19 +29,21 @@ public:
     Q_ENUM(State)
 
     explicit ValhallaServiceManager(QObject *parent = nullptr);
-    ~ValhallaServiceManager() override;
-
     void start(const QString &program, const QString &configPath, quint16 port,
                int concurrency = 2, int readinessTimeoutMs = 10000);
     void stop();
+    void forceStop();
 
     State state() const;
+    bool isRunning() const;
+    qint64 processId() const;
     QString errorMessage() const;
     QUrl endpoint() const;
 
 signals:
     void stateChanged();
     void ready();
+    void stopped();
 
 private:
     void setState(State state, const QString &error = QString());
@@ -49,7 +51,7 @@ private:
     void probeHealth();
     void fail(const QString &error);
 
-    QProcess process_;
+    QProcess *process_ = nullptr;
     QNetworkAccessManager *network_ = nullptr;
     QTimer *healthTimer_ = nullptr;
     QTimer *startupTimer_ = nullptr;

@@ -37,8 +37,11 @@ RoutingController::RoutingController(QObject *parent)
             setStatus(error);
             return;
         }
+        emit backendReady();
         calculateRoute();
     });
+    connect(&service_, &ValhallaServiceManager::stopped,
+            this, &RoutingController::backendStopped);
     connect(client_, &ValhallaRouteClient::routeReady, this, [this](const Route &route) {
         setLoading(false);
         applyRoute(route, QStringLiteral("Valhalla local"));
@@ -154,6 +157,15 @@ void RoutingController::stopBackend()
     client_->cancel();
     service_.stop();
 }
+
+void RoutingController::forceStopBackend()
+{
+    client_->cancel();
+    service_.forceStop();
+}
+
+bool RoutingController::backendRunning() const { return service_.isRunning(); }
+qint64 RoutingController::backendProcessId() const { return service_.processId(); }
 
 bool RoutingController::loadFixtureRoute(const QString &reason)
 {

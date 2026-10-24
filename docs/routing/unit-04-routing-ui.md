@@ -63,7 +63,9 @@ A process snapshot confirmed the ownership boundary: QtMaps PID 6238 used
 219,280 KiB RSS and its direct `valhalla_service` child PID 6249 used 227,144
 KiB RSS. These are diagnostic snapshots, not the deferred Unit 04E benchmark.
 After the timed app exit, neither process remained and port 18002 was no
-longer listening, confirming the graceful-interrupt/bounded cleanup path.
+longer listening. The application now reaches that result through the
+asynchronous shutdown coordinator documented in the backend evidence rather
+than a blocking destructor wait.
 
 When the service is starting or fails, the same screen keeps the last valid
 route where possible and explicitly switches to `offline — fixture fallback`.

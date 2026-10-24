@@ -10,12 +10,37 @@
 #include <QTimer>
 
 #include <csignal>
+#if defined(Q_OS_LINUX)
+#include <sys/prctl.h>
+#include <unistd.h>
+#endif
 
 namespace qtmaps {
 namespace routing {
 
+namespace {
+
+class ValhallaProcess final : public QProcess
+{
+public:
+    using QProcess::QProcess;
+
+protected:
+    void setupChildProcess() override
+    {
+#if defined(Q_OS_LINUX)
+        if (::prctl(PR_SET_PDEATHSIG, SIGTERM) == -1 || ::getppid() == 1) {
+            ::_exit(127);
+        }
+#endif
+    }
+};
+
+} // namespace
+
 ValhallaServiceManager::ValhallaServiceManager(QObject *parent)
-    : QObject(parent), network_(new QNetworkAccessManager(this)),
+    : QObject(parent), process_(new ValhallaProcess(this)),
+      network_(new QNetworkAccessManager(this)),
       healthTimer_(new QTimer(this)), startupTimer_(new QTimer(this)),
       killTimer_(new QTimer(this))
 {
@@ -29,17 +54,17 @@ ValhallaServiceManager::ValhallaServiceManager(QObject *parent)
         fail(QStringLiteral("Valhalla readiness check timed out"));
     });
     connect(killTimer_, &QTimer::timeout, this, [this]() {
-        if (process_.state() != QProcess::NotRunning) {
-            process_.kill();
+        if (process_->state() != QProcess::NotRunning) {
+            process_->kill();
         }
     });
-    connect(&process_, &QProcess::started, this, &ValhallaServiceManager::scheduleHealthCheck);
-    connect(&process_, &QProcess::errorOccurred, this, [this](QProcess::ProcessError error) {
+    connect(process_, &QProcess::started, this, &ValhallaServiceManager::scheduleHealthCheck);
+    connect(process_, &QProcess::errorOccurred, this, [this](QProcess::ProcessError error) {
         if (error != QProcess::Crashed || state_ != State::Stopping) {
-            fail(QStringLiteral("Valhalla process error: %1").arg(process_.errorString()));
+            fail(QStringLiteral("Valhalla process error: %1").arg(process_->errorString()));
         }
     });
-    connect(&process_, qOverload<int, QProcess::ExitStatus>(&QProcess::finished), this,
+    connect(process_, qOverload<int, QProcess::ExitStatus>(&QProcess::finished), this,
             [this](int exitCode, QProcess::ExitStatus exitStatus) {
         healthTimer_->stop();
         startupTimer_->stop();
@@ -51,27 +76,20 @@ ValhallaServiceManager::ValhallaServiceManager(QObject *parent)
         }
         if (state_ == State::Stopping) {
             setState(State::Stopped);
+            emit stopped();
         } else if (state_ != State::Error) {
             fail(QStringLiteral("Valhalla exited before shutdown (code %1, status %2)")
                      .arg(exitCode)
                      .arg(static_cast<int>(exitStatus)));
         }
     });
-    process_.setProcessChannelMode(QProcess::ForwardedChannels);
-}
-
-ValhallaServiceManager::~ValhallaServiceManager()
-{
-    if (process_.state() != QProcess::NotRunning) {
-        process_.kill();
-        process_.waitForFinished(1000);
-    }
+    process_->setProcessChannelMode(QProcess::ForwardedChannels);
 }
 
 void ValhallaServiceManager::start(const QString &program, const QString &configPath,
                                    quint16 port, int concurrency, int readinessTimeoutMs)
 {
-    if (process_.state() != QProcess::NotRunning) {
+    if (process_->state() != QProcess::NotRunning) {
         fail(QStringLiteral("Valhalla process has not stopped yet"));
         return;
     }
@@ -117,9 +135,9 @@ void ValhallaServiceManager::start(const QString &program, const QString &config
     errorMessage_.clear();
     setState(State::Starting);
     startupTimer_->start(qMax(100, readinessTimeoutMs));
-    process_.setProgram(programInfo.absoluteFilePath());
-    process_.setArguments({configInfo.absoluteFilePath(), QString::number(concurrency)});
-    process_.start();
+    process_->setProgram(programInfo.absoluteFilePath());
+    process_->setArguments({configInfo.absoluteFilePath(), QString::number(concurrency)});
+    process_->start();
 }
 
 void ValhallaServiceManager::stop()
@@ -131,20 +149,39 @@ void ValhallaServiceManager::stop()
         healthReply_->deleteLater();
         healthReply_ = nullptr;
     }
-    if (process_.state() == QProcess::NotRunning) {
+    if (process_->state() == QProcess::NotRunning) {
         setState(State::Stopped);
+        emit stopped();
         return;
     }
     setState(State::Stopping);
 #if defined(Q_OS_UNIX)
-    ::kill(static_cast<pid_t>(process_.processId()), SIGINT);
+    ::kill(static_cast<pid_t>(process_->processId()), SIGINT);
 #else
-    process_.terminate();
+    process_->terminate();
 #endif
-    killTimer_->start(1500);
+}
+
+void ValhallaServiceManager::forceStop()
+{
+    healthTimer_->stop();
+    startupTimer_->stop();
+    killTimer_->stop();
+    if (process_->state() == QProcess::NotRunning) {
+        setState(State::Stopped);
+        emit stopped();
+        return;
+    }
+    setState(State::Stopping);
+    process_->kill();
 }
 
 ValhallaServiceManager::State ValhallaServiceManager::state() const { return state_; }
+bool ValhallaServiceManager::isRunning() const
+{
+    return process_->state() != QProcess::NotRunning;
+}
+qint64 ValhallaServiceManager::processId() const { return process_->processId(); }
 QString ValhallaServiceManager::errorMessage() const { return errorMessage_; }
 QUrl ValhallaServiceManager::endpoint() const { return endpoint_; }
 
@@ -200,8 +237,8 @@ void ValhallaServiceManager::fail(const QString &error)
     healthTimer_->stop();
     startupTimer_->stop();
     setState(State::Error, error);
-    if (process_.state() != QProcess::NotRunning) {
-        process_.terminate();
+    if (process_->state() != QProcess::NotRunning) {
+        process_->terminate();
         killTimer_->start(1500);
     }
 }

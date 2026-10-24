@@ -63,8 +63,11 @@ Large generated datasets, caches, routing graphs, and third-party artifacts must
   child. The service receives an explicit generated config, uses at most two
   workers, and listens only on a configured `127.0.0.1` port. A bounded
   asynchronous `/status` probe controls readiness; shutdown first sends the
-  service's graceful interrupt signal and then applies a bounded forced kill
-  if the child does not exit.
+  service's graceful interrupt signal. An application-level asynchronous
+  shutdown coordinator waits for the stopped signal, applies a forced kill
+  after two seconds if needed, and only then allows the application to exit.
+  On Linux, the `QProcess` child sets `PR_SET_PDEATHSIG` to `SIGTERM` before
+  exec so an ungraceful parent death cannot orphan Valhalla.
 - The routing client uses asynchronous `QNetworkAccessManager` requests to the
   loopback service, requests `auto` costing, kilometre units, and `vi-VN`
   directions, then normalizes the response into the backend-independent route

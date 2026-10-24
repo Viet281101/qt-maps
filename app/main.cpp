@@ -14,6 +14,7 @@
 #include <algorithm>
 
 #include "map/CameraProbeController.h"
+#include "core/ApplicationShutdownCoordinator.h"
 #include "map/DirectoryTileSource.h"
 #include "map/MapSourceController.h"
 #include "map/MbTilesTileSource.h"
@@ -49,6 +50,7 @@ void probeProvider(const QString &providerName)
 int main(int argc, char *argv[])
 {
     QGuiApplication application(argc, argv);
+    application.setQuitOnLastWindowClosed(false);
     QCoreApplication::setApplicationName(QStringLiteral("QtMaps"));
     QCoreApplication::setApplicationVersion(QStringLiteral("0.2.0"));
 
@@ -109,6 +111,7 @@ int main(int argc, char *argv[])
                                                          &diagnosticRasterSource);
     qtmaps::map::SimulatedNavigationController navigationController;
     qtmaps::routing::RoutingController routingController;
+    qtmaps::core::ApplicationShutdownCoordinator shutdownCoordinator(&routingController);
     qtmaps::perf::PerformanceMonitor performanceMonitor;
     QQmlApplicationEngine engine;
 
@@ -179,22 +182,19 @@ int main(int argc, char *argv[])
                                              interactionMilliseconds);
 
     const bool unit03Vector = useUnit03LocalMap && !mapSourceController.usingRasterFallback();
+    bool valhallaPortOk = false;
+    const int valhallaPort = parser.value(QStringLiteral("valhalla-port")).toInt(&valhallaPortOk);
     if (unit03Vector && useRoutingDemo
-        && !parser.isSet(QStringLiteral("routing-fixture-only"))) {
-        bool portOk = false;
-        const int port = parser.value(QStringLiteral("valhalla-port")).toInt(&portOk);
-        if (!portOk || port < 1 || port > 65535) {
-            qCritical() << "--valhalla-port must be between 1 and 65535";
-            return 4;
-        }
-        const QDir workingDirectory = QDir::current();
-        routingController.startBackend(
-            workingDirectory.absoluteFilePath(parser.value(QStringLiteral("valhalla-service"))),
-            workingDirectory.absoluteFilePath(parser.value(QStringLiteral("valhalla-config"))),
-            static_cast<quint16>(port));
+        && !parser.isSet(QStringLiteral("routing-fixture-only"))
+        && (!valhallaPortOk || valhallaPort < 1 || valhallaPort > 65535)) {
+        qCritical() << "--valhalla-port must be between 1 and 65535";
+        return 4;
     }
-    QObject::connect(&application, &QCoreApplication::aboutToQuit,
-                     &routingController, &qtmaps::routing::RoutingController::stopBackend);
+    const QString benchmarkOutput = parser.value(QStringLiteral("benchmark-output"));
+    if (!benchmarkOutput.isEmpty() && !instrumentationEnabled) {
+        qCritical() << "--benchmark-output cannot be used with --disable-instrumentation";
+        return 2;
+    }
     const QUrl qmlUrl(unit03Vector && useRoutingDemo
                           ? QStringLiteral("qrc:/qml/RoutingProbe.qml")
                       : unit03Vector && useNavigationBenchmark
@@ -203,6 +203,25 @@ int main(int argc, char *argv[])
                               ? QStringLiteral("qrc:/qml/MapboxGlProbe.qml")
                               : useBlankProbe ? QStringLiteral("qrc:/qml/BlankProbe.qml")
                                               : QStringLiteral("qrc:/qml/Main.qml"));
+    engine.load(qmlUrl);
+    if (engine.rootObjects().isEmpty()) {
+        qCritical() << "Failed to load" << qmlUrl;
+        return 1;
+    }
+    if (unit03Vector && useRoutingDemo
+        && !parser.isSet(QStringLiteral("routing-fixture-only"))) {
+        const QDir workingDirectory = QDir::current();
+        routingController.startBackend(
+            workingDirectory.absoluteFilePath(parser.value(QStringLiteral("valhalla-service"))),
+            workingDirectory.absoluteFilePath(parser.value(QStringLiteral("valhalla-config"))),
+            static_cast<quint16>(valhallaPort));
+    }
+    QObject::connect(&application, &QGuiApplication::lastWindowClosed,
+                     &shutdownCoordinator,
+                     &qtmaps::core::ApplicationShutdownCoordinator::requestQuit);
+    QObject::connect(&shutdownCoordinator,
+                     &qtmaps::core::ApplicationShutdownCoordinator::shutdownReady,
+                     &application, &QCoreApplication::quit);
     qInfo().noquote() << "probeMode="
                       << (unit03Vector && useRoutingDemo
                               ? (parser.isSet(QStringLiteral("routing-fixture-only"))
@@ -215,23 +234,12 @@ int main(int argc, char *argv[])
                                           : useMapboxGlProbe ? "mapboxgl-local-resources"
                                           : useBlankProbe ? "blank-performance"
                                                           : "osm-diagnostic-raster");
-    engine.load(qmlUrl);
-    if (engine.rootObjects().isEmpty()) {
-        qCritical() << "Failed to load" << qmlUrl;
-        return 1;
-    }
-
     QQuickWindow *window = qobject_cast<QQuickWindow *>(engine.rootObjects().constFirst());
     if (instrumentationEnabled) {
         performanceMonitor.attachWindow(window);
     }
 
-    const QString benchmarkOutput = parser.value(QStringLiteral("benchmark-output"));
     if (!benchmarkOutput.isEmpty()) {
-        if (!instrumentationEnabled) {
-            qCritical() << "--benchmark-output cannot be used with --disable-instrumentation";
-            return 2;
-        }
         const int warmupSeconds = std::max(0, parser.value(QStringLiteral("benchmark-warmup")).toInt());
         const int durationSeconds = std::max(1, parser.value(QStringLiteral("benchmark-duration")).toInt());
         QTimer::singleShot(250, [&performanceMonitor, benchmarkOutput]() {
@@ -242,10 +250,12 @@ int main(int argc, char *argv[])
         QTimer::singleShot((warmupSeconds + durationSeconds) * 1000 + intervalMilliseconds,
                            &performanceMonitor, &qtmaps::perf::PerformanceMonitor::stopBenchmark);
         QTimer::singleShot((warmupSeconds + durationSeconds) * 1000 + intervalMilliseconds + 500,
-                           &application, &QCoreApplication::quit);
+                           &shutdownCoordinator,
+                           &qtmaps::core::ApplicationShutdownCoordinator::requestQuit);
     } else if (parser.isSet(QStringLiteral("exit-after"))) {
         const int exitSeconds = std::max(1, parser.value(QStringLiteral("exit-after")).toInt());
-        QTimer::singleShot(exitSeconds * 1000, &application, &QCoreApplication::quit);
+        QTimer::singleShot(exitSeconds * 1000, &shutdownCoordinator,
+                           &qtmaps::core::ApplicationShutdownCoordinator::requestQuit);
     }
 
     return application.exec();
