@@ -18,6 +18,7 @@
 #include "map/MbTilesTileSource.h"
 #include "map/SimulatedNavigationController.h"
 #include "perf/PerformanceMonitor.h"
+#include "routing/RoutingController.h"
 
 #ifndef QTMAPS_BUILD_ID
 #define QTMAPS_BUILD_ID "unknown"
@@ -63,6 +64,7 @@ int main(int argc, char *argv[])
     parser.addOption({QStringLiteral("diagnostic-raster-root"), QStringLiteral("Local diagnostic raster fallback directory"), QStringLiteral("path"), QStringLiteral("generated/diagnostic-tiles")});
     parser.addOption({QStringLiteral("force-vector-failure"), QStringLiteral("Force Unit 03 diagnostic raster fallback")});
     parser.addOption({QStringLiteral("navigation-benchmark"), QStringLiteral("Run continuous simulated camera-follow navigation")});
+    parser.addOption({QStringLiteral("routing-demo"), QStringLiteral("Run the Unit 04 fixture-first routing UI")});
     parser.addOption({QStringLiteral("blank-probe"), QStringLiteral("Run the blank-window performance probe")});
     parser.addOption({QStringLiteral("disable-instrumentation"), QStringLiteral("Disable frame and process instrumentation")});
     parser.addOption({QStringLiteral("automated-pan-zoom"), QStringLiteral("Run the deterministic raster pan/zoom sequence")});
@@ -82,6 +84,7 @@ int main(int argc, char *argv[])
     const bool useVectorProbe = useMapboxGlProbe || useMapLibreProbe;
     const bool useUnit03LocalMap = parser.isSet(QStringLiteral("unit03-local-map"));
     const bool useNavigationBenchmark = parser.isSet(QStringLiteral("navigation-benchmark"));
+    const bool useRoutingDemo = parser.isSet(QStringLiteral("routing-demo"));
     const bool useBlankProbe = parser.isSet(QStringLiteral("blank-probe"));
     const bool instrumentationEnabled = !parser.isSet(QStringLiteral("disable-instrumentation"));
 
@@ -100,6 +103,7 @@ int main(int argc, char *argv[])
     qtmaps::map::MapSourceController mapSourceController(&vectorTileSource,
                                                          &diagnosticRasterSource);
     qtmaps::map::SimulatedNavigationController navigationController;
+    qtmaps::routing::RoutingController routingController;
     qtmaps::perf::PerformanceMonitor performanceMonitor;
     QQmlApplicationEngine engine;
 
@@ -131,6 +135,8 @@ int main(int argc, char *argv[])
                                              &cameraProbeController);
     engine.rootContext()->setContextProperty(QStringLiteral("navigationController"),
                                              &navigationController);
+    engine.rootContext()->setContextProperty(QStringLiteral("routingController"),
+                                             &routingController);
     engine.rootContext()->setContextProperty(QStringLiteral("instrumentationEnabled"), instrumentationEnabled);
     engine.rootContext()->setContextProperty(QStringLiteral("benchmarkAutomation"),
                                              parser.isSet(QStringLiteral("automated-pan-zoom")));
@@ -165,14 +171,17 @@ int main(int argc, char *argv[])
                                              interactionMilliseconds);
 
     const bool unit03Vector = useUnit03LocalMap && !mapSourceController.usingRasterFallback();
-    const QUrl qmlUrl(unit03Vector && useNavigationBenchmark
+    const QUrl qmlUrl(unit03Vector && useRoutingDemo
+                          ? QStringLiteral("qrc:/qml/RoutingProbe.qml")
+                      : unit03Vector && useNavigationBenchmark
                           ? QStringLiteral("qrc:/qml/NavigationProbe.qml")
                           : useVectorProbe || unit03Vector
                               ? QStringLiteral("qrc:/qml/MapboxGlProbe.qml")
                               : useBlankProbe ? QStringLiteral("qrc:/qml/BlankProbe.qml")
                                               : QStringLiteral("qrc:/qml/Main.qml"));
     qInfo().noquote() << "probeMode="
-                      << (unit03Vector && useNavigationBenchmark ? "unit03-navigation"
+                      << (unit03Vector && useRoutingDemo ? "unit04-routing-fixture"
+                          : unit03Vector && useNavigationBenchmark ? "unit03-navigation"
                           : unit03Vector ? "unit03-vector-package"
                           : useUnit03LocalMap ? "unit03-diagnostic-raster-fallback"
                           : useMapLibreProbe ? "maplibre-local-resources"

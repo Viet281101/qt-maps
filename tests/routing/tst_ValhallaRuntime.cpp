@@ -2,6 +2,7 @@
 
 #include "routing/ValhallaRouteClient.h"
 #include "routing/ValhallaServiceManager.h"
+#include "routing/RoutingController.h"
 
 #include <QCoreApplication>
 #include <QFile>
@@ -16,6 +17,7 @@
 
 using qtmaps::routing::Route;
 using qtmaps::routing::RouteSource;
+using qtmaps::routing::RoutingController;
 using qtmaps::routing::ValhallaRouteClient;
 using qtmaps::routing::ValhallaServiceManager;
 
@@ -192,6 +194,31 @@ private slots:
         QVERIFY(failureSpy.wait(1000));
         QVERIFY(failureSpy.takeFirst().at(0).toString().contains(QStringLiteral("timed out")));
         QVERIFY(!client.isRequestPending());
+    }
+
+    void fixtureControllerSelectsPointsCalculatesAndFocusesManeuver()
+    {
+        RoutingController controller;
+        QVERIFY(controller.setOriginInput(QStringLiteral("Hoàn Kiếm")));
+        QVERIFY(controller.setDestinationInput(QStringLiteral("Ba Đình")));
+        controller.calculateFixtureRoute();
+        QVERIFY(controller.routeAvailable());
+        QCOMPARE(controller.sourceLabel(), QStringLiteral("fixture/mô phỏng"));
+        QCOMPARE(controller.connectionLabel(), QStringLiteral("offline — fixture"));
+        QCOMPARE(controller.distanceMeters(), 4262.0);
+        QCOMPARE(controller.maneuvers().size(), 11);
+        QVERIFY(controller.routePath().size() > 200);
+
+        QSignalSpy focusSpy(&controller, &RoutingController::focusCoordinateRequested);
+        controller.focusManeuver(4);
+        QCOMPARE(focusSpy.size(), 1);
+        QVERIFY(focusSpy.takeFirst().at(0).value<QGeoCoordinate>().isValid());
+
+        controller.selectMapPoint(QGeoCoordinate(21.0300, 105.8500));
+        QVERIFY(!controller.routeAvailable());
+        QVERIFY(controller.originInput().contains(QLatin1Char(',')));
+        controller.calculateFixtureRoute();
+        QVERIFY(controller.statusMessage().contains(QStringLiteral("Fixture chỉ")));
     }
 };
 

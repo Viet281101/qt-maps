@@ -81,6 +81,12 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
 - Twenty alternating real-route requests had 56.138 ms overall median latency. Hoàn Kiếm–Thái Hà is 7.294 km/523.659 s and Hoàn Kiếm–Ba Đình is 4.262 km/392.156 s; native Vietnamese maneuvers are available.
 - The two fixtures are now recorded Valhalla 3.9.1 responses with version/date/dataset metadata. Detailed evidence: `docs/routing/unit-04-valhalla-local-backend.md`.
 
+### Unit 04C — fixture-first routing UI
+
+- Added a map-first Qt Quick screen with map-click and alias/coordinate endpoint selection, calculate action, route polyline, A/B markers, summary, Vietnamese maneuver list, maneuver focus, source/connectivity/error state, attribution, and the existing F3 overlay.
+- The first Release smoke intentionally used the recorded fixture only. `mapReady=true`; the 7.294 km Hoàn Kiếm–Thái Hà route visually followed the local Hanoi vector roads and displayed all 14 maneuvers with explicit `fixture/mô phỏng` and `offline — fixture` labels.
+- The render-facing controller flow is covered by Qt Test. Current minimal runtime lacks Qt Quick Controls/Layouts, so the screen uses dependency-free Qt Quick core primitives. Evidence: `docs/routing/unit-04-routing-ui.md`.
+
 ## Active Decisions
 
 ### Committed
@@ -97,7 +103,7 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
 
 ## In Progress
 
-- Unit 04B graph, managed child lifecycle, asynchronous route client, real fixtures, evidence, and licensing updates are complete locally. Unit 04C fixture-first map UI is next; it has not yet been connected to the backend.
+- Unit 04B and the Unit 04C fixture-first UI are complete locally. The next scoped change is to connect the already-tested UI controller to the managed backend, retaining explicit fixture fallback.
 
 ## Next Up
 
