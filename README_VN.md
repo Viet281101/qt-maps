@@ -44,6 +44,48 @@ Phạm vi dữ liệu toàn quốc ở độ chi tiết cao, pipeline dữ liệ
 
 Các công nghệ mang trạng thái đề xuất không được xem là đã chốt cho đến khi có bằng chứng build/chạy trên Qt 5.15.13 và máy tham chiếu.
 
+## Build và chạy
+
+Workflow Release đã kiểm chứng chọn rõ Qt 5.15.13 của hệ thống và không đổi `PATH` toàn cục:
+
+```bash
+make requirements
+make build
+make test
+```
+
+MapLibre development install và các Qt QML/runtime plugin hiện là dependency local nằm ngoài Git. Lệnh smoke local đã chạy thành công dưới đây mở package Hà Nội có checksum trong 15 giây; evidence Unit 03 bọc lệnh này trong network namespace dùng cho kiểm chứng mất mạng:
+
+```bash
+LD_LIBRARY_PATH="$PWD/generated/unit-01b/maplibre-install/lib" \
+QT_PLUGIN_PATH="$PWD/generated/unit-01b/maplibre-install/plugins:$PWD/generated/unit-01b/qml-runtime/usr/lib/x86_64-linux-gnu/qt5/plugins" \
+QML2_IMPORT_PATH="$PWD/generated/unit-01b/maplibre-install/qml:$PWD/generated/unit-01b/qml-runtime/usr/lib/x86_64-linux-gnu/qt5/qml" \
+QSG_RENDER_LOOP=threaded \
+./build-qt515/qtmaps --unit03-local-map --navigation-benchmark \
+  --map-package data/packages/current --exit-after 15 \
+  --network-mode network-namespace-offline \
+  --dataset-id hanoi-20261024-v1 \
+  --dataset-coverage "Hanoi bounds 105.78,20.97,105.90,21.10; z12-z15"
+```
+
+Benchmark 120 giây đã ghi nhận dùng cùng lệnh và các biến runtime trên, thay `--exit-after 15` bằng:
+
+```bash
+--benchmark-output /tmp/qtmaps-unit03.csv \
+--benchmark-warmup 10 --benchmark-duration 120 --benchmark-interval 1000 \
+--scenario unit03-navigation
+```
+
+Chỉ tái tạo package có version nằm ngoài Git từ hai input local đã được duyệt:
+
+```bash
+make hanoi-package \
+  HANOI_PBF=generated/unit-01b/source/vietnam-latest.osm.pbf \
+  PLANETILER_JAR=generated/unit-01b/tools/planetiler.jar
+```
+
+Quy trình kiểm chứng mất mạng hoàn toàn và benchmark đầy đủ nằm trong [evidence Unit 03](docs/benchmarks/unit-03-local-map-data-pipeline.md).
+
 ## Nguyên tắc triển khai
 
 - Chỉ dùng API tương thích Qt 5.15.13; không dùng API chỉ có trên Qt 6.
@@ -75,12 +117,15 @@ Kết quả thực tế được ghi theo [mẫu benchmark](docs/benchmarks/benc
 
 - Qt 5.15.13 hệ thống và MapLibre Native Qt v3.0.0 liên kết động là baseline đã duyệt; Qt 5.13.2 tại `/home/viet/Qt/5.13.2/gcc_64` được giữ để đối chiếu.
 - CMake/Ninja/ccache Release build và CTest đã được xác nhận. Việc chọn Qt dùng `CMAKE_PREFIX_PATH` hoặc biến Makefile, không đổi `PATH` toàn cục.
-- MapLibre và Qt 5.13 `mapboxgl` đều đã render dữ liệu Hà Nội thật qua localhost; raster localhost được giữ làm fallback.
-- Unit 03 đã hoàn tất local: package có version/checksum, tile service in-process chỉ bind loopback, fallback diagnostic có lý do và benchmark navigation cold/warm đủ 120 giây. Nhánh đang chờ review/push, chưa merge.
+- Package vector có checksum hiện chỉ bao phủ vùng Hà Nội giới hạn ở zoom 12–15; chưa phải dữ liệu toàn quốc.
+- Tuyến 5,47 km và chuyển động 40 km/h đang hiển thị là fixture mô phỏng xác định trước, chưa phải kết quả từ routing engine.
+- Raster fallback chỉ là ảnh chẩn đoán local để kiểm tra phát hiện lỗi và chuyển nguồn, chưa phải raster Hà Nội thật.
+- Routing, search offline, orthography, UI sản phẩm hoàn chỉnh, installer và kiểm chứng ổn định dài hạn chưa được triển khai.
+- Unit 03 đã hoàn tất trên PR #20: package có version/checksum, tile service in-process chỉ bind loopback, fallback chẩn đoán có lý do và benchmark navigation cold/warm đủ 120 giây; PR chưa merge.
 
 Trạng thái chi tiết và bước tiếp theo nằm trong [progress tracker](context/progress-tracker.md). Kiến trúc, UI, coding standards và workflow nằm trong thư mục [`context/`](context/).
 
-## Cấu trúc dự kiến
+## Cấu trúc repository
 
 ```text
 app/                 entry point và lifecycle
@@ -94,15 +139,6 @@ tools/data-pipeline/ chuẩn bị dữ liệu có thể tái lập
 tests/               Qt Test và Qt Quick Test
 docs/                benchmark và báo cáo tuần
 context/             nguồn sự thật về phạm vi và quyết định dự án
-```
-
-Workflow baseline đã được kiểm chứng:
-
-```bash
-make requirements
-make build
-make test
-make run
 ```
 
 Cách build đối chiếu Qt 5.13.2 và cấu hình runtime MapLibre được ghi trong [code standards](context/code-standards.md) và [evidence Unit 01b](docs/benchmarks/unit-01b-vector-feasibility.md).

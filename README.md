@@ -44,6 +44,56 @@ Nationwide high-detail coverage, a complete data pipeline, installer packaging, 
 
 A proposed technology is not committed until it has been built and exercised successfully with Qt 5.15.13 on the reference machine.
 
+## Build and run
+
+The validated Release workflow selects system Qt 5.15.13 explicitly and does not change the global `PATH`:
+
+```bash
+make requirements
+make build
+make test
+```
+
+The current MapLibre development install and Qt QML/runtime plugins are ignored local dependencies. This successful local smoke command runs the checksummed Hanoi package for 15 seconds; the Unit 03 evidence wraps it in the network namespace used for the disconnected check:
+
+```bash
+LD_LIBRARY_PATH="$PWD/generated/unit-01b/maplibre-install/lib" \
+QT_PLUGIN_PATH="$PWD/generated/unit-01b/maplibre-install/plugins:$PWD/generated/unit-01b/qml-runtime/usr/lib/x86_64-linux-gnu/qt5/plugins" \
+QML2_IMPORT_PATH="$PWD/generated/unit-01b/maplibre-install/qml:$PWD/generated/unit-01b/qml-runtime/usr/lib/x86_64-linux-gnu/qt5/qml" \
+QSG_RENDER_LOOP=threaded \
+./build-qt515/qtmaps --unit03-local-map --navigation-benchmark \
+  --map-package data/packages/current --exit-after 15 \
+  --network-mode network-namespace-offline \
+  --dataset-id hanoi-20261024-v1 \
+  --dataset-coverage "Hanoi bounds 105.78,20.97,105.90,21.10; z12-z15"
+```
+
+The recorded 120-second benchmark uses the same command and runtime variables, replacing `--exit-after 15` with:
+
+```bash
+--benchmark-output /tmp/qtmaps-unit03.csv \
+--benchmark-warmup 10 --benchmark-duration 120 --benchmark-interval 1000 \
+--scenario unit03-navigation
+```
+
+Recreate the ignored, versioned package only from the approved local inputs:
+
+```bash
+make hanoi-package \
+  HANOI_PBF=generated/unit-01b/source/vietnam-latest.osm.pbf \
+  PLANETILER_JAR=generated/unit-01b/tools/planetiler.jar
+```
+
+Exact disconnected verification and benchmark procedures are recorded in [the Unit 03 evidence](docs/benchmarks/unit-03-local-map-data-pipeline.md).
+
+## Current status and limitations
+
+- Qt 5.15.13 plus dynamically linked MapLibre Native Qt v3.0.0 is the production baseline. Qt 5.13.2 is retained only for explicit comparison.
+- The checksummed local vector package currently covers bounded Hanoi data at zoom 12–15. It is not nationwide coverage.
+- The visible 5.47 km navigation path and 40 km/h movement are deterministic simulation fixtures, not output from a routing engine.
+- Raster fallback is a local diagnostic image that proves failure detection and switching; it is not real Hanoi raster coverage.
+- Routing, offline search, orthography, final product UI, installer packaging, and long-duration stability validation are not implemented yet.
+
 ## Implementation Principles
 
 - Use only APIs compatible with Qt 5.15.13; do not use Qt 6-only APIs.
@@ -71,7 +121,7 @@ These values are planning targets, not measured results:
 
 Actual results are recorded using [the benchmark template](docs/benchmarks/benchmark-template.md).
 
-## Planned Repository Structure
+## Repository Structure
 
 ```text
 app/                 Entry point and lifecycle
@@ -85,15 +135,6 @@ tools/data-pipeline/ Reproducible data preparation
 tests/               Qt Test and Qt Quick Test suites
 docs/                Benchmarks and weekly reports
 context/             Authoritative scope and project decisions
-```
-
-The validated baseline workflow uses system Qt 5.15.13 without changing global `PATH`:
-
-```bash
-make requirements
-make build
-make test
-make run
 ```
 
 Qt 5.13.2 comparison and MapLibre runtime-path details are documented in [the code standards](context/code-standards.md) and [Unit 01b evidence](docs/benchmarks/unit-01b-vector-feasibility.md).
