@@ -15,6 +15,21 @@ Window {
     title: qsTr("QtMaps — Lập tuyến Hà Nội")
     property bool performanceOverlayVisible: instrumentationEnabled
 
+    function applyEndpoints() {
+        if (routingController.setOriginInput(originField.text))
+            routingController.setDestinationInput(destinationField.text)
+    }
+
+    function calculateRequestedRoute() {
+        if (routingController.setOriginInput(originField.text)
+                && routingController.setDestinationInput(destinationField.text)) {
+            if (routingFixtureOnly)
+                routingController.calculateFixtureRoute()
+            else
+                routingController.calculateRoute()
+        }
+    }
+
     Plugin {
         id: mapPlugin
         name: "maplibre"
@@ -153,6 +168,9 @@ Window {
                     color: "#17212b"
                     verticalAlignment: TextInput.AlignVCenter
                     selectByMouse: true
+                    activeFocusOnTab: true
+                    KeyNavigation.tab: destinationField
+                    KeyNavigation.backtab: routeButton
                     text: routingController.originInput
                     onAccepted: routingController.setOriginInput(text)
                 }
@@ -171,6 +189,9 @@ Window {
                     color: "#17212b"
                     verticalAlignment: TextInput.AlignVCenter
                     selectByMouse: true
+                    activeFocusOnTab: true
+                    KeyNavigation.tab: applyButton
+                    KeyNavigation.backtab: originField
                     text: routingController.destinationInput
                     onAccepted: routingController.setDestinationInput(text)
                 }
@@ -179,47 +200,25 @@ Window {
             Row {
                 width: parent.width
                 spacing: Theme.spaceSm
-                Rectangle {
+                KeyboardActionButton {
+                    id: applyButton
                     width: (parent.width - parent.spacing) / 2
-                    height: 38
-                    radius: Theme.radiusPanel
-                    color: applyMouse.pressed ? "#455869" : "#334352"
-                    border.color: Theme.border
-                    Text { anchors.centerIn: parent; color: Theme.textPrimary; text: qsTr("Áp dụng điểm") }
-                    MouseArea {
-                        id: applyMouse
-                        anchors.fill: parent
-                        onClicked: {
-                        if (routingController.setOriginInput(originField.text))
-                            routingController.setDestinationInput(destinationField.text)
-                        }
-                    }
+                    text: qsTr("Áp dụng điểm")
+                    normalColor: "#334352"
+                    pressedColor: "#455869"
+                    textColor: Theme.textPrimary
+                    KeyNavigation.tab: routeButton
+                    KeyNavigation.backtab: destinationField
+                    onTriggered: root.applyEndpoints()
                 }
-                Rectangle {
+                KeyboardActionButton {
+                    id: routeButton
                     width: (parent.width - parent.spacing) / 2
-                    height: 38
-                    radius: Theme.radiusPanel
-                    color: routeMouse.pressed ? "#2266aa" : Theme.accent
-                    opacity: routingController.loading ? 0.55 : 1
-                    Text {
-                        anchors.centerIn: parent
-                        color: "#08243a"
-                        font.bold: true
-                        text: routingController.loading ? qsTr("Đang tính…") : qsTr("Tính đường")
-                    }
-                    MouseArea {
-                        id: routeMouse
-                        anchors.fill: parent
-                        enabled: !routingController.loading
-                        onClicked: {
-                            if (routingController.setOriginInput(originField.text)
-                                    && routingController.setDestinationInput(destinationField.text))
-                                if (routingFixtureOnly)
-                                    routingController.calculateFixtureRoute()
-                                else
-                                    routingController.calculateRoute()
-                        }
-                    }
+                    enabled: !routingController.loading
+                    text: routingController.loading ? qsTr("Đang tính…") : qsTr("Tính đường")
+                    KeyNavigation.tab: originField
+                    KeyNavigation.backtab: applyButton
+                    onTriggered: root.calculateRequestedRoute()
                 }
             }
 

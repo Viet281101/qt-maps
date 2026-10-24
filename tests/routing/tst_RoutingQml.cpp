@@ -1,8 +1,12 @@
 #include <QtTest>
 
 #include <QColor>
+#include <QFile>
 #include <QQmlComponent>
 #include <QQmlEngine>
+#include <QQuickItem>
+#include <QQuickWindow>
+#include <QSignalSpy>
 
 class RoutingQmlTest final : public QObject
 {
@@ -31,6 +35,40 @@ private slots:
         QVERIFY(selected.isValid());
         QVERIFY(normal != selected);
         QCOMPARE(row->property("selected").toBool(), true);
+    }
+
+    void keyboardActionButtonSupportsTabReturnAndSpace()
+    {
+        QQmlEngine engine;
+        QQmlComponent component(
+            &engine, QUrl(QStringLiteral("qrc:/qml/components/KeyboardActionButton.qml")));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> button(component.create());
+        QVERIFY2(button, qPrintable(component.errorString()));
+        QQuickItem *item = qobject_cast<QQuickItem *>(button.data());
+        QVERIFY(item);
+        QVERIFY(item->activeFocusOnTab());
+
+        QQuickWindow window;
+        item->setParentItem(window.contentItem());
+        window.show();
+        item->forceActiveFocus();
+        QVERIFY(item->hasActiveFocus());
+        QSignalSpy triggered(button.data(), SIGNAL(triggered()));
+        QTest::keyClick(&window, Qt::Key_Return);
+        QTest::keyClick(&window, Qt::Key_Space);
+        QCOMPARE(triggered.size(), 2);
+    }
+
+    void routingProbeDeclaresExpectedTabOrder()
+    {
+        QFile file(QStringLiteral(":/qml/RoutingProbe.qml"));
+        QVERIFY(file.open(QIODevice::ReadOnly));
+        const QByteArray qml = file.readAll();
+        QVERIFY(qml.contains("KeyNavigation.tab: destinationField"));
+        QVERIFY(qml.contains("KeyNavigation.tab: applyButton"));
+        QVERIFY(qml.contains("KeyNavigation.tab: routeButton"));
+        QVERIFY(qml.contains("KeyNavigation.tab: originField"));
     }
 };
 
