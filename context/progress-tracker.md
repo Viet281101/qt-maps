@@ -123,6 +123,7 @@ Licensing and packaging evidence:
 
 ## Latest Verification
 
+- PR #20 closure gate on 2026-10-24: Qt 5.15.13 Release rebuilt without a new compiler warning; `make test` passed 3/3, `git diff --check` passed, all internal links across 23 tracked Markdown files resolved, and `git ls-files` found no prohibited generated/downloaded artifact. The live PR remains mergeable/clean with CodeRabbit success, the approved assignee/labels/milestone/Project fields, and squash-only repository settings.
 - **BUILD PASS:** default Qt 5.15.13 Release `make test` in `build-qt515`: 3/3 executables passed, including manifest corruption, service lifecycle/bounded failure/port conflict, fallback, and navigation-route coverage; `ldd` resolves Qt Core from the system Qt 5.15 runtime.
 - Last pre-Unit03 isolated Qt 5.13.2 comparison: 2/2 passed and `ldd` resolved Qt Core from `/home/viet/Qt/5.13.2/gcc_64`; Unit 03 is intentionally not gated or rerun on the comparison kit.
 - Unit 03 corrected benchmark: three cold plus three warm-cache real-data runs reported `mapReady=true`, 7,168-7,179 interaction frames, no CSV errors, and only loopback IP connections.
