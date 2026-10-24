@@ -20,7 +20,7 @@ Window {
 
         PluginParameter {
             name: "osm.mapping.custom.host"
-            value: "http://127.0.0.1:8765/"
+            value: rasterTileBaseUrl
         }
         PluginParameter {
             name: "osm.mapping.providersrepository.disabled"
@@ -141,7 +141,9 @@ Window {
             anchors.centerIn: parent
             color: "#111111"
             font.bold: true
-            text: qsTr("DIAGNOSTIC XYZ TILES — NOT A REAL GEOGRAPHIC MAP")
+            text: fallbackReason.length > 0
+                  ? qsTr("DIAGNOSTIC RASTER FALLBACK — %1").arg(fallbackReason)
+                  : qsTr("DIAGNOSTIC XYZ TILES — NOT A REAL GEOGRAPHIC MAP")
         }
     }
 

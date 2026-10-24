@@ -16,9 +16,11 @@ find_package(Qt5 ${QTMAPS_MIN_QT_VERSION} REQUIRED COMPONENTS
     Core
     Gui
     Location
+    Network
     Positioning
     Qml
     Quick
+    Sql
     Test
 )
 
@@ -67,9 +69,25 @@ target_link_libraries(qtmaps_perf PUBLIC Qt5::Core Qt5::Quick)
 add_library(qtmaps_map_probe STATIC
     src/map/CameraProbeController.cpp
     src/map/CameraProbeController.h
+    src/map/DirectoryTileSource.cpp
+    src/map/DirectoryTileSource.h
+    src/map/MapPackageManifest.cpp
+    src/map/MapPackageManifest.h
+    src/map/MapSourceController.cpp
+    src/map/MapSourceController.h
+    src/map/MbTilesTileSource.cpp
+    src/map/MbTilesTileSource.h
+    src/map/SimulatedNavigationController.cpp
+    src/map/SimulatedNavigationController.h
+    src/map/TileSource.h
 )
 target_include_directories(qtmaps_map_probe PUBLIC "${CMAKE_SOURCE_DIR}/src")
-target_link_libraries(qtmaps_map_probe PUBLIC Qt5::Core)
+target_link_libraries(qtmaps_map_probe PUBLIC
+    Qt5::Core
+    Qt5::Network
+    Qt5::Positioning
+    Qt5::Sql
+)
 
 qt5_add_resources(QTMAPS_RESOURCES resources.qrc)
 
@@ -84,9 +102,11 @@ target_link_libraries(qtmaps PRIVATE
     Qt5::Core
     Qt5::Gui
     Qt5::Location
+    Qt5::Network
     Qt5::Positioning
     Qt5::Qml
     Qt5::Quick
+    Qt5::Sql
 )
 target_compile_definitions(qtmaps PRIVATE QTMAPS_BUILD_ID="${QTMAPS_BUILD_ID}")
 
@@ -99,4 +119,13 @@ if(BUILD_TESTING)
     add_executable(qtmaps_map_probe_tests tests/map/tst_CameraProbeController.cpp)
     target_link_libraries(qtmaps_map_probe_tests PRIVATE qtmaps_map_probe Qt5::Test)
     add_test(NAME qtmaps_map_probe_tests COMMAND qtmaps_map_probe_tests)
+
+    add_executable(qtmaps_map_pipeline_tests tests/map/tst_MapPipeline.cpp)
+    target_link_libraries(qtmaps_map_pipeline_tests PRIVATE
+        qtmaps_map_probe
+        Qt5::Network
+        Qt5::Sql
+        Qt5::Test
+    )
+    add_test(NAME qtmaps_map_pipeline_tests COMMAND qtmaps_map_pipeline_tests)
 endif()
