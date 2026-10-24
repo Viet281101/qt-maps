@@ -4,9 +4,9 @@ Update this file after every meaningful implementation change. Keep it below the
 
 ## Current Phase
 
-- Unit 01b is complete locally on `feat/01b-vector-feasibility-spike`, which branches from Unit 02 because it reuses instrumentation not yet merged into `main`.
-- The bounded real-Hanoi comparison recommends Qt 5.15.13 plus MapLibre Native Qt v3.0.0 for the demo, with QtLocation raster as fallback. The project-wide baseline remains Qt 5.13.2 until owner approval.
-- The Unit 01b branch has not been pushed or merged. Unit 02 remains associated with PR #19 and Issue #7.
+- Pre-Unit-03 work is active on `feat/03-local-map-data-pipeline`, branched from completed local Unit 01b as instructed. Neither branch has been pushed or merged.
+- The owner approved Qt 5.15.13 plus dynamically linked MapLibre Native Qt v3.0.0 as the application baseline, retaining Qt 5.13.2 for comparison and localhost raster as fallback.
+- Performance schema v2 implementation is in progress: interaction-only FPS and frame-time p50/p95/p99 replace the legacy whole-session 1% low as the primary render-on-demand report. Legacy CSV fields remain for historical comparison.
 
 ## Current Goal
 
@@ -63,14 +63,11 @@ CPU uses 100% per logical core; the separately launched localhost server is excl
 
 ### Proposed — owner approval required
 
-- Migrate the demo baseline to Qt 5.15.13 plus dynamically linked MapLibre Native Qt v3.0.0.
-- Retain QtLocation raster tiles as the fallback and the Qt 5.13.2 vector probe as rollback/comparison evidence.
-- Require a continuous-motion navigation benchmark before treating UI frame pacing as stable.
 - Use Geofabrik/Planetiler-generated map data, a loopback-only tile service or direct MBTiles access, Valhalla for routing, and SQLite FTS5 for offline search.
 
 ## In Progress
 
-- Await owner review of Unit 01b and approval or rejection of the renderer/version migration, LGPL-compatible dynamic-link packaging approach, and continuous-motion performance gate.
+- Complete A-D before Unit 03 implementation: performance metric correction and benchmark rerun; minimal Unit 03 plan/spec; Qt 5.15.13 baseline migration; third-party notices and dynamic-link packaging guidance.
 
 ## Next Up
 

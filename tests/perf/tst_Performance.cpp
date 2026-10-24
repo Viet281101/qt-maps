@@ -40,6 +40,39 @@ private slots:
         QCOMPARE(statistics.averageFps(), 25.0);
     }
 
+    void interactionFrameStatisticsExcludeIdleAndReportPercentiles()
+    {
+        FrameStatistics statistics(8);
+        statistics.addSample(0.0); // Legacy interval sample remains available.
+        statistics.addInteractionFrameTime(10.0);
+        statistics.addInteractionFrameTime(20.0);
+        statistics.addInteractionFrameTime(30.0);
+        statistics.addInteractionFrameTime(40.0);
+        statistics.addInteractionFrameTime(100.0);
+        statistics.addInteractionFrameTime(0.0); // Invalid frame interval is ignored.
+
+        QCOMPARE(statistics.averageFps(), 0.0);
+        QCOMPARE(statistics.interactionFrameCount(), 5);
+        QCOMPARE(statistics.interactionAverageFps(), 25.0);
+        QCOMPARE(statistics.interactionFrameTimePercentile(50.0), 30.0);
+        QCOMPARE(statistics.interactionFrameTimePercentile(95.0), 100.0);
+        QCOMPARE(statistics.interactionFrameTimePercentile(99.0), 100.0);
+
+        statistics.reset();
+        QCOMPARE(statistics.interactionFrameCount(), 0);
+        QCOMPARE(statistics.interactionFrameTimePercentile(95.0), 0.0);
+    }
+
+    void interactionFrameStatisticsRemainBounded()
+    {
+        FrameStatistics statistics(2);
+        statistics.addInteractionFrameTime(10.0);
+        statistics.addInteractionFrameTime(20.0);
+        statistics.addInteractionFrameTime(40.0);
+        QCOMPARE(statistics.interactionFrameCount(), 2);
+        QCOMPARE(statistics.interactionFrameTimePercentile(50.0), 20.0);
+    }
+
     void processAggregationIncludesDescendantsAndCpuDelta()
     {
         QHash<qint64, ProcessSnapshot> previous;
@@ -115,6 +148,9 @@ private slots:
         QVERIFY(file.open(QIODevice::ReadOnly | QIODevice::Text));
         const QList<QByteArray> lines = file.readAll().split('\n');
         QCOMPARE(lines.at(0), BenchmarkCsvWriter::columns().join(QLatin1Char(',')).toUtf8());
+        QCOMPARE(BenchmarkCsvWriter::schemaVersion(), QStringLiteral("qtmaps-perf-v2"));
+        QVERIFY(BenchmarkCsvWriter::columns().contains(
+            QStringLiteral("interaction_frame_time_p99_ms")));
         QCOMPARE(lines.size(), 4); // header, two rows, trailing empty entry
         QVERIFY(lines.at(1).contains("\"pan, \"\"zoom\"\"\""));
     }

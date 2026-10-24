@@ -44,9 +44,11 @@ Window {
                 performanceOverlayVisible = !performanceOverlayVisible
                 event.accepted = true
             } else if (event.key === Qt.Key_C) {
+                performanceMonitor.beginInteractionWindow(450)
                 cameraProbeController.advance(minimumTilt, maximumTilt)
                 event.accepted = true
             } else if (event.key === Qt.Key_N) {
+                performanceMonitor.beginInteractionWindow(450)
                 cameraProbeController.reset()
                 event.accepted = true
             }
@@ -82,14 +84,19 @@ Window {
         onTriggered: {
             var phase = automationStep % 12
             if (phase === 0) {
+                performanceMonitor.beginInteractionWindow(450)
                 cameraProbeController.advance(map.minimumTilt, map.maximumTilt)
             } else if (phase === 2 || phase === 3) {
+                performanceMonitor.beginInteractionWindow(450)
                 map.pan(-64, 0)
             } else if (phase === 4 || phase === 5) {
+                performanceMonitor.beginInteractionWindow(450)
                 map.pan(64, 0)
             } else if (phase === 6) {
+                performanceMonitor.beginInteractionWindow(450)
                 map.zoomLevel = Math.min(map.maximumZoomLevel, map.zoomLevel + 1)
             } else if (phase === 9) {
+                performanceMonitor.beginInteractionWindow(450)
                 map.zoomLevel = Math.max(map.minimumZoomLevel, map.zoomLevel - 1)
             }
             automationStep += 1

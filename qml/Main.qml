@@ -60,21 +60,27 @@ Window {
                 performanceOverlayVisible = !performanceOverlayVisible
                 event.accepted = true
             } else if (event.key === Qt.Key_Left) {
+                performanceMonitor.beginInteractionWindow(450)
                 pan(128, 0)
                 event.accepted = true
             } else if (event.key === Qt.Key_Right) {
+                performanceMonitor.beginInteractionWindow(450)
                 pan(-128, 0)
                 event.accepted = true
             } else if (event.key === Qt.Key_Up) {
+                performanceMonitor.beginInteractionWindow(450)
                 pan(0, 128)
                 event.accepted = true
             } else if (event.key === Qt.Key_Down) {
+                performanceMonitor.beginInteractionWindow(450)
                 pan(0, -128)
                 event.accepted = true
             } else if (event.key === Qt.Key_Plus || event.key === Qt.Key_Equal) {
+                performanceMonitor.beginInteractionWindow(450)
                 zoomLevel = Math.min(maximumZoomLevel, zoomLevel + 1)
                 event.accepted = true
             } else if (event.key === Qt.Key_Minus) {
+                performanceMonitor.beginInteractionWindow(450)
                 zoomLevel = Math.max(minimumZoomLevel, zoomLevel - 1)
                 event.accepted = true
             }
@@ -107,14 +113,19 @@ Window {
         repeat: true
         onTriggered: {
             var phase = automationStep % 8
-            if (phase === 0 || phase === 1)
+            if (phase === 0 || phase === 1) {
+                performanceMonitor.beginInteractionWindow(450)
                 map.pan(-64, 0)
-            else if (phase === 2 || phase === 3)
+            } else if (phase === 2 || phase === 3) {
+                performanceMonitor.beginInteractionWindow(450)
                 map.pan(64, 0)
-            else if (phase === 4)
+            } else if (phase === 4) {
+                performanceMonitor.beginInteractionWindow(450)
                 map.zoomLevel = Math.min(map.maximumZoomLevel, map.zoomLevel + 1)
-            else if (phase === 6)
+            } else if (phase === 6) {
+                performanceMonitor.beginInteractionWindow(450)
                 map.zoomLevel = Math.max(map.minimumZoomLevel, map.zoomLevel - 1)
+            }
             automationStep += 1
         }
     }
