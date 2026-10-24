@@ -5,7 +5,7 @@ Update this file after every meaningful implementation change. Keep it below the
 ## Current Phase
 
 - Unit 03 was squash-merged through PR #20 as `1358c3c`.
-- Unit 04 increment A is approved and backed up on `origin/feat/04-routing`. The owner approved `osmium-tool` plus checksum-pinned `pyvalhalla==3.9.1`; the bounded Hanoi extract and graph now build successfully and Unit 04B lifecycle/client implementation is in progress.
+- Unit 04 increments A-C are complete on `feat/04-routing` and under review in PR #21. The owner approved `osmium-tool` plus checksum-pinned `pyvalhalla==3.9.1`; the bounded Hanoi graph, managed backend, and route-planning UI are verified. Route replay/guidance and full process-tree measurement remain deferred.
 - The owner approved Qt 5.15.13 plus dynamically linked MapLibre Native Qt v3.0.0 as the application baseline, retaining Qt 5.13.2 for comparison and localhost raster as fallback.
 - Performance schema v3 is complete: interaction-only FPS and frame-time p50/p95/p99 exclude the final settling swap, which is reported separately; legacy CSV fields remain for historical comparison.
 
@@ -87,6 +87,7 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
 - The first Release smoke intentionally used the recorded fixture only. `mapReady=true`; the 7.294 km Hoàn Kiếm–Thái Hà route visually followed the local Hanoi vector roads and displayed all 14 maneuvers with explicit `fixture/mô phỏng` and `offline — fixture` labels.
 - The render-facing controller flow is covered by Qt Test. Current minimal runtime lacks Qt Quick Controls/Layouts, so the screen uses dependency-free Qt Quick core primitives. Evidence: `docs/routing/unit-04-routing-ui.md`.
 - The same controller is now connected to the managed backend: it validates the exact loopback listen config, switches the visible source to `Valhalla local`, preserves an explicit fixture fallback for startup/failure, and refuses unsupported fallback endpoints. Release smoke showed the real route polyline and 14 Vietnamese maneuvers; timed exit removed both app/service processes and released port 18002.
+- PR #21 references Issues #4 and #5, is assigned to `Viet281101`, and uses the `First Management Demo` milestone plus the `feature`, `demo`, `priority:P0`, `area:routing`, `area:map`, and `area:ui` labels. The PR and both issues are in Project #6 with Status `In Progress`, Priority `P0`, and Demo Phase `Week 1`.
 
 ## Active Decisions
 
@@ -104,13 +105,13 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
 
 ## In Progress
 
-- Unit 04B and Unit 04C are complete locally, including the managed backend connection and visible fallback. Steps D (route replay/guidance) and E (full process-tree benchmark) remain explicitly unstarted per the current turn boundary.
+- Unit 04 increments A-C are under review in PR #21. Issues #4 and #5 remain open while their acceptance criteria are reviewed. Steps D (route replay/guidance) and E (full process-tree benchmark) remain explicitly unstarted.
 
 ## Next Up
 
-1. Finish and verify the bounded managed Valhalla child lifecycle and asynchronous route client.
-2. Expose the recorded route through the minimum map-first fixture UI and verify the visual road alignment.
-3. Only after the separate Unit 04B report, connect that UI controller to the real backend with visible fixture fallback.
+1. Review PR #21 and merge it with GitHub `Squash and merge` only after approval.
+2. Implement route replay, guidance presentation, and maneuver progression against the selected route.
+3. Measure the Release app plus Valhalla process tree and record clean-shell reproducibility evidence.
 
 ## Open Questions and Risks
 
@@ -158,4 +159,4 @@ Licensing and packaging evidence:
 - Unit conversion follow-up: omitted units default to kilometers, explicit kilometers/miles normalize to meters, and seconds remain unchanged; Release `make test` passes 4/4. Branch backup matched `origin/feat/04-routing` at `6aa1c8e` with no PR.
 - Valhalla survey evidence: `docs/routing/valhalla-availability-survey.md`. Ubuntu apt/release binaries are unavailable; the official 37.5 MB `pyvalhalla` 3.9.1 wheel is preferred over the 156.3 MiB compressed container or a 328-package source-build dependency set.
 - Unit 04B/C Release verification on 2026-10-25: all 5 CTest executables pass, the managed service is a direct child listening only at `127.0.0.1:18002`, the UI displays the real Valhalla route/source and Vietnamese maneuvers over the local map, and the timed exit leaves no service process or listener.
-- Local Unit 04 branch starts from `main`/`origin/main` at `1358c3c`. The pre-existing `.vscode/settings.json` change remains user-owned and excluded from every commit; no Unit 04 PR exists and nothing has been merged.
+- PR #21 verification on 2026-10-25: the Qt 5.15.13 Release build passed 5/5 CTest executables, `git diff --check origin/main...HEAD` passed, the PR is mergeable, and CodeRabbit reports success. Live metadata confirms the issue references, assignee, milestone, six labels, and Project #6 fields described above. The pre-existing `.vscode/settings.json` change remains user-owned and excluded from every commit.
