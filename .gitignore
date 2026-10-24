@@ -59,4 +59,5 @@ aqtinstall.log
 
 # Generated unit 01 diagnostic tiles/caches (not real geographic map data)
 /generated/
+/data/packages/
 __pycache__/

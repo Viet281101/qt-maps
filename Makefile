@@ -9,11 +9,14 @@ BUILD_DIR ?= build-qt515
 BUILD_TYPE ?= Release
 CMAKE ?= cmake
 PYTHON ?= python3
+HANOI_PBF ?= generated/unit-01b/source/vietnam-latest.osm.pbf
+PLANETILER_JAR ?= generated/unit-01b/tools/planetiler.jar
+QT_RUNTIME_PLUGIN_PATH ?= generated/unit-01b/qml-runtime/usr/lib/x86_64-linux-gnu/qt5/plugins
 
 QMAKE := $(QT_PREFIX)/bin/qmake
 QTMAPS := $(BUILD_DIR)/qtmaps
 
-.PHONY: help requirements configure build test run diagnostic-tiles vector-fixture vector-real-style \
+.PHONY: help requirements configure build test run diagnostic-tiles vector-fixture vector-real-style hanoi-package \
 	serve-diagnostic-tiles serve-vector-fixture run-mapboxgl-probe clean
 
 help:
@@ -27,6 +30,7 @@ help:
 	@echo "  make serve-diagnostic-tiles Serve the fixture on 127.0.0.1:8765"
 	@echo "  make vector-fixture        Generate the synthetic local MVT/style/glyph/sprite fixture"
 	@echo "  make vector-real-style     Generate local style/glyph/sprite resources for real Planetiler tiles"
+	@echo "  make hanoi-package         Build ignored versioned Hanoi MBTiles package from approved local inputs"
 	@echo "  make serve-vector-fixture  Serve the vector fixture on 127.0.0.1:8766"
 	@echo "  make run-mapboxgl-probe    Run probe (vector fixture server must be separate)"
 	@echo "  make clean                 Clean compiled outputs through CMake"
@@ -58,7 +62,8 @@ build: configure
 	"$(CMAKE)" --build "$(BUILD_DIR)" --parallel
 
 test: build
-	ctest --test-dir "$(BUILD_DIR)" --output-on-failure
+	env QT_PLUGIN_PATH="$(abspath $(QT_RUNTIME_PLUGIN_PATH))$${QT_PLUGIN_PATH:+:$$QT_PLUGIN_PATH}" \
+		ctest --test-dir "$(BUILD_DIR)" --output-on-failure
 
 run: build
 	"$(QTMAPS)"
@@ -74,6 +79,10 @@ vector-fixture:
 
 vector-real-style:
 	"$(PYTHON)" tools/generate_vector_fixture.py --real-style-only --output generated/unit-01b/site
+
+hanoi-package:
+	"$(PYTHON)" tools/data-pipeline/build_hanoi_package.py \
+		--pbf "$(HANOI_PBF)" --planetiler-jar "$(PLANETILER_JAR)"
 
 serve-vector-fixture: vector-fixture
 	"$(PYTHON)" -m http.server 8766 --bind 127.0.0.1 --directory generated/vector-fixture
