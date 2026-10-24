@@ -4,7 +4,7 @@ Update this file after every meaningful implementation change. Keep it below the
 
 ## Current Phase
 
-- Unit 03 is complete and reviewed locally on `feat/03-local-map-data-pipeline`, including corrected full-window benchmark evidence, and is ready to push. It has not been merged.
+- Unit 03 is complete, reviewed, and pushed on `feat/03-local-map-data-pipeline`, including corrected full-window benchmark evidence. It has not been merged.
 - The owner approved Qt 5.15.13 plus dynamically linked MapLibre Native Qt v3.0.0 as the application baseline, retaining Qt 5.13.2 for comparison and localhost raster as fallback.
 - Performance schema v3 is complete: interaction-only FPS and frame-time p50/p95/p99 exclude the final settling swap, which is reported separately; legacy CSV fields remain for historical comparison.
 
@@ -123,4 +123,4 @@ Licensing and packaging evidence:
 - **BUILD PASS:** default Qt 5.15.13 Release `make test` in `build-qt515`: 3/3 executables passed, including manifest corruption, service lifecycle/bounded failure/port conflict, fallback, and navigation-route coverage; `ldd` resolves Qt Core from the system Qt 5.15 runtime.
 - Last pre-Unit03 isolated Qt 5.13.2 comparison: 2/2 passed and `ldd` resolved Qt Core from `/home/viet/Qt/5.13.2/gcc_64`; Unit 03 is intentionally not gated or rerun on the comparison kit.
 - Unit 03 corrected benchmark: three cold plus three warm-cache real-data runs reported `mapReady=true`, 7,168-7,179 interaction frames, no CSV errors, and only loopback IP connections.
-- No push or merge was performed. The pre-existing `.vscode/settings.json` change is user-owned and excluded from every commit.
+- The reviewed Unit 03 branch is published at `origin/feat/03-local-map-data-pipeline`; no merge or pull request was performed. The pre-existing `.vscode/settings.json` change is user-owned and excluded from every commit.
