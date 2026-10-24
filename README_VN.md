@@ -34,9 +34,9 @@ Phạm vi dữ liệu toàn quốc ở độ chi tiết cao, pipeline dữ liệ
 | -------------- | -------------------------------------------------------------- |
 | UI và runtime  | Qt 5.15.13, MapLibre Native Qt v3.0.0, C++, QML, Qt Quick      |
 | Build          | CMake và Ninja với Qt 5 CMake APIs                             |
-| Raster         | QtLocation `osm`, cần xác nhận bằng spike chạy thật            |
-| Vector         | MapLibre Native/Qt integration, chỉ chốt sau spike tương thích |
-| Dữ liệu bản đồ | Geofabrik Vietnam OSM PBF; MBTiles cho dữ liệu tile local      |
+| Raster         | Fallback diagnostic localhost đã xác nhận; raster thật để sau  |
+| Vector         | MapLibre Native Qt v3.0.0 đã duyệt, dùng MBTiles local hợp lệ  |
+| Dữ liệu bản đồ | Package Hà Nội có version từ Geofabrik PBF/Planetiler đã duyệt |
 | Routing        | Valhalla chạy local qua `QProcess` đang là phương án đề xuất   |
 | Search offline | SQLite FTS5 đang là phương án đề xuất                          |
 | GPS mô phỏng   | QtPositioning và route/NMEA replay                             |
@@ -76,7 +76,7 @@ Kết quả thực tế được ghi theo [mẫu benchmark](docs/benchmarks/benc
 - Qt 5.15.13 hệ thống và MapLibre Native Qt v3.0.0 liên kết động là baseline đã duyệt; Qt 5.13.2 tại `/home/viet/Qt/5.13.2/gcc_64` được giữ để đối chiếu.
 - CMake/Ninja/ccache Release build và CTest đã được xác nhận. Việc chọn Qt dùng `CMAKE_PREFIX_PATH` hoặc biến Makefile, không đổi `PATH` toàn cục.
 - MapLibre và Qt 5.13 `mapboxgl` đều đã render dữ liệu Hà Nội thật qua localhost; raster localhost được giữ làm fallback.
-- Unit 03 chưa triển khai và đang chờ duyệt package contract, tile-service lifecycle, phạm vi raster fallback và kịch bản benchmark navigation liên tục.
+- Unit 03 đã hoàn tất local: package có version/checksum, tile service in-process chỉ bind loopback, fallback diagnostic có lý do và benchmark navigation cold/warm đủ 120 giây. Nhánh đang chờ review/push, chưa merge.
 
 Trạng thái chi tiết và bước tiếp theo nằm trong [progress tracker](context/progress-tracker.md). Kiến trúc, UI, coding standards và workflow nằm trong thư mục [`context/`](context/).
 

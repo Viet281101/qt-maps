@@ -35,7 +35,7 @@ help:
 	@echo "  make run-mapboxgl-probe    Run probe (vector fixture server must be separate)"
 	@echo "  make clean                 Clean compiled outputs through CMake"
 	@echo
-	@echo "Overrides: QT_PREFIX, QT_EXPECTED_VERSION, QTMAPS_MIN_QT_VERSION, BUILD_DIR, BUILD_TYPE, CMAKE, PYTHON"
+	@echo "Overrides: QT_PREFIX, QT_EXPECTED_VERSION, QTMAPS_MIN_QT_VERSION, BUILD_DIR, BUILD_TYPE, CMAKE, PYTHON, QT_RUNTIME_PLUGIN_PATH, HANOI_PBF, PLANETILER_JAR"
 
 requirements:
 	@command -v "$(CMAKE)" >/dev/null || { echo "error: CMake is required" >&2; exit 1; }
@@ -62,6 +62,10 @@ build: configure
 	"$(CMAKE)" --build "$(BUILD_DIR)" --parallel
 
 test: build
+	@test -f "$(QT_RUNTIME_PLUGIN_PATH)/sqldrivers/libqsqlite.so" || { \
+		echo "error: Qt SQLite runtime plugin not found under $(QT_RUNTIME_PLUGIN_PATH); set QT_RUNTIME_PLUGIN_PATH to a Qt 5.15 plugin root" >&2; \
+		exit 1; \
+	}
 	env QT_PLUGIN_PATH="$(abspath $(QT_RUNTIME_PLUGIN_PATH))$${QT_PLUGIN_PATH:+:$$QT_PLUGIN_PATH}" \
 		ctest --test-dir "$(BUILD_DIR)" --output-on-failure
 

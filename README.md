@@ -34,9 +34,9 @@ Nationwide high-detail coverage, a complete data pipeline, installer packaging, 
 | ------------------- | --------------------------------------------------------------------- |
 | UI and runtime      | Qt 5.15.13, MapLibre Native Qt v3.0.0, C++, QML, and Qt Quick          |
 | Build system        | CMake and Ninja using Qt 5 CMake APIs                                 |
-| Raster rendering    | QtLocation `osm`, pending a real load/render spike                    |
-| Vector rendering    | MapLibre Native with a Qt integration, pending compatibility evidence |
-| Map data            | Geofabrik Vietnam OSM PBF; MBTiles for local tile data                |
+| Raster rendering    | Diagnostic localhost fallback validated; real raster data deferred    |
+| Vector rendering    | Approved MapLibre Native Qt v3.0.0 over validated local MBTiles       |
+| Map data            | Versioned Hanoi package from the approved Geofabrik PBF/Planetiler    |
 | Routing             | A local Valhalla child process is the proposed approach               |
 | Offline search      | A project-built SQLite FTS5 index is the proposed approach            |
 | Position simulation | QtPositioning with route or NMEA replay                               |
