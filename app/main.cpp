@@ -94,7 +94,6 @@ int main(int argc, char *argv[])
         probeProvider(QStringLiteral("mapboxgl"));
     }
 
-    QQmlApplicationEngine engine;
     qtmaps::map::CameraProbeController cameraProbeController;
     qtmaps::map::MbTilesTileSource vectorTileSource;
     qtmaps::map::DirectoryTileSource diagnosticRasterSource;
@@ -102,6 +101,7 @@ int main(int argc, char *argv[])
                                                          &diagnosticRasterSource);
     qtmaps::map::SimulatedNavigationController navigationController;
     qtmaps::perf::PerformanceMonitor performanceMonitor;
+    QQmlApplicationEngine engine;
 
     if (useUnit03LocalMap
         && !mapSourceController.start(parser.value(QStringLiteral("map-package")),

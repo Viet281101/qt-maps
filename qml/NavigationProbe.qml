@@ -37,9 +37,26 @@ Window {
 
         Connections {
             target: navigationController
-            onPositionChanged: {
+            function onPositionChanged() {
                 map.center = navigationController.coordinate
                 map.bearing = navigationController.bearing
+            }
+        }
+
+        MapQuickItem {
+            coordinate: navigationController.coordinate
+            anchorPoint.x: marker.width / 2
+            anchorPoint.y: marker.height / 2
+            z: 10
+
+            sourceItem: Rectangle {
+                id: marker
+                width: 18
+                height: 18
+                radius: 9
+                color: "#1976d2"
+                border.color: "white"
+                border.width: 3
             }
         }
     }
