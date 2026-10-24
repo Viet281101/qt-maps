@@ -4,7 +4,7 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Unit 01 environment and feasibility spike on `feat/01-env-and-spike`; validate the Release CMake/Ninja path and the smallest Qt Quick/QtLocation proofs before expanding the demo.
+- Unit 02 performance instrumentation is complete on `feat/02-perf-instrumentation`, owner review is complete, and [PR #19](https://github.com/Viet281101/qt-maps/pull/19) is open for merge. Do not begin unit 01b on this branch.
 
 ## Current Goal
 
@@ -50,10 +50,22 @@ Update this file after every meaningful implementation change.
 - FPS was not captured: the on-demand Qt Quick scene has no existing frame-swap counter, and adding production FPS instrumentation belongs to unit 02. Two earlier interaction attempts were rejected because asymmetric pan/zoom moved beyond the bounded fixture and caused 404 retries; only the symmetric run with five HTTP 200 responses and zero 404/errors is retained as the interaction baseline.
 - On 2026-10-21 the owner accepted unit 01 as **complete for its environment portion**. Verified scope is Qt 5.13.2 provisioning and dependency inspection, CMake/Ninja Release build, provider loading, diagnostic localhost raster mechanics, and exploratory RSS/CPU tooling. Two incomplete evidence tracks were explicitly transferred rather than waived: real rendered-frame FPS to unit 02, and local vector plus MapLibre Native feasibility to `context/feature-specs/01b_vector-feasibility-spike.md`.
 - Added the five-part unit 01b vector-feasibility spec. It requires a project-generated local MVT/style/glyph/sprite proof, bearing/tilt verification, dense-urban three-run performance evidence using unit 02 instrumentation, and explicit MapLibre Native switch criteria/build estimation. No dataset or tool was downloaded and no package was installed for this documentation step.
+- Owner confirmed the unit 01 branch was merged. Local `main` was fast-forwarded to merge commit `afe5c38`, and `feat/02-perf-instrumentation` was created from that commit on 2026-10-22.
+- Implemented bounded completed-swap FPS metrics from Qt 5.13 `QQuickWindow::frameSwapped`, including visible zero-frame intervals, hidden/minimized exclusion, reset, average FPS, and an explicitly defined interval-based 1% low.
+- Implemented the `qtmaps-perf-v1` CSV logger on a dedicated worker thread. It discovers the QtMaps PID and readable descendants from Linux `/proc`, sums RSS bytes, calculates CPU deltas with 100% equal to one logical CPU, handles PID churn and unreadable entries, validates existing CSV headers, escapes fields, flushes every row, surfaces non-fatal errors, and shuts down cleanly.
+- Added a switchable F3 performance overlay, manual start/stop control, blank-window probe, deterministic raster pan/zoom mode, benchmark CLI metadata, warm-up exclusion, and lazy worker startup so `--disable-instrumentation` does not start the sampler thread.
+- Added `qtmaps_perf_tests`. `make test` completed a Release build and passed 1/1 CTest target on 2026-10-22. Coverage includes bounded/zero-frame summaries, CPU/RSS aggregation, a real controlled child entering and leaving the process tree, CSV escaping and one-header append behavior, recording start/stop, and an unwritable path.
+- **BUILD PASS (Unit 02):** `make test` used the validated Qt 5.13.2/CMake/Ninja/ccache Release path and passed after the final implementation change. `git diff --check` also passed.
+- Recorded short instrumentation-on/off validation runs in `docs/benchmarks/unit-02-performance-results.md`. External-sampler overhead was +2.375 CPU percentage points and +2.963 MiB average RSS for the blank window, and +2.375 CPU points and +2.147 MiB for diagnostic raster pan/zoom. These short diagnostic results are not management-facing product benchmarks.
+- Completed three fresh-cache raster runs per render loop. Median default-loop values were 3.618 completed-swap FPS, 3.000 interval 1% low, 3.167% CPU, and 155.076 MiB average RSS; basic-loop medians were 3.741 FPS, 3.000 interval 1% low, 3.399% CPU, and 151.414 MiB average RSS. The on-demand scripted workload does not justify changing the Qt default render loop. Local fixture requests returned HTTP 200 at zooms 12 and 13.
+- Enabled CMake compile-command export and pointed VS Code C/C++ IntelliSense at `build/compile_commands.json` on 2026-10-23. This supplies the selected Qt 5.13.2 include paths, compiler flags, project headers, and target definitions without hard-coding machine-specific Qt subdirectories in `includePath`; the existing project cSpell additions were preserved.
+- Added a repository-level pull-request tracking gate on 2026-10-23. Every new PR must reference its canonical issue without prematurely closing incomplete acceptance criteria, use the active milestone, join Project #6 without duplication, align Priority and Demo Phase with the issue, and have its live metadata verified after creation.
+- Applied the tracking gate to PR #19 on 2026-10-23: its description references Issue #7, its milestone is `First Management Demo`, and its Project #6 item is `In Progress` with Priority `P0` and Demo Phase `Week 2`. Issue #7 is also `In Progress` and remains open because the real navigation-scenario acceptance evidence is not yet complete.
+- Added repository and Project identity guardrails on 2026-10-23. Project #6, whose verified live title is `QtMaps`, must not be renamed or replaced; the `qt-maps` repository may be renamed only after an explicit owner request plus a documented necessity and impact review. Every repository or GitHub metadata change now requires a proportional impact check, clean-scope review, and verification of the resulting local or live state before work continues.
 
 ## In Progress
 
-- Unit 01 is awaiting the owner's PR merge into `main`; do not create the next feature branch before explicit merge confirmation. After confirmation, unit 02 performance instrumentation is the next implementation unit on `feat/02-perf-instrumentation`.
+- No implementation is in progress after the Unit 02 completion gate. Owner review is complete and PR #19 is open for merge; generated CSV files remain outside source control.
 
 ## Next Up
 
@@ -61,8 +73,8 @@ Before the first demo, execute the shortest stable vertical slice. Existing unit
 
 Immediate feature-unit backlog order:
 
-1. **Unit 02 — Performance instrumentation:** real `QQuickWindow::frameSwapped` FPS/1% low, process-tree RSS/CPU CSV logging, repeatable automated pan/zoom, three-run medians, and default-versus-basic render-loop comparison on diagnostic tiles.
-2. **Unit 01b — Local vector and MapLibre Native feasibility:** only after unit 02 supplies trustworthy instrumentation; prove or disprove the Qt 5.13.2 `mapboxgl` local vector path, bearing/tilt, dense-urban performance, and MapLibre switch criteria.
+1. **Merge Unit 02:** merge PR #19 after its required issue, milestone, and Project metadata have been verified, preserving the recorded limitations.
+2. **Unit 01b — Local vector and MapLibre Native feasibility:** use the Unit 02 instrumentation to prove or disprove the Qt 5.13.2 `mapboxgl` local vector path, bearing/tilt, dense-urban performance, and MapLibre switch criteria.
 3. Resume the demo vertical slice and unit 03 real-data pipeline using the owner-reviewed outcomes.
 
 The demo delivery sequence remains:
@@ -84,7 +96,7 @@ After the demo, resume the ten-unit plan and close every deferred verification g
 1. **Transferred to unit 01b:** `osm` renders the localhost diagnostic raster, and `mapboxgl` loads/renders a localhost HTTP background style. Whether `mapboxgl` renders local vector tiles with a matching local style, glyphs, and sprites remains unverified. The exact vector source/glyph/sprite URL rules for Qt 5.13.2 are also open.
 2. **Deferred, low priority; does not block unit 01:** Does Qt 5.13.2 complete a real HTTPS request reliably with OpenSSL 3 despite the two unresolved-symbol warnings? The current spike assumes HTTP localhost for every tile and routing endpoint. Later options are (a) a local tile server that fetches HTTPS upstream and re-serves over HTTP localhost, or (b) a private OpenSSL 1.1 runtime only as a last resort because OpenSSL 1.1 is end-of-life. Do not modify OpenSSL or install `libssl1.1` while this question is deferred.
 3. What graph-build-time and peak-RAM thresholds should trigger reconsideration of the initial nationwide routing scope?
-4. **Resolved:** the owner approved the locally generated diagnostic XYZ tile grid for the localhost raster mechanics proof. It is not real geographic map content and its measurements are not management-reportable. Reliable active-motion FPS and 1% low are transferred to unit 02.
+4. **Resolved for instrumentation semantics:** Unit 02 now measures completed swaps and an interval-based 1% low, excludes warm-up and hidden/minimized intervals from summaries, and records process-tree RSS/CPU. The current fixture is render-on-demand and remains non-geographic; its short results are tooling evidence, not management-reportable map performance. Dense active-motion evidence transfers to unit 01b with real local vector data.
 
 ### Technical and Product
 

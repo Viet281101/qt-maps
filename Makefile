@@ -11,7 +11,7 @@ PYTHON ?= python3
 QMAKE := $(QT_PREFIX)/bin/qmake
 QTMAPS := $(BUILD_DIR)/qtmaps
 
-.PHONY: help requirements configure build run diagnostic-tiles \
+.PHONY: help requirements configure build test run diagnostic-tiles \
 	serve-diagnostic-tiles serve-mapboxgl-style run-mapboxgl-probe clean
 
 help:
@@ -19,6 +19,7 @@ help:
 	@echo "  make requirements          Verify the Qt/C++ toolchain and helper tools"
 	@echo "  make configure             Configure a CMake build with Ninja"
 	@echo "  make build                 Configure and build QtMaps"
+	@echo "  make test                  Build and run CTest with failures shown"
 	@echo "  make run                   Build and run (fixture server must be separate)"
 	@echo "  make diagnostic-tiles      Generate the non-geographic XYZ fixture"
 	@echo "  make serve-diagnostic-tiles Serve the fixture on 127.0.0.1:8765"
@@ -50,6 +51,9 @@ configure: requirements
 
 build: configure
 	"$(CMAKE)" --build "$(BUILD_DIR)" --parallel
+
+test: build
+	ctest --test-dir "$(BUILD_DIR)" --output-on-failure
 
 run: build
 	"$(QTMAPS)"

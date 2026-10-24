@@ -71,16 +71,6 @@ These values are planning targets, not measured results:
 
 Actual results are recorded using [the benchmark template](docs/benchmarks/benchmark-template.md).
 
-## Current Status
-
-- Qt 5.13.2 `gcc_64` is installed at `/home/viet/Qt/5.13.2/gcc_64`.
-- Qt Quick, QtLocation, QtPositioning, and the `osm`, `mapboxgl`, and `serialnmea` plugins exist on disk but still require real load/render probes.
-- CMake 3.28.3 and GCC/G++ 13.3.0 are available. Ninja and ccache are not on `PATH` and must be installed manually by the owner using an approved command.
-- Qt 5.13.2 currently reports OpenSSL 3 compatibility warnings; real HTTPS behavior has not yet been confirmed.
-- Application code and the authoritative build command have not yet been created or validated.
-
-Detailed status and the next action are maintained in the [progress tracker](context/progress-tracker.md). Architecture, UI, coding standards, and workflow documentation are available under [`context/`](context/).
-
 ## Planned Repository Structure
 
 ```text

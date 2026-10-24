@@ -10,7 +10,7 @@ Copy this template for each benchmark session. Report project performance only f
 | Operator | TODO |
 | Git commit | TODO |
 | Build type | Release |
-| Configure/build command | TBD after unit 01 |
+| Configure/build command | `make build` (CMake/Ninja Release wrapper) |
 | Qt version and source | TODO |
 | Scenario | TODO |
 | Duration and warm-up | TODO |
@@ -30,8 +30,8 @@ Copy this template for each benchmark session. Report project performance only f
 | RAM | 16 GiB |
 | Storage | 512 GB NVMe SSD |
 | Compiler | GCC/G++ 13.3.0 |
-| Build tools currently present | CMake 3.28.3; GNU Make 4.3 |
-| Tools currently absent from `PATH` | qmake/Qt; Ninja; Clang; ccache |
+| Build tools currently present | CMake 3.28.3; GNU Make 4.3; Ninja 1.11.1; ccache 4.9.1 |
+| Tools intentionally absent from `PATH` | qmake/Qt (use the selected absolute Qt prefix); Clang |
 | GPU | Intel HD Graphics 520 (Skylake GT2) |
 | Driver | Mesa 25.2.8 |
 | Direct rendering | Yes |

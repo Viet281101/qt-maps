@@ -47,6 +47,23 @@ Do not modify the following unless explicitly instructed:
 
 Do not commit generated datasets, build directories, caches, credentials, or machine-specific secrets.
 
+## Repository and Project Identity
+
+- The GitHub Project identity is fixed as Project #6; its current display title is `QtMaps`. Do not rename this Project or replace it with another board.
+- Do not rename the `qt-maps` GitHub repository unless the owner explicitly requests the rename, the necessity is documented, and the impact on remotes, links, automation, documentation, and integrations has been reviewed before the change.
+- Treat repository and Project URLs, numbers, and names as shared external contracts. A feature, cleanup, or documentation task does not implicitly authorize changing them.
+
+## Continuous Impact Verification
+
+After every implementation, repair, configuration, documentation, commit, or external GitHub metadata change:
+
+1. Inspect the resulting diff or live state and identify affected code paths, build targets, tests, documentation, links, Issues, milestones, and Project fields.
+2. Run verification proportional to the change before pushing. At minimum run `git diff --check` for repository changes; code, build, QML, runtime, data-pipeline, and benchmark changes also require their relevant automated checks and documented manual scenario.
+3. Check `git status` to ensure generated files, secrets, unrelated edits, and user-owned changes are not accidentally included.
+4. Re-read the changed context and the exact next step for contradictions or stale status. Update `context/progress-tracker.md` when the change is meaningful.
+5. For GitHub mutations, query the live PR, Issue, milestone, repository, or Project state after the mutation instead of assuming the command succeeded.
+6. Do not continue to the next change while a newly introduced regression, unexplained side effect, broken link, metadata mismatch, or failed check remains unresolved or explicitly recorded as a blocker.
+
 ## Keeping Docs in Sync
 
 Update the relevant context file before continuing whenever implementation changes:
@@ -69,3 +86,14 @@ Before moving to the next unit:
 5. **BUILD PASS** is recorded using the validated Release configure/build commands in `context/code-standards.md` and `context/progress-tracker.md`.
 6. A unit that affects rendering records the latest Release-build FPS, total RAM, and total CPU results using the current fixed scenario and includes child processes.
 7. Generated artifacts and licenses/attributions are accounted for, and no protected artifact was hand-edited.
+
+## Pull Request Tracking Gate
+
+After creating a pull request for QtMaps:
+
+1. Identify the canonical tracking issue before editing GitHub metadata. Add `Refs #N` to the pull request description while acceptance criteria remain open; use a closing keyword only when the pull request fully satisfies the issue and closing it on merge is intended.
+2. Assign the active delivery milestone to the pull request.
+3. Add the pull request to [Project #6, QtMaps](https://github.com/users/Viet281101/projects/6) without creating a duplicate item.
+4. Align the pull request's Priority and Demo Phase project fields with its primary tracking issue. Set Status to `In Progress` while the pull request is open and to `Done` only after the work is merged or otherwise completed.
+5. Move the primary tracking issue to `In Progress` when implementation or review has started, while leaving the issue open until all of its acceptance criteria are satisfied.
+6. Verify the live pull request description, milestone, Project item, and Project fields after all mutations. Record the pull request, linked issue, milestone, and Project status in `context/progress-tracker.md`.

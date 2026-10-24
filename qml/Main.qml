@@ -2,13 +2,16 @@ import QtQuick 2.13
 import QtQuick.Window 2.13
 import QtLocation 5.13
 import QtPositioning 5.13
+import "components"
 
 Window {
     id: root
     width: 960
     height: 640
     visible: true
-    title: qsTr("QtMaps unit 01 diagnostic raster probe")
+    title: qsTr("QtMaps diagnostic raster with performance instrumentation")
+    property bool performanceOverlayVisible: instrumentationEnabled
+    property int automationStep: 0
 
     Plugin {
         id: osmPlugin
@@ -53,7 +56,10 @@ Window {
         focus: true
 
         Keys.onPressed: {
-            if (event.key === Qt.Key_Left) {
+            if (event.key === Qt.Key_F3 && instrumentationEnabled) {
+                performanceOverlayVisible = !performanceOverlayVisible
+                event.accepted = true
+            } else if (event.key === Qt.Key_Left) {
                 pan(128, 0)
                 event.accepted = true
             } else if (event.key === Qt.Key_Right) {
@@ -95,6 +101,24 @@ Window {
         onZoomLevelChanged: console.log("zoomLevel=" + zoomLevel)
     }
 
+    Timer {
+        interval: 500
+        running: benchmarkAutomation
+        repeat: true
+        onTriggered: {
+            var phase = automationStep % 8
+            if (phase === 0 || phase === 1)
+                map.pan(-64, 0)
+            else if (phase === 2 || phase === 3)
+                map.pan(64, 0)
+            else if (phase === 4)
+                map.zoomLevel = Math.min(map.maximumZoomLevel, map.zoomLevel + 1)
+            else if (phase === 6)
+                map.zoomLevel = Math.max(map.minimumZoomLevel, map.zoomLevel - 1)
+            automationStep += 1
+        }
+    }
+
     Rectangle {
         anchors.left: parent.left
         anchors.right: parent.right
@@ -124,5 +148,37 @@ Window {
             color: "white"
             text: qsTr("Arrow keys: pan    + / −: zoom")
         }
+    }
+
+    Rectangle {
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.topMargin: 48
+        anchors.rightMargin: 8
+        width: 82
+        height: 28
+        color: "#dd111111"
+        visible: instrumentationEnabled
+        z: 20
+
+        Text {
+            anchors.centerIn: parent
+            color: "white"
+            text: qsTr("Perf [F3]")
+        }
+        MouseArea {
+            anchors.fill: parent
+            onClicked: performanceOverlayVisible = !performanceOverlayVisible
+        }
+    }
+
+    PerformanceOverlay {
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.topMargin: 84
+        anchors.rightMargin: 8
+        monitor: performanceMonitor
+        visible: instrumentationEnabled && performanceOverlayVisible
+        z: 20
     }
 }
