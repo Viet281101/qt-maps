@@ -139,4 +139,10 @@ if(BUILD_TESTING)
     )
     add_test(NAME qtmaps_map_pipeline_tests COMMAND qtmaps_map_pipeline_tests)
 
+    add_executable(qtmaps_routing_tests tests/routing/tst_Routing.cpp)
+    target_compile_definitions(qtmaps_routing_tests PRIVATE
+        QTMAPS_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+    target_link_libraries(qtmaps_routing_tests PRIVATE qtmaps_routing Qt5::Test)
+    add_test(NAME qtmaps_routing_tests COMMAND qtmaps_routing_tests)
+
 endif()
