@@ -59,18 +59,26 @@ RouteParseResult ValhallaRouteParser::parse(const QByteArray &response, RouteSou
 
     const QJsonObject trip = document.object().value(QStringLiteral("trip")).toObject();
     const QJsonObject summary = trip.value(QStringLiteral("summary")).toObject();
-    double distanceKilometers = 0.0;
+    double distance = 0.0;
     if (trip.isEmpty() || summary.isEmpty()
-        || !readNonNegativeNumber(summary, QStringLiteral("length"), &distanceKilometers)
+        || !readNonNegativeNumber(summary, QStringLiteral("length"), &distance)
         || !readNonNegativeNumber(summary, QStringLiteral("time"), &result.route.durationSeconds)) {
         result.error = QStringLiteral("Valhalla response has an invalid trip summary");
         return result;
     }
-    if (trip.value(QStringLiteral("units")).toString() != QStringLiteral("kilometers")) {
-        result.error = QStringLiteral("Valhalla fixture must report distance in kilometers");
+    const QString units = trip.value(QStringLiteral("units")).toString(
+        QStringLiteral("kilometers"));
+    double metersPerUnit = 0.0;
+    if (units == QStringLiteral("kilometers")) {
+        metersPerUnit = 1000.0;
+    } else if (units == QStringLiteral("miles")) {
+        metersPerUnit = 1609.344;
+    } else {
+        result.error = QStringLiteral("Valhalla response uses unsupported distance units: %1")
+                           .arg(units);
         return result;
     }
-    result.route.distanceMeters = distanceKilometers * 1000.0;
+    result.route.distanceMeters = distance * metersPerUnit;
 
     const QJsonArray legs = trip.value(QStringLiteral("legs")).toArray();
     if (legs.isEmpty()) {
@@ -107,11 +115,11 @@ RouteParseResult ValhallaRouteParser::parse(const QByteArray &response, RouteSou
             const QJsonObject object = maneuverValue.toObject();
             RouteManeuver maneuver;
             int legShapeIndex = -1;
-            double lengthKilometers = 0.0;
+            double length = 0.0;
             if (!readNonNegativeInteger(object, QStringLiteral("type"), &maneuver.type)
                 || !readNonNegativeInteger(object, QStringLiteral("begin_shape_index"),
                                            &legShapeIndex)
-                || !readNonNegativeNumber(object, QStringLiteral("length"), &lengthKilometers)
+                || !readNonNegativeNumber(object, QStringLiteral("length"), &length)
                 || !readNonNegativeNumber(object, QStringLiteral("time"),
                                           &maneuver.durationSeconds)) {
                 result.error = QStringLiteral("Valhalla maneuver has invalid numeric fields");
@@ -131,7 +139,7 @@ RouteParseResult ValhallaRouteParser::parse(const QByteArray &response, RouteSou
             if (!streetNames.isEmpty()) {
                 maneuver.streetName = streetNames.at(0).toString();
             }
-            maneuver.distanceMeters = lengthKilometers * 1000.0;
+            maneuver.distanceMeters = length * metersPerUnit;
             maneuver.position = result.route.polyline.at(maneuver.shapeIndex);
             result.route.maneuvers.append(maneuver);
         }

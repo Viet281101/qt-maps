@@ -14,8 +14,10 @@ are explicit values; no exception or silent fallback crosses the boundary.
 
 `Polyline6Decoder` uses precision 6 and rejects empty/truncated input,
 out-of-range characters, oversized components/deltas, invalid coordinates, and
-geometry with fewer than two points. The response parser currently requires
-Valhalla `kilometers` units and converts all distances to meters.
+geometry with fewer than two points. Missing response units follow Valhalla's
+default `kilometers`; explicit `kilometers` and `miles` are converted to meters.
+Valhalla `time` values remain seconds in the route model, and unsupported units
+fail explicitly.
 
 ## Fixtures
 
@@ -36,7 +38,8 @@ driving route.
 `make test` configured and rebuilt the Qt 5.15.13 Release tree without a new
 compiler warning. CTest passed 4/4 executables in 0.64 seconds, including the
 new `qtmaps_routing_tests`. Tests cover positive/negative polyline deltas, both
-fixtures, Vietnamese names, source labeling, invalid encodings/deltas,
+fixtures, Vietnamese names, source labeling, default kilometers, explicit
+miles-to-meters conversion, unchanged seconds, invalid encodings/deltas,
 unsupported units, and negative/out-of-route maneuver indices.
 
 `git diff --check` passed. No dataset, graph, executable, third-party build

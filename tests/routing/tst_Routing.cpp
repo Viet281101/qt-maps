@@ -107,15 +107,43 @@ private slots:
         QVERIFY(parsed.error.contains(QStringLiteral("outside")));
     }
 
-    void rejectsUnsupportedDistanceUnits()
+    void defaultsMissingUnitsToKilometersAndKeepsSeconds()
+    {
+        QByteArray response = fixture(QStringLiteral("hanoi_hoan_kiem_to_ba_dinh.json"));
+        QVERIFY(!response.isEmpty());
+        response.replace("    \"units\": \"kilometers\",\n", "");
+        const RouteParseResult parsed = ValhallaRouteParser::parse(response);
+
+        QVERIFY2(parsed.ok(), qPrintable(parsed.error));
+        QCOMPARE(parsed.route.distanceMeters, 2600.0);
+        QCOMPARE(parsed.route.durationSeconds, 390.0);
+        QCOMPARE(parsed.route.maneuvers.at(0).distanceMeters, 531.0);
+        QCOMPARE(parsed.route.maneuvers.at(0).durationSeconds, 75.0);
+    }
+
+    void convertsExplicitMilesToMetersAndKeepsSeconds()
     {
         QByteArray response = fixture(QStringLiteral("hanoi_hoan_kiem_to_ba_dinh.json"));
         QVERIFY(!response.isEmpty());
         response.replace("\"units\": \"kilometers\"", "\"units\": \"miles\"");
         const RouteParseResult parsed = ValhallaRouteParser::parse(response);
 
+        QVERIFY2(parsed.ok(), qPrintable(parsed.error));
+        QVERIFY(std::abs(parsed.route.distanceMeters - 4184.2944) < 0.0001);
+        QCOMPARE(parsed.route.durationSeconds, 390.0);
+        QVERIFY(std::abs(parsed.route.maneuvers.at(0).distanceMeters - 854.561664) < 0.0001);
+        QCOMPARE(parsed.route.maneuvers.at(0).durationSeconds, 75.0);
+    }
+
+    void rejectsUnsupportedDistanceUnits()
+    {
+        QByteArray response = fixture(QStringLiteral("hanoi_hoan_kiem_to_ba_dinh.json"));
+        QVERIFY(!response.isEmpty());
+        response.replace("\"units\": \"kilometers\"", "\"units\": \"nautical_miles\"");
+        const RouteParseResult parsed = ValhallaRouteParser::parse(response);
+
         QVERIFY(!parsed.ok());
-        QVERIFY(parsed.error.contains(QStringLiteral("kilometers")));
+        QVERIFY(parsed.error.contains(QStringLiteral("unsupported")));
     }
 
     void rejectsNegativeManeuverIndex()
