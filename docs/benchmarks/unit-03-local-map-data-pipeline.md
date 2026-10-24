@@ -54,13 +54,50 @@ loop and a 16.66 ms vsync animation driver. MapLibre logs that its plugin does
 not consider the threaded loop optimal; both the visual check and benchmark
 nonetheless use it consistently.
 
+### Fully disconnected Release verification
+
+PR #20 was rechecked with the Release binary in a new user/network namespace.
+Only the loopback interface was brought up; the namespace had no default route
+or non-loopback interface. The successful command was:
+
+```bash
+unshare -Urn bash -c '
+set -euo pipefail
+ip link set lo up
+export LD_LIBRARY_PATH="$PWD/generated/unit-01b/maplibre-install/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+export QT_PLUGIN_PATH="$PWD/generated/unit-01b/maplibre-install/plugins:$PWD/generated/unit-01b/qml-runtime/usr/lib/x86_64-linux-gnu/qt5/plugins${QT_PLUGIN_PATH:+:$QT_PLUGIN_PATH}"
+export QML2_IMPORT_PATH="$PWD/generated/unit-01b/maplibre-install/qml:$PWD/generated/unit-01b/qml-runtime/usr/lib/x86_64-linux-gnu/qt5/qml${QML2_IMPORT_PATH:+:$QML2_IMPORT_PATH}"
+export QSG_RENDER_LOOP=threaded
+strace -f -e trace=connect -s 256 -o /tmp/qtmaps-pr20-offline-connect.strace \
+  ./build-qt515/qtmaps --unit03-local-map --navigation-benchmark \
+  --map-package data/packages/current --exit-after 15 \
+  --network-mode network-namespace-offline \
+  --dataset-id hanoi-20261024-v1 \
+  --dataset-coverage "Hanoi bounds 105.78,20.97,105.90,21.10; z12-z15"
+'
+```
+
+The app reported `mapReady=true`, error 0, and Mesa Intel HD Graphics 520. A
+captured 960x640 frame showed the bounded Hanoi vector map with Vietnamese
+`HÀ NỘI` text, roads, building footprints, the simulated-position marker, and
+the visible `© OpenStreetMap contributors, ODbL 1.0` attribution. The trace
+contained AF_INET connections only to the in-process service at
+`127.0.0.1:<random-port>`; AF_UNIX connections were desktop IPC. The package
+style contains no `http://`, `https://`, public tile-server URL, or remote
+source URL. Its tile, glyph, and sprite entries all use the
+`__QTMAPS_BASE_URL__` token, which the validated service replaces with its
+random loopback endpoint.
+
 ## Continuous navigation benchmark
 
 Reference host: Dell Latitude 5480, i5-6300U (2 cores/4 logical CPUs), 16 GiB
 RAM, Intel HD Graphics 520, Mesa 25.2.8, Qt 5.15.13, dynamically linked
 MapLibre Native Qt v3.0.0, Release, 960x640. CPU uses 100% for one logical core.
 RSS includes the complete QtMaps process; the tile service is in-process and
-there are no child processes.
+there are no child processes. Therefore the current CPU/RSS figures cover the
+Qt application and its in-process tile service, but no external service. When
+Valhalla is added, the benchmark must be repeated over the full process tree so
+the routing child process is included.
 
 The committed simulated street fixture is 5.47 km through central Hanoi. Each
 run follows it at 40 km/h with a 16 ms position timer, rotating camera, zoom 15,
@@ -89,6 +126,10 @@ Both cache states pass the proposed p50 <= 17 ms and p95 <= 33 ms review
 thresholds; p99 remains report-only. CSV uses `qtmaps-perf-v3`, so the final
 settling interval cannot distort the primary percentiles. Raw CSV, logs,
 caches, screenshot, package, PBF, jar, and reproduction output remain ignored.
+The approximately 60 FPS result is limited by the 60 Hz vsync path; it is not
+evidence of unused rendering capacity. CPU and RSS are the primary capacity
+indicators for this baseline, with frame-time percentiles used to detect
+interaction stalls.
 The reviewed benchmark binary identified the tree as
 `6e26a48bdb30+working-tree`; `6e26a48` contains the full-window buffer and
 offline-contract fixes. The suffix is caused by the pre-existing user-owned VS
