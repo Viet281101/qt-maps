@@ -18,10 +18,10 @@ Reusable visual tokens belong in a QML singleton, planned as `qml/theme/Theme.qm
 | Typography | `fontFamily`, `fontSizeCaption`, `fontSizeBody`, `fontSizeTitle`, `fontWeightRegular`, `fontWeightEmphasis` | TODO; prefer an available system font unless a licensed bundled font is approved |
 | Spacing | `spaceXs`, `spaceSm`, `spaceMd`, `spaceLg`, `spaceXl` | TODO |
 | Radius | `radiusControl`, `radiusPanel`, `radiusPill` | TODO |
-| Elevation | `shadowLow`, `shadowHigh` or equivalent Qt 5.13-compatible properties | TODO |
+| Elevation | `shadowLow`, `shadowHigh` or equivalent Qt 5.15-compatible properties | TODO |
 | Motion | `durationFast`, `durationNormal`, `easingStandard` | TODO; respect measured render cost |
 
-Theme implementation must use Qt 5.13-compatible QML and must not depend on APIs or graphical effects introduced later.
+Theme implementation must use Qt 5.15.13-compatible QML and must not depend on Qt 6-only APIs or graphical effects.
 
 ## Layout Patterns
 

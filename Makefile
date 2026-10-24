@@ -2,8 +2,10 @@ SHELL := /bin/bash
 
 .DEFAULT_GOAL := help
 
-QT_PREFIX ?= /home/viet/Qt/5.13.2/gcc_64
-BUILD_DIR ?= build
+QT_PREFIX ?= /usr
+QT_EXPECTED_VERSION ?= 5.15.13
+QTMAPS_MIN_QT_VERSION ?= 5.15.13
+BUILD_DIR ?= build-qt515
 BUILD_TYPE ?= Release
 CMAKE ?= cmake
 PYTHON ?= python3
@@ -29,7 +31,7 @@ help:
 	@echo "  make run-mapboxgl-probe    Run probe (vector fixture server must be separate)"
 	@echo "  make clean                 Clean compiled outputs through CMake"
 	@echo
-	@echo "Overrides: QT_PREFIX, BUILD_DIR, BUILD_TYPE, CMAKE, PYTHON"
+	@echo "Overrides: QT_PREFIX, QT_EXPECTED_VERSION, QTMAPS_MIN_QT_VERSION, BUILD_DIR, BUILD_TYPE, CMAKE, PYTHON"
 
 requirements:
 	@command -v "$(CMAKE)" >/dev/null || { echo "error: CMake is required" >&2; exit 1; }
@@ -39,16 +41,17 @@ requirements:
 	@command -v "$(PYTHON)" >/dev/null || { echo "error: Python 3 is required" >&2; exit 1; }
 	@test -x "$(QMAKE)" || { echo "error: Qt qmake not found at $(QMAKE)" >&2; exit 1; }
 	@qt_version="$$($(QMAKE) -query QT_VERSION)"; \
-		test "$$qt_version" = "5.13.2" || { \
-			echo "error: expected Qt 5.13.2 at $(QT_PREFIX), found $$qt_version" >&2; \
+		test "$$qt_version" = "$(QT_EXPECTED_VERSION)" || { \
+			echo "error: expected Qt $(QT_EXPECTED_VERSION) at $(QT_PREFIX), found $$qt_version" >&2; \
 			exit 1; \
 		}
-	@echo "requirements: OK (Qt 5.13.2, CMake, Ninja, ccache, g++; Python 3 for tools)"
+	@echo "requirements: OK (Qt $(QT_EXPECTED_VERSION), CMake, Ninja, ccache, g++; Python 3 for tools)"
 
 configure: requirements
 	"$(CMAKE)" -S . -B "$(BUILD_DIR)" -G Ninja \
 		-DCMAKE_BUILD_TYPE="$(BUILD_TYPE)" \
 		-DCMAKE_PREFIX_PATH="$(QT_PREFIX)" \
+		-DQTMAPS_MIN_QT_VERSION="$(QTMAPS_MIN_QT_VERSION)" \
 		-DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
 build: configure

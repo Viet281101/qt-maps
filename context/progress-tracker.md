@@ -59,7 +59,7 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
 ### Committed
 
 - Demo-first delivery through 2026-11-03; report real, simulated, fixture-backed, online, offline, degraded, and unavailable behavior honestly.
-- Current application baseline: Qt 5.13.2, C++14, QML/Qt Quick 2.13, CMake with Ninja, and Qt 5-compatible CMake APIs.
+- Current application baseline: Qt 5.15.13, dynamically linked MapLibre Native Qt v3.0.0, C++14, QML/Qt Quick, CMake with Ninja, and Qt 5-compatible CMake APIs. Qt 5.13.2 is comparison-only.
 - No public tile-server downloads. Real map artifacts come from the approved Geofabrik/Planetiler/local-service pipeline and stay outside Git.
 - Reference machine: Dell Latitude 5480, i5-6300U, 16 GiB RAM, Intel HD Graphics 520, Mesa direct rendering.
 
@@ -69,7 +69,7 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
 
 ## In Progress
 
-- Complete A-D before Unit 03 implementation. A is complete. B is documented in `context/feature-specs/03_local-map-data-pipeline.md`. C (Qt 5.15.13 baseline migration) and D (third-party notices/dynamic-link packaging) remain.
+- Complete A-D before Unit 03 implementation. A and B are complete. C migrated the default CMake/Makefile configuration to Qt 5.15.13 while preserving an isolated Qt 5.13 comparison override. D (third-party notices/dynamic-link packaging) remains.
 
 ## Next Up
 
@@ -79,7 +79,7 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
 
 ## Open Questions and Risks
 
-1. Approve Qt 5.15.13/MapLibre v3, dynamic-link packaging, and the continuous-motion gate, or keep Qt 5.13.2 as the demo baseline?
+1. Which Unit 03 package layout, tile-access implementation, raster-data scope, and continuous-navigation scenario should be approved from the new spec?
 2. What graph-build time and peak-RAM thresholds should trigger reducing the initial nationwide routing scope?
 3. Is zoom 16 practical for Hanoi/Red River Delta after storage, generation-time, visual-quality, and performance measurements?
 4. Which orthography source, license, attribution, geographic bounds, zoom range, and storage cap are acceptable?
@@ -90,8 +90,8 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
 
 ## Environment and Working Commands
 
-- Qt 5.13.2: `/home/viet/Qt/5.13.2/gcc_64/bin/qmake` or `CMAKE_PREFIX_PATH=/home/viet/Qt/5.13.2/gcc_64`.
-- Qt 5.15.13: `/usr/lib/qt5/bin/qmake` or `CMAKE_PREFIX_PATH=/usr`.
+- Qt 5.15.13 baseline: `/usr/lib/qt5/bin/qmake` or `CMAKE_PREFIX_PATH=/usr`; plain `make test` uses this kit.
+- Qt 5.13.2 comparison: `/home/viet/Qt/5.13.2/gcc_64/bin/qmake` or `CMAKE_PREFIX_PATH=/home/viet/Qt/5.13.2/gcc_64`; use the isolated override command in `context/code-standards.md`.
 - Do not modify global `PATH`; `/usr/bin/qmake` currently resolves to package-managed Qt 5.15.13.
 
 ```bash
@@ -108,7 +108,7 @@ Authoritative benchmark evidence:
 
 ## Latest Verification
 
-- Unit 01b closeout commits: `1b1dcca`, `36335cd`, `e1d9560`, `0671f99`.
-- Qt 5.13.2 Release `make test`: 2/2 passed.
-- Isolated Qt 5.15.13 Release `ctest`: 2/2 passed.
-- Unit 01b closeout left the worktree clean; the subsequent context-compaction documentation change is the only new scope. No push or merge was performed.
+- Default Qt 5.15.13 Release `make test` in `build-qt515`: 2/2 passed; `ldd` resolves Qt Core from the system Qt 5.15 runtime.
+- Isolated Qt 5.13.2 comparison command in `context/code-standards.md`: 2/2 passed; `ldd` resolves Qt Core from `/home/viet/Qt/5.13.2/gcc_64`.
+- Schema-v2 Unit 01b rerun: three successful real-data runs per renderer; all probes reported `mapReady=true`, and the resource server was bound to `127.0.0.1` only.
+- No push or merge was performed. The pre-existing `.vscode/settings.json` change is user-owned and excluded from every commit.

@@ -32,7 +32,7 @@ Split an implementation step when it combines:
 
 - Do not invent product behavior, benchmark values, dataset coverage, licenses, or build commands.
 - If a requirement is ambiguous, add it to `context/progress-tracker.md` and resolve it in the relevant context/spec before implementation.
-- Verify version-specific APIs against Qt 5.13, not current Qt documentation.
+- Verify production APIs against Qt 5.15.13 documentation, not Qt 6/current documentation. Use Qt 5.13 documentation only for the explicit comparison path.
 - Stop and ask the owner if instructions conflict with the repository or require installation, credentials, external publication, pushing, merging, or destructive data changes.
 
 ## Protected Files and Artifacts

@@ -11,11 +11,11 @@
 | Layer | Technology | Status | Role |
 | --- | --- | --- | --- |
 | Platform | Linux desktop | Committed | Development and target platform |
-| UI/runtime | Qt 5.13.2, QML, Qt Quick 2.13 | Current implementation baseline; Qt >= 5.15 evaluation permitted, migration not approved | Application lifecycle and user interface |
+| UI/runtime | Qt 5.15.13, QML, Qt Quick | Committed baseline; Qt 5.13.2 retained for comparison only | Application lifecycle and user interface |
 | Language | C++ with C++14 as the proposed project level | Qt/C++ committed; language level proposed | Native application and service integration |
 | Build system | CMake with Ninja | Committed; Release path validated in accepted unit 01 environment scope | Primary configure/generate/build path; exact commands are recorded in `progress-tracker.md` and `code-standards.md` |
-| Raster map | QtLocation `osm` plugin | Diagnostic localhost path verified; production data path pending unit 03 | Minimal raster display and fallback path |
-| Vector map | MapLibre Native Qt v3.0.0 on Qt 5.15.13 recommended; Qt 5.13.2 `mapboxgl` retained as rollback | Unit 01b evidence complete; owner approval required before commitment | Local vector rendering, camera behavior, and navigation presentation |
+| Raster map | QtLocation `osm` plugin over localhost | Committed fallback; production data path pending unit 03 | Recovery path when vector startup/package/rendering fails |
+| Vector map | Dynamically linked MapLibre Native Qt v3.0.0 on Qt 5.15.13 | Committed baseline after Unit 01b evidence and owner approval | Local vector rendering, camera behavior, and navigation presentation |
 | Map source data | Geofabrik Vietnam OSM PBF | Proposed | Input for map, routing, and search datasets |
 | Vector pipeline | Planetiler to MBTiles | Proposed | Generate vector tiles |
 | Tile access | Direct MBTiles through `QSqlDatabase`, or Martin/mbtileserver child process | Proposed | Serve or read local tiles |
@@ -67,7 +67,7 @@ Large generated datasets, caches, routing graphs, and third-party artifacts must
 
 ## Invariants
 
-1. Current production code must remain compatible with the committed Qt 5.13 baseline until an owner-reviewed migration is approved. Unit 01b may build isolated Qt 5.15-or-newer feasibility probes without changing the application target.
+1. Production configuration targets Qt 5.15.13 and dynamically linked MapLibre Native Qt v3.0.0. Qt 5.13.2 remains an explicit comparison configuration and must not constrain new production behavior unless the owner reverses the baseline decision.
 2. The UI thread must never perform blocking routing, network, database, filesystem, or child-process waits.
 3. The agreed demo must operate fully offline after its required datasets have been provisioned.
 4. Only Release builds may produce performance results presented as project benchmarks.
@@ -75,7 +75,7 @@ Large generated datasets, caches, routing graphs, and third-party artifacts must
 6. The application must own and cleanly terminate the child services it starts.
 7. Generated data, vendor internals, and third-party artifacts are not hand-edited as application source.
 8. Architecture entries retain their decision status until evidence is recorded and the project owner approves a change.
-9. The current application build remains on the validated Qt 5 CMake integration (`find_package(Qt5 ...)`, `CMAKE_AUTOMOC`/`CMAKE_AUTORCC`, `qt5_add_resources`, and `add_executable`). The owner permitted Qt 5.15-or-newer evaluation on 2026-10-23, but changing the whole-project target or adopting Qt 6-only APIs still requires a separate reviewed migration decision.
+9. The application remains on the Qt 5 CMake integration (`find_package(Qt5 ...)`, `CMAKE_AUTOMOC`/`CMAKE_AUTORCC`, `qt5_add_resources`, and `add_executable`). The default minimum is Qt 5.15.13. Qt 6-only APIs still require a separate reviewed migration decision.
 10. QtMaps must not download raster or vector tiles from `tile.openstreetmap.org` or any other public tile server, including small test downloads. Real map tiles must come from the project data pipeline based on an owner-approved Geofabrik PBF, Planetiler configuration, and localhost tile service. Unit 01 may use only clearly labeled, locally generated diagnostic tiles that contain no geographic map data; unit 01b may generate a bounded real-data spike only after its explicit download/tool approval gate.
 
 ## Environment Provisioning Decisions
@@ -86,7 +86,7 @@ Large generated datasets, caches, routing graphs, and third-party artifacts must
 - After installation, use `ldd` to identify missing system libraries rather than assuming the archive is self-contained.
 - Qt 5.13.2 compatibility with OpenSSL 1.1 versus the host's OpenSSL 3 remains a spike question for online HTTPS. Offline localhost HTTP does not require TLS, so this risk does not by itself block the offline path.
 - Ninja and ccache were installed manually by the owner. Later system-package changes require an explicit package list, dry-run impact review, and owner approval before authentication or installation.
-- The owner approved the minimal system Qt 5.15.13 development packages for the isolated MapLibre comparison on 2026-10-24. Ubuntu does not package Qt 5 Location private headers, so the successful v3.0.0 build used a verified Qt 5.15.13 source-header overlay under ignored `generated/`; it did not modify `/usr` beyond the approved apt packages.
+- The owner approved Qt 5.15.13 plus dynamically linked MapLibre Native Qt v3.0.0 as the application baseline on 2026-10-24. Ubuntu does not package Qt 5 Location private headers, so the successful v3.0.0 build used a verified Qt 5.15.13 source-header overlay under ignored `generated/`; it did not modify `/usr` beyond the approved apt packages.
 
 ## Current Environment Baseline
 
@@ -94,4 +94,4 @@ Large generated datasets, caches, routing graphs, and third-party artifacts must
 - GCC/G++ 13.3.0, CMake 3.28.3, and GNU Make 4.3 are available.
 - Package-managed `/usr/bin/qmake` currently selects Qt 5.15.13; the project still selects each Qt kit by absolute qmake path or `CMAKE_PREFIX_PATH` rather than relying on `PATH`. Clang is not required. Owner-installed Ninja 1.11.1 and ccache 4.9.1 are available on `PATH`.
 - Intel HD Graphics 520 (Skylake GT2), Mesa 25.2.8, direct rendering enabled, and OpenGL up to 4.6.
-- Qt 5.13.2 under `/home/viet/Qt/5.13.2/gcc_64` remains usable as the application baseline. System Qt 5.15.13 development libraries are installed for the MapLibre comparison; select either kit with an explicit `CMAKE_PREFIX_PATH` and do not modify global `PATH`.
+- System Qt 5.15.13 is the application baseline. Qt 5.13.2 under `/home/viet/Qt/5.13.2/gcc_64` remains usable for comparison; select either kit with an explicit `CMAKE_PREFIX_PATH` and never modify global `PATH`.

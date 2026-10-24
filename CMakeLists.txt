@@ -9,7 +9,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-find_package(Qt5 5.13 REQUIRED COMPONENTS
+set(QTMAPS_MIN_QT_VERSION "5.15.13" CACHE STRING
+    "Minimum Qt 5 version; set to 5.13 only for the documented comparison build")
+
+find_package(Qt5 ${QTMAPS_MIN_QT_VERSION} REQUIRED COMPONENTS
     Core
     Gui
     Location
@@ -18,6 +21,12 @@ find_package(Qt5 5.13 REQUIRED COMPONENTS
     Quick
     Test
 )
+
+if(Qt5Core_VERSION_STRING VERSION_LESS QTMAPS_MIN_QT_VERSION)
+    message(FATAL_ERROR
+        "Resolved Qt Core ${Qt5Core_VERSION_STRING}, below required ${QTMAPS_MIN_QT_VERSION}. "
+        "Use a separate build directory for each Qt kit.")
+endif()
 
 find_package(Git QUIET)
 set(QTMAPS_BUILD_ID "unknown")

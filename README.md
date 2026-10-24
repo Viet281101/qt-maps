@@ -1,6 +1,6 @@
 # QtMaps
 
-QtMaps is a Linux desktop mapping application for Vietnam built with Qt 5.13.2, C++, and QML/Qt Quick 2.13. The project focuses on local and offline operation, car routing, and a navigation experience inspired by familiar modern mapping applications.
+QtMaps is a Linux desktop mapping application for Vietnam built with Qt 5.15.13, dynamically linked MapLibre Native Qt v3.0.0, C++, and QML/Qt Quick. Qt 5.13.2 is retained for comparison evidence. The project focuses on local and offline operation, car routing, and a navigation experience inspired by familiar modern mapping applications.
 
 ## Project Requirements
 
@@ -32,7 +32,7 @@ Nationwide high-detail coverage, a complete data pipeline, installer packaging, 
 
 | Component           | Current direction                                                     |
 | ------------------- | --------------------------------------------------------------------- |
-| UI and runtime      | Qt 5.13.2, C++, QML, and Qt Quick 2.13                                |
+| UI and runtime      | Qt 5.15.13, MapLibre Native Qt v3.0.0, C++, QML, and Qt Quick          |
 | Build system        | CMake and Ninja using Qt 5 CMake APIs                                 |
 | Raster rendering    | QtLocation `osm`, pending a real load/render spike                    |
 | Vector rendering    | MapLibre Native with a Qt integration, pending compatibility evidence |
@@ -42,11 +42,11 @@ Nationwide high-detail coverage, a complete data pipeline, installer packaging, 
 | Position simulation | QtPositioning with route or NMEA replay                               |
 | Performance         | Rendered-frame FPS and process-tree CPU/RAM measurements              |
 
-A proposed technology is not committed until it has been built and exercised successfully with Qt 5.13.2 on the reference machine.
+A proposed technology is not committed until it has been built and exercised successfully with Qt 5.15.13 on the reference machine.
 
 ## Implementation Principles
 
-- Use only APIs compatible with Qt 5.13; do not use Qt 5.15 or Qt 6 APIs.
+- Use only APIs compatible with Qt 5.15.13; do not use Qt 6-only APIs.
 - CMake must use `find_package(Qt5 ...)`, `CMAKE_AUTOMOC`/`CMAKE_AUTORCC`, `qt5_add_resources`, and `add_executable`.
 - Never perform blocking network, routing, database, filesystem, or process waits on the UI thread.
 - Do not commit generated datasets, caches, routing graphs, MBTiles, or third-party artifacts to Git.
@@ -87,4 +87,13 @@ docs/                Benchmarks and weekly reports
 context/             Authoritative scope and project decisions
 ```
 
-Build and run commands will be added after Unit 01 completes CMake/Ninja validation. The repository does not publish commands that have not been verified.
+The validated baseline workflow uses system Qt 5.15.13 without changing global `PATH`:
+
+```bash
+make requirements
+make build
+make test
+make run
+```
+
+Qt 5.13.2 comparison and MapLibre runtime-path details are documented in [the code standards](context/code-standards.md) and [Unit 01b evidence](docs/benchmarks/unit-01b-vector-feasibility.md).

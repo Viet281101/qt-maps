@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
     QCoreApplication::setApplicationVersion(QStringLiteral("0.2.0"));
 
     QCommandLineParser parser;
-    parser.setApplicationDescription(QStringLiteral("QtMaps Qt 5.13 diagnostic application"));
+    parser.setApplicationDescription(QStringLiteral("QtMaps Qt 5.15 diagnostic application"));
     parser.addHelpOption();
     parser.addVersionOption();
     parser.addOption({QStringLiteral("mapboxgl-probe"), QStringLiteral("Run the Mapbox GL local-resource probe")});

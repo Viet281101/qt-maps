@@ -1,6 +1,6 @@
 # QtMaps
 
-QtMaps là ứng dụng bản đồ desktop cho Việt Nam, được xây dựng bằng Qt 5.13.2, C++ và QML/Qt Quick 2.13 trên Linux. Dự án tập trung vào khả năng chạy local/offline, tìm đường ô tô và trình bày chế độ dẫn đường theo phong cách quen thuộc của các ứng dụng bản đồ hiện đại.
+QtMaps là ứng dụng bản đồ desktop cho Việt Nam, được xây dựng bằng Qt 5.15.13, MapLibre Native Qt v3.0.0 liên kết động, C++ và QML/Qt Quick trên Linux. Qt 5.13.2 chỉ được giữ để đối chiếu. Dự án tập trung vào khả năng chạy local/offline, tìm đường ô tô và trình bày chế độ dẫn đường theo phong cách quen thuộc của các ứng dụng bản đồ hiện đại.
 
 ## Yêu cầu dự án
 
@@ -32,7 +32,7 @@ Phạm vi dữ liệu toàn quốc ở độ chi tiết cao, pipeline dữ liệ
 
 | Thành phần     | Định hướng hiện tại                                            |
 | -------------- | -------------------------------------------------------------- |
-| UI và runtime  | Qt 5.13.2, C++, QML, Qt Quick 2.13                             |
+| UI và runtime  | Qt 5.15.13, MapLibre Native Qt v3.0.0, C++, QML, Qt Quick      |
 | Build          | CMake và Ninja với Qt 5 CMake APIs                             |
 | Raster         | QtLocation `osm`, cần xác nhận bằng spike chạy thật            |
 | Vector         | MapLibre Native/Qt integration, chỉ chốt sau spike tương thích |
@@ -42,11 +42,11 @@ Phạm vi dữ liệu toàn quốc ở độ chi tiết cao, pipeline dữ liệ
 | GPS mô phỏng   | QtPositioning và route/NMEA replay                             |
 | Hiệu năng      | FPS từ frame render; CPU/RAM tính cả application process tree  |
 
-Các công nghệ mang trạng thái đề xuất không được xem là đã chốt cho đến khi có bằng chứng build/chạy trên Qt 5.13.2 và máy tham chiếu.
+Các công nghệ mang trạng thái đề xuất không được xem là đã chốt cho đến khi có bằng chứng build/chạy trên Qt 5.15.13 và máy tham chiếu.
 
 ## Nguyên tắc triển khai
 
-- Chỉ dùng API tương thích Qt 5.13; không dùng Qt 5.15 hoặc Qt 6 APIs.
+- Chỉ dùng API tương thích Qt 5.15.13; không dùng API chỉ có trên Qt 6.
 - CMake phải dùng `find_package(Qt5 ...)`, `CMAKE_AUTOMOC`/`CMAKE_AUTORCC`, `qt5_add_resources` và `add_executable`.
 - Không thực hiện I/O, routing, database hoặc chờ process theo kiểu blocking trên UI thread.
 - Dữ liệu sinh ra, cache, routing graph, MBTiles và artifact bên thứ ba không được commit vào Git.
@@ -73,11 +73,10 @@ Kết quả thực tế được ghi theo [mẫu benchmark](docs/benchmarks/benc
 
 ## Trạng thái hiện tại
 
-- Qt 5.13.2 `gcc_64` đã được cài tại `/home/viet/Qt/5.13.2/gcc_64`.
-- Qt Quick, QtLocation, QtPositioning và các plugin `osm`, `mapboxgl`, `serialnmea` đã có trên disk nhưng vẫn cần probe load/render thực tế.
-- CMake 3.28.3 và GCC/G++ 13.3.0 đã có; Ninja và ccache chưa có trên `PATH` và phải do owner cài bằng lệnh đã duyệt.
-- Qt 5.13.2 đang có cảnh báo tương thích OpenSSL 3; đường HTTPS thực tế chưa được xác nhận.
-- Application code và build command chính thức chưa được tạo/xác nhận.
+- Qt 5.15.13 hệ thống và MapLibre Native Qt v3.0.0 liên kết động là baseline đã duyệt; Qt 5.13.2 tại `/home/viet/Qt/5.13.2/gcc_64` được giữ để đối chiếu.
+- CMake/Ninja/ccache Release build và CTest đã được xác nhận. Việc chọn Qt dùng `CMAKE_PREFIX_PATH` hoặc biến Makefile, không đổi `PATH` toàn cục.
+- MapLibre và Qt 5.13 `mapboxgl` đều đã render dữ liệu Hà Nội thật qua localhost; raster localhost được giữ làm fallback.
+- Unit 03 chưa triển khai và đang chờ duyệt package contract, tile-service lifecycle, phạm vi raster fallback và kịch bản benchmark navigation liên tục.
 
 Trạng thái chi tiết và bước tiếp theo nằm trong [progress tracker](context/progress-tracker.md). Kiến trúc, UI, coding standards và workflow nằm trong thư mục [`context/`](context/).
 
@@ -97,4 +96,13 @@ docs/                benchmark và báo cáo tuần
 context/             nguồn sự thật về phạm vi và quyết định dự án
 ```
 
-Build và run command sẽ được bổ sung sau khi Unit 01 hoàn thành CMake/Ninja validation; repository không công bố một lệnh chưa được kiểm chứng.
+Workflow baseline đã được kiểm chứng:
+
+```bash
+make requirements
+make build
+make test
+make run
+```
+
+Cách build đối chiếu Qt 5.13.2 và cấu hình runtime MapLibre được ghi trong [code standards](context/code-standards.md) và [evidence Unit 01b](docs/benchmarks/unit-01b-vector-feasibility.md).
