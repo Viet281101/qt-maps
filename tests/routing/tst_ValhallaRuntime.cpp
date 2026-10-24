@@ -407,10 +407,12 @@ private slots:
         QSignalSpy focusSpy(&controller, &RoutingController::focusCoordinateRequested);
         controller.focusManeuver(4);
         QCOMPARE(focusSpy.size(), 1);
+        QCOMPARE(controller.currentManeuverIndex(), 4);
         QVERIFY(focusSpy.takeFirst().at(0).value<QGeoCoordinate>().isValid());
 
         controller.selectMapPoint(QGeoCoordinate(21.0300, 105.8500));
         QVERIFY(!controller.routeAvailable());
+        QCOMPARE(controller.currentManeuverIndex(), -1);
         QVERIFY(controller.originInput().contains(QLatin1Char(',')));
         controller.calculateFixtureRoute();
         QVERIFY(controller.statusMessage().contains(QStringLiteral("Fixture chỉ")));

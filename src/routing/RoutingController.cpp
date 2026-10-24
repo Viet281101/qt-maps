@@ -70,6 +70,7 @@ QString RoutingController::nextMapSelection() const
 {
     return selectOriginNext_ ? QStringLiteral("điểm đi") : QStringLiteral("điểm đến");
 }
+int RoutingController::currentManeuverIndex() const { return currentManeuverIndex_; }
 
 bool RoutingController::setOriginInput(const QString &input)
 {
@@ -213,6 +214,10 @@ void RoutingController::focusManeuver(int index)
         setStatus(QStringLiteral("Bước chỉ đường không hợp lệ"));
         return;
     }
+    if (currentManeuverIndex_ != index) {
+        currentManeuverIndex_ = index;
+        emit currentManeuverChanged();
+    }
     emit focusCoordinateRequested(route_.maneuvers.at(index).position, 16.5);
 }
 
@@ -256,6 +261,10 @@ void RoutingController::clearRoute()
 {
     client_->cancel();
     setLoading(false);
+    if (currentManeuverIndex_ != -1) {
+        currentManeuverIndex_ = -1;
+        emit currentManeuverChanged();
+    }
     if (!route_.isValid() && routePath_.isEmpty() && maneuvers_.isEmpty()) {
         return;
     }
@@ -268,6 +277,10 @@ void RoutingController::clearRoute()
 
 void RoutingController::applyRoute(const Route &route, const QString &sourceLabel)
 {
+    if (currentManeuverIndex_ != -1) {
+        currentManeuverIndex_ = -1;
+        emit currentManeuverChanged();
+    }
     if (route_.isValid() && route_.polyline == route.polyline
         && route_.maneuvers.size() == route.maneuvers.size()
         && route_.distanceMeters == route.distanceMeters

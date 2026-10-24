@@ -281,42 +281,14 @@ Window {
             clip: true
             spacing: Theme.spaceXs
             model: routingController.maneuvers
+            currentIndex: routingController.currentManeuverIndex
 
-            delegate: Rectangle {
+            delegate: ManeuverRow {
                 width: maneuverList.width
-                height: Math.max(54, instructionText.implicitHeight + 22)
-                radius: Theme.radiusPanel
-                color: maneuverMouse.containsMouse ? "#e6334352" : "#b8222d38"
-                border.color: Theme.border
-
-                Text {
-                    id: instructionText
-                    anchors.left: parent.left
-                    anchors.right: distanceText.left
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.margins: Theme.spaceSm
-                    color: Theme.textPrimary
-                    wrapMode: Text.WordWrap
-                    text: (index + 1) + ". " + modelData.instruction
-                }
-                Text {
-                    id: distanceText
-                    anchors.right: parent.right
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.rightMargin: Theme.spaceSm
-                    width: 58
-                    horizontalAlignment: Text.AlignRight
-                    color: Theme.textSecondary
-                    text: modelData.distanceMeters >= 1000
-                          ? (modelData.distanceMeters / 1000).toFixed(1) + " km"
-                          : Math.round(modelData.distanceMeters) + " m"
-                }
-                MouseArea {
-                    id: maneuverMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    onClicked: routingController.focusManeuver(index)
-                }
+                maneuverIndex: index
+                maneuver: modelData
+                selected: ListView.isCurrentItem
+                onActivated: routingController.focusManeuver(maneuverIndex)
             }
         }
     }

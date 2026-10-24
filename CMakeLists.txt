@@ -174,4 +174,19 @@ if(BUILD_TESTING)
     )
     add_test(NAME qtmaps_valhalla_runtime_tests COMMAND qtmaps_valhalla_runtime_tests)
 
+    add_executable(qtmaps_routing_qml_tests
+        tests/routing/tst_RoutingQml.cpp
+        ${QTMAPS_RESOURCES}
+    )
+    target_link_libraries(qtmaps_routing_qml_tests PRIVATE
+        Qt5::Gui
+        Qt5::Qml
+        Qt5::Quick
+        Qt5::Test
+    )
+    add_test(NAME qtmaps_routing_qml_tests COMMAND qtmaps_routing_qml_tests)
+    set_tests_properties(qtmaps_routing_qml_tests PROPERTIES
+        ENVIRONMENT
+            "QT_QPA_PLATFORM=offscreen;QML2_IMPORT_PATH=${CMAKE_SOURCE_DIR}/generated/unit-01b/qml-runtime/usr/lib/x86_64-linux-gnu/qt5/qml")
+
 endif()

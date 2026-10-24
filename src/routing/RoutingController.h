@@ -29,6 +29,8 @@ class RoutingController final : public QObject
     Q_PROPERTY(bool routeAvailable READ routeAvailable NOTIFY routeChanged)
     Q_PROPERTY(bool loading READ loading NOTIFY stateChanged)
     Q_PROPERTY(QString nextMapSelection READ nextMapSelection NOTIFY endpointsChanged)
+    Q_PROPERTY(int currentManeuverIndex READ currentManeuverIndex
+               NOTIFY currentManeuverChanged)
 
 public:
     explicit RoutingController(QObject *parent = nullptr);
@@ -47,6 +49,7 @@ public:
     bool routeAvailable() const;
     bool loading() const;
     QString nextMapSelection() const;
+    int currentManeuverIndex() const;
 
     Q_INVOKABLE bool setOriginInput(const QString &input);
     Q_INVOKABLE bool setDestinationInput(const QString &input);
@@ -67,6 +70,7 @@ signals:
     void focusCoordinateRequested(const QGeoCoordinate &coordinate, double zoomLevel);
     void backendReady();
     void backendStopped();
+    void currentManeuverChanged();
 
 private:
     static bool parseLocation(const QString &input, QGeoCoordinate *coordinate,
@@ -90,6 +94,7 @@ private:
     QString statusMessage_ = QStringLiteral("Chọn hai điểm rồi bấm Tính đường");
     bool loading_ = false;
     bool selectOriginNext_ = true;
+    int currentManeuverIndex_ = -1;
     ValhallaServiceManager service_;
     ValhallaRouteClient *client_ = nullptr;
 };
