@@ -141,4 +141,3 @@ void ValhallaRouteClient::finishError(const QString &error)
 
 } // namespace routing
 } // namespace qtmaps
-

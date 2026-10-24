@@ -91,4 +91,3 @@ private:
 
 } // namespace routing
 } // namespace qtmaps
-

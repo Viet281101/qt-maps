@@ -327,4 +327,3 @@ void RoutingController::updateServiceState()
 
 } // namespace routing
 } // namespace qtmaps
-

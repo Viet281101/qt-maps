@@ -208,4 +208,3 @@ void ValhallaServiceManager::fail(const QString &error)
 
 } // namespace routing
 } // namespace qtmaps
-
