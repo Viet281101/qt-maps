@@ -86,6 +86,7 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
 - Added a map-first Qt Quick screen with map-click and alias/coordinate endpoint selection, calculate action, route polyline, A/B markers, summary, Vietnamese maneuver list, maneuver focus, source/connectivity/error state, attribution, and the existing F3 overlay.
 - The first Release smoke intentionally used the recorded fixture only. `mapReady=true`; the 7.294 km Hoàn Kiếm–Thái Hà route visually followed the local Hanoi vector roads and displayed all 14 maneuvers with explicit `fixture/mô phỏng` and `offline — fixture` labels.
 - The render-facing controller flow is covered by Qt Test. Current minimal runtime lacks Qt Quick Controls/Layouts, so the screen uses dependency-free Qt Quick core primitives. Evidence: `docs/routing/unit-04-routing-ui.md`.
+- The same controller is now connected to the managed backend: it validates the exact loopback listen config, switches the visible source to `Valhalla local`, preserves an explicit fixture fallback for startup/failure, and refuses unsupported fallback endpoints. Release smoke showed the real route polyline and 14 Vietnamese maneuvers; timed exit removed both app/service processes and released port 18002.
 
 ## Active Decisions
 
@@ -103,7 +104,7 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
 
 ## In Progress
 
-- Unit 04B and the Unit 04C fixture-first UI are complete locally. The next scoped change is to connect the already-tested UI controller to the managed backend, retaining explicit fixture fallback.
+- Unit 04B and Unit 04C are complete locally, including the managed backend connection and visible fallback. Steps D (route replay/guidance) and E (full process-tree benchmark) remain explicitly unstarted per the current turn boundary.
 
 ## Next Up
 
@@ -156,4 +157,5 @@ Licensing and packaging evidence:
 - Unit 04A Qt 5.15.13 Release verification: `make test` passed 4/4 executables in 0.64 seconds with no new compiler warning; `git diff --check` passed. Only source, tests, compact JSON fixtures, context, and evidence are changed.
 - Unit conversion follow-up: omitted units default to kilometers, explicit kilometers/miles normalize to meters, and seconds remain unchanged; Release `make test` passes 4/4. Branch backup matched `origin/feat/04-routing` at `6aa1c8e` with no PR.
 - Valhalla survey evidence: `docs/routing/valhalla-availability-survey.md`. Ubuntu apt/release binaries are unavailable; the official 37.5 MB `pyvalhalla` 3.9.1 wheel is preferred over the 156.3 MiB compressed container or a 328-package source-build dependency set.
+- Unit 04B/C Release verification on 2026-10-25: all 5 CTest executables pass, the managed service is a direct child listening only at `127.0.0.1:18002`, the UI displays the real Valhalla route/source and Vietnamese maneuvers over the local map, and the timed exit leaves no service process or listener.
 - Local Unit 04 branch starts from `main`/`origin/main` at `1358c3c`. The pre-existing `.vscode/settings.json` change remains user-owned and excluded from every commit; no Unit 04 PR exists and nothing has been merged.

@@ -48,3 +48,26 @@ Qt Quick Controls and Layouts runtime modules are not present in the current
 minimal local QML runtime. The verified screen therefore uses Qt Quick core
 primitives only; no package installation or unapproved UI dependency was
 added. Final visual design remains out of scope.
+
+## Managed-backend connection
+
+Verified on 2026-10-25 with the same Release command after removing
+`--routing-fixture-only`. QtMaps started the native Valhalla 3.9.1 process as
+its direct child, validated that the generated config exactly matched
+`tcp://127.0.0.1:18002`, waited asynchronously for `/status`, then requested
+the default route. The UI changed to `Nguồn: Valhalla local` and `Valhalla
+local — loopback`, retained the 7.29 km/9 minute summary and 14 Vietnamese
+maneuvers, and visibly drew the route on the Hanoi roads.
+
+A process snapshot confirmed the ownership boundary: QtMaps PID 6238 used
+219,280 KiB RSS and its direct `valhalla_service` child PID 6249 used 227,144
+KiB RSS. These are diagnostic snapshots, not the deferred Unit 04E benchmark.
+After the timed app exit, neither process remained and port 18002 was no
+longer listening, confirming the graceful-interrupt/bounded cleanup path.
+
+When the service is starting or fails, the same screen keeps the last valid
+route where possible and explicitly switches to `offline — fixture fallback`.
+Unsupported arbitrary endpoints do not receive a misleading fixture route.
+The runtime Qt Test uses a managed loopback child to verify fixture-to-backend
+transition, request completion, visible source state, and shutdown without
+requiring the generated graph in routine CTest.
