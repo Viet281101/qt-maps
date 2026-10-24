@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QGeoCoordinate>
+#include <QMetaType>
 #include <QString>
 #include <QVector>
 
@@ -40,3 +41,5 @@ struct Route
 
 } // namespace routing
 } // namespace qtmaps
+
+Q_DECLARE_METATYPE(qtmaps::routing::Route)

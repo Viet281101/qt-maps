@@ -93,11 +93,15 @@ add_library(qtmaps_routing STATIC
     src/routing/Polyline6Decoder.cpp
     src/routing/Polyline6Decoder.h
     src/routing/Route.h
+    src/routing/ValhallaRouteClient.cpp
+    src/routing/ValhallaRouteClient.h
     src/routing/ValhallaRouteParser.cpp
     src/routing/ValhallaRouteParser.h
+    src/routing/ValhallaServiceManager.cpp
+    src/routing/ValhallaServiceManager.h
 )
 target_include_directories(qtmaps_routing PUBLIC "${CMAKE_SOURCE_DIR}/src")
-target_link_libraries(qtmaps_routing PUBLIC Qt5::Core Qt5::Positioning)
+target_link_libraries(qtmaps_routing PUBLIC Qt5::Core Qt5::Network Qt5::Positioning)
 
 qt5_add_resources(QTMAPS_RESOURCES resources.qrc)
 
@@ -144,5 +148,15 @@ if(BUILD_TESTING)
         QTMAPS_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
     target_link_libraries(qtmaps_routing_tests PRIVATE qtmaps_routing Qt5::Test)
     add_test(NAME qtmaps_routing_tests COMMAND qtmaps_routing_tests)
+
+    add_executable(qtmaps_valhalla_runtime_tests tests/routing/tst_ValhallaRuntime.cpp)
+    target_compile_definitions(qtmaps_valhalla_runtime_tests PRIVATE
+        QTMAPS_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+    target_link_libraries(qtmaps_valhalla_runtime_tests PRIVATE
+        qtmaps_routing
+        Qt5::Network
+        Qt5::Test
+    )
+    add_test(NAME qtmaps_valhalla_runtime_tests COMMAND qtmaps_valhalla_runtime_tests)
 
 endif()
