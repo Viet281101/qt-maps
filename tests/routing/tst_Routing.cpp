@@ -4,6 +4,8 @@
 #include "routing/ValhallaRouteParser.h"
 
 #include <QFile>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 #include <cmath>
 
@@ -71,15 +73,15 @@ private slots:
 
         QVERIFY2(parsed.ok(), qPrintable(parsed.error));
         QCOMPARE(parsed.route.source, RouteSource::Fixture);
-        QCOMPARE(parsed.route.polyline.size(), 7);
-        QCOMPARE(parsed.route.maneuvers.size(), 7);
-        QCOMPARE(parsed.route.distanceMeters, 5475.0);
-        QCOMPARE(parsed.route.durationSeconds, 720.0);
-        QCOMPARE(parsed.route.maneuvers.at(1).type, 15);
-        QCOMPARE(parsed.route.maneuvers.at(1).streetName, QStringLiteral("Phố Tràng Thi"));
-        QCOMPARE(parsed.route.maneuvers.at(1).distanceMeters, 729.0);
-        compareCoordinate(parsed.route.maneuvers.at(1).position, 21.03210, 105.85120);
-        QCOMPARE(parsed.route.maneuvers.constLast().shapeIndex, 6);
+        QCOMPARE(parsed.route.polyline.size(), 320);
+        QCOMPARE(parsed.route.maneuvers.size(), 14);
+        QCOMPARE(parsed.route.distanceMeters, 7294.0);
+        QCOMPARE(parsed.route.durationSeconds, 523.659);
+        QCOMPARE(parsed.route.maneuvers.at(4).type, 10);
+        QCOMPARE(parsed.route.maneuvers.at(4).streetName, QStringLiteral("Phố Tràng Thi"));
+        QCOMPARE(parsed.route.maneuvers.at(4).distanceMeters, 1256.0);
+        QCOMPARE(parsed.route.maneuvers.at(4).shapeIndex, 91);
+        QCOMPARE(parsed.route.maneuvers.constLast().shapeIndex, 319);
     }
 
     void parsesSecondHanoiFixture()
@@ -89,11 +91,25 @@ private slots:
         const RouteParseResult parsed = ValhallaRouteParser::parse(response, RouteSource::Fixture);
 
         QVERIFY2(parsed.ok(), qPrintable(parsed.error));
-        QCOMPARE(parsed.route.polyline.size(), 5);
-        QCOMPARE(parsed.route.maneuvers.size(), 5);
-        QCOMPARE(parsed.route.distanceMeters, 2600.0);
-        QCOMPARE(parsed.route.maneuvers.at(3).streetName, QStringLiteral("Đường Hùng Vương"));
-        compareCoordinate(parsed.route.polyline.constLast(), 21.03670, 105.82980);
+        QCOMPARE(parsed.route.polyline.size(), 233);
+        QCOMPARE(parsed.route.maneuvers.size(), 11);
+        QCOMPARE(parsed.route.distanceMeters, 4262.0);
+        QCOMPARE(parsed.route.maneuvers.at(7).streetName, QStringLiteral("Phố Lê Hồng Phong"));
+        QCOMPARE(parsed.route.maneuvers.constLast().shapeIndex, 232);
+    }
+
+    void fixturesAreRecordedFromValhalla()
+    {
+        for (const QString &name : {QStringLiteral("hanoi_hoan_kiem_to_thai_ha.json"),
+                                    QStringLiteral("hanoi_hoan_kiem_to_ba_dinh.json")}) {
+            const QJsonObject root = QJsonDocument::fromJson(fixture(name)).object();
+            const QJsonObject metadata = root.value(QStringLiteral("fixture_metadata")).toObject();
+            QCOMPARE(metadata.value(QStringLiteral("source")).toString(),
+                     QStringLiteral("recorded from local Valhalla 3.9.1"));
+            QCOMPARE(metadata.value(QStringLiteral("recorded_date")).toString(),
+                     QStringLiteral("2026-10-24"));
+            QVERIFY(metadata.value(QStringLiteral("backend_calculated")).toBool());
+        }
     }
 
     void rejectsManeuverOutsideShape()
@@ -115,10 +131,10 @@ private slots:
         const RouteParseResult parsed = ValhallaRouteParser::parse(response);
 
         QVERIFY2(parsed.ok(), qPrintable(parsed.error));
-        QCOMPARE(parsed.route.distanceMeters, 2600.0);
-        QCOMPARE(parsed.route.durationSeconds, 390.0);
-        QCOMPARE(parsed.route.maneuvers.at(0).distanceMeters, 531.0);
-        QCOMPARE(parsed.route.maneuvers.at(0).durationSeconds, 75.0);
+        QCOMPARE(parsed.route.distanceMeters, 4262.0);
+        QCOMPARE(parsed.route.durationSeconds, 392.156);
+        QCOMPARE(parsed.route.maneuvers.at(0).distanceMeters, 10.0);
+        QCOMPARE(parsed.route.maneuvers.at(0).durationSeconds, 3.6);
     }
 
     void convertsExplicitMilesToMetersAndKeepsSeconds()
@@ -129,10 +145,10 @@ private slots:
         const RouteParseResult parsed = ValhallaRouteParser::parse(response);
 
         QVERIFY2(parsed.ok(), qPrintable(parsed.error));
-        QVERIFY(std::abs(parsed.route.distanceMeters - 4184.2944) < 0.0001);
-        QCOMPARE(parsed.route.durationSeconds, 390.0);
-        QVERIFY(std::abs(parsed.route.maneuvers.at(0).distanceMeters - 854.561664) < 0.0001);
-        QCOMPARE(parsed.route.maneuvers.at(0).durationSeconds, 75.0);
+        QVERIFY(std::abs(parsed.route.distanceMeters - 6859.024128) < 0.0001);
+        QCOMPARE(parsed.route.durationSeconds, 392.156);
+        QVERIFY(std::abs(parsed.route.maneuvers.at(0).distanceMeters - 16.09344) < 0.0001);
+        QCOMPARE(parsed.route.maneuvers.at(0).durationSeconds, 3.6);
     }
 
     void rejectsUnsupportedDistanceUnits()
