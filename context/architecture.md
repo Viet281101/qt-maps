@@ -19,7 +19,7 @@
 | Map source data | Approved local Geofabrik Vietnam OSM PBF | Committed for bounded Hanoi Unit 03 package | Input for the local map pipeline |
 | Vector pipeline | Planetiler v0.10.2 to versioned MBTiles package | Committed for Unit 03 | Generate bounded Hanoi vector tiles and manifest |
 | Tile access | In-process `TileSource`; loopback HTTP plus `QSqlDatabase` on a worker thread | Committed for Unit 03 | Serve validated MBTiles/resources on a random `127.0.0.1` port |
-| Routing | Valhalla child process | Proposed | Offline route, maneuvers, and map matching |
+| Routing | Valhalla child process | Committed for Unit 04; build/runtime validation pending | Offline route and maneuvers behind a fixture-compatible route contract |
 | Search | SQLite FTS5 index | Proposed | Offline geocoding/search |
 | Position simulation | QtPositioning and route/NMEA replay | Proposed | Simulated GPS for navigation |
 | Performance | `QQuickWindow::frameSwapped` metrics plus Linux `/proc` process-tree CSV logger | Implemented and verified in unit 02 | Capture FPS, RAM, and CPU for the app process tree |
