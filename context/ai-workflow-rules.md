@@ -105,6 +105,8 @@ Before moving to the next unit:
 
 ## Pull Request Tracking Gate
 
+Every QtMaps pull request must be merged with GitHub's **Squash and merge** method. Repository settings must keep squash merging enabled and disable merge commits and rebase merging. Before merge, make the pull-request title suitable as the single squashed commit subject; never bypass this policy with a local merge pushed directly to `main`.
+
 After creating a pull request for QtMaps:
 
 1. Identify the canonical tracking issue before editing GitHub metadata. Add `Refs #N` to the pull request description while acceptance criteria remain open; use a closing keyword only when the pull request fully satisfies the issue and closing it on merge is intended.
