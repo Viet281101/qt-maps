@@ -8,6 +8,7 @@
 #include <QJsonParseError>
 
 #include <cmath>
+#include <limits>
 
 namespace qtmaps {
 namespace routing {
@@ -20,6 +21,19 @@ bool readNonNegativeNumber(const QJsonObject &object, const QString &key, double
         return false;
     }
     *value = field.toDouble();
+    return true;
+}
+
+bool readNonNegativeInteger(const QJsonObject &object, const QString &key, int *value)
+{
+    const QJsonValue field = object.value(key);
+    const double number = field.toDouble(-1.0);
+    if (!field.isDouble() || !std::isfinite(number) || number < 0.0
+        || std::floor(number) != number
+        || number > static_cast<double>(std::numeric_limits<int>::max())) {
+        return false;
+    }
+    *value = static_cast<int>(number);
     return true;
 }
 
@@ -92,20 +106,22 @@ RouteParseResult ValhallaRouteParser::parse(const QByteArray &response, RouteSou
         for (const QJsonValue &maneuverValue : maneuvers) {
             const QJsonObject object = maneuverValue.toObject();
             RouteManeuver maneuver;
-            const QJsonValue type = object.value(QStringLiteral("type"));
-            const QJsonValue shapeIndex = object.value(QStringLiteral("begin_shape_index"));
+            int legShapeIndex = -1;
             double lengthKilometers = 0.0;
-            if (!type.isDouble() || std::floor(type.toDouble()) != type.toDouble()
-                || !shapeIndex.isDouble()
-                || std::floor(shapeIndex.toDouble()) != shapeIndex.toDouble()
+            if (!readNonNegativeInteger(object, QStringLiteral("type"), &maneuver.type)
+                || !readNonNegativeInteger(object, QStringLiteral("begin_shape_index"),
+                                           &legShapeIndex)
                 || !readNonNegativeNumber(object, QStringLiteral("length"), &lengthKilometers)
                 || !readNonNegativeNumber(object, QStringLiteral("time"),
                                           &maneuver.durationSeconds)) {
                 result.error = QStringLiteral("Valhalla maneuver has invalid numeric fields");
                 return result;
             }
-            maneuver.type = type.toInt();
-            maneuver.shapeIndex = shapeIndexOffset + shapeIndex.toInt();
+            if (legShapeIndex > std::numeric_limits<int>::max() - shapeIndexOffset) {
+                result.error = QStringLiteral("Valhalla maneuver shape index is outside the route");
+                return result;
+            }
+            maneuver.shapeIndex = shapeIndexOffset + legShapeIndex;
             if (maneuver.shapeIndex < 0 || maneuver.shapeIndex >= result.route.polyline.size()) {
                 result.error = QStringLiteral("Valhalla maneuver shape index is outside the route");
                 return result;

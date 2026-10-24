@@ -59,6 +59,8 @@ private slots:
         invalid.append(char(10));
         invalid.append(char(10));
         QVERIFY(!Polyline6Decoder::decode(invalid).ok());
+
+        QVERIFY(!Polyline6Decoder::decode(QByteArrayLiteral("~~~~~~~~~~~~?~")).ok());
     }
 
     void parsesHoanKiemToThaiHaFixture()
@@ -114,6 +116,17 @@ private slots:
 
         QVERIFY(!parsed.ok());
         QVERIFY(parsed.error.contains(QStringLiteral("kilometers")));
+    }
+
+    void rejectsNegativeManeuverIndex()
+    {
+        QByteArray response = fixture(QStringLiteral("hanoi_hoan_kiem_to_ba_dinh.json"));
+        QVERIFY(!response.isEmpty());
+        response.replace("\"begin_shape_index\": 0", "\"begin_shape_index\": -1");
+        const RouteParseResult parsed = ValhallaRouteParser::parse(response);
+
+        QVERIFY(!parsed.ok());
+        QVERIFY(parsed.error.contains(QStringLiteral("numeric")));
     }
 };
 

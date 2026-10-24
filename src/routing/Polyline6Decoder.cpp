@@ -23,9 +23,14 @@ bool decodeComponent(const QByteArray &encoded, int *index, qint64 *value, QStri
         }
         result |= (chunk & 0x1fU) << shift;
         if ((chunk & 0x20U) == 0) {
+            const quint64 magnitude = result >> 1U;
+            if (magnitude > 360000000U) {
+                *error = QStringLiteral("Polyline coordinate delta is out of range");
+                return false;
+            }
             *value = (result & 1U) != 0
-                ? -static_cast<qint64>((result >> 1U) + 1U)
-                : static_cast<qint64>(result >> 1U);
+                ? -static_cast<qint64>(magnitude + 1U)
+                : static_cast<qint64>(magnitude);
             return true;
         }
         shift += 5;
