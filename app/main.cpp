@@ -12,6 +12,11 @@
 
 #include <algorithm>
 
+#include "map/CameraProbeController.h"
+#include "map/DirectoryTileSource.h"
+#include "map/MapSourceController.h"
+#include "map/MbTilesTileSource.h"
+#include "map/SimulatedNavigationController.h"
 #include "perf/PerformanceMonitor.h"
 
 #ifndef QTMAPS_BUILD_ID
@@ -46,10 +51,18 @@ int main(int argc, char *argv[])
     QCoreApplication::setApplicationVersion(QStringLiteral("0.2.0"));
 
     QCommandLineParser parser;
-    parser.setApplicationDescription(QStringLiteral("QtMaps Qt 5.13 diagnostic application"));
+    parser.setApplicationDescription(QStringLiteral("QtMaps Qt 5.15 diagnostic application"));
     parser.addHelpOption();
     parser.addVersionOption();
-    parser.addOption({QStringLiteral("mapboxgl-probe"), QStringLiteral("Run the Mapbox GL style-only probe")});
+    parser.addOption({QStringLiteral("mapboxgl-probe"), QStringLiteral("Run the Mapbox GL local-resource probe")});
+    parser.addOption({QStringLiteral("maplibre-probe"), QStringLiteral("Run the MapLibre local-resource probe")});
+    parser.addOption({QStringLiteral("vector-style-url"), QStringLiteral("Local vector style URL"), QStringLiteral("url"), QStringLiteral("http://127.0.0.1:8766/style.json")});
+    parser.addOption({QStringLiteral("real-vector-data"), QStringLiteral("Label the vector probe as real OSM-derived data with attribution")});
+    parser.addOption({QStringLiteral("unit03-local-map"), QStringLiteral("Run the checksummed Unit 03 local map package")});
+    parser.addOption({QStringLiteral("map-package"), QStringLiteral("Unit 03 map package directory or current pointer"), QStringLiteral("path"), QStringLiteral("data/packages/current")});
+    parser.addOption({QStringLiteral("diagnostic-raster-root"), QStringLiteral("Local diagnostic raster fallback directory"), QStringLiteral("path"), QStringLiteral("generated/diagnostic-tiles")});
+    parser.addOption({QStringLiteral("force-vector-failure"), QStringLiteral("Force Unit 03 diagnostic raster fallback")});
+    parser.addOption({QStringLiteral("navigation-benchmark"), QStringLiteral("Run continuous simulated camera-follow navigation")});
     parser.addOption({QStringLiteral("blank-probe"), QStringLiteral("Run the blank-window performance probe")});
     parser.addOption({QStringLiteral("disable-instrumentation"), QStringLiteral("Disable frame and process instrumentation")});
     parser.addOption({QStringLiteral("automated-pan-zoom"), QStringLiteral("Run the deterministic raster pan/zoom sequence")});
@@ -65,16 +78,39 @@ int main(int argc, char *argv[])
     parser.process(application);
 
     const bool useMapboxGlProbe = parser.isSet(QStringLiteral("mapboxgl-probe"));
+    const bool useMapLibreProbe = parser.isSet(QStringLiteral("maplibre-probe"));
+    const bool useVectorProbe = useMapboxGlProbe || useMapLibreProbe;
+    const bool useUnit03LocalMap = parser.isSet(QStringLiteral("unit03-local-map"));
+    const bool useNavigationBenchmark = parser.isSet(QStringLiteral("navigation-benchmark"));
     const bool useBlankProbe = parser.isSet(QStringLiteral("blank-probe"));
     const bool instrumentationEnabled = !parser.isSet(QStringLiteral("disable-instrumentation"));
 
     const QStringList providers = QGeoServiceProvider::availableServiceProviders();
     qInfo().noquote() << "availableServiceProviders=" << providers.join(QLatin1Char(','));
-    probeProvider(QStringLiteral("osm"));
-    probeProvider(QStringLiteral("mapboxgl"));
+    if (useVectorProbe || useUnit03LocalMap) {
+        qInfo() << "providerConstructionProbe=skipped for localhost-only vector mode";
+    } else {
+        probeProvider(QStringLiteral("osm"));
+        probeProvider(QStringLiteral("mapboxgl"));
+    }
 
-    QQmlApplicationEngine engine;
+    qtmaps::map::CameraProbeController cameraProbeController;
+    qtmaps::map::MbTilesTileSource vectorTileSource;
+    qtmaps::map::DirectoryTileSource diagnosticRasterSource;
+    qtmaps::map::MapSourceController mapSourceController(&vectorTileSource,
+                                                         &diagnosticRasterSource);
+    qtmaps::map::SimulatedNavigationController navigationController;
     qtmaps::perf::PerformanceMonitor performanceMonitor;
+    QQmlApplicationEngine engine;
+
+    if (useUnit03LocalMap
+        && !mapSourceController.start(parser.value(QStringLiteral("map-package")),
+                                      parser.value(QStringLiteral("diagnostic-raster-root")),
+                                      parser.isSet(QStringLiteral("force-vector-failure")))) {
+        qCritical().noquote() << "Unit 03 map startup failed:"
+                              << mapSourceController.fallbackReason();
+        return 3;
+    }
     QVariantMap metadata;
     metadata.insert(QStringLiteral("scenario"), parser.value(QStringLiteral("scenario")));
     metadata.insert(QStringLiteral("build_id"), QStringLiteral(QTMAPS_BUILD_ID));
@@ -91,16 +127,56 @@ int main(int argc, char *argv[])
     performanceMonitor.setSamplingInterval(parser.value(QStringLiteral("benchmark-interval")).toInt());
     performanceMonitor.setWarmupSeconds(parser.value(QStringLiteral("benchmark-warmup")).toInt());
     engine.rootContext()->setContextProperty(QStringLiteral("performanceMonitor"), &performanceMonitor);
+    engine.rootContext()->setContextProperty(QStringLiteral("cameraProbeController"),
+                                             &cameraProbeController);
+    engine.rootContext()->setContextProperty(QStringLiteral("navigationController"),
+                                             &navigationController);
     engine.rootContext()->setContextProperty(QStringLiteral("instrumentationEnabled"), instrumentationEnabled);
     engine.rootContext()->setContextProperty(QStringLiteral("benchmarkAutomation"),
                                              parser.isSet(QStringLiteral("automated-pan-zoom")));
+    const QString vectorStyleUrl = useUnit03LocalMap && !mapSourceController.usingRasterFallback()
+        ? mapSourceController.vectorStyleUrl()
+        : parser.value(QStringLiteral("vector-style-url"));
+    engine.rootContext()->setContextProperty(QStringLiteral("vectorStyleUrl"), vectorStyleUrl);
+    engine.rootContext()->setContextProperty(
+        QStringLiteral("rasterTileBaseUrl"),
+        useUnit03LocalMap ? mapSourceController.rasterBaseUrl()
+                          : QStringLiteral("http://127.0.0.1:8765/"));
+    engine.rootContext()->setContextProperty(QStringLiteral("fallbackReason"),
+                                             mapSourceController.fallbackReason());
+    engine.rootContext()->setContextProperty(QStringLiteral("vectorPluginName"),
+                                             useMapLibreProbe || useUnit03LocalMap
+                                                 ? QStringLiteral("maplibre")
+                                                 : QStringLiteral("mapboxgl"));
+    engine.rootContext()->setContextProperty(
+        QStringLiteral("vectorStyleParameterName"),
+        useMapLibreProbe || useUnit03LocalMap
+            ? QStringLiteral("maplibre.map.styles")
+            : QStringLiteral("mapboxgl.mapping.additional_style_urls"));
+    engine.rootContext()->setContextProperty(QStringLiteral("datasetLabel"),
+                                             parser.value(QStringLiteral("dataset-id")));
+    engine.rootContext()->setContextProperty(QStringLiteral("vectorDataReal"),
+                                             useUnit03LocalMap
+                                                 || parser.isSet(QStringLiteral("real-vector-data")));
+    const int interactionMilliseconds =
+        (std::max(0, parser.value(QStringLiteral("benchmark-warmup")).toInt())
+         + std::max(1, parser.value(QStringLiteral("benchmark-duration")).toInt())) * 1000;
+    engine.rootContext()->setContextProperty(QStringLiteral("navigationInteractionMilliseconds"),
+                                             interactionMilliseconds);
 
-    const QUrl qmlUrl(useMapboxGlProbe
-                          ? QStringLiteral("qrc:/qml/MapboxGlProbe.qml")
-                          : useBlankProbe ? QStringLiteral("qrc:/qml/BlankProbe.qml")
-                                          : QStringLiteral("qrc:/qml/Main.qml"));
+    const bool unit03Vector = useUnit03LocalMap && !mapSourceController.usingRasterFallback();
+    const QUrl qmlUrl(unit03Vector && useNavigationBenchmark
+                          ? QStringLiteral("qrc:/qml/NavigationProbe.qml")
+                          : useVectorProbe || unit03Vector
+                              ? QStringLiteral("qrc:/qml/MapboxGlProbe.qml")
+                              : useBlankProbe ? QStringLiteral("qrc:/qml/BlankProbe.qml")
+                                              : QStringLiteral("qrc:/qml/Main.qml"));
     qInfo().noquote() << "probeMode="
-                      << (useMapboxGlProbe ? "mapboxgl-style-only"
+                      << (unit03Vector && useNavigationBenchmark ? "unit03-navigation"
+                          : unit03Vector ? "unit03-vector-package"
+                          : useUnit03LocalMap ? "unit03-diagnostic-raster-fallback"
+                          : useMapLibreProbe ? "maplibre-local-resources"
+                                          : useMapboxGlProbe ? "mapboxgl-local-resources"
                                           : useBlankProbe ? "blank-performance"
                                                           : "osm-diagnostic-raster");
     engine.load(qmlUrl);

@@ -3,6 +3,7 @@
         <file>qml/Main.qml</file>
         <file>qml/BlankProbe.qml</file>
         <file>qml/MapboxGlProbe.qml</file>
+        <file>qml/NavigationProbe.qml</file>
         <file>qml/components/PerformanceOverlay.qml</file>
         <file>qml/theme/qmldir</file>
         <file>qml/theme/Theme.qml</file>

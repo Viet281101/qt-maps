@@ -59,4 +59,19 @@ aqtinstall.log
 
 # Generated unit 01 diagnostic tiles/caches (not real geographic map data)
 /generated/
+/data/packages/
 __pycache__/
+
+# Generated/downloaded map and benchmark artifacts
+*.pbf
+*.jar
+*.mbtiles
+*.pmtiles
+*.csv
+*.log
+/.cache/
+/**/.cache/
+/cache/
+/**/cache/
+/screenshots/
+/**/screenshots/

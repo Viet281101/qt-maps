@@ -6,7 +6,7 @@
 namespace qtmaps {
 namespace perf {
 
-QString BenchmarkCsvWriter::schemaVersion() { return QStringLiteral("qtmaps-perf-v1"); }
+QString BenchmarkCsvWriter::schemaVersion() { return QStringLiteral("qtmaps-perf-v3"); }
 
 QStringList BenchmarkCsvWriter::columns()
 {
@@ -20,7 +20,17 @@ QStringList BenchmarkCsvWriter::columns()
             QStringLiteral("warmup_seconds"), QStringLiteral("app_pid"),
             QStringLiteral("process_count"), QStringLiteral("child_count"),
             QStringLiteral("current_fps"), QStringLiteral("average_fps"),
-            QStringLiteral("one_percent_low_fps"), QStringLiteral("total_rss_bytes"),
+            QStringLiteral("one_percent_low_fps"), QStringLiteral("interaction_active"),
+            QStringLiteral("interaction_frame_count"),
+            QStringLiteral("interaction_average_fps"),
+            QStringLiteral("interaction_frame_time_p50_ms"),
+            QStringLiteral("interaction_frame_time_p95_ms"),
+            QStringLiteral("interaction_frame_time_p99_ms"),
+            QStringLiteral("interaction_frames_over_100ms"),
+            QStringLiteral("settling_frame_count"),
+            QStringLiteral("settling_frame_average_ms"),
+            QStringLiteral("settling_frame_maximum_ms"),
+            QStringLiteral("total_rss_bytes"),
             QStringLiteral("total_cpu_percent_one_core_100"), QStringLiteral("error")};
 }
 

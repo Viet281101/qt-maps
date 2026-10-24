@@ -32,7 +32,19 @@ Rectangle {
         }
         Text {
             color: Theme.textSecondary
-            text: qsTr("1% low %1").arg(monitor ? monitor.frameMetrics.onePercentLowFps.toFixed(1) : "0.0")
+            text: qsTr("Active avg %1 FPS").arg(monitor ? monitor.frameMetrics.interactionAverageFps.toFixed(1) : "0.0")
+        }
+        Text {
+            color: Theme.textSecondary
+            text: qsTr("Frame ms p50/p95/p99 %1/%2/%3")
+                .arg(monitor ? monitor.frameMetrics.frameTimeP50Milliseconds.toFixed(1) : "0.0")
+                .arg(monitor ? monitor.frameMetrics.frameTimeP95Milliseconds.toFixed(1) : "0.0")
+                .arg(monitor ? monitor.frameMetrics.frameTimeP99Milliseconds.toFixed(1) : "0.0")
+        }
+        Text {
+            color: Theme.textSecondary
+            text: qsTr("Settling max %1 ms")
+                .arg(monitor ? monitor.frameMetrics.settlingFrameMaximumMilliseconds.toFixed(1) : "0.0")
         }
         Text {
             color: Theme.textSecondary

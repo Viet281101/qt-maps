@@ -2,7 +2,7 @@
 
 ## Overview
 
-QtMaps is a Linux desktop mapping exercise for Vietnam, built by one developer with Qt 5.13.2, C++, QML, and Qt Quick 2.13. It is intended to demonstrate offline-first map rendering, car routing on national and provincial roads, and a Google Maps-like navigation view on modest integrated-graphics hardware. Development is organized into small, verifiable increments, with the immediate priority being a convincing first management demo by 2026-11-03.
+QtMaps is a Linux desktop mapping exercise for Vietnam, built by one developer with Qt 5.15.13, MapLibre Native Qt v3.0.0, C++, and QML/Qt Quick on Linux. Qt 5.13.2 is retained only for comparison evidence. The application is intended to demonstrate offline-first map rendering, car routing on national and provincial roads, and a Google Maps-like navigation view on modest integrated-graphics hardware. Development is organized into small, verifiable increments, with the immediate priority being a convincing first management demo by 2026-11-03.
 
 ## Goals
 
@@ -47,7 +47,7 @@ For this milestone, breadth, nationwide high-detail coverage, a complete data-ge
 ### Map Layers
 
 - Raster tile rendering with local/offline operation and an online fallback only when configured and available.
-- Vector map rendering, subject to the MapLibre Native Qt 5.13.2 feasibility spike.
+- Vector map rendering with dynamically linked MapLibre Native Qt v3.0.0 on Qt 5.15.13; localhost raster remains the fallback.
 - Orthography rendering for a bounded demo area and zoom range from a source whose license permits the intended use.
 
 ### Routing and Navigation
@@ -78,7 +78,7 @@ For this milestone, breadth, nationwide high-detail coverage, a complete data-ge
 
 ### In Scope
 
-- Linux desktop implementation with Qt 5.13.2, C++, QML, and Qt Quick 2.13.
+- Linux desktop implementation with Qt 5.15.13, dynamically linked MapLibre Native Qt v3.0.0, C++, QML, and Qt Quick. Qt 5.13.2 remains a comparison configuration only.
 - The three map layer types, offline-first behavior, two-point car routing, offline search, navigation simulation, and re-routing described above.
 - A reproducible local data pipeline for the bounded datasets selected for the demo.
 - National raster/vector coverage at zoom 0-10, detailed Hanoi/Red River Delta coverage initially up to zoom 16, and nationwide routing coverage from one uncropped Geofabrik Vietnam extract. The routing scope remains subject to measured graph-build time and peak RAM.

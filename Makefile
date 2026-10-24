@@ -2,17 +2,22 @@ SHELL := /bin/bash
 
 .DEFAULT_GOAL := help
 
-QT_PREFIX ?= /home/viet/Qt/5.13.2/gcc_64
-BUILD_DIR ?= build
+QT_PREFIX ?= /usr
+QT_EXPECTED_VERSION ?= 5.15.13
+QTMAPS_MIN_QT_VERSION ?= 5.15.13
+BUILD_DIR ?= build-qt515
 BUILD_TYPE ?= Release
 CMAKE ?= cmake
 PYTHON ?= python3
+HANOI_PBF ?= generated/unit-01b/source/vietnam-latest.osm.pbf
+PLANETILER_JAR ?= generated/unit-01b/tools/planetiler.jar
+QT_RUNTIME_PLUGIN_PATH ?= generated/unit-01b/qml-runtime/usr/lib/x86_64-linux-gnu/qt5/plugins
 
 QMAKE := $(QT_PREFIX)/bin/qmake
 QTMAPS := $(BUILD_DIR)/qtmaps
 
-.PHONY: help requirements configure build test run diagnostic-tiles \
-	serve-diagnostic-tiles serve-mapboxgl-style run-mapboxgl-probe clean
+.PHONY: help requirements configure build test run diagnostic-tiles vector-fixture vector-real-style hanoi-package \
+	serve-diagnostic-tiles serve-vector-fixture run-mapboxgl-probe clean
 
 help:
 	@echo "QtMaps development targets"
@@ -23,11 +28,14 @@ help:
 	@echo "  make run                   Build and run (fixture server must be separate)"
 	@echo "  make diagnostic-tiles      Generate the non-geographic XYZ fixture"
 	@echo "  make serve-diagnostic-tiles Serve the fixture on 127.0.0.1:8765"
-	@echo "  make serve-mapboxgl-style  Serve the style probe on 127.0.0.1:8766"
-	@echo "  make run-mapboxgl-probe    Run probe (style server must be separate)"
+	@echo "  make vector-fixture        Generate the synthetic local MVT/style/glyph/sprite fixture"
+	@echo "  make vector-real-style     Generate local style/glyph/sprite resources for real Planetiler tiles"
+	@echo "  make hanoi-package         Build ignored versioned Hanoi MBTiles package from approved local inputs"
+	@echo "  make serve-vector-fixture  Serve the vector fixture on 127.0.0.1:8766"
+	@echo "  make run-mapboxgl-probe    Run probe (vector fixture server must be separate)"
 	@echo "  make clean                 Clean compiled outputs through CMake"
 	@echo
-	@echo "Overrides: QT_PREFIX, BUILD_DIR, BUILD_TYPE, CMAKE, PYTHON"
+	@echo "Overrides: QT_PREFIX, QT_EXPECTED_VERSION, QTMAPS_MIN_QT_VERSION, BUILD_DIR, BUILD_TYPE, CMAKE, PYTHON, QT_RUNTIME_PLUGIN_PATH, HANOI_PBF, PLANETILER_JAR"
 
 requirements:
 	@command -v "$(CMAKE)" >/dev/null || { echo "error: CMake is required" >&2; exit 1; }
@@ -37,23 +45,29 @@ requirements:
 	@command -v "$(PYTHON)" >/dev/null || { echo "error: Python 3 is required" >&2; exit 1; }
 	@test -x "$(QMAKE)" || { echo "error: Qt qmake not found at $(QMAKE)" >&2; exit 1; }
 	@qt_version="$$($(QMAKE) -query QT_VERSION)"; \
-		test "$$qt_version" = "5.13.2" || { \
-			echo "error: expected Qt 5.13.2 at $(QT_PREFIX), found $$qt_version" >&2; \
+		test "$$qt_version" = "$(QT_EXPECTED_VERSION)" || { \
+			echo "error: expected Qt $(QT_EXPECTED_VERSION) at $(QT_PREFIX), found $$qt_version" >&2; \
 			exit 1; \
 		}
-	@echo "requirements: OK (Qt 5.13.2, CMake, Ninja, ccache, g++; Python 3 for tools)"
+	@echo "requirements: OK (Qt $(QT_EXPECTED_VERSION), CMake, Ninja, ccache, g++; Python 3 for tools)"
 
 configure: requirements
 	"$(CMAKE)" -S . -B "$(BUILD_DIR)" -G Ninja \
 		-DCMAKE_BUILD_TYPE="$(BUILD_TYPE)" \
 		-DCMAKE_PREFIX_PATH="$(QT_PREFIX)" \
+		-DQTMAPS_MIN_QT_VERSION="$(QTMAPS_MIN_QT_VERSION)" \
 		-DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
 build: configure
 	"$(CMAKE)" --build "$(BUILD_DIR)" --parallel
 
 test: build
-	ctest --test-dir "$(BUILD_DIR)" --output-on-failure
+	@test -f "$(QT_RUNTIME_PLUGIN_PATH)/sqldrivers/libqsqlite.so" || { \
+		echo "error: Qt SQLite runtime plugin not found under $(QT_RUNTIME_PLUGIN_PATH); set QT_RUNTIME_PLUGIN_PATH to a Qt 5.15 plugin root" >&2; \
+		exit 1; \
+	}
+	env QT_PLUGIN_PATH="$(abspath $(QT_RUNTIME_PLUGIN_PATH))$${QT_PLUGIN_PATH:+:$$QT_PLUGIN_PATH}" \
+		ctest --test-dir "$(BUILD_DIR)" --output-on-failure
 
 run: build
 	"$(QTMAPS)"
@@ -64,11 +78,24 @@ diagnostic-tiles:
 serve-diagnostic-tiles: diagnostic-tiles
 	"$(PYTHON)" -m http.server 8765 --bind 127.0.0.1 --directory generated/diagnostic-tiles
 
-serve-mapboxgl-style:
-	"$(PYTHON)" -m http.server 8766 --bind 127.0.0.1 --directory fixtures/mapboxgl
+vector-fixture:
+	"$(PYTHON)" tools/generate_vector_fixture.py
+
+vector-real-style:
+	"$(PYTHON)" tools/generate_vector_fixture.py --real-style-only --output generated/unit-01b/site
+
+hanoi-package:
+	"$(PYTHON)" tools/data-pipeline/build_hanoi_package.py \
+		--pbf "$(HANOI_PBF)" --planetiler-jar "$(PLANETILER_JAR)"
+
+serve-vector-fixture: vector-fixture
+	"$(PYTHON)" -m http.server 8766 --bind 127.0.0.1 --directory generated/vector-fixture
 
 run-mapboxgl-probe: build
-	"$(QTMAPS)" --mapboxgl-probe
+	"$(QTMAPS)" --mapboxgl-probe \
+		--dataset-id synthetic-vector-mechanics-v1 \
+		--dataset-coverage "synthetic local MVT around Hanoi coordinates; not geographic data" \
+		--network-mode localhost-only
 
 clean:
 	@if test -d "$(BUILD_DIR)"; then \

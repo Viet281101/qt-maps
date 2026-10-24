@@ -1,0 +1,50 @@
+schema_name: QtMaps Unit 01b Hanoi
+schema_description: Minimal bounded real-data schema for renderer feasibility only
+attribution: '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a>, ODbL 1.0'
+version: 1
+is_overlay: false
+
+sources:
+  osm:
+    type: osm
+    local_path: generated/unit-01b/source/vietnam-latest.osm.pbf
+
+layers:
+  - id: building
+    features:
+      - source: osm
+        geometry: polygon
+        min_zoom: 12
+        include_when:
+          building: __any__
+        attributes:
+          - key: kind
+            value: building
+
+  - id: transportation
+    features:
+      - source: osm
+        geometry: line
+        min_zoom: 12
+        include_when:
+          highway: __any__
+        attributes:
+          - key: class
+            tag_value: highway
+          - key: name
+            tag_value: name
+
+  - id: place
+    features:
+      - source: osm
+        geometry: point
+        min_zoom: 12
+        include_when:
+          place: [city, town]
+        attributes:
+          - key: class
+            tag_value: place
+          - key: name
+            tag_value: name
+          - key: name_vi
+            tag_value: name:vi
