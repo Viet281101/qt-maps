@@ -35,8 +35,10 @@ Window {
         onMapReadyChanged: {
             console.log("routing mapReady=" + mapReady + " error=" + error
                         + " errorString=" + errorString)
-            if (mapReady && supportedMapTypes.length > 0)
+            if (mapReady && supportedMapTypes.length > 0) {
                 activeMapType = supportedMapTypes[0]
+                routeRefreshTimer.restart()
+            }
         }
 
         Keys.onPressed: {
@@ -61,6 +63,7 @@ Window {
         }
 
         MapPolyline {
+            id: routeLine
             path: routingController.routePath
             line.width: 5
             line.color: Theme.route
@@ -211,7 +214,10 @@ Window {
                         onClicked: {
                             if (routingController.setOriginInput(originField.text)
                                     && routingController.setDestinationInput(destinationField.text))
-                                routingController.calculateFixtureRoute()
+                                if (routingFixtureOnly)
+                                    routingController.calculateFixtureRoute()
+                                else
+                                    routingController.calculateRoute()
                         }
                     }
                 }
@@ -366,11 +372,38 @@ Window {
 
     Connections {
         target: routingController
+        function onRouteChanged() {
+            routeRefreshTimer.restart()
+        }
+        function onStateChanged() {
+            if (routingController.routeAvailable)
+                routeRefreshTimer.restart()
+        }
         function onFocusCoordinateRequested(coordinate, zoomLevel) {
             map.center = coordinate
             map.zoomLevel = zoomLevel
         }
     }
 
-    Component.onCompleted: routingController.calculateFixtureRoute()
+    Timer {
+        id: routeRefreshTimer
+        interval: 100
+        repeat: false
+        onTriggered: {
+            var currentPath = routingController.routePath
+            routeOutline.path = []
+            routeLine.path = []
+            routeOutline.path = currentPath
+            routeLine.path = currentPath
+        }
+    }
+
+    Component.onCompleted: {
+        if (!routingController.routeAvailable && !routingController.loading) {
+            if (routingFixtureOnly)
+                routingController.calculateFixtureRoute()
+            else
+                routingController.calculateRoute()
+        }
+    }
 }

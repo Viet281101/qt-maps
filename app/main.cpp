@@ -1,6 +1,7 @@
 #include <QDebug>
 #include <QCommandLineOption>
 #include <QCommandLineParser>
+#include <QDir>
 #include <QGuiApplication>
 #include <QGeoServiceProvider>
 #include <QQmlApplicationEngine>
@@ -65,6 +66,10 @@ int main(int argc, char *argv[])
     parser.addOption({QStringLiteral("force-vector-failure"), QStringLiteral("Force Unit 03 diagnostic raster fallback")});
     parser.addOption({QStringLiteral("navigation-benchmark"), QStringLiteral("Run continuous simulated camera-follow navigation")});
     parser.addOption({QStringLiteral("routing-demo"), QStringLiteral("Run the Unit 04 fixture-first routing UI")});
+    parser.addOption({QStringLiteral("routing-fixture-only"), QStringLiteral("Do not start Valhalla; keep the routing UI on its recorded fixture")});
+    parser.addOption({QStringLiteral("valhalla-service"), QStringLiteral("Native valhalla_service executable"), QStringLiteral("path"), QStringLiteral("generated/unit-04/valhalla-venv/lib/python3.12/site-packages/valhalla/bin/valhalla_service")});
+    parser.addOption({QStringLiteral("valhalla-config"), QStringLiteral("Generated loopback-only Valhalla config"), QStringLiteral("path"), QStringLiteral("generated/unit-04/valhalla/valhalla.json")});
+    parser.addOption({QStringLiteral("valhalla-port"), QStringLiteral("Configured Valhalla loopback port"), QStringLiteral("port"), QStringLiteral("18002")});
     parser.addOption({QStringLiteral("blank-probe"), QStringLiteral("Run the blank-window performance probe")});
     parser.addOption({QStringLiteral("disable-instrumentation"), QStringLiteral("Disable frame and process instrumentation")});
     parser.addOption({QStringLiteral("automated-pan-zoom"), QStringLiteral("Run the deterministic raster pan/zoom sequence")});
@@ -137,6 +142,9 @@ int main(int argc, char *argv[])
                                              &navigationController);
     engine.rootContext()->setContextProperty(QStringLiteral("routingController"),
                                              &routingController);
+    engine.rootContext()->setContextProperty(
+        QStringLiteral("routingFixtureOnly"),
+        parser.isSet(QStringLiteral("routing-fixture-only")));
     engine.rootContext()->setContextProperty(QStringLiteral("instrumentationEnabled"), instrumentationEnabled);
     engine.rootContext()->setContextProperty(QStringLiteral("benchmarkAutomation"),
                                              parser.isSet(QStringLiteral("automated-pan-zoom")));
@@ -171,6 +179,22 @@ int main(int argc, char *argv[])
                                              interactionMilliseconds);
 
     const bool unit03Vector = useUnit03LocalMap && !mapSourceController.usingRasterFallback();
+    if (unit03Vector && useRoutingDemo
+        && !parser.isSet(QStringLiteral("routing-fixture-only"))) {
+        bool portOk = false;
+        const int port = parser.value(QStringLiteral("valhalla-port")).toInt(&portOk);
+        if (!portOk || port < 1 || port > 65535) {
+            qCritical() << "--valhalla-port must be between 1 and 65535";
+            return 4;
+        }
+        const QDir workingDirectory = QDir::current();
+        routingController.startBackend(
+            workingDirectory.absoluteFilePath(parser.value(QStringLiteral("valhalla-service"))),
+            workingDirectory.absoluteFilePath(parser.value(QStringLiteral("valhalla-config"))),
+            static_cast<quint16>(port));
+    }
+    QObject::connect(&application, &QCoreApplication::aboutToQuit,
+                     &routingController, &qtmaps::routing::RoutingController::stopBackend);
     const QUrl qmlUrl(unit03Vector && useRoutingDemo
                           ? QStringLiteral("qrc:/qml/RoutingProbe.qml")
                       : unit03Vector && useNavigationBenchmark
@@ -180,7 +204,10 @@ int main(int argc, char *argv[])
                               : useBlankProbe ? QStringLiteral("qrc:/qml/BlankProbe.qml")
                                               : QStringLiteral("qrc:/qml/Main.qml"));
     qInfo().noquote() << "probeMode="
-                      << (unit03Vector && useRoutingDemo ? "unit04-routing-fixture"
+                      << (unit03Vector && useRoutingDemo
+                              ? (parser.isSet(QStringLiteral("routing-fixture-only"))
+                                     ? "unit04-routing-fixture"
+                                     : "unit04-routing-valhalla")
                           : unit03Vector && useNavigationBenchmark ? "unit03-navigation"
                           : unit03Vector ? "unit03-vector-package"
                           : useUnit03LocalMap ? "unit03-diagnostic-raster-fallback"

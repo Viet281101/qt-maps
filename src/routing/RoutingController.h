@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Route.h"
+#include "ValhallaServiceManager.h"
 
 #include <QGeoCoordinate>
 #include <QObject>
@@ -8,6 +9,8 @@
 
 namespace qtmaps {
 namespace routing {
+
+class ValhallaRouteClient;
 
 class RoutingController final : public QObject
 {
@@ -20,7 +23,7 @@ class RoutingController final : public QObject
     Q_PROPERTY(QVariantList maneuvers READ maneuvers NOTIFY routeChanged)
     Q_PROPERTY(double distanceMeters READ distanceMeters NOTIFY routeChanged)
     Q_PROPERTY(double durationSeconds READ durationSeconds NOTIFY routeChanged)
-    Q_PROPERTY(QString sourceLabel READ sourceLabel NOTIFY routeChanged)
+    Q_PROPERTY(QString sourceLabel READ sourceLabel NOTIFY stateChanged)
     Q_PROPERTY(QString connectionLabel READ connectionLabel NOTIFY stateChanged)
     Q_PROPERTY(QString statusMessage READ statusMessage NOTIFY stateChanged)
     Q_PROPERTY(bool routeAvailable READ routeAvailable NOTIFY routeChanged)
@@ -48,8 +51,11 @@ public:
     Q_INVOKABLE bool setOriginInput(const QString &input);
     Q_INVOKABLE bool setDestinationInput(const QString &input);
     Q_INVOKABLE void selectMapPoint(const QGeoCoordinate &coordinate);
+    Q_INVOKABLE void calculateRoute();
     Q_INVOKABLE void calculateFixtureRoute();
     Q_INVOKABLE void focusManeuver(int index);
+    void startBackend(const QString &program, const QString &configPath, quint16 port);
+    void stopBackend();
 
 signals:
     void endpointsChanged();
@@ -61,8 +67,11 @@ private:
     static bool parseLocation(const QString &input, QGeoCoordinate *coordinate,
                               QString *canonicalInput);
     void clearRoute();
+    bool loadFixtureRoute(const QString &reason = QString());
     void applyRoute(const Route &route, const QString &sourceLabel);
     void setStatus(const QString &status);
+    void setLoading(bool loading);
+    void updateServiceState();
 
     QString originInput_;
     QString destinationInput_;
@@ -76,6 +85,8 @@ private:
     QString statusMessage_ = QStringLiteral("Chọn hai điểm rồi bấm Tính đường");
     bool loading_ = false;
     bool selectOriginNext_ = true;
+    ValhallaServiceManager service_;
+    ValhallaRouteClient *client_ = nullptr;
 };
 
 } // namespace routing

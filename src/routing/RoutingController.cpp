@@ -1,6 +1,7 @@
 #include "RoutingController.h"
 
 #include "ValhallaRouteParser.h"
+#include "ValhallaRouteClient.h"
 
 #include <QFile>
 #include <QLocale>
@@ -25,8 +26,28 @@ QString coordinateText(const QGeoCoordinate &coordinate)
 
 RoutingController::RoutingController(QObject *parent)
     : QObject(parent), originInput_(QStringLiteral("Hoàn Kiếm")),
-      destinationInput_(QStringLiteral("Thái Hà")), origin_(kHoanKiem), destination_(kThaiHa)
+      destinationInput_(QStringLiteral("Thái Hà")), origin_(kHoanKiem), destination_(kThaiHa),
+      service_(this), client_(new ValhallaRouteClient(this))
 {
+    connect(&service_, &ValhallaServiceManager::stateChanged,
+            this, &RoutingController::updateServiceState);
+    connect(&service_, &ValhallaServiceManager::ready, this, [this]() {
+        QString error;
+        if (!client_->setEndpoint(service_.endpoint(), &error)) {
+            setStatus(error);
+            return;
+        }
+        calculateRoute();
+    });
+    connect(client_, &ValhallaRouteClient::routeReady, this, [this](const Route &route) {
+        setLoading(false);
+        applyRoute(route, QStringLiteral("Valhalla local"));
+        setStatus(QStringLiteral("Đã tính tuyến bằng Valhalla local"));
+    });
+    connect(client_, &ValhallaRouteClient::routeFailed, this, [this](const QString &error) {
+        setLoading(false);
+        loadFixtureRoute(QStringLiteral("%1; đã chuyển sang fixture").arg(error));
+    });
 }
 
 QString RoutingController::originInput() const { return originInput_; }
@@ -102,13 +123,48 @@ void RoutingController::selectMapPoint(const QGeoCoordinate &coordinate)
 
 void RoutingController::calculateFixtureRoute()
 {
-    if (!origin_.isValid() || !destination_.isValid()) {
-        setStatus(QStringLiteral("Cần đủ điểm đi và điểm đến hợp lệ"));
+    loadFixtureRoute();
+}
+
+void RoutingController::calculateRoute()
+{
+    if (service_.state() == ValhallaServiceManager::State::Ready) {
+        setLoading(true);
+        setStatus(QStringLiteral("Đang tính tuyến bằng Valhalla local…"));
+        client_->requestRoute(origin_, destination_);
         return;
     }
+    const QString reason = service_.state() == ValhallaServiceManager::State::Error
+        ? QStringLiteral("Valhalla local lỗi: %1; đang dùng fixture")
+              .arg(service_.errorMessage())
+        : QStringLiteral("Valhalla local chưa sẵn sàng; đang dùng fixture");
+    loadFixtureRoute(reason);
+}
+
+void RoutingController::startBackend(const QString &program, const QString &configPath,
+                                     quint16 port)
+{
+    connectionLabel_ = QStringLiteral("đang khởi động Valhalla local");
+    emit stateChanged();
+    service_.start(program, configPath, port, 2, 10000);
+}
+
+void RoutingController::stopBackend()
+{
+    client_->cancel();
+    service_.stop();
+}
+
+bool RoutingController::loadFixtureRoute(const QString &reason)
+{
+    if (!origin_.isValid() || !destination_.isValid()) {
+        setStatus(QStringLiteral("Cần đủ điểm đi và điểm đến hợp lệ"));
+        return false;
+    }
     if (origin_.distanceTo(kHoanKiem) > 250.0) {
-        setStatus(QStringLiteral("Fixture chỉ hỗ trợ điểm đi Hoàn Kiếm; backend local chưa được nối"));
-        return;
+        setStatus(QStringLiteral("%1%2Fixture chỉ hỗ trợ điểm đi Hoàn Kiếm")
+                      .arg(reason, reason.isEmpty() ? QString() : QStringLiteral("; ")));
+        return false;
     }
     QString resource;
     if (destination_.distanceTo(kThaiHa) <= 500.0) {
@@ -116,22 +172,27 @@ void RoutingController::calculateFixtureRoute()
     } else if (destination_.distanceTo(kBaDinh) <= 500.0) {
         resource = QStringLiteral(":/fixtures/routing/hanoi_hoan_kiem_to_ba_dinh.json");
     } else {
-        setStatus(QStringLiteral("Fixture chỉ có tuyến Thái Hà hoặc Ba Đình; backend local chưa được nối"));
-        return;
+        setStatus(QStringLiteral("%1%2Fixture chỉ có tuyến Thái Hà hoặc Ba Đình")
+                      .arg(reason, reason.isEmpty() ? QString() : QStringLiteral("; ")));
+        return false;
     }
 
     QFile file(resource);
     if (!file.open(QIODevice::ReadOnly)) {
         setStatus(QStringLiteral("Không thể đọc route fixture đã đóng gói"));
-        return;
+        return false;
     }
     const RouteParseResult parsed = ValhallaRouteParser::parse(file.readAll(), RouteSource::Fixture);
     if (!parsed.ok()) {
         setStatus(QStringLiteral("Route fixture lỗi: %1").arg(parsed.error));
-        return;
+        return false;
     }
     applyRoute(parsed.route, QStringLiteral("fixture/mô phỏng"));
-    setStatus(QStringLiteral("Đã nạp tuyến fixture offline"));
+    connectionLabel_ = reason.isEmpty() ? QStringLiteral("offline — fixture")
+                                        : QStringLiteral("offline — fixture fallback");
+    emit stateChanged();
+    setStatus(reason.isEmpty() ? QStringLiteral("Đã nạp tuyến fixture offline") : reason);
+    return true;
 }
 
 void RoutingController::focusManeuver(int index)
@@ -193,6 +254,15 @@ void RoutingController::clearRoute()
 
 void RoutingController::applyRoute(const Route &route, const QString &sourceLabel)
 {
+    if (route_.isValid() && route_.polyline == route.polyline
+        && route_.maneuvers.size() == route.maneuvers.size()
+        && route_.distanceMeters == route.distanceMeters
+        && route_.durationSeconds == route.durationSeconds) {
+        route_ = route;
+        sourceLabel_ = sourceLabel;
+        emit stateChanged();
+        return;
+    }
     route_ = route;
     sourceLabel_ = sourceLabel;
     routePath_.clear();
@@ -211,6 +281,7 @@ void RoutingController::applyRoute(const Route &route, const QString &sourceLabe
         maneuvers_.append(item);
     }
     emit routeChanged();
+    emit stateChanged();
 }
 
 void RoutingController::setStatus(const QString &status)
@@ -219,6 +290,38 @@ void RoutingController::setStatus(const QString &status)
         return;
     }
     statusMessage_ = status;
+    emit stateChanged();
+}
+
+void RoutingController::setLoading(bool loading)
+{
+    if (loading_ == loading) {
+        return;
+    }
+    loading_ = loading;
+    emit stateChanged();
+}
+
+void RoutingController::updateServiceState()
+{
+    switch (service_.state()) {
+    case ValhallaServiceManager::State::Starting:
+        connectionLabel_ = QStringLiteral("đang khởi động Valhalla local");
+        break;
+    case ValhallaServiceManager::State::Ready:
+        connectionLabel_ = QStringLiteral("Valhalla local — loopback");
+        break;
+    case ValhallaServiceManager::State::Stopping:
+        connectionLabel_ = QStringLiteral("đang dừng Valhalla local");
+        break;
+    case ValhallaServiceManager::State::Error:
+        connectionLabel_ = QStringLiteral("offline — fixture fallback");
+        setStatus(QStringLiteral("Valhalla local lỗi: %1").arg(service_.errorMessage()));
+        break;
+    case ValhallaServiceManager::State::Stopped:
+        connectionLabel_ = QStringLiteral("offline — fixture");
+        break;
+    }
     emit stateChanged();
 }
 

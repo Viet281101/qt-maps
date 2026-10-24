@@ -1,6 +1,7 @@
 #include "ValhallaServiceManager.h"
 
 #include <QFileInfo>
+#include <QFile>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QNetworkAccessManager>
@@ -94,6 +95,21 @@ void ValhallaServiceManager::start(const QString &program, const QString &config
     }
     if (concurrency < 1 || concurrency > 2) {
         fail(QStringLiteral("Valhalla concurrency must be between one and two"));
+        return;
+    }
+
+    QFile configFile(configInfo.absoluteFilePath());
+    if (!configFile.open(QIODevice::ReadOnly)) {
+        fail(QStringLiteral("Valhalla config cannot be opened"));
+        return;
+    }
+    const QJsonObject config = QJsonDocument::fromJson(configFile.readAll()).object();
+    const QString listen = config.value(QStringLiteral("httpd")).toObject()
+                               .value(QStringLiteral("service")).toObject()
+                               .value(QStringLiteral("listen")).toString();
+    const QString requiredListen = QStringLiteral("tcp://127.0.0.1:%1").arg(port);
+    if (listen != requiredListen) {
+        fail(QStringLiteral("Valhalla config must listen only at %1").arg(requiredListen));
         return;
     }
 

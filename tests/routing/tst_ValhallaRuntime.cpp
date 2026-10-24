@@ -80,19 +80,27 @@ private:
 int runFakeValhallaService(int argc, char **argv, const QJsonObject &config)
 {
     QCoreApplication application(argc, argv);
+    QFile fixture(QStringLiteral(":/fixtures/routing/hanoi_hoan_kiem_to_thai_ha.json"));
+    if (!fixture.open(QIODevice::ReadOnly)) {
+        return 3;
+    }
+    const QByteArray routeBody = fixture.readAll();
     QTcpServer server;
     const quint16 port = static_cast<quint16>(config.value(QStringLiteral("fake_service_port")).toInt());
     if (!server.listen(QHostAddress::LocalHost, port)) {
         return 2;
     }
-    QObject::connect(&server, &QTcpServer::newConnection, &application, [&server]() {
+    QObject::connect(&server, &QTcpServer::newConnection, &application, [&server, routeBody]() {
         while (QTcpSocket *socket = server.nextPendingConnection()) {
-            QObject::connect(socket, &QTcpSocket::readyRead, socket, [socket]() {
-                const QByteArray request = socket->readAll();
+            QObject::connect(socket, &QTcpSocket::readyRead, socket, [socket, routeBody]() {
+                const QByteArray request = socket->property("request").toByteArray()
+                    + socket->readAll();
+                socket->setProperty("request", request);
                 if (!request.contains("\r\n\r\n")) {
                     return;
                 }
-                const QByteArray body = QByteArrayLiteral("{\"version\":\"test\"}");
+                const QByteArray body = request.startsWith("GET /route?")
+                    ? routeBody : QByteArrayLiteral("{\"version\":\"test\"}");
                 socket->write(QByteArrayLiteral(
                                   "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nConnection: close\r\nContent-Length: ")
                               + QByteArray::number(body.size()) + QByteArrayLiteral("\r\n\r\n")
@@ -121,9 +129,15 @@ private slots:
         const quint16 port = unusedLoopbackPort();
         QVERIFY(port != 0);
         const QString configPath = temporary.path() + QStringLiteral("/fake-valhalla.json");
-        writeFile(configPath, QJsonDocument(QJsonObject{
-                                  {QStringLiteral("fake_service_port"), static_cast<int>(port)}})
-                                  .toJson(QJsonDocument::Compact));
+        QJsonObject serviceConfig;
+        serviceConfig.insert(QStringLiteral("listen"),
+                             QStringLiteral("tcp://127.0.0.1:%1").arg(port));
+        QJsonObject httpd;
+        httpd.insert(QStringLiteral("service"), serviceConfig);
+        QJsonObject config;
+        config.insert(QStringLiteral("fake_service_port"), static_cast<int>(port));
+        config.insert(QStringLiteral("httpd"), httpd);
+        writeFile(configPath, QJsonDocument(config).toJson(QJsonDocument::Compact));
 
         ValhallaServiceManager service;
         QSignalSpy readySpy(&service, &ValhallaServiceManager::ready);
@@ -143,6 +157,23 @@ private slots:
                       QStringLiteral("/missing/valhalla.json"), 8002);
         QCOMPARE(service.state(), ValhallaServiceManager::State::Error);
         QVERIFY(service.errorMessage().contains(QStringLiteral("executable")));
+
+        QTemporaryDir temporary;
+        QVERIFY(temporary.isValid());
+        const quint16 port = unusedLoopbackPort();
+        QJsonObject serviceConfig;
+        serviceConfig.insert(QStringLiteral("listen"),
+                             QStringLiteral("tcp://0.0.0.0:%1").arg(port));
+        QJsonObject httpd;
+        httpd.insert(QStringLiteral("service"), serviceConfig);
+        const QString configPath = temporary.path() + QStringLiteral("/unsafe.json");
+        writeFile(configPath,
+                  QJsonDocument(QJsonObject{{QStringLiteral("httpd"), httpd}})
+                      .toJson(QJsonDocument::Compact));
+        ValhallaServiceManager unsafeService;
+        unsafeService.start(QCoreApplication::applicationFilePath(), configPath, port);
+        QCOMPARE(unsafeService.state(), ValhallaServiceManager::State::Error);
+        QVERIFY(unsafeService.errorMessage().contains(QStringLiteral("listen only")));
     }
 
     void clientRequestsVietnameseKilometerRouteAsynchronously()
@@ -219,6 +250,37 @@ private slots:
         QVERIFY(controller.originInput().contains(QLatin1Char(',')));
         controller.calculateFixtureRoute();
         QVERIFY(controller.statusMessage().contains(QStringLiteral("Fixture chỉ")));
+    }
+
+    void controllerSwitchesFromFixtureToManagedBackend()
+    {
+        QTemporaryDir temporary;
+        QVERIFY(temporary.isValid());
+        const quint16 port = unusedLoopbackPort();
+        QVERIFY(port != 0);
+        QJsonObject serviceConfig;
+        serviceConfig.insert(QStringLiteral("listen"),
+                             QStringLiteral("tcp://127.0.0.1:%1").arg(port));
+        QJsonObject httpd;
+        httpd.insert(QStringLiteral("service"), serviceConfig);
+        QJsonObject config;
+        config.insert(QStringLiteral("fake_service_port"), static_cast<int>(port));
+        config.insert(QStringLiteral("httpd"), httpd);
+        const QString configPath = temporary.path() + QStringLiteral("/fake-valhalla.json");
+        writeFile(configPath, QJsonDocument(config).toJson(QJsonDocument::Compact));
+
+        RoutingController controller;
+        QSignalSpy routeChangedSpy(&controller, &RoutingController::routeChanged);
+        controller.calculateRoute();
+        QCOMPARE(controller.sourceLabel(), QStringLiteral("fixture/mô phỏng"));
+        QCOMPARE(routeChangedSpy.size(), 1);
+        controller.startBackend(QCoreApplication::applicationFilePath(), configPath, port);
+        QTRY_COMPARE_WITH_TIMEOUT(controller.sourceLabel(), QStringLiteral("Valhalla local"), 4000);
+        QCOMPARE(routeChangedSpy.size(), 1);
+        QCOMPARE(controller.connectionLabel(), QStringLiteral("Valhalla local — loopback"));
+        QVERIFY(controller.routeAvailable());
+        QVERIFY(!controller.loading());
+        controller.stopBackend();
     }
 };
 
