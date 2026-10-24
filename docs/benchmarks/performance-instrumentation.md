@@ -38,8 +38,7 @@ Text fields follow RFC 4180-style escaping: a field containing a comma, quote, c
 Build and test with the established Release path:
 
 ```bash
-make build
-ctest --test-dir build --output-on-failure
+make test
 ```
 
 Generate and serve the local non-geographic fixture in another terminal, then record a deterministic raster run:

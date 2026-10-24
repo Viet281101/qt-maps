@@ -4,9 +4,9 @@ Update this file after every meaningful implementation change. Keep it below the
 
 ## Current Phase
 
-- Unit 03 implementation is active on `feat/03-local-map-data-pipeline`, branched from completed local Unit 01b as instructed. Neither branch has been pushed or merged.
+- Unit 03 is complete locally on `feat/03-local-map-data-pipeline`, branched from completed local Unit 01b as instructed, and is awaiting owner review. Neither branch has been pushed or merged.
 - The owner approved Qt 5.15.13 plus dynamically linked MapLibre Native Qt v3.0.0 as the application baseline, retaining Qt 5.13.2 for comparison and localhost raster as fallback.
-- Performance schema v2 is complete: interaction-only FPS and frame-time p50/p95/p99 replace the legacy whole-session 1% low as the primary render-on-demand report. Legacy CSV fields remain for historical comparison.
+- Performance schema v3 is complete: interaction-only FPS and frame-time p50/p95/p99 exclude the final settling swap, which is reported separately; legacy CSV fields remain for historical comparison.
 
 ## Current Goal
 
@@ -54,6 +54,13 @@ CPU uses 100% per logical core; the separately launched localhost server is excl
 
 The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `mapboxgl` 33.407 FPS with frame-time p50/p95/p99 of 16.535/295.523/319.129 ms; Qt 5.15 MapLibre 50.054 FPS with 16.549/19.035/350.803 ms. CPU medians were 6.271% and 12.660%; mean-RSS medians were 176.684 MiB and 209.021 MiB. The long p99 tail occurs inside the explicit 450 ms response window, while idle phases between actions are excluded.
 
+### Unit 03 — local map data pipeline
+
+- `make hanoi-package` reproducibly emits the ignored checksummed `hanoi-20261024-v1` package and `current` pointer from approved local inputs. Two generations produced identical MBTiles/style/glyph/sprite hashes; the 14,675,968-byte MBTiles contains 226 z12-z15 tiles.
+- The in-process worker-thread MBTiles/SQLite service binds a random loopback port behind `TileSource`; strict startup validation, lifecycle/port-conflict/error tests, visible diagnostic-raster fallback, and loopback-only socket trace pass.
+- Real-data runtime verification shows Vietnamese labels, buildings/roads, marker, attribution, bearing, and 45-degree tilt. The 5.47 km route is explicitly simulated; each 120-second run covers approximately 1.33 km at 40 km/h.
+- Three-run schema-v3 medians are: cold 60.009 FPS, p50/p95/p99 16.640/17.895/19.216 ms, 17.352% CPU, 207.751 MiB mean RSS; warm 60.011 FPS, 16.646/17.872/19.314 ms, 16.499% CPU, 201.901 MiB mean RSS. Both have zero frames over 100 ms and pass the proposed p50/p95 review thresholds. Full evidence: `docs/benchmarks/unit-03-local-map-data-pipeline.md`.
+
 ## Active Decisions
 
 ### Committed
@@ -65,28 +72,27 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
 
 ### Proposed — owner approval required
 
-- Use Geofabrik/Planetiler-generated map data, a loopback-only tile service or direct MBTiles access, Valhalla for routing, and SQLite FTS5 for offline search.
+- Use Valhalla for routing and SQLite FTS5 for offline search; both remain unapproved implementation choices.
 
 ## In Progress
 
-- The owner approved Unit 03 package layout, in-process worker-thread MBTiles service, diagnostic raster fallback scope, and 120-second continuous-navigation benchmark. Performance schema v3 now separates the final settling interval of each interaction window from primary FPS/p50/p95/p99; pipeline/service/navigation implementation remains in progress.
+- Unit 03 is stopped for owner review as required. No routing or final UI implementation has started.
 
 ## Next Up
 
 1. Review Unit 02/PR #19 and the local Unit 01b commits; do not push or merge without owner approval.
-2. Complete and verify the approved minimum Unit 03 pipeline, service/fallback lifecycle, and continuous-navigation baseline; stop for owner review before routing or final UI.
-3. Build the demo shell, then the real two-point route, navigation replay, and fixed Release benchmark in that order.
+2. Obtain owner approval for Unit 03 and the proposed Valhalla routing direction plus graph-build time/peak-RAM thresholds.
+3. Implement the minimum two-point routing backend and route/maneuver model before final route-planning and navigation UI polish.
 
 ## Open Questions and Risks
 
-1. Which Unit 03 package layout, tile-access implementation, raster-data scope, and continuous-navigation scenario should be approved from the new spec?
-2. What graph-build time and peak-RAM thresholds should trigger reducing the initial nationwide routing scope?
-3. Is zoom 16 practical for Hanoi/Red River Delta after storage, generation-time, visual-quality, and performance measurements?
-4. Which orthography source, license, attribution, geographic bounds, zoom range, and storage cap are acceptable?
-5. How complete are Vietnam OSM `ref` tags for QL and DT/ĐT roads, and what fallback routing behavior is acceptable?
-6. Which machine will run the management demo, and is a distributable package required?
-7. Which UI theme tokens, icon source, minimum window size, shortcuts, contrast target, and map-aware light/dark behavior should be committed?
-8. Long-duration MapLibre stability, deployment packaging, continuous-motion frame pacing, and Qt 5.13/OpenSSL 3 HTTPS remain unverified.
+1. What graph-build time and peak-RAM thresholds should trigger reducing the initial nationwide routing scope?
+2. Is zoom 16 practical for Hanoi/Red River Delta after storage, generation-time, visual-quality, and performance measurements?
+3. Which orthography source, license, attribution, geographic bounds, zoom range, and storage cap are acceptable?
+4. How complete are Vietnam OSM `ref` tags for QL and DT/ĐT roads, and what fallback routing behavior is acceptable?
+5. Which machine will run the management demo, and is a distributable package required?
+6. Which UI theme tokens, icon source, minimum window size, shortcuts, contrast target, and map-aware light/dark behavior should be committed?
+7. Long-duration MapLibre stability, explicit cache bounds, deployment packaging, and Qt 5.13/OpenSSL 3 HTTPS remain unverified.
 
 ## Environment and Working Commands
 
@@ -113,7 +119,7 @@ Licensing and packaging evidence:
 
 ## Latest Verification
 
-- Default Qt 5.15.13 Release `make test` in `build-qt515`: 2/2 passed; `ldd` resolves Qt Core from the system Qt 5.15 runtime.
-- Isolated Qt 5.13.2 comparison command in `context/code-standards.md`: 2/2 passed; `ldd` resolves Qt Core from `/home/viet/Qt/5.13.2/gcc_64`.
-- Schema-v2 Unit 01b rerun: three successful real-data runs per renderer; all probes reported `mapReady=true`, and the resource server was bound to `127.0.0.1` only.
+- **BUILD PASS:** default Qt 5.15.13 Release `make test` in `build-qt515`: 3/3 executables passed, including manifest corruption, service lifecycle/bounded failure/port conflict, fallback, and navigation-route coverage; `ldd` resolves Qt Core from the system Qt 5.15 runtime.
+- Last pre-Unit03 isolated Qt 5.13.2 comparison: 2/2 passed and `ldd` resolved Qt Core from `/home/viet/Qt/5.13.2/gcc_64`; Unit 03 is intentionally not gated or rerun on the comparison kit.
+- Unit 03 final benchmark: three cold plus three warm-cache real-data runs reported `mapReady=true`, 3,600 interaction frames each, no CSV errors, and only loopback IP connections.
 - No push or merge was performed. The pre-existing `.vscode/settings.json` change is user-owned and excluded from every commit.

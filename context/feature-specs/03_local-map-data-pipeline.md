@@ -20,7 +20,7 @@ Turn the bounded Hanoi feasibility assets into a reproducible, versioned, localh
 - Package vector tiles and their manifest as an immutable versioned artifact. MBTiles is the preferred production container; an exploded XYZ tree may remain a development fixture, not the final package contract.
 - Bind the runtime endpoint to `127.0.0.1` only. QtMaps owns service start/readiness/failure/timeout/shutdown and includes the service in process-tree performance totals.
 - Use a bounded startup timeout, explicit health/readiness result, collision-safe port selection/configuration, incremental capped logs, graceful stop, and bounded forced termination.
-- Do not select or add a new runtime server dependency until the owner approves the implementation choice. Unit 03 must compare the smallest viable MBTiles server adapter against direct/in-process access before coding the lifecycle.
+- The owner selected direct in-process MBTiles/SQLite access behind `TileSource`; no runtime server dependency is added. A future QProcess implementation remains possible behind that interface.
 
 ### 3. Style-resource contract
 
@@ -43,18 +43,18 @@ Turn the bounded Hanoi feasibility assets into a reproducible, versioned, localh
 
 ## Acceptance Criteria
 
-- [ ] One command regenerates the bounded Hanoi vector package from already approved local inputs with no Internet access and emits a complete versioned manifest.
-- [ ] Repeating the pipeline with identical inputs produces matching content checksums or documents every intentionally nondeterministic field outside the content identity.
-- [ ] Validation detects a changed checksum, missing layer/resource, incompatible style-contract version, and out-of-bounds package.
-- [ ] No PBF, jar, MBTiles, tiles, package, log, screenshot, CSV, cache, or third-party build tree is tracked by Git.
-- [ ] QtMaps starts the approved localhost tile service, observes readiness within a bounded timeout, renders the real Hanoi package, and terminates the service cleanly; startup failure and port conflict are tested.
-- [ ] Socket evidence contains no non-loopback map-resource request.
-- [ ] Style, glyph, sprite, layer schema, Vietnamese labels, and OSM/ODbL attribution pass the contract check and visible runtime check.
-- [ ] A forced vector-package/service failure selects the configured localhost raster fallback with a visible reason; no public tile server is contacted.
-- [ ] The fixed simulated route runs with continuous camera follow at the documented stable speed for three Release runs and records median interaction FPS, frame-time p50/p95/p99, total CPU, and total RSS including the tile service.
-- [ ] Qt Test/CTest covers manifest parsing/validation, lifecycle state transitions/timeouts, fallback selection, and deterministic route replay logic.
-- [ ] Qt 5.15.13 Release build and CTest pass; Qt 5.13 comparison instructions remain documented but are not a Unit 03 release gate.
-- [ ] Evidence records licenses, commands, package identity, measured resource use, limitations, and the next owner decision.
+- [x] One command regenerates the bounded Hanoi vector package from already approved local inputs with no Internet access and emits a complete versioned manifest.
+- [x] Repeating the pipeline with identical inputs produces matching content checksums or documents every intentionally nondeterministic field outside the content identity.
+- [x] Validation detects a changed checksum, missing layer/resource, incompatible style-contract version, and out-of-bounds package.
+- [x] No PBF, jar, MBTiles, tiles, package, log, screenshot, CSV, cache, or third-party build tree is tracked by Git.
+- [x] QtMaps starts the approved localhost tile service, observes readiness within a bounded validation interval, renders the real Hanoi package, and terminates the service cleanly; startup failure and port conflict are tested.
+- [x] Socket evidence contains no non-loopback map-resource request.
+- [x] Style, glyph, sprite, layer schema, Vietnamese labels, and OSM/ODbL attribution pass the contract check and visible runtime check.
+- [x] A forced vector-package/service failure selects the configured localhost raster fallback with a visible reason; no public tile server is contacted.
+- [x] The fixed simulated route runs with continuous camera follow at the documented stable speed for three Release runs per cache state and records median interaction FPS, frame-time p50/p95/p99, total CPU, and total RSS including the tile service.
+- [x] Qt Test/CTest covers manifest parsing/validation, lifecycle state transitions/bounded failures, fallback selection, and deterministic route replay logic.
+- [x] Qt 5.15.13 Release build and CTest pass; Qt 5.13 comparison instructions remain documented but are not a Unit 03 release gate.
+- [x] Evidence records licenses, commands, package identity, measured resource use, limitations, and the next owner decision.
 
 ## Not in Unit 03
 
