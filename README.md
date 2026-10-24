@@ -90,9 +90,10 @@ Exact disconnected verification and benchmark procedures are recorded in [the Un
 
 - Qt 5.15.13 plus dynamically linked MapLibre Native Qt v3.0.0 is the production baseline. Qt 5.13.2 is retained only for explicit comparison.
 - The checksummed local vector package currently covers bounded Hanoi data at zoom 12–15. It is not nationwide coverage.
-- The visible 5.47 km navigation path and 40 km/h movement are deterministic simulation fixtures, not output from a routing engine.
+- PR #20 is merged. Its visible 5.47 km path and 40 km/h movement remain deterministic Unit 03 navigation fixtures, not output from a routing engine.
+- The Unit 04 route-planning flow now runs a managed, loopback-only Valhalla 3.9.1 service and returns real route geometry, distance, duration, and Vietnamese maneuvers for the bounded greater-Hanoi graph. Recorded fixtures remain an explicitly labeled fallback.
 - Raster fallback is a local diagnostic image that proves failure detection and switching; it is not real Hanoi raster coverage.
-- Routing, offline search, orthography, final product UI, installer packaging, and long-duration stability validation are not implemented yet.
+- Navigation replay over the selected route, re-routing, full QtMaps-plus-Valhalla process-tree benchmarking, nationwide graph generation, offline search, orthography, final product UI, installer packaging, and long-duration stability validation are not implemented yet.
 
 ## Implementation Principles
 
