@@ -4,7 +4,7 @@ Update this file after every meaningful implementation change. Keep it below the
 
 ## Current Phase
 
-- Unit 03 final review is active on `feat/03-local-map-data-pipeline`: review found that the 3,600-frame interaction buffer truncated a 120-second 60 FPS run to its final minute. The buffer and evidence are being corrected before push. Neither branch has been pushed or merged.
+- Unit 03 is complete and reviewed locally on `feat/03-local-map-data-pipeline`, including corrected full-window benchmark evidence, and is ready to push. It has not been merged.
 - The owner approved Qt 5.15.13 plus dynamically linked MapLibre Native Qt v3.0.0 as the application baseline, retaining Qt 5.13.2 for comparison and localhost raster as fallback.
 - Performance schema v3 is complete: interaction-only FPS and frame-time p50/p95/p99 exclude the final settling swap, which is reported separately; legacy CSV fields remain for historical comparison.
 
@@ -59,7 +59,8 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
 - `make hanoi-package` reproducibly emits the ignored checksummed `hanoi-20261024-v1` package and `current` pointer from approved local inputs. Two generations produced identical MBTiles/style/glyph/sprite hashes; the 14,675,968-byte MBTiles contains 226 z12-z15 tiles.
 - The in-process worker-thread MBTiles/SQLite service binds a random loopback port behind `TileSource`; strict startup validation, lifecycle/port-conflict/error tests, visible diagnostic-raster fallback, and loopback-only socket trace pass.
 - Real-data runtime verification shows Vietnamese labels, buildings/roads, marker, attribution, bearing, and 45-degree tilt. The 5.47 km route is explicitly simulated; each 120-second run covers approximately 1.33 km at 40 km/h.
-- Three-run schema-v3 medians are: cold 60.009 FPS, p50/p95/p99 16.640/17.895/19.216 ms, 17.352% CPU, 207.751 MiB mean RSS; warm 60.011 FPS, 16.646/17.872/19.314 ms, 16.499% CPU, 201.901 MiB mean RSS. Both have zero frames over 100 ms and pass the proposed p50/p95 review thresholds. Full evidence: `docs/benchmarks/unit-03-local-map-data-pipeline.md`.
+- Commit review found and fixed a 3,600-frame buffer that had truncated the original 120-second statistics plus a missing style tile-URL contract check. The final runs retain 7,168-7,179 frames and reject non-local style URLs.
+- Corrected three-run schema-v3 medians are: cold 60.011 FPS, p50/p95/p99 16.642/17.969/19.322 ms, 17.569% CPU, 208.934 MiB mean RSS; warm 60.012 FPS, 16.646/17.922/19.248 ms, 17.102% CPU, 202.294 MiB mean RSS. Both have zero frames over 100 ms and pass the proposed p50/p95 review thresholds. Full evidence: `docs/benchmarks/unit-03-local-map-data-pipeline.md`.
 
 ## Active Decisions
 
@@ -121,5 +122,5 @@ Licensing and packaging evidence:
 
 - **BUILD PASS:** default Qt 5.15.13 Release `make test` in `build-qt515`: 3/3 executables passed, including manifest corruption, service lifecycle/bounded failure/port conflict, fallback, and navigation-route coverage; `ldd` resolves Qt Core from the system Qt 5.15 runtime.
 - Last pre-Unit03 isolated Qt 5.13.2 comparison: 2/2 passed and `ldd` resolved Qt Core from `/home/viet/Qt/5.13.2/gcc_64`; Unit 03 is intentionally not gated or rerun on the comparison kit.
-- Unit 03 final benchmark: three cold plus three warm-cache real-data runs reported `mapReady=true`, 3,600 interaction frames each, no CSV errors, and only loopback IP connections.
+- Unit 03 corrected benchmark: three cold plus three warm-cache real-data runs reported `mapReady=true`, 7,168-7,179 interaction frames, no CSV errors, and only loopback IP connections.
 - No push or merge was performed. The pre-existing `.vscode/settings.json` change is user-owned and excluded from every commit.

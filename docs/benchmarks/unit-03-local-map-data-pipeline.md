@@ -67,28 +67,32 @@ run follows it at 40 km/h with a 16 ms position timer, rotating camera, zoom 15,
 and tilt 45 degrees. The 120-second measured segment covers approximately 1.33
 km; it is not a routing-engine result. Ten warm-up seconds are excluded. Cold
 runs use three new `XDG_CACHE_HOME` directories. Warm runs share a separate
-cache after a 20-second preload. Every final run has 3,600 retained interaction
-frames and one separately reported settling swap.
+cache after a 20-second preload. Final runs retain 7,168-7,179 interaction
+frames (the complete approximately 119.5-second post-warm-up window) and one
+separately reported settling swap. An earlier 3,600-frame result set was
+rejected during commit review because the original buffer retained only the
+last approximately 60 seconds; those raw files remain ignored historical
+diagnostics and are not used below.
 
 | Cache/run | FPS avg | p50 ms | p95 ms | p99 ms | >100 ms | Mean CPU | Mean RSS MiB | Peak RSS MiB |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Cold 1 | 60.009 | 16.658 | 17.878 | 19.216 | 0 | 17.352% | 207.373 | 208.898 |
-| Cold 2 | 60.009 | 16.640 | 17.895 | 19.112 | 0 | 16.691% | 208.749 | 210.688 |
-| Cold 3 | 60.016 | 16.622 | 18.008 | 19.345 | 0 | 17.593% | 207.751 | 209.969 |
-| **Cold median** | **60.009** | **16.640** | **17.895** | **19.216** | **0** | **17.352%** | **207.751** | **209.969** |
-| Warm 1 | 60.011 | 16.658 | 18.048 | 19.674 | 0 | 16.407% | 205.590 | 207.969 |
-| Warm 2 | 60.011 | 16.645 | 17.872 | 19.314 | 0 | 16.919% | 201.901 | 204.207 |
-| Warm 3 | 60.010 | 16.646 | 17.793 | 18.999 | 0 | 16.499% | 198.508 | 200.336 |
-| **Warm median** | **60.011** | **16.646** | **17.872** | **19.314** | **0** | **16.499%** | **201.901** | **204.207** |
+| Cold 1 | 60.011 | 16.642 | 18.284 | 19.811 | 0 | 17.548% | 208.934 | 211.480 |
+| Cold 2 | 60.011 | 16.642 | 17.943 | 19.318 | 0 | 17.569% | 209.044 | 211.562 |
+| Cold 3 | 60.011 | 16.645 | 17.969 | 19.322 | 0 | 17.575% | 207.706 | 209.496 |
+| **Cold median** | **60.011** | **16.642** | **17.969** | **19.322** | **0** | **17.569%** | **208.934** | **211.480** |
+| Warm 1 | 60.010 | 16.641 | 17.837 | 19.138 | 0 | 16.850% | 203.677 | 206.199 |
+| Warm 2 | 60.012 | 16.648 | 17.944 | 19.248 | 0 | 17.102% | 202.294 | 204.152 |
+| Warm 3 | 60.012 | 16.646 | 17.922 | 19.249 | 0 | 17.451% | 199.132 | 201.363 |
+| **Warm median** | **60.012** | **16.646** | **17.922** | **19.248** | **0** | **17.102%** | **202.294** | **204.152** |
 
 Both cache states pass the proposed p50 <= 17 ms and p95 <= 33 ms review
 thresholds; p99 remains report-only. CSV uses `qtmaps-perf-v3`, so the final
 settling interval cannot distort the primary percentiles. Raw CSV, logs,
 caches, screenshot, package, PBF, jar, and reproduction output remain ignored.
-The benchmark binary identified the tree as `930f6495ac25+working-tree`; its
-only source changes were the marker and shutdown-order fix committed immediately
-afterward as `4e377ec` (the pre-existing user-owned VS Code change kept the tree
-dirty).
+The reviewed benchmark binary identified the tree as
+`6e26a48bdb30+working-tree`; `6e26a48` contains the full-window buffer and
+offline-contract fixes. The suffix is caused by the pre-existing user-owned VS
+Code settings change, which was excluded from every commit.
 
 ## Licensing, limitations, and recommendation
 
@@ -101,6 +105,10 @@ in `THIRD_PARTY_NOTICES.md` and `docs/packaging/linux-dynamic-linking.md`.
 
 Unit 03 supports the approved Qt 5.15.13 + MapLibre baseline. The local
 diagnostic raster is a mechanics-only fallback, not real Hanoi raster data.
+Development tests currently select the Qt 5.15 QSQLITE plugin from the ignored
+Unit 01b runtime tree through `QT_RUNTIME_PLUGIN_PATH`; `make test` now fails
+early with an actionable message when that plugin root is absent. A release
+bundle must include the matching `plugins/sqldrivers/libqsqlite.so`.
 Remaining risks are MapLibre deployment packaging/private-header overlay,
 long-duration stability, explicit cache bounds, real raster generation, and
 coverage beyond the bounded z12-z15 package. The next demo-critical unit should
