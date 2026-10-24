@@ -69,12 +69,12 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
 
 ## In Progress
 
-- Complete A-D before Unit 03 implementation: performance metric correction and benchmark rerun; minimal Unit 03 plan/spec; Qt 5.15.13 baseline migration; third-party notices and dynamic-link packaging guidance.
+- Complete A-D before Unit 03 implementation. A is complete. B is documented in `context/feature-specs/03_local-map-data-pipeline.md`. C (Qt 5.15.13 baseline migration) and D (third-party notices/dynamic-link packaging) remain.
 
 ## Next Up
 
 1. Review Unit 02/PR #19 and the local Unit 01b commits; do not push or merge without owner approval.
-2. After the renderer decision, start the minimum Unit 03 pipeline: reproducible bounded Hanoi generation and loopback service, renderer/backend contract, raster fallback, and continuous-navigation workload.
+2. Review the minimum Unit 03 spec, then implement only after the package/server/fallback/benchmark decisions listed there are approved.
 3. Build the demo shell, then the real two-point route, navigation replay, and fixed Release benchmark in that order.
 
 ## Open Questions and Risks
