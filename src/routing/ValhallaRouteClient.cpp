@@ -90,10 +90,14 @@ void ValhallaRouteClient::requestRoute(const QGeoCoordinate &origin,
     query.addQueryItem(QStringLiteral("json"),
                        QString::fromUtf8(QJsonDocument(requestObject).toJson(QJsonDocument::Compact)));
     url.setQuery(query);
+    const quint64 requestGeneration = ++requestGeneration_;
     reply_ = network_->get(QNetworkRequest(url));
     emit requestPendingChanged();
     timeout_->start(qMax(100, timeoutMs));
-    connect(reply_, &QNetworkReply::finished, this, [this]() {
+    connect(reply_, &QNetworkReply::finished, this, [this, requestGeneration]() {
+        if (requestGeneration != requestGeneration_) {
+            return;
+        }
         QNetworkReply *reply = reply_;
         if (!reply) {
             return;
@@ -121,6 +125,7 @@ void ValhallaRouteClient::requestRoute(const QGeoCoordinate &origin,
 
 void ValhallaRouteClient::cancel()
 {
+    ++requestGeneration_;
     if (!reply_) {
         return;
     }

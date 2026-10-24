@@ -13,6 +13,7 @@
 #include <QTcpServer>
 #include <QTcpSocket>
 #include <QTemporaryDir>
+#include <QTimer>
 #include <QUrlQuery>
 
 using qtmaps::routing::Route;
@@ -85,27 +86,35 @@ int runFakeValhallaService(int argc, char **argv, const QJsonObject &config)
         return 3;
     }
     const QByteArray routeBody = fixture.readAll();
+    const int routeDelayMs = config.value(QStringLiteral("fake_route_delay_ms")).toInt();
     QTcpServer server;
     const quint16 port = static_cast<quint16>(config.value(QStringLiteral("fake_service_port")).toInt());
     if (!server.listen(QHostAddress::LocalHost, port)) {
         return 2;
     }
-    QObject::connect(&server, &QTcpServer::newConnection, &application, [&server, routeBody]() {
+    QObject::connect(&server, &QTcpServer::newConnection, &application,
+                     [&server, routeBody, routeDelayMs]() {
         while (QTcpSocket *socket = server.nextPendingConnection()) {
-            QObject::connect(socket, &QTcpSocket::readyRead, socket, [socket, routeBody]() {
+            QObject::connect(socket, &QTcpSocket::readyRead, socket,
+                             [socket, routeBody, routeDelayMs]() {
                 const QByteArray request = socket->property("request").toByteArray()
                     + socket->readAll();
                 socket->setProperty("request", request);
-                if (!request.contains("\r\n\r\n")) {
+                if (!request.contains("\r\n\r\n")
+                    || socket->property("responseScheduled").toBool()) {
                     return;
                 }
+                socket->setProperty("responseScheduled", true);
                 const QByteArray body = request.startsWith("GET /route?")
                     ? routeBody : QByteArrayLiteral("{\"version\":\"test\"}");
-                socket->write(QByteArrayLiteral(
-                                  "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nConnection: close\r\nContent-Length: ")
-                              + QByteArray::number(body.size()) + QByteArrayLiteral("\r\n\r\n")
-                              + body);
-                socket->disconnectFromHost();
+                const int delayMs = request.startsWith("GET /route?") ? routeDelayMs : 0;
+                QTimer::singleShot(delayMs, socket, [socket, body]() {
+                    socket->write(QByteArrayLiteral(
+                                      "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nConnection: close\r\nContent-Length: ")
+                                  + QByteArray::number(body.size())
+                                  + QByteArrayLiteral("\r\n\r\n") + body);
+                    socket->disconnectFromHost();
+                });
             });
             QObject::connect(socket, &QTcpSocket::disconnected, socket, &QObject::deleteLater);
         }
@@ -280,6 +289,39 @@ private slots:
         QCOMPARE(controller.connectionLabel(), QStringLiteral("Valhalla local — loopback"));
         QVERIFY(controller.routeAvailable());
         QVERIFY(!controller.loading());
+        controller.stopBackend();
+    }
+
+    void controllerIgnoresDelayedRouteAfterEndpointsChange()
+    {
+        QTemporaryDir temporary;
+        QVERIFY(temporary.isValid());
+        const quint16 port = unusedLoopbackPort();
+        QVERIFY(port != 0);
+        QJsonObject serviceConfig;
+        serviceConfig.insert(QStringLiteral("listen"),
+                             QStringLiteral("tcp://127.0.0.1:%1").arg(port));
+        QJsonObject httpd;
+        httpd.insert(QStringLiteral("service"), serviceConfig);
+        QJsonObject config;
+        config.insert(QStringLiteral("fake_service_port"), static_cast<int>(port));
+        config.insert(QStringLiteral("fake_route_delay_ms"), 400);
+        config.insert(QStringLiteral("httpd"), httpd);
+        const QString configPath = temporary.path() + QStringLiteral("/delayed-valhalla.json");
+        writeFile(configPath, QJsonDocument(config).toJson(QJsonDocument::Compact));
+
+        RoutingController controller;
+        controller.startBackend(QCoreApplication::applicationFilePath(), configPath, port);
+        QTRY_VERIFY_WITH_TIMEOUT(controller.loading(), 3000);
+
+        QVERIFY(controller.setDestinationInput(QStringLiteral("Ba Đình")));
+        QVERIFY(!controller.loading());
+        QVERIFY(!controller.routeAvailable());
+        QTest::qWait(700);
+
+        QVERIFY(!controller.routeAvailable());
+        QCOMPARE(controller.destinationInput(), QStringLiteral("Ba Đình"));
+        QVERIFY(controller.sourceLabel() != QStringLiteral("Valhalla local"));
         controller.stopBackend();
     }
 };

@@ -242,6 +242,8 @@ bool RoutingController::parseLocation(const QString &input, QGeoCoordinate *coor
 
 void RoutingController::clearRoute()
 {
+    client_->cancel();
+    setLoading(false);
     if (!route_.isValid() && routePath_.isEmpty() && maneuvers_.isEmpty()) {
         return;
     }

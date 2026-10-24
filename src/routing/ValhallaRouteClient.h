@@ -38,6 +38,7 @@ private:
     QNetworkReply *reply_ = nullptr;
     QTimer *timeout_ = nullptr;
     QUrl endpoint_;
+    quint64 requestGeneration_ = 0;
 };
 
 } // namespace routing
