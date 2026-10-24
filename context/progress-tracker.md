@@ -6,7 +6,7 @@ Update this file after every meaningful implementation change. Keep it below the
 
 - Pre-Unit-03 work is active on `feat/03-local-map-data-pipeline`, branched from completed local Unit 01b as instructed. Neither branch has been pushed or merged.
 - The owner approved Qt 5.15.13 plus dynamically linked MapLibre Native Qt v3.0.0 as the application baseline, retaining Qt 5.13.2 for comparison and localhost raster as fallback.
-- Performance schema v2 implementation is in progress: interaction-only FPS and frame-time p50/p95/p99 replace the legacy whole-session 1% low as the primary render-on-demand report. Legacy CSV fields remain for historical comparison.
+- Performance schema v2 is complete: interaction-only FPS and frame-time p50/p95/p99 replace the legacy whole-session 1% low as the primary render-on-demand report. Legacy CSV fields remain for historical comparison.
 
 ## Current Goal
 
@@ -51,6 +51,8 @@ Deliver a stable management demo by 2026-11-03: polished map-first Release UI, v
 | Qt 5.15.13 MapLibre v3 | 33.769 | 5.000 | 10.440% | 209.778 MiB |
 
 CPU uses 100% per logical core; the separately launched localhost server is excluded. The low one-second samples occurred during no-action/render-on-demand phases at low CPU and recovered during camera motion, so the current 1% low mainly reflects coarse sampling/frame pacing rather than sustained tile loading or GPU saturation. See `docs/benchmarks/unit-01b-vector-feasibility.md` for complete evidence.
+
+The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `mapboxgl` 33.407 FPS with frame-time p50/p95/p99 of 16.535/295.523/319.129 ms; Qt 5.15 MapLibre 50.054 FPS with 16.549/19.035/350.803 ms. CPU medians were 6.271% and 12.660%; mean-RSS medians were 176.684 MiB and 209.021 MiB. The long p99 tail occurs inside the explicit 450 ms response window, while idle phases between actions are excluded.
 
 ## Active Decisions
 

@@ -4,7 +4,7 @@
 
 Unit 01b is complete locally. Both the installed Qt 5.13.2 `mapboxgl` plugin and MapLibre Native Qt v3.0.0 on Qt 5.15.13 rendered the same real bounded-Hanoi data, local style, project-owned glyphs and sprite through `127.0.0.1`. Both retained the requested bearing/tilt values and displayed `HÀ NỘI` with diacritics and visible OpenStreetMap attribution.
 
-Recommend **MapLibre Native Qt v3.0.0 on Qt 5.15.13 for the first demo vector renderer**. Its median average FPS exceeded the provisional 30 FPS target and was 38.6% above the Qt 5.13 plugin, while its additional CPU and RSS remained modest on the reference laptop. Keep project-generated localhost raster tiles as the fallback. A project-wide Qt migration still requires owner approval before Unit 03; this spike does not silently change the current Qt 5.13 baseline.
+The owner approved **MapLibre Native Qt v3.0.0 on Qt 5.15.13 as the application baseline** on 2026-10-24, using dynamic linking under the LGPL-3.0-compatible distribution plan. Qt 5.13.2 remains available for comparison, and project-generated localhost raster tiles remain the fallback.
 
 No PBF, jar, generated tile, third-party source/build/install tree, `.deb`, log, screenshot, or CSV is tracked by Git. All such artifacts are under ignored `generated/` or `/tmp`.
 
@@ -112,6 +112,23 @@ The Unit 02 metric is an interval-based percentile, not a frame-time percentile.
 
 The Qt 5.13 runs repeatedly fell to 4–6 swaps/s during three no-action phases in the 12-step automation cycle, with only 2–4% CPU, then returned to 29–62 swaps/s on pan/zoom phases. MapLibre showed the same low sample and low CPU during the corresponding render-on-demand phase while improving active-phase throughput. This evidence attributes the low primarily to on-demand frame pacing plus the coarse interval metric, not sustained tile loading or GPU saturation. A continuously animated navigation scenario should be added in Unit 03 before treating this value as perceived stutter.
 
+## Interaction-only rerun with schema v2
+
+After the renderer decision, the same real-data comparison was repeated with `qtmaps-perf-v2`. Each scripted pan, zoom, or camera action opened a 450 ms interaction window. Frame intervals were retained only between consecutive completed swaps inside those windows; idle phases between actions were excluded. Each renderer again ran three times with the same Release build, 960×640 viewport, threaded default render loop, 60 Hz vsync, three-second warm-up, 15-second recording, localhost data, and app-only process scope.
+
+| Renderer/run | Active avg FPS | Frame p50 | Frame p95 | Frame p99 | Mean CPU | Mean RSS |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Qt 5.13 `mapboxgl` 1 | 33.407 | 16.535 ms | 308.735 ms | 319.129 ms | 6.271% | 177.316 MiB |
+| Qt 5.13 `mapboxgl` 2 | 61.960 | 16.518 ms | 18.134 ms | 20.801 ms | 8.530% | 176.684 MiB |
+| Qt 5.13 `mapboxgl` 3 | 30.874 | 16.579 ms | 295.523 ms | 334.460 ms | 6.137% | 176.033 MiB |
+| **Qt 5.13 median** | **33.407** | **16.535 ms** | **295.523 ms** | **319.129 ms** | **6.271%** | **176.684 MiB** |
+| MapLibre/Qt 5.15 1 | 50.054 | 16.431 ms | 19.932 ms | 350.803 ms | 12.660% | 209.021 MiB |
+| MapLibre/Qt 5.15 2 | 50.281 | 16.549 ms | 19.035 ms | 344.911 ms | 13.077% | 206.785 MiB |
+| MapLibre/Qt 5.15 3 | 41.769 | 16.550 ms | 18.674 ms | 388.026 ms | 10.519% | 209.439 MiB |
+| **MapLibre/Qt 5.15 median** | **50.054** | **16.549 ms** | **19.035 ms** | **350.803 ms** | **12.660%** | **209.021 MiB** |
+
+MapLibre improves median interaction-only average FPS by 49.8% and keeps median p95 near one 60 Hz frame plus a small scheduling margin. Both renderers have approximately 16.5 ms median frame time. The 300–390 ms p99 values are late settling swaps still inside the explicit 450 ms response window, not idle phases between actions. Qt 5.13 also moved those long gaps into p95 in two of three runs, while MapLibre confined them to the top 1%; this supports the approved MapLibre baseline but also justifies Unit 03's continuous-navigation workload.
+
 ## Licenses, risks, and fallback
 
 - Geofabrik data is OpenStreetMap-derived and governed by ODbL 1.0; visible `© OpenStreetMap contributors` attribution is present.
@@ -121,9 +138,9 @@ The Qt 5.13 runs repeatedly fell to 4–6 swaps/s during three no-action phases 
 - The 15-second comparison does not replace a 30–60 minute soak, navigation animation, rapid layer switching, or cold-cache benchmark.
 - Project-generated raster tiles served only on localhost remain the recovery path if vector startup, driver, packaging, or licensing issues block the demo.
 
-## Decision requested before Unit 03
+## Decision status before Unit 03
 
-Approve Qt 5.15.13 plus MapLibre Native Qt v3.0.0 as the project/demo vector baseline, approve the LGPL-3.0-compatible dynamic-linking/package approach for review, and retain Qt 5.13 only as the known-working rollback until the Qt 5.15 build and deployment path is integrated. Also approve adding a continuously animated navigation benchmark to Unit 03 while keeping the existing interval metric for historical comparison.
+The renderer, Qt baseline, dynamic-link model, Qt 5.13 comparison path, localhost raster fallback, and continuous-navigation benchmark were approved on 2026-10-24. Unit 03 implementation remains gated on review of the minimum plan, acceptance criteria, data-package versioning, and tile-server lifecycle proposed on the Unit 03 branch.
 
 ## Sources checked
 
