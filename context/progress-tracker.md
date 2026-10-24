@@ -1,219 +1,115 @@
 # Progress Tracker
 
-Update this file after every meaningful implementation change.
+Update this file after every meaningful implementation change. Keep it below the automatic compaction thresholds in `context/ai-workflow-rules.md`; detailed historical evidence belongs in the linked specs and reports.
 
 ## Current Phase
 
-- Unit 01b local-vector and MapLibre Native feasibility is complete locally on `feat/01b-vector-feasibility-spike`, branched from Unit 02 because it directly depends on instrumentation not yet in `main`. Both renderers passed the bounded real-Hanoi proof and three-run comparison. The evidence recommends Qt 5.15.13 plus MapLibre Native Qt v3.0.0 for the demo, with raster tiles as the fallback, but the project-wide baseline remains Qt 5.13.2 until the owner approves the migration. Neither the Unit 01b branch nor its commits have been pushed.
+- Unit 01b is complete locally on `feat/01b-vector-feasibility-spike`, which branches from Unit 02 because it reuses instrumentation not yet merged into `main`.
+- The bounded real-Hanoi comparison recommends Qt 5.15.13 plus MapLibre Native Qt v3.0.0 for the demo, with QtLocation raster as fallback. The project-wide baseline remains Qt 5.13.2 until owner approval.
+- The Unit 01b branch has not been pushed or merged. Unit 02 remains associated with PR #19 and Issue #7.
 
 ## Current Goal
 
-- Deliver the strongest stable management demo possible by 2026-11-03: a polished map-first Release application, a visible two-point route and navigation-style flow, and honest FPS/RAM/CPU evidence on the reference laptop.
+Deliver a stable management demo by 2026-11-03: polished map-first Release UI, visible two-point routing and navigation-style flow, and honest FPS/RAM/CPU evidence on the reference laptop.
 
-## Completed
+## Completed Outcomes
 
-- Surveyed the repository and converted the web-oriented context templates into QtMaps project documentation.
-- Recorded the current compiler, build tools, GPU, Mesa, direct-rendering, and OpenGL baseline.
-- Defined the first ten dependency-ordered units and detailed specs for units 01 and 02.
-- Owner selected Qt 5.13.2 `gcc_64` through `aqtinstall` under `~/Qt` and committed the project to CMake with Ninja, subject to successful unit 01 validation.
-- Owner selected Vietnam zoom 0-10 for national raster/vector coverage, Hanoi and the surrounding Red River Delta for zoom 11-16 detail, with zoom 16 explicitly provisional.
-- Owner approved Ninja and ccache installation but required all `sudo apt` commands to be printed for manual execution.
-- Installed `aqtinstall` 3.3.0 in `~/.local/share/aqtinstall-3.3.0`.
-- Queried Qt 5.13.2 `gcc_64` successfully: the extra-module list matched the repository-derived preliminary list, and the base archives include `qtdeclarative` and `qtlocation`.
-- Owner selected nationwide routing data from one uncropped Geofabrik Vietnam extract as the initial scope, to be confirmed by graph-build time and peak-RAM measurements.
-- Installed the Qt 5.13.2 `gcc_64` base archives under `/home/viet/Qt/5.13.2/gcc_64`; `/home/viet/Qt` uses 563 MiB as reported by `du -sh`.
-- Confirmed qmake 3.1 reports Qt 5.13.2, and confirmed the QtLocation and QtPositioning libraries and QML import directories exist.
-- Confirmed geoservice plugins `osm` and `mapboxgl`, plus the position plugin `serialnmea`, are present on disk.
-- Ran `ldd` on Qt Core, Quick, Location, Positioning, and the xcb platform plugin; none reported a `not found` dependency.
-- Built and ran a temporary non-application SSL probe outside the repository with GCC 13.3.0. `QSslSocket::supportsSsl()` returned true, but Qt reported unresolved `EVP_PKEY_base_id` and `SSL_get_peer_certificate` symbols when using OpenSSL 3.0.13.
-- Owner set a two-week deadline ending 2026-11-03 for the first management demo and directed work to prioritize the most convincing stable vertical slice over the previously estimated long-form sequence.
-- Updated the project overview, AI workflow, progress tracker, and bilingual root documentation to describe the demo-first direction and distinguish complete, partial, simulated, and unavailable behavior. `README.md` is the professional English entry point and `README_VN.md` contains the Vietnamese version.
-- Linked the public [QtMaps Project board](https://github.com/users/Viet281101/projects/6) and repository in both directions, set the repository homepage to the board, and added Qt/QML/OSM/offline-map/routing topics for discoverability.
-- Created the [First Management Demo milestone](https://github.com/Viet281101/qt-maps/milestone/1), the [demo tracking issue](https://github.com/Viet281101/qt-maps/issues/1), eleven scoped sub-issues with acceptance criteria, P0/P1 labels, area labels, and Project fields for Priority and Demo Phase.
-- Opened [PR #17](https://github.com/Viet281101/qt-maps/pull/17) to review the complete context and demo-first documentation baseline before merging it into `main`.
-- Merged the context baseline from PR #17 into `main` and created `feat/01-env-and-spike` from that merge.
-- Owner deferred Qt 5.13.2 HTTPS compatibility work as a low-priority open risk that does not block unit 01. Until revisited, tile and routing endpoints are assumed to use HTTP on localhost. Possible later approaches are a local tile proxy that fetches HTTPS upstream and serves HTTP locally, or, only as a last resort, a private OpenSSL 1.1 runtime because OpenSSL 1.1 is end-of-life. Do not modify system OpenSSL or install `libssl1.1`.
-- Ran `ldd` on the installed `mapboxgl` and `osm` geoservice plugins and the `serialnmea` position plugin. None produced a `not found` line, so this check does not justify any runtime-library installation command.
-- Confirmed the owner-installed build tools are available: Ninja 1.11.1 and ccache 4.9.1.
-- Added the minimal Qt 5 CMake project and completed a Release build with GCC 13.3.0, Ninja 1.11.1, ccache 4.9.1, and C++14. The QML engine loaded a 960x640 Qt Quick 2.13 window, and `xwininfo` confirmed the X11 window existed.
-- Added a root `Makefile` as a thin wrapper around the authoritative CMake/Ninja workflow. `make requirements` verifies Qt 5.13.2, CMake, Ninja, ccache, G++, and Python 3 for the standard-library-only helper scripts; `make build` completed the validated Release configure/build path successfully. Python provisioning packages are intentionally not represented as application requirements because QtMaps is a Qt/C++ application and the current helper scripts have no third-party Python dependency.
-- `QGeoServiceProvider::availableServiceProviders()` returned `mapboxgl`, `here`, `osm`, `itemsoverlay`, `esri`, and `mapbox` (order varied between runs). Constructing `osm` and `mapboxgl` with experimental providers allowed returned a non-null mapping manager for both; provider and mapping errors were zero with empty error strings. This proves provider loading only, not raster or vector rendering.
-- Verified against the QtLocation `v5.13.2` source that the OSM plugin parameter is `osm.mapping.custom.host`; the plugin appends `%z/%x/%y.png` to that base URL. The same source confirms `osm.mapping.providersrepository.disabled`, `osm.mapping.prefetching_style=NoPrefetching`, and `osm.useragent`.
-- Reviewed the current OpenStreetMap Foundation standard raster-tile policy. It requires HTTPS and prohibits pre-seeding/bulk downloads and offline tile archives, so `tile.openstreetmap.org` will not be used as the source of a curl-downloaded localhost fixture. No tile was downloaded or generated during this research step.
-- Owner approved a locally generated diagnostic XYZ fixture for unit 01 and prohibited downloading tiles from `tile.openstreetmap.org` or any other public tile server in all cases, including small tests. Real map content is reserved for the unit 03 project pipeline using Geofabrik PBF, Planetiler, and a localhost tile server. The unit 01 fixture must be labeled as non-geographic diagnostic content.
-- Added `tools/generate_diagnostic_tiles.py`, which uses only Python standard-library `math`, `struct`, and `zlib` support and performs no network access. It applies the documented Web Mercator XYZ formula around Hanoi and generates 49 bordered, coordinate-labeled diagnostic tiles at each zoom from 10 through 14 (245 PNG files, 1.2 MiB total). The output under `generated/diagnostic-tiles/` is ignored and not committed; it is not real geographic map data.
-- Added the unit 01 diagnostic raster view using the Qt 5.13.2 OSM parameters `osm.mapping.custom.host=http://127.0.0.1:8765/`, `osm.mapping.providersrepository.disabled=true`, `osm.mapping.prefetching_style=NoPrefetching`, and a diagnostic `osm.useragent`. The view labels itself as not a real geographic map and supports mouse gestures plus deterministic arrow-key pan and `+`/`-` zoom controls.
-- Served the fixture with `python3 -m http.server 8765 --bind 127.0.0.1 --directory generated/diagnostic-tiles`. A clean zoom-12 load generated 20 localhost requests and zooming to approximately 13 generated 15 more; all 35 returned HTTP 200. Keyboard pan changed the captured window hash from `fea04a14...d552390` to `958e89cb...561c68` and produced additional localhost requests when the viewport moved beyond the deliberately bounded fixture; those out-of-coverage requests returned the expected 404.
-- Verified from the QtLocation `v5.13.2` source that the Mapbox GL plugin accepts `mapboxgl.mapping.additional_style_urls`, `mapboxgl.access_token`, `mapboxgl.mapping.cache.memory`, `mapboxgl.mapping.cache.directory`, `mapboxgl.mapping.cache.size`, and `mapboxgl.mapping.use_fbo`. An `http:` additional-style URL is explicitly marked non-HTTPS by that implementation.
-- Added a separate `--mapboxgl-probe` mode with a committed localhost style containing only a background layer. The plugin reached `mapReady=true`, selected the `User provided style`, fetched `/style.json` once from `127.0.0.1:8766` with HTTP 200, rendered the background, and identified the Mesa Intel HD Graphics 520 GPU. It also warned that threaded rendering is not optimal. This proves local HTTP style loading and background rendering only; vector tile rendering and MapLibre Native feasibility remain unverified until unit 03 provides project vector tiles and a matching style, including any required sprites/glyphs.
-- Added a reusable `/proc` sampler and captured an exploratory Release baseline for the 960x640 diagnostic raster plus its manually launched localhost HTTP server. Idle for 60 seconds averaged 139016 KiB RSS and 0.000% CPU for QtMaps, 20012 KiB and 0.017% for the server, and 159028 KiB and 0.017% combined. A valid symmetric pan/zoom run for 30 seconds averaged 144504.3 KiB and 0.533% for QtMaps, 20626.0 KiB and 0.000% for the server, and 165130.3 KiB and 0.533% combined; combined maxima were 165292 KiB and 2.999%. CPU percentages use one logical CPU as 100%. This is diagnostic-tool validation only and must not be reported to management.
-- FPS was not captured: the on-demand Qt Quick scene has no existing frame-swap counter, and adding production FPS instrumentation belongs to unit 02. Two earlier interaction attempts were rejected because asymmetric pan/zoom moved beyond the bounded fixture and caused 404 retries; only the symmetric run with five HTTP 200 responses and zero 404/errors is retained as the interaction baseline.
-- On 2026-10-21 the owner accepted unit 01 as **complete for its environment portion**. Verified scope is Qt 5.13.2 provisioning and dependency inspection, CMake/Ninja Release build, provider loading, diagnostic localhost raster mechanics, and exploratory RSS/CPU tooling. Two incomplete evidence tracks were explicitly transferred rather than waived: real rendered-frame FPS to unit 02, and local vector plus MapLibre Native feasibility to `context/feature-specs/01b_vector-feasibility-spike.md`.
-- Added the five-part unit 01b vector-feasibility spec. It requires a project-generated local MVT/style/glyph/sprite proof, bearing/tilt verification, dense-urban three-run performance evidence using unit 02 instrumentation, and explicit MapLibre Native switch criteria/build estimation. No dataset or tool was downloaded and no package was installed for this documentation step.
-- Owner confirmed the unit 01 branch was merged. Local `main` was fast-forwarded to merge commit `afe5c38`, and `feat/02-perf-instrumentation` was created from that commit on 2026-10-22.
-- Implemented bounded completed-swap FPS metrics from Qt 5.13 `QQuickWindow::frameSwapped`, including visible zero-frame intervals, hidden/minimized exclusion, reset, average FPS, and an explicitly defined interval-based 1% low.
-- Implemented the `qtmaps-perf-v1` CSV logger on a dedicated worker thread. It discovers the QtMaps PID and readable descendants from Linux `/proc`, sums RSS bytes, calculates CPU deltas with 100% equal to one logical CPU, handles PID churn and unreadable entries, validates existing CSV headers, escapes fields, flushes every row, surfaces non-fatal errors, and shuts down cleanly.
-- Added a switchable F3 performance overlay, manual start/stop control, blank-window probe, deterministic raster pan/zoom mode, benchmark CLI metadata, warm-up exclusion, and lazy worker startup so `--disable-instrumentation` does not start the sampler thread.
-- Added `qtmaps_perf_tests`. `make test` completed a Release build and passed 1/1 CTest target on 2026-10-22. Coverage includes bounded/zero-frame summaries, CPU/RSS aggregation, a real controlled child entering and leaving the process tree, CSV escaping and one-header append behavior, recording start/stop, and an unwritable path.
-- **BUILD PASS (Unit 02):** `make test` used the validated Qt 5.13.2/CMake/Ninja/ccache Release path and passed after the final implementation change. `git diff --check` also passed.
-- Recorded short instrumentation-on/off validation runs in `docs/benchmarks/unit-02-performance-results.md`. External-sampler overhead was +2.375 CPU percentage points and +2.963 MiB average RSS for the blank window, and +2.375 CPU points and +2.147 MiB for diagnostic raster pan/zoom. These short diagnostic results are not management-facing product benchmarks.
-- Completed three fresh-cache raster runs per render loop. Median default-loop values were 3.618 completed-swap FPS, 3.000 interval 1% low, 3.167% CPU, and 155.076 MiB average RSS; basic-loop medians were 3.741 FPS, 3.000 interval 1% low, 3.399% CPU, and 151.414 MiB average RSS. The on-demand scripted workload does not justify changing the Qt default render loop. Local fixture requests returned HTTP 200 at zooms 12 and 13.
-- Enabled CMake compile-command export and pointed VS Code C/C++ IntelliSense at `build/compile_commands.json` on 2026-10-23. This supplies the selected Qt 5.13.2 include paths, compiler flags, project headers, and target definitions without hard-coding machine-specific Qt subdirectories in `includePath`; the existing project cSpell additions were preserved.
-- Added a repository-level pull-request tracking gate on 2026-10-23. Every new PR must reference its canonical issue without prematurely closing incomplete acceptance criteria, use the active milestone, join Project #6 without duplication, align Priority and Demo Phase with the issue, and have its live metadata verified after creation.
-- Applied the tracking gate to PR #19 on 2026-10-23: its description references Issue #7, its milestone is `First Management Demo`, and its Project #6 item is `In Progress` with Priority `P0` and Demo Phase `Week 2`. Issue #7 is also `In Progress` and remains open because the real navigation-scenario acceptance evidence is not yet complete.
-- Added repository and Project identity guardrails on 2026-10-23. Project #6, whose verified live title is `QtMaps`, must not be renamed or replaced; the `qt-maps` repository may be renamed only after an explicit owner request plus a documented necessity and impact review. Every repository or GitHub metadata change now requires a proportional impact check, clean-scope review, and verification of the resulting local or live state before work continues.
-- Revalidated the clean Unit 02 branch before starting Unit 01b on 2026-10-23. `make test` passed 1/1 existing CTest target and `git diff --check` passed; there was no uncommitted Unit 02 diff to split into new commits. Existing published Unit 02 history was preserved rather than rewritten.
-- Added a no-network synthetic local-vector mechanics fixture and Qt 5.13.2 `mapboxgl` probe. The Release app visibly rendered local MVT fill/line geometry, the project-owned sprite, and the limited `HANOI` glyph label; loopback logs returned HTTP 200 for style, vector, glyph, and sprite resources. The banner and metadata explicitly identify this as synthetic non-geographic evidence.
-- Added and tested a reusable camera probe controller. Requested and observed values matched at 45-degree bearing/30-degree tilt and 315-degree bearing/45-degree tilt; the installed plugin reported a 0-to-60-degree tilt range. `make test` now passes 2/2 CTest targets, including Qt Test coverage for bearing normalization, tilt bounds, sequence advancement, and reset.
-- Recorded the pre-approval evidence, one explicitly non-official `qtmaps-perf-v1` smoke run, exact candidate downloads/checksums/licenses/destinations/cleanup, and the MapLibre comparison in `docs/benchmarks/unit-01b-vector-feasibility.md`. MapLibre Native Qt v3.0.0 supports Qt 5.15 desktop but not QtLocation on Qt 5.13; current upstream no longer supports Qt 5, so a switch remains a high-burden conditional fallback rather than the default path.
-- Downloaded and SHA-256-verified the owner-approved Planetiler v0.10.2 jar under ignored `generated/unit-01b/tools/`; its digest is `f310bd0413e2e4512b27f4046d418664e8e1d3bf31603c2a70e23de06c167e4d` and its size is 93,278,824 bytes. `git status` confirmed that no downloaded artifact entered source control.
-- Added a real-data presentation mode for the existing local-vector probe. It emits a minimal style for Planetiler's built-in OpenMapTiles `building`, `transportation`, and `place` layers, keeps all resources on loopback, and displays OpenStreetMap/ODbL attribution without changing the synthetic-fixture behavior.
-- Inventoried the available Qt kits after the owner widened the feasibility scope: `/home/viet/Qt/5.13.2/gcc_64` provides Qt 5.13.2, and the system provides Qt 6.4.2 development libraries. No Qt 5.15 kit is installed; the system Qt 6 kit is below MapLibre Native Qt's current 6.5+ support floor. Qt 5.15.x plus MapLibre Native Qt v3.0.0 is the proposed minimum-migration comparison, pending installation approval.
-- Downloaded and MD5-verified the owner-approved 331,337,283-byte Geofabrik Vietnam PBF under ignored `generated/unit-01b/source/`. Its digest is `5f7388bb0dc809212fddf9cea071e513`; no PBF, jar, tile, installer, log, screenshot, or CSV entered source control.
-- Added the bounded `tools/data-pipeline/unit01b-hanoi.yml` schema and generated 226 real MVT tiles for `105.78,20.97,105.90,21.10`, zooms 12-15. Planetiler completed in 62.94 seconds with a 6 GiB heap limit, two workers, 2,635,164 KiB peak RSS, and 14,463,231 tile bytes.
-- Verified the real Release probe end to end: roads and buildings rendered; `HÀ NỘI` displayed with diacritics; OSM/ODbL attribution was visible; requested/observed bearing and tilt matched; and the post-fix socket trace contained only AF_INET connections to `127.0.0.1:8766`.
-- Completed three real-data Qt 5.13.2 `mapboxgl` runs using the default render loop, three-second warm-up, 15-second recording, one-second samples, 960x640 window, and Unit 02 instrumentation. Median values were 24.362 average FPS, 5.000 interval 1% low, 6.600% CPU with 100% equal to one logical core, 177.087 MiB mean RSS, and 177.879 MiB max RSS. The app process tree excluded the separately launched Python static server.
-- Downloaded and SHA-256-verified Qt Online Installer 4.11.0 under ignored `generated/unit-01b/tools/`, but left it non-executable and did not run it. System Qt 5.15.13 packages are also available; owner approval is required before either installation route.
-- Dry-ran the six owner-approved, non-metapackage Qt 5.15.13 development packages with `--no-install-recommends`: 0 upgraded, 32 newly installed, 0 removed, and 1 held back. The dependency set was limited to required Qt runtime/tooling libraries plus `libegl-dev`, `libglu1-mesa-dev`, and `libxext-dev`; no unrelated upgrade or removal occurred. The installation completed using 66.6 MB of additional system disk.
-- Verified side-by-side Qt selection without changing shell startup files or global `PATH`: Qt 5.13.2 remains at `/home/viet/Qt/5.13.2/gcc_64`, while Qt 5.15.13 is selected explicitly with `/usr/lib/qt5/bin/qmake` and `CMAKE_PREFIX_PATH=/usr`. The comparison used isolated extracted QML runtime and SQLite plugin payloads under ignored `generated/unit-01b/` because they were not part of the approved system package command.
-- Rechecked graphics before benchmarking. `glxinfo -B` reported direct rendering on the real Mesa Intel HD Graphics 520 driver, not llvmpipe. `QSG_INFO=1` reported the threaded Qt Quick render loop with a 16.66 ms vsync animation driver.
-- Built the signed MapLibre Native Qt v3.0.0 tag at commit `d929c783737120787b43417d9ef05da88da75dfd` with Qt 5.15.13, GCC 13.3.0, Release configuration, and exactly `make -j2`. The build took 16:01.44 wall-clock, peaked at 1,149,676 KiB RSS, and produced a 92 MiB build tree plus a 12 MiB install tree. Ubuntu does not package `qtlocation5-private-dev`; the isolated build used MD5-verified QtLocation 5.15.13 private headers without copying them into `/usr`.
-- Generalized the existing vector probe so both Qt 5.13.2 `mapboxgl` and Qt 5.15.13 MapLibre use the same localhost style, glyphs, sprite, Hanoi tiles, camera sequence, and Unit 02 instrumentation. The MapLibre run rendered real roads/buildings, displayed `HÀ NỘI` with diacritics, matched requested bearing/tilt values, and its socket trace contained only connections to `127.0.0.1:8766`.
-- Completed three comparable real-data runs for each renderer. Qt 5.13.2 `mapboxgl` medians were 24.362 average FPS, 5.000 interval 1% low, 6.600% CPU, and 177.087 MiB mean RSS. Qt 5.15.13 MapLibre medians were 33.769 average FPS, 5.000 interval 1% low, 10.440% CPU, and 209.778 MiB mean RSS. CPU uses one logical core as 100%; the separately launched localhost server is excluded from both app-process-tree measurements.
-- Traced the 4-to-6 FPS interval lows to the on-demand scene and the coarse 14-to-15-sample interval-percentile definition: the minimum one-second samples occurred during no-action phases at low CPU and recovered during camera motion. This is frame pacing/measurement behavior rather than sustained tile loading or GPU saturation; unit 03 should add a continuous-motion scenario before treating it as perceived stutter.
+### Context, tracking, and identity
 
-## In Progress
+- The project has a demo-first product definition, architecture, UI conventions, code standards, workflow rules, and dependency-ordered unit specs.
+- GitHub Project #6 is named `QtMaps` and must not be renamed or replaced. The `qt-maps` repository must not be renamed without explicit owner approval and an impact review.
+- PRs must link the canonical issue, milestone, and Project #6 item; their live metadata and fields must be verified after mutation.
+- Context files now compact automatically when they exceed 250 lines or 24 KiB, become dominated by history, or duplicate authoritative facts. The pre-compaction completed log is retained in Git commit `0671f99`.
 
-- Unit 01b implementation and evidence are complete locally. Owner review is required before changing the project baseline from Qt 5.13.2/QtLocation `mapboxgl` to Qt 5.15.13/MapLibre Native Qt v3.0.0, adopting the dynamic-link packaging approach, or starting unit 03 from that renderer decision.
+### Unit 01 — environment and rendering foundation
 
-## Next Up
+- Qt 5.13.2 remains available at `/home/viet/Qt/5.13.2/gcc_64`; its QtLocation/QtPositioning plugins and runtime dependencies were verified.
+- CMake/Ninja/ccache Release builds work with GCC 13.3.0 and Qt 5-compatible CMake APIs. The root `Makefile` is a convenience wrapper only.
+- The local diagnostic raster and `mapboxgl` style probes verified localhost provider loading and rendering mechanics without using public tile servers.
+- Qt 5.13.2 uses build-time OpenSSL 1.1 APIs against runtime OpenSSL 3 and emits two unresolved-symbol warnings. HTTPS remains deferred; all current map/service endpoints use HTTP on loopback.
+- Detailed scope and transferred gates are recorded in `context/feature-specs/01b_vector-feasibility-spike.md` and the Git history preceding Unit 02.
 
-Before the first demo, execute the shortest stable vertical slice. Existing unit specifications remain authoritative for their completed implementations, but their full completion gates may be deferred and recorded during this milestone.
+### Unit 02 — performance instrumentation
 
-Immediate feature-unit backlog order:
+- Implemented completed-swap FPS, interval 1% low, process-tree RSS/CPU, `qtmaps-perf-v1` CSV logging, F3 overlay, warm-up exclusion, and bounded worker shutdown.
+- Unit tests cover summaries, CPU/RSS aggregation, child-process churn, CSV handling, recording control, and error paths.
+- Latest accepted Unit 02 build passed the Qt 5.13.2 Release test path; detailed diagnostic results are in `docs/benchmarks/unit-02-performance-results.md`.
+- PR #19 references Issue #7, uses the `First Management Demo` milestone, and is `In Progress` in Project #6. It remains unmerged.
 
-1. **Review Unit 02 and current local commits:** Unit 02 remains unmerged in PR #19, while Unit 01b intentionally inherits its instrumentation. Do not push or merge either branch without owner review.
-2. **Review the Unit 01b recommendation:** approve or reject Qt 5.15.13 plus MapLibre Native Qt v3.0.0 as the demo baseline, the LGPL-compatible dynamic-link packaging plan, and a continuous-motion benchmark gate.
-3. **Start the minimum unit 03 pipeline after approval:** make the bounded Hanoi data generation and localhost service reproducible, define the renderer/backend contract, preserve a raster fallback, and add a continuous navigation workload before UI contracts are frozen.
+### Unit 01b — vector feasibility
 
-The demo delivery sequence remains:
+- Generated a bounded Hanoi dataset from the owner-approved Geofabrik Vietnam PBF with Planetiler v0.10.2: bounds `105.78,20.97,105.90,21.10`, zooms 12-15, 226 tiles, 14,463,231 tile bytes, 62.94 seconds, 6 GiB heap limit, two workers, and 2,635,164 KiB peak RSS.
+- Verified checksums, licenses, OSM/ODbL attribution, Vietnamese `HÀ NỘI` labels, bearing/tilt, and loopback-only network access. No PBF, jar, generated tiles, logs, screenshots, or CSV entered Git.
+- Installed only the owner-approved minimal Qt 5.15.13 development packages after a dry run reported 0 upgrades, 32 new packages, 0 removals, and 1 held package. Qt 5.13.2 remains independently selectable.
+- Built signed MapLibre Native Qt v3.0.0 commit `d929c783737120787b43417d9ef05da88da75dfd` with Qt 5.15.13, GCC 13.3.0, Release, OpenGL, and `make -j2`. Build: 16:01.44 wall time, 1,149,676 KiB peak RSS, 92 MiB build tree, 12 MiB install tree.
+- GPU verification used real Mesa Intel HD Graphics 520 direct rendering, not llvmpipe. Qt Quick used the threaded render loop and a 16.66 ms/60 Hz vsync animation driver.
+- Both renderers used the same real Hanoi data, localhost style/glyph/sprite resources, camera sequence, Unit 02 instrumentation, three-second warm-up, and 15-second recording.
 
-1. **Preserve the raster proof** — preserve the validated Release CMake/Ninja path and the policy-compliant, tightly bounded diagnostic fixture through HTTP localhost until project-generated real data is available.
-2. **Create the demo shell** — render the first real raster map and add a coherent map-first QML layout with status, route, navigation, layer, and performance presentation areas.
-3. **Complete the route vertical slice** — select two points, obtain a real route through the fastest viable approved integration, draw it, and show its summary and maneuvers. Clearly label any bounded fixture or online dependency used for the first demo.
-4. **Add navigation presentation** — replay a route or simulated position, follow the current position, show the next maneuver, and expose an obvious exit/recenter action.
-5. **Measure the demo** — show rendered-frame FPS and capture short Release-build CPU/RAM results for the application process tree with documented scope.
-6. **Add breadth without destabilizing the flow** — attempt offline fallback, vector, orthography, and search in that priority only after the end-to-end demo remains reproducible.
-7. **Freeze and rehearse** — fix demo blockers, prepare a deterministic scenario and fallback evidence, update the weekly report, and avoid risky dependency changes immediately before the demonstration.
+| Renderer | Median avg FPS | Median interval 1% low | Median CPU | Median mean RSS |
+| --- | ---: | ---: | ---: | ---: |
+| Qt 5.13.2 `mapboxgl` | 24.362 | 5.000 | 6.600% | 177.087 MiB |
+| Qt 5.15.13 MapLibre v3 | 33.769 | 5.000 | 10.440% | 209.778 MiB |
 
-After the demo, resume the ten-unit plan and close every deferred verification gate rather than treating the demonstration slice as production completion.
+CPU uses 100% per logical core; the separately launched localhost server is excluded. The low one-second samples occurred during no-action/render-on-demand phases at low CPU and recovered during camera motion, so the current 1% low mainly reflects coarse sampling/frame pacing rather than sustained tile loading or GPU saturation. See `docs/benchmarks/unit-01b-vector-feasibility.md` for complete evidence.
 
-## Open Questions
-
-### Environment Validation
-
-1. **Resolved in unit 01b:** Qt 5.13.2 `mapboxgl` renders local real vector tiles with a matching localhost style, project-owned glyphs/sprite, Vietnamese diacritics, and no non-localhost AF_INET connection after the provider diagnostic fix.
-2. **Deferred, low priority; does not block unit 01:** Does Qt 5.13.2 complete a real HTTPS request reliably with OpenSSL 3 despite the two unresolved-symbol warnings? The current spike assumes HTTP localhost for every tile and routing endpoint. Later options are (a) a local tile server that fetches HTTPS upstream and re-serves over HTTP localhost, or (b) a private OpenSSL 1.1 runtime only as a last resort because OpenSSL 1.1 is end-of-life. Do not modify OpenSSL or install `libssl1.1` while this question is deferred.
-3. What graph-build-time and peak-RAM thresholds should trigger reconsideration of the initial nationwide routing scope?
-4. **Resolved for instrumentation semantics:** Unit 02 now measures completed swaps and an interval-based 1% low, excludes warm-up and hidden/minimized intervals from summaries, and records process-tree RSS/CPU. The current fixture is render-on-demand and remains non-geographic; its short results are tooling evidence, not management-reportable map performance. Dense active-motion evidence transfers to unit 01b with real local vector data.
-
-### Technical and Product
-
-5. **Resolved for unit 01 environment scope:** Qt Quick/QtLocation compiles and runs with GCC 13.3.0 in Release mode, and the `osm` plugin renders the diagnostic localhost raster.
-6. **Resolved by measurement; owner decision pending:** Qt 5.13.2 `mapboxgl` and Qt 5.15.13 MapLibre both render the bounded real Hanoi data, Vietnamese labels, and tested bearing/tilt. Their median average FPS values were 24.362 and 33.769 respectively; median app CPU was 6.600% and 10.440%, and median mean RSS was 177.087 MiB and 209.778 MiB. The evidence recommends MapLibre, but this does not itself authorize a project-wide migration.
-7. **Unit 01b decision gate:** approve or reject Qt 5.15.13/MapLibre as the demo baseline, the LGPL-compatible dynamic-link packaging approach, and the continuous-motion benchmark required before UI performance is considered stable.
-8. Is zoom 16 practical for the detailed Hanoi/Red River Delta dataset after storage, generation-time, visual-quality, and performance measurements?
-9. Which legally usable orthography source should be selected, and what license, attribution, region, zoom range, and storage cap apply?
-10. How complete and consistent are Vietnam OSM `ref` tags for national roads (QL) and provincial roads (DT/ĐT), and what routing behavior is acceptable where tags are missing?
-11. Which machine will management use to view the demo, and how does it differ from the reference laptop?
-12. Is a distributable installer/package required, or is a documented local Release build sufficient?
-13. What exact UI theme token values, icon source, minimum window size, panel dimensions, keyboard shortcuts, contrast target, and map-aware light/dark behavior should be committed?
-
-## Architecture Decisions
+## Active Decisions
 
 ### Committed
 
-- Target the first management demo for 2026-11-03 and prioritize a stable, visually coherent vertical slice with measured performance until that date.
-- Keep Qt 5.13.2 with C++ and QML/Qt Quick 2.13 as the current implementation baseline. The owner has removed the hard Qt 5.13 ceiling for feasibility work; a move to Qt 5.15 or Qt 6 remains uncommitted until the Unit 01b evidence is reviewed.
-- Provision Qt 5.13.2 `gcc_64` through `aqtinstall` under `~/Qt`; the approved installation completed successfully.
-- Use CMake with Ninja as the primary build system. Unit 01 validated the Release path; the exact commands are recorded under Unit 01 Working Commands.
-- Use Qt 5-compatible CMake APIs only; Qt 6 APIs such as `qt_add_executable`, `qt_add_qml_module`, and `qt_standard_project_setup` are forbidden.
-- Use Vietnam zoom 0-10 for national raster/vector coverage and Hanoi plus the surrounding Red River Delta for zoom 11-16 detail. Zoom 16 remains an explicit initial assumption pending evidence.
-- Initially build routing data for all of Vietnam from one uncropped Geofabrik Vietnam extract. Confirm this decision with graph-build-time and peak-RAM measurements; consider cutting the region only if agreed thresholds are exceeded.
-- Support raster, vector, and orthography layers; offline-first operation; two-point car routing; simulated navigation; performance measurement; and weekly reporting.
-- Measure FPS and combined RAM/CPU for the app and child services in Release mode with fixed scenarios.
-- Manage routing/tile-server child processes through `QProcess` and keep routing/I/O off the UI thread.
-- Never download tiles from `tile.openstreetmap.org` or another public tile server. Generate only non-geographic diagnostic tiles in unit 01; obtain real map tiles exclusively from the project-owned Geofabrik PBF/Planetiler/localhost pipeline. Unit 01b may produce a bounded spike dataset only after explicit owner approval; unit 03 owns the production pipeline.
+- Demo-first delivery through 2026-11-03; report real, simulated, fixture-backed, online, offline, degraded, and unavailable behavior honestly.
+- Current application baseline: Qt 5.13.2, C++14, QML/Qt Quick 2.13, CMake with Ninja, and Qt 5-compatible CMake APIs.
+- No public tile-server downloads. Real map artifacts come from the approved Geofabrik/Planetiler/local-service pipeline and stay outside Git.
+- Reference machine: Dell Latitude 5480, i5-6300U, 16 GiB RAM, Intel HD Graphics 520, Mesa direct rendering.
 
-### Proposed
+### Proposed — owner approval required
 
-- Adopt Qt 5.15.13 plus MapLibre Native Qt v3.0.0 as the demo vector-rendering baseline, subject to owner approval. The measured implementation exceeds the provisional 30 FPS target while retaining acceptable CPU/RSS headroom. Preserve QtLocation raster tiles as a fallback and keep the Qt 5.13.2 probe as reproducible comparison evidence.
-- Use dynamic linking and an explicit LGPL-compatible packaging plan for MapLibre/Qt dependencies. Do not copy the private-header build overlay into the application or treat it as a runtime dependency. Qt 6.5+ remains a later migration option rather than a requirement for the first demo.
-- Use Geofabrik Vietnam PBF, Planetiler-generated vector MBTiles, raster tiles, and either Martin/mbtileserver or direct `QSqlDatabase` MBTiles access.
-- Use Valhalla locally for routing, maneuvers, and map matching, with car costing oriented toward `trunk`, `primary`, and `secondary` roads.
-- Build offline geocoding with SQLite FTS5.
-- Use C++14 as the project language level, subject to toolchain confirmation in unit 01.
-- Planning performance thresholds are an average of at least 30 FPS, idle CPU at most 25%, interactive CPU at most 150%, and process-tree resident memory at most 2 GiB after 30 minutes on the reference laptop. Final thresholds wait for the baseline.
+- Migrate the demo baseline to Qt 5.15.13 plus dynamically linked MapLibre Native Qt v3.0.0.
+- Retain QtLocation raster tiles as the fallback and the Qt 5.13.2 vector probe as rollback/comparison evidence.
+- Require a continuous-motion navigation benchmark before treating UI frame pacing as stable.
+- Use Geofabrik/Planetiler-generated map data, a loopback-only tile service or direct MBTiles access, Valhalla for routing, and SQLite FTS5 for offline search.
 
-### Investigation Required
+## In Progress
 
-- Legal orthography source and bounded coverage.
-- Long-duration MapLibre stability, continuous-motion frame pacing, reproducible package construction, and deployment on the eventual management-demo machine.
-- Qt 5.13.2 compatibility with GCC 13 for Qt Quick/QtLocation and with system OpenSSL 3 for real online HTTPS. A console probe compiled, but OpenSSL 3 produced unresolved-symbol warnings; offline localhost HTTP is not blocked by this TLS question.
-- Vietnam OSM national/provincial road-reference completeness.
+- Await owner review of Unit 01b and approval or rejection of the renderer/version migration, LGPL-compatible dynamic-link packaging approach, and continuous-motion performance gate.
 
-## Environment Baseline
+## Next Up
 
-- Reference machine: Dell Latitude 5480; Intel Core i5-6300U (2 cores/4 threads); 16 GiB RAM; 512 GB NVMe SSD.
-- Available: Linux, GCC/G++ 13.3.0, CMake 3.28.3, GNU Make 4.3, `aqtinstall` 3.3.0, Qt 5.13.2 `gcc_64` under `/home/viet/Qt/5.13.2/gcc_64`, and the explicitly approved Qt 5.15.13 development packages under `/usr`.
-- Select Qt 5.13.2 with `/home/viet/Qt/5.13.2/gcc_64/bin/qmake` or `CMAKE_PREFIX_PATH=/home/viet/Qt/5.13.2/gcc_64`; select Qt 5.15.13 with `/usr/lib/qt5/bin/qmake` or `CMAKE_PREFIX_PATH=/usr`. `/usr/bin/qmake` now resolves to Qt 5.15.13 as a package-managed alternative, but no shell startup file or global `PATH` value was changed. Ninja 1.11.1 and ccache 4.9.1 remain available on `PATH`; Clang is not required by the validated path.
-- Graphics: Intel HD Graphics 520 (Skylake GT2), Mesa 25.2.8, direct rendering enabled, OpenGL up to 4.6.
+1. Review Unit 02/PR #19 and the local Unit 01b commits; do not push or merge without owner approval.
+2. After the renderer decision, start the minimum Unit 03 pipeline: reproducible bounded Hanoi generation and loopback service, renderer/backend contract, raster fallback, and continuous-navigation workload.
+3. Build the demo shell, then the real two-point route, navigation replay, and fixed Release benchmark in that order.
 
-## Session Notes
+## Open Questions and Risks
 
-- No application code, library installation, Qt build, dataset download, push, or merge was performed during context setup.
-- `README.md` intentionally remains at the repository root with only the project title; no `docs/ai-playbook.md` exists because the original file was not a playbook.
-- The Release configure, build, and run commands are validated below. No automated test target exists yet; the current verification is the bounded runtime/provider probe and X11-window inspection.
-- The successful module query returned `debug_info qtcharts qtdatavis3d qtlottie qtnetworkauth qtpurchasing qtscript qtvirtualkeyboard qtwebengine qtwebglplugin`.
-- The successful base-archive query returned `icu qt3d qtbase qtconnectivity qtdeclarative qtgamepad qtgraphicaleffects qtimageformats qtlocation qtmultimedia qtquickcontrols qtquickcontrols2 qtremoteobjects qtscxml qtsensors qtserialbus qtserialport qtspeech qtsvg qttools qttranslations qtwayland qtwebchannel qtwebsockets qtwebview qtx11extras qtxmlpatterns`.
-- The original install command hit certificate errors on randomly selected fallback mirrors twice. Retrying with `--base https://ftp.jaist.ac.jp/pub/qtproject/` completed with hash verification enabled and no extra modules.
-- Qt SSL probe: build version `OpenSSL 1.1.1b  26 Feb 2019`; runtime version `OpenSSL 3.0.13 30 Jan 2024`; `supportsSsl: true`; unresolved symbols `EVP_PKEY_base_id` and `SSL_get_peer_certificate`. This does not yet prove HTTPS works.
+1. Approve Qt 5.15.13/MapLibre v3, dynamic-link packaging, and the continuous-motion gate, or keep Qt 5.13.2 as the demo baseline?
+2. What graph-build time and peak-RAM thresholds should trigger reducing the initial nationwide routing scope?
+3. Is zoom 16 practical for Hanoi/Red River Delta after storage, generation-time, visual-quality, and performance measurements?
+4. Which orthography source, license, attribution, geographic bounds, zoom range, and storage cap are acceptable?
+5. How complete are Vietnam OSM `ref` tags for QL and DT/ĐT roads, and what fallback routing behavior is acceptable?
+6. Which machine will run the management demo, and is a distributable package required?
+7. Which UI theme tokens, icon source, minimum window size, shortcuts, contrast target, and map-aware light/dark behavior should be committed?
+8. Long-duration MapLibre stability, deployment packaging, continuous-motion frame pacing, and Qt 5.13/OpenSSL 3 HTTPS remain unverified.
 
-## Unit 01 Working Commands
+## Environment and Working Commands
 
-The convenience wrapper exposes the validated workflow without replacing CMake:
+- Qt 5.13.2: `/home/viet/Qt/5.13.2/gcc_64/bin/qmake` or `CMAKE_PREFIX_PATH=/home/viet/Qt/5.13.2/gcc_64`.
+- Qt 5.15.13: `/usr/lib/qt5/bin/qmake` or `CMAKE_PREFIX_PATH=/usr`.
+- Do not modify global `PATH`; `/usr/bin/qmake` currently resolves to package-managed Qt 5.15.13.
 
 ```bash
 make requirements
 make build
+make test
 make run
 ```
 
-Use `make help` for the diagnostic-fixture and localhost style-server targets. Override machine-specific values when required, for example `make QT_PREFIX=/path/to/Qt/5.13.2/gcc_64 BUILD_DIR=build-release build`.
+Authoritative benchmark evidence:
 
-Configure the Release build without modifying `PATH` or shell startup files:
+- `docs/benchmarks/unit-01b-vector-feasibility.md`
+- `docs/benchmarks/unit-02-performance-results.md`
 
-```bash
-cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/home/viet/Qt/5.13.2/gcc_64 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-```
+## Latest Verification
 
-Build and run:
-
-```bash
-cmake --build build --parallel
-./build/qtmaps
-```
-
-The bounded provider-probe observation used:
-
-```bash
-timeout --signal=TERM 8s ./build/qtmaps
-xwininfo -root -tree | rg -i 'QtMaps unit 01 probe|qtmaps'
-```
-
-Generate and serve the non-geographic diagnostic fixture:
-
-```bash
-python3 tools/generate_diagnostic_tiles.py
-python3 -m http.server 8765 --bind 127.0.0.1 --directory generated/diagnostic-tiles
-```
+- Unit 01b closeout commits: `1b1dcca`, `36335cd`, `e1d9560`, `0671f99`.
+- Qt 5.13.2 Release `make test`: 2/2 passed.
+- Isolated Qt 5.15.13 Release `ctest`: 2/2 passed.
+- Unit 01b closeout left the worktree clean; the subsequent context-compaction documentation change is the only new scope. No push or merge was performed.

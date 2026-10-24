@@ -75,6 +75,22 @@ Update the relevant context file before continuing whenever implementation chang
 
 Update `context/progress-tracker.md` after every meaningful implementation change with completed work, evidence, decisions, risks, and the exact next step.
 
+## Automatic Context Compaction
+
+Keep the six mandatory context files as concise operational state, not append-only session logs. After every meaningful context update, check their line and byte counts. A context file must be compacted in the same change before work continues when any of these conditions is true:
+
+- it exceeds 250 lines or 24 KiB;
+- historical narrative or repeated evidence materially obscures current requirements and next actions; or
+- the same fact is maintained in more than one context file without a clear authoritative owner.
+
+Compaction is routine documentation maintenance and does not require separate owner approval. During compaction:
+
+1. Preserve current scope, committed/proposed decision status, invariants, active assumptions, unresolved risks, acceptance criteria, working commands, evidence links, and the exact next step.
+2. Replace completed chronological narration with a short outcome summary and links to the authoritative spec, benchmark/report, pull request/issue, or a dated archive under `context/history/`. Git history may be used as the archive for an already committed snapshot when the retained file names the relevant commit.
+3. Never rewrite or discard raw benchmark evidence, published reports, license/attribution records, or unresolved owner decisions. Do not present an archived or compacted item as completed unless its cited evidence supports that status.
+4. Remove duplicate facts from non-authoritative files and leave a link to the authoritative file instead. Do not create a second summary that must be kept manually in sync.
+5. Re-read all changed sections, validate local links, run `git diff --check`, and confirm the compacted files remain sufficient for a new agent to resume without reconstructing the project from commit history.
+
 ## Unit Completion Gate
 
 Before moving to the next unit:
