@@ -89,6 +89,16 @@ target_link_libraries(qtmaps_map_probe PUBLIC
     Qt5::Sql
 )
 
+add_library(qtmaps_routing STATIC
+    src/routing/Polyline6Decoder.cpp
+    src/routing/Polyline6Decoder.h
+    src/routing/Route.h
+    src/routing/ValhallaRouteParser.cpp
+    src/routing/ValhallaRouteParser.h
+)
+target_include_directories(qtmaps_routing PUBLIC "${CMAKE_SOURCE_DIR}/src")
+target_link_libraries(qtmaps_routing PUBLIC Qt5::Core Qt5::Positioning)
+
 qt5_add_resources(QTMAPS_RESOURCES resources.qrc)
 
 add_executable(qtmaps
@@ -128,4 +138,5 @@ if(BUILD_TESTING)
         Qt5::Test
     )
     add_test(NAME qtmaps_map_pipeline_tests COMMAND qtmaps_map_pipeline_tests)
+
 endif()
