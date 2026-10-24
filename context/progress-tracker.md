@@ -69,7 +69,7 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
 
 ## In Progress
 
-- Complete A-D before Unit 03 implementation. A and B are complete. C migrated the default CMake/Makefile configuration to Qt 5.15.13 while preserving an isolated Qt 5.13 comparison override. D (third-party notices/dynamic-link packaging) remains.
+- Pre-Unit-03 tasks A-D are complete locally: schema-v2 interaction metrics and rerun; minimum Unit 03 spec; Qt 5.15.13 default build with Qt 5.13 comparison; third-party notices and dynamic-link packaging guidance. Stop for owner review before Unit 03 implementation.
 
 ## Next Up
 
@@ -105,6 +105,11 @@ Authoritative benchmark evidence:
 
 - `docs/benchmarks/unit-01b-vector-feasibility.md`
 - `docs/benchmarks/unit-02-performance-results.md`
+
+Licensing and packaging evidence:
+
+- `THIRD_PARTY_NOTICES.md`
+- `docs/packaging/linux-dynamic-linking.md`
 
 ## Latest Verification
 

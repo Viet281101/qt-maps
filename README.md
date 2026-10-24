@@ -97,3 +97,5 @@ make run
 ```
 
 Qt 5.13.2 comparison and MapLibre runtime-path details are documented in [the code standards](context/code-standards.md) and [Unit 01b evidence](docs/benchmarks/unit-01b-vector-feasibility.md).
+
+Third-party attribution and the approved dynamic-link distribution plan are recorded in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [the Linux packaging guide](docs/packaging/linux-dynamic-linking.md).

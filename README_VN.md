@@ -106,3 +106,5 @@ make run
 ```
 
 Cách build đối chiếu Qt 5.13.2 và cấu hình runtime MapLibre được ghi trong [code standards](context/code-standards.md) và [evidence Unit 01b](docs/benchmarks/unit-01b-vector-feasibility.md).
+
+Attribution bên thứ ba và kế hoạch đóng gói dynamic link đã duyệt được ghi trong [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) và [hướng dẫn đóng gói Linux](docs/packaging/linux-dynamic-linking.md).
