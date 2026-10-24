@@ -8,6 +8,7 @@
 
 #include <QCryptographicHash>
 #include <QDir>
+#include <QElapsedTimer>
 #include <QFile>
 #include <QHostAddress>
 #include <QJsonArray>
@@ -293,6 +294,28 @@ private slots:
             QVERIFY(source.errorMessage().contains(QStringLiteral("Cannot bind")));
             QVERIFY(!source.isRunning());
         }
+    }
+
+    void mbtilesMissingAndCorruptPackageFailWithinBoundedStartupTime()
+    {
+        qtmaps::map::MbTilesTileSource source;
+        QElapsedTimer elapsed;
+        elapsed.start();
+        QVERIFY(!source.start(QStringLiteral("/definitely/missing/qtmaps-package")));
+        QVERIFY(elapsed.elapsed() < 5000);
+        QVERIFY(source.errorMessage().contains(QStringLiteral("missing")));
+
+        QTemporaryDir temporary;
+        const QString root = createPackage(temporary);
+        QVERIFY(!root.isEmpty());
+        QFile corrupt(root + QStringLiteral("/tiles.mbtiles"));
+        QVERIFY(corrupt.open(QIODevice::Append));
+        corrupt.write("corrupt");
+        corrupt.close();
+        elapsed.restart();
+        QVERIFY(!source.start(root));
+        QVERIFY(elapsed.elapsed() < 5000);
+        QVERIFY(source.errorMessage().contains(QStringLiteral("Checksum mismatch")));
     }
 
     void controllerReportsFallbackReason()
