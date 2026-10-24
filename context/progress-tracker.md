@@ -128,4 +128,5 @@ Licensing and packaging evidence:
 - Unit 03 corrected benchmark: three cold plus three warm-cache real-data runs reported `mapReady=true`, 7,168-7,179 interaction frames, no CSV errors, and only loopback IP connections.
 - PR #20 offline recheck used the Release binary with no external network interface or route; style, glyph, sprite, and tile requests resolved only through the random in-process `127.0.0.1` endpoint.
 - `README.md` and `README_VN.md` now document only the validated Qt 5.15.13/MapLibre workflow, current run/benchmark/package commands, and the bounded data, simulated-route, diagnostic-raster, and unimplemented-feature limitations.
+- `.gitignore` explicitly rejects PBF, jar, MBTiles, PMTiles, benchmark CSV/log, cache directories, and screenshot directories regardless of where a local tool creates them; none of these artifact classes is tracked.
 - Local `main` and `origin/main` both resolve to `39f6b0f`, the squash merge of PR #19. Unit 03 is published at `origin/feat/03-local-map-data-pipeline` and open as PR #20; it has not been merged. The pre-existing `.vscode/settings.json` change is user-owned and excluded from every commit.

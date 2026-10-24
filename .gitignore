@@ -61,3 +61,17 @@ aqtinstall.log
 /generated/
 /data/packages/
 __pycache__/
+
+# Generated/downloaded map and benchmark artifacts
+*.pbf
+*.jar
+*.mbtiles
+*.pmtiles
+*.csv
+*.log
+/.cache/
+/**/.cache/
+/cache/
+/**/cache/
+/screenshots/
+/**/screenshots/
