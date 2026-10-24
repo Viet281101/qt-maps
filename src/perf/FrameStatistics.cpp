@@ -7,8 +7,9 @@
 namespace qtmaps {
 namespace perf {
 
-FrameStatistics::FrameStatistics(int maximumSamples)
-    : maximumSamples_(std::max(1, maximumSamples))
+FrameStatistics::FrameStatistics(int maximumSamples, int maximumInteractionSamples)
+    : maximumSamples_(std::max(1, maximumSamples)),
+      maximumInteractionSamples_(std::max(1, maximumInteractionSamples))
 {
 }
 
@@ -28,7 +29,7 @@ void FrameStatistics::addInteractionFrameTime(double milliseconds)
     if (!std::isfinite(milliseconds) || milliseconds <= 0.0) {
         return;
     }
-    if (interactionFrameTimesMilliseconds_.size() == maximumSamples_) {
+    if (interactionFrameTimesMilliseconds_.size() == maximumInteractionSamples_) {
         interactionFrameTimesMilliseconds_.removeFirst();
     }
     interactionFrameTimesMilliseconds_.append(milliseconds);

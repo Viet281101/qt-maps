@@ -156,7 +156,8 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty(QStringLiteral("datasetLabel"),
                                              parser.value(QStringLiteral("dataset-id")));
     engine.rootContext()->setContextProperty(QStringLiteral("vectorDataReal"),
-                                             parser.isSet(QStringLiteral("real-vector-data")));
+                                             useUnit03LocalMap
+                                                 || parser.isSet(QStringLiteral("real-vector-data")));
     const int interactionMilliseconds =
         (std::max(0, parser.value(QStringLiteral("benchmark-warmup")).toInt())
          + std::max(1, parser.value(QStringLiteral("benchmark-duration")).toInt())) * 1000;

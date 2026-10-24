@@ -8,7 +8,8 @@ namespace perf {
 class FrameStatistics
 {
 public:
-    explicit FrameStatistics(int maximumSamples = 3600);
+    explicit FrameStatistics(int maximumSamples = 3600,
+                             int maximumInteractionSamples = 216000);
 
     void addSample(double framesPerSecond);
     void addInteractionFrameTime(double milliseconds);
@@ -28,6 +29,7 @@ public:
 
 private:
     int maximumSamples_;
+    int maximumInteractionSamples_;
     QVector<double> samples_;
     QVector<double> interactionFrameTimesMilliseconds_;
     QVector<double> settlingFrameTimesMilliseconds_;

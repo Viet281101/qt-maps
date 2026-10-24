@@ -73,12 +73,22 @@ private slots:
 
     void interactionFrameStatisticsRemainBounded()
     {
-        FrameStatistics statistics(2);
+        FrameStatistics statistics(2, 2);
         statistics.addInteractionFrameTime(10.0);
         statistics.addInteractionFrameTime(20.0);
         statistics.addInteractionFrameTime(40.0);
         QCOMPARE(statistics.interactionFrameCount(), 2);
         QCOMPARE(statistics.interactionFrameTimePercentile(50.0), 20.0);
+    }
+
+    void interactionFrameStatisticsCoverFullTwoMinuteSixtyFpsWindow()
+    {
+        FrameStatistics statistics;
+        for (int frame = 0; frame < 7200; ++frame) {
+            statistics.addInteractionFrameTime(16.666);
+        }
+        QCOMPARE(statistics.interactionFrameCount(), 7200);
+        QCOMPARE(statistics.interactionFrameTimePercentile(99.0), 16.666);
     }
 
     void finalInteractionIntervalBecomesSettlingSample()

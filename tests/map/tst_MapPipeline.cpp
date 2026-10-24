@@ -10,6 +10,7 @@
 #include <QDir>
 #include <QElapsedTimer>
 #include <QFile>
+#include <QFileInfo>
 #include <QHostAddress>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -58,7 +59,8 @@ QString createPackage(QTemporaryDir &temporary)
               QByteArrayLiteral(
                   "{\"version\":8,\"sprite\":\"__QTMAPS_BASE_URL__/sprites/sprite\","
                   "\"glyphs\":\"__QTMAPS_BASE_URL__/glyphs/{fontstack}/{range}.pbf\","
-                  "\"sources\":{},\"layers\":["
+                  "\"sources\":{\"qtmaps\":{\"type\":\"vector\",\"tiles\":["
+                  "\"__QTMAPS_BASE_URL__/tiles/{z}/{x}/{y}.pbf\"]}},\"layers\":["
                   "{\"id\":\"building\",\"source-layer\":\"building\"},"
                   "{\"id\":\"place\",\"source-layer\":\"place\"},"
                   "{\"id\":\"road\",\"source-layer\":\"transportation\"}]}\n"));
@@ -100,6 +102,8 @@ QString createPackage(QTemporaryDir &temporary)
     for (const QString &relative : paths) {
         QJsonObject entry;
         entry.insert(QStringLiteral("sha256"), digest(root + QLatin1Char('/') + relative));
+        entry.insert(QStringLiteral("size_bytes"),
+                     QFileInfo(root + QLatin1Char('/') + relative).size());
         files.insert(relative, entry);
     }
     QJsonObject planetiler;
@@ -124,6 +128,15 @@ QString createPackage(QTemporaryDir &temporary)
     manifest.insert(QStringLiteral("max_zoom"), 15);
     manifest.insert(QStringLiteral("planetiler"), planetiler);
     manifest.insert(QStringLiteral("source_pbf"), sourcePbf);
+    QJsonObject pipelineConfig;
+    pipelineConfig.insert(QStringLiteral("revision"), QStringLiteral("unit03-test-v1"));
+    pipelineConfig.insert(QStringLiteral("sha256"), QString(64, QLatin1Char('b')));
+    manifest.insert(QStringLiteral("pipeline_config"), pipelineConfig);
+    QJsonObject resources;
+    resources.insert(QStringLiteral("style_revision"), QStringLiteral("style-test-v1"));
+    resources.insert(QStringLiteral("glyph_revision"), QStringLiteral("glyph-test-v1"));
+    resources.insert(QStringLiteral("sprite_revision"), QStringLiteral("sprite-test-v1"));
+    manifest.insert(QStringLiteral("resources"), resources);
     manifest.insert(QStringLiteral("attribution"),
                     QStringLiteral("© OpenStreetMap contributors, ODbL 1.0"));
     manifest.insert(QStringLiteral("files"), files);
@@ -258,6 +271,33 @@ private slots:
             object.insert(QStringLiteral("bounds"), QJsonArray{100.0, 10.0, 110.0, 24.0});
         });
         QVERIFY(!qtmaps::map::MapPackageManifest::loadAndValidate(boundsRoot, &manifest, &error));
+
+        QTemporaryDir remoteStyleTemporary;
+        const QString remoteStyleRoot = createPackage(remoteStyleTemporary);
+        QVERIFY(!remoteStyleRoot.isEmpty());
+        const QString stylePath = remoteStyleRoot + QStringLiteral("/style/style.json");
+        QFile styleInput(stylePath);
+        QVERIFY(styleInput.open(QIODevice::ReadOnly));
+        QJsonObject style = QJsonDocument::fromJson(styleInput.readAll()).object();
+        styleInput.close();
+        QJsonObject sources = style.value(QStringLiteral("sources")).toObject();
+        QJsonObject qtmapsSource = sources.value(QStringLiteral("qtmaps")).toObject();
+        qtmapsSource.insert(QStringLiteral("tiles"),
+                            QJsonArray{QStringLiteral("https://tiles.invalid/{z}/{x}/{y}.pbf")});
+        sources.insert(QStringLiteral("qtmaps"), qtmapsSource);
+        style.insert(QStringLiteral("sources"), sources);
+        writeFile(stylePath, QJsonDocument(style).toJson(QJsonDocument::Indented));
+        mutateManifest(remoteStyleRoot, [&stylePath](QJsonObject &object) {
+            QJsonObject files = object.value(QStringLiteral("files")).toObject();
+            QJsonObject styleEntry = files.value(QStringLiteral("style/style.json")).toObject();
+            styleEntry.insert(QStringLiteral("sha256"), digest(stylePath));
+            styleEntry.insert(QStringLiteral("size_bytes"), QFileInfo(stylePath).size());
+            files.insert(QStringLiteral("style/style.json"), styleEntry);
+            object.insert(QStringLiteral("files"), files);
+        });
+        QVERIFY(!qtmaps::map::MapPackageManifest::loadAndValidate(
+            remoteStyleRoot, &manifest, &error));
+        QVERIFY(error.contains(QStringLiteral("Style resource URLs")));
     }
 
     void mbtilesLifecycleStartStopRestartAndServe()

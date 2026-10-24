@@ -88,7 +88,8 @@ def main():
             f"--bounds={','.join(str(value) for value in BOUNDS)}",
             f"--minzoom={MIN_ZOOM}", f"--maxzoom={MAX_ZOOM}",
             f"--render_maxzoom={MAX_ZOOM}", f"--threads={args.threads}",
-            "--tile_compression=none", f"--tmpdir={staging / 'tmp'}", "--force",
+            "--tile_compression=none", "--download=false", "--refresh_sources=false",
+            f"--tmpdir={staging / 'tmp'}", "--force",
         ]
         subprocess.run(command, cwd=repository, check=True)
         generation_peak_rss_kib = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss

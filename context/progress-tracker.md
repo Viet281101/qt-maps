@@ -4,7 +4,7 @@ Update this file after every meaningful implementation change. Keep it below the
 
 ## Current Phase
 
-- Unit 03 is complete locally on `feat/03-local-map-data-pipeline`, branched from completed local Unit 01b as instructed, and is awaiting owner review. Neither branch has been pushed or merged.
+- Unit 03 final review is active on `feat/03-local-map-data-pipeline`: review found that the 3,600-frame interaction buffer truncated a 120-second 60 FPS run to its final minute. The buffer and evidence are being corrected before push. Neither branch has been pushed or merged.
 - The owner approved Qt 5.15.13 plus dynamically linked MapLibre Native Qt v3.0.0 as the application baseline, retaining Qt 5.13.2 for comparison and localhost raster as fallback.
 - Performance schema v3 is complete: interaction-only FPS and frame-time p50/p95/p99 exclude the final settling swap, which is reported separately; legacy CSV fields remain for historical comparison.
 
