@@ -41,6 +41,31 @@ The release must include prominent Qt/LGPL notice and license text, correspondin
 
 If Planetiler or a bundled launcher is ever redistributed, include its Apache-2.0 license, NOTICE, and notices for bundled dependencies/JRE. Planetiler does not replace the attribution and share-alike requirements of its OSM input data.
 
+## Valhalla and pyvalhalla
+
+- **Version:** Valhalla/`pyvalhalla` 3.9.1.
+- **Use:** local offline route-graph build and runtime HTTP routing service.
+- **License:** MIT.
+- **Links:** <https://github.com/valhalla/valhalla/releases/tag/3.9.1>, <https://github.com/valhalla/valhalla/blob/3.9.1/COPYING>.
+
+Development currently launches the native `valhalla_service` supplied by a
+checksum-pinned Python virtualenv outside Git. That virtualenv is therefore a
+runtime dependency on the development/demo machine. A future installer must
+either provision this exact runtime or package a reviewed equivalent and must
+include the MIT notice plus all transitive runtime notices; installer design
+remains outside Unit 04.
+
+## osmium-tool
+
+- **Version:** 1.16.0 on the development host.
+- **Use:** build-time extraction of the bounded Hanoi PBF only.
+- **License:** GNU General Public License v3.0.
+- **Link:** <https://osmcode.org/osmium-tool/>.
+
+`osmium-tool` is not linked to QtMaps and is not distributed with the app. If
+that boundary changes, its GPL-3.0 distribution obligations require a new
+license and packaging review.
+
 ## Project-owned resources
 
 The current marker sprite and generated glyph resources used by the Unit 01b probe are project-owned test resources. Their manifest and checksums must travel with any dataset package that references them. No public map tile, proprietary map style, or third-party font asset may be added without a separate source/license review.

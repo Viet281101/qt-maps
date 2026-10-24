@@ -5,7 +5,7 @@ Update this file after every meaningful implementation change. Keep it below the
 ## Current Phase
 
 - Unit 03 was squash-merged through PR #20 as `1358c3c`.
-- Unit 04 increment A is approved and backed up on `origin/feat/04-routing`. The preliminary Unit 04B availability survey is complete; work is paused before package installation/download and graph build for owner approval of the recommended tool path.
+- Unit 04 increment A is approved and backed up on `origin/feat/04-routing`. The owner approved `osmium-tool` plus checksum-pinned `pyvalhalla==3.9.1`; the bounded Hanoi extract and graph now build successfully and Unit 04B lifecycle/client implementation is in progress.
 - The owner approved Qt 5.15.13 plus dynamically linked MapLibre Native Qt v3.0.0 as the application baseline, retaining Qt 5.13.2 for comparison and localhost raster as fallback.
 - Performance schema v3 is complete: interaction-only FPS and frame-time p50/p95/p99 exclude the final settling swap, which is reported separately; legacy CSV fields remain for historical comparison.
 
@@ -73,6 +73,14 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
 - Added two fixture-labeled Valhalla-shaped Hanoi responses: Hoàn Kiếm–Thái Hà (5.475 km) and Hoàn Kiếm–Ba Đình (2.600 km). They use real bounded coordinates but are hand-authored, not backend-calculated driving routes.
 - Evidence: `docs/routing/unit-04-route-model-fixtures.md`. Qt 5.15.13 Release `make test` passes 4/4.
 
+### Unit 04B — bounded local Valhalla backend
+
+- Owner-installed `osmium-tool` 1.16.0 cut bbox `105.20,20.45,106.20,21.45` with the smart complete-way/relation strategy: 41,468,052 bytes in 20.57 seconds with 3,906,660 KiB peak RSS.
+- The checksum-pinned `pyvalhalla` 3.9.1 wheel lives only under ignored `generated/unit-04/`. Its native builder produced a 175,042,264-byte/35-file Hanoi graph with two threads in 64.83 seconds and 699,660 KiB peak RSS.
+- Native `valhalla_service` binds only `127.0.0.1`; the managed `QProcess` lifecycle has bounded asynchronous readiness and graceful-interrupt/forced-kill shutdown. The asynchronous client enforces loopback, `auto`, kilometres, `vi-VN`, timeout, cancellation, and explicit errors.
+- Twenty alternating real-route requests had 56.138 ms overall median latency. Hoàn Kiếm–Thái Hà is 7.294 km/523.659 s and Hoàn Kiếm–Ba Đình is 4.262 km/392.156 s; native Vietnamese maneuvers are available.
+- The two fixtures are now recorded Valhalla 3.9.1 responses with version/date/dataset metadata. Detailed evidence: `docs/routing/unit-04-valhalla-local-backend.md`.
+
 ## Active Decisions
 
 ### Committed
@@ -89,13 +97,13 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
 
 ## In Progress
 
-- Unit 04B is paused at its pre-install/build gate. The recommended path is the official checksum-pinned `pyvalhalla` 3.9.1 wheel in an ignored virtualenv plus the minimal apt `osmium-tool` package for PBF cutting. No Valhalla process, graph, client, routing UI, or navigation replacement has started.
+- Unit 04B graph, managed child lifecycle, asynchronous route client, real fixtures, evidence, and licensing updates are complete locally. Unit 04C fixture-first map UI is next; it has not yet been connected to the backend.
 
 ## Next Up
 
-1. Obtain owner approval to install `osmium-tool` plus its one Boost runtime dependency and to provision checksum-pinned `pyvalhalla==3.9.1` under ignored `generated/`.
-2. Cut the bounded Hanoi PBF and build its graph with at most two threads and `/usr/bin/time -v`, or stop by the day-three gate if it remains unavailable.
-3. In parallel, expose the approved fixture route through the minimum map-first origin/destination UI, then switch the same contract to the asynchronous backend client.
+1. Finish and verify the bounded managed Valhalla child lifecycle and asynchronous route client.
+2. Expose the recorded route through the minimum map-first fixture UI and verify the visual road alignment.
+3. Only after the separate Unit 04B report, connect that UI controller to the real backend with visible fixture fallback.
 
 ## Open Questions and Risks
 
