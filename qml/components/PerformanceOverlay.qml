@@ -43,6 +43,11 @@ Rectangle {
         }
         Text {
             color: Theme.textSecondary
+            text: qsTr("Settling max %1 ms")
+                .arg(monitor ? monitor.frameMetrics.settlingFrameMaximumMilliseconds.toFixed(1) : "0.0")
+        }
+        Text {
+            color: Theme.textSecondary
             text: qsTr("CPU %1%   RSS %2 MiB")
                 .arg(monitor ? monitor.totalCpuPercent.toFixed(1) : "0.0")
                 .arg(monitor ? monitor.totalRssMiB.toFixed(1) : "0.0")

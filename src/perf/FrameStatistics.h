@@ -12,6 +12,7 @@ public:
 
     void addSample(double framesPerSecond);
     void addInteractionFrameTime(double milliseconds);
+    void addSettlingFrameTime(double milliseconds);
     void reset();
 
     int sampleCount() const;
@@ -20,11 +21,16 @@ public:
     int interactionFrameCount() const;
     double interactionAverageFps() const;
     double interactionFrameTimePercentile(double percentile) const;
+    int interactionFrameTimeOverThresholdCount(double thresholdMilliseconds) const;
+    int settlingFrameCount() const;
+    double settlingFrameAverageMilliseconds() const;
+    double settlingFrameMaximumMilliseconds() const;
 
 private:
     int maximumSamples_;
     QVector<double> samples_;
     QVector<double> interactionFrameTimesMilliseconds_;
+    QVector<double> settlingFrameTimesMilliseconds_;
 };
 
 } // namespace perf

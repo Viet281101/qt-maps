@@ -34,10 +34,22 @@ void FrameStatistics::addInteractionFrameTime(double milliseconds)
     interactionFrameTimesMilliseconds_.append(milliseconds);
 }
 
+void FrameStatistics::addSettlingFrameTime(double milliseconds)
+{
+    if (!std::isfinite(milliseconds) || milliseconds <= 0.0) {
+        return;
+    }
+    if (settlingFrameTimesMilliseconds_.size() == maximumSamples_) {
+        settlingFrameTimesMilliseconds_.removeFirst();
+    }
+    settlingFrameTimesMilliseconds_.append(milliseconds);
+}
+
 void FrameStatistics::reset()
 {
     samples_.clear();
     interactionFrameTimesMilliseconds_.clear();
+    settlingFrameTimesMilliseconds_.clear();
 }
 
 int FrameStatistics::sampleCount() const
@@ -93,6 +105,40 @@ double FrameStatistics::interactionFrameTimePercentile(double percentile) const
     const int nearestRank = std::max(
         1, static_cast<int>(std::ceil(boundedPercentile * ordered.size() / 100.0)));
     return ordered.at(std::min(nearestRank - 1, ordered.size() - 1));
+}
+
+int FrameStatistics::interactionFrameTimeOverThresholdCount(double thresholdMilliseconds) const
+{
+    return static_cast<int>(std::count_if(
+        interactionFrameTimesMilliseconds_.cbegin(),
+        interactionFrameTimesMilliseconds_.cend(),
+        [thresholdMilliseconds](double milliseconds) {
+            return milliseconds > thresholdMilliseconds;
+        }));
+}
+
+int FrameStatistics::settlingFrameCount() const
+{
+    return settlingFrameTimesMilliseconds_.size();
+}
+
+double FrameStatistics::settlingFrameAverageMilliseconds() const
+{
+    if (settlingFrameTimesMilliseconds_.isEmpty()) {
+        return 0.0;
+    }
+    return std::accumulate(settlingFrameTimesMilliseconds_.cbegin(),
+                           settlingFrameTimesMilliseconds_.cend(), 0.0)
+        / settlingFrameTimesMilliseconds_.size();
+}
+
+double FrameStatistics::settlingFrameMaximumMilliseconds() const
+{
+    if (settlingFrameTimesMilliseconds_.isEmpty()) {
+        return 0.0;
+    }
+    return *std::max_element(settlingFrameTimesMilliseconds_.cbegin(),
+                             settlingFrameTimesMilliseconds_.cend());
 }
 
 } // namespace perf

@@ -85,7 +85,10 @@ public slots:
     void updateFrameMetrics(double currentFps, double averageFps, double onePercentLowFps,
                             bool interactionActive, int interactionFrameCount,
                             double interactionAverageFps, double frameTimeP50Milliseconds,
-                            double frameTimeP95Milliseconds, double frameTimeP99Milliseconds)
+                            double frameTimeP95Milliseconds, double frameTimeP99Milliseconds,
+                            int framesOver100Milliseconds,
+                            int settlingFrameCount, double settlingFrameAverageMilliseconds,
+                            double settlingFrameMaximumMilliseconds)
     {
         currentFps_ = currentFps;
         averageFps_ = averageFps;
@@ -96,6 +99,10 @@ public slots:
         frameTimeP50Milliseconds_ = frameTimeP50Milliseconds;
         frameTimeP95Milliseconds_ = frameTimeP95Milliseconds;
         frameTimeP99Milliseconds_ = frameTimeP99Milliseconds;
+        framesOver100Milliseconds_ = framesOver100Milliseconds;
+        settlingFrameCount_ = settlingFrameCount;
+        settlingFrameAverageMilliseconds_ = settlingFrameAverageMilliseconds;
+        settlingFrameMaximumMilliseconds_ = settlingFrameMaximumMilliseconds;
     }
 
 signals:
@@ -161,6 +168,13 @@ private slots:
                    QString::number(frameTimeP95Milliseconds_, 'f', 3));
         row.insert(QStringLiteral("interaction_frame_time_p99_ms"),
                    QString::number(frameTimeP99Milliseconds_, 'f', 3));
+        row.insert(QStringLiteral("interaction_frames_over_100ms"),
+                   framesOver100Milliseconds_);
+        row.insert(QStringLiteral("settling_frame_count"), settlingFrameCount_);
+        row.insert(QStringLiteral("settling_frame_average_ms"),
+                   QString::number(settlingFrameAverageMilliseconds_, 'f', 3));
+        row.insert(QStringLiteral("settling_frame_maximum_ms"),
+                   QString::number(settlingFrameMaximumMilliseconds_, 'f', 3));
         row.insert(QStringLiteral("total_rss_bytes"), processSample.rssBytes);
         row.insert(QStringLiteral("total_cpu_percent_one_core_100"),
                    QString::number(processSample.cpuPercent, 'f', 3));
@@ -192,6 +206,10 @@ private:
     double frameTimeP50Milliseconds_ = 0.0;
     double frameTimeP95Milliseconds_ = 0.0;
     double frameTimeP99Milliseconds_ = 0.0;
+    int framesOver100Milliseconds_ = 0;
+    int settlingFrameCount_ = 0;
+    double settlingFrameAverageMilliseconds_ = 0.0;
+    double settlingFrameMaximumMilliseconds_ = 0.0;
 };
 
 PerformanceMonitor::PerformanceMonitor(QObject *parent)

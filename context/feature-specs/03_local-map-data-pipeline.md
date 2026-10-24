@@ -64,9 +64,10 @@ Turn the bounded Hanoi feasibility assets into a reproducible, versioned, localh
 - A 30-to-60-minute soak, cold-cache matrix, rapid layer-switch suite, or final performance thresholds beyond recording the first continuous-motion evidence.
 - Removing Qt 5.13 comparison support or changing repository/GitHub Project identity.
 
-## Decisions Required Before Implementation
+## Approved Implementation Decisions
 
-1. Approve the dataset manifest/style-contract fields and immutable package layout.
-2. Select the minimal runtime access implementation: a dynamically linked loopback MBTiles server owned through `QProcess`, or direct/in-process MBTiles access with an equivalent lifecycle contract. Any new dependency needs license/footprint review.
-3. Confirm that the existing labeled diagnostic raster is sufficient for Unit 03 fallback mechanics, or require a real project-generated bounded-Hanoi raster package in this unit.
-4. Approve the fixed simulated route, speed, duration, camera parameters, and post-measurement p95/p99 decision process.
+1. Use ignored `data/packages/hanoi-<yyyymmdd>-v1/` packages containing `manifest.json`, `tiles.mbtiles`, `style/`, `glyphs/`, and `sprites/`, plus an ignored `data/packages/current` pointer. Validate every manifest checksum before loading.
+2. Serve through an in-process `TileSource` implementation bound to a random `127.0.0.1` port. The HTTP server and `QSqlDatabase` connection run on a worker thread; the interface must allow a later QProcess implementation.
+3. Unit 03 fallback uses only the visibly labeled diagnostic localhost raster to prove detection, switching, and reason reporting. Real Hanoi raster data is deferred.
+4. Benchmark an explicitly simulated approximately 5 km real-Hanoi street route at a stable approximately 40 km/h for 120 seconds, with rotating camera follow, 10-second warm-up, separate cold/warm-cache results, and three runs per cache state.
+5. Record p50, p95, p99, and count of frames over 100 ms. Proposed review thresholds are p50 at most 17 ms and p95 at most 33 ms; p99 is report-only until the owner reviews baseline evidence.

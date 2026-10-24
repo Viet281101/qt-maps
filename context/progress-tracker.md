@@ -4,7 +4,7 @@ Update this file after every meaningful implementation change. Keep it below the
 
 ## Current Phase
 
-- Pre-Unit-03 work is active on `feat/03-local-map-data-pipeline`, branched from completed local Unit 01b as instructed. Neither branch has been pushed or merged.
+- Unit 03 implementation is active on `feat/03-local-map-data-pipeline`, branched from completed local Unit 01b as instructed. Neither branch has been pushed or merged.
 - The owner approved Qt 5.15.13 plus dynamically linked MapLibre Native Qt v3.0.0 as the application baseline, retaining Qt 5.13.2 for comparison and localhost raster as fallback.
 - Performance schema v2 is complete: interaction-only FPS and frame-time p50/p95/p99 replace the legacy whole-session 1% low as the primary render-on-demand report. Legacy CSV fields remain for historical comparison.
 
@@ -69,12 +69,12 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
 
 ## In Progress
 
-- Pre-Unit-03 tasks A-D are complete locally: schema-v2 interaction metrics and rerun; minimum Unit 03 spec; Qt 5.15.13 default build with Qt 5.13 comparison; third-party notices and dynamic-link packaging guidance. Stop for owner review before Unit 03 implementation.
+- The owner approved Unit 03 package layout, in-process worker-thread MBTiles service, diagnostic raster fallback scope, and 120-second continuous-navigation benchmark. Performance schema v3 now separates the final settling interval of each interaction window from primary FPS/p50/p95/p99; pipeline/service/navigation implementation remains in progress.
 
 ## Next Up
 
 1. Review Unit 02/PR #19 and the local Unit 01b commits; do not push or merge without owner approval.
-2. Review the minimum Unit 03 spec, then implement only after the package/server/fallback/benchmark decisions listed there are approved.
+2. Complete and verify the approved minimum Unit 03 pipeline, service/fallback lifecycle, and continuous-navigation baseline; stop for owner review before routing or final UI.
 3. Build the demo shell, then the real two-point route, navigation replay, and fixed Release benchmark in that order.
 
 ## Open Questions and Risks

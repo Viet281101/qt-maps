@@ -57,7 +57,10 @@ signals:
     void frameSampleChanged(double currentFps, double averageFps, double onePercentLowFps,
                             bool interactionActive, int interactionFrameCount,
                             double interactionAverageFps, double frameTimeP50Milliseconds,
-                            double frameTimeP95Milliseconds, double frameTimeP99Milliseconds);
+                            double frameTimeP95Milliseconds, double frameTimeP99Milliseconds,
+                            int framesOver100Milliseconds,
+                            int settlingFrameCount, double settlingFrameAverageMilliseconds,
+                            double settlingFrameMaximumMilliseconds);
 
 private slots:
     void handleStarted(const QString &path);

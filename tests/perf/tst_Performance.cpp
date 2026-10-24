@@ -1,4 +1,5 @@
 #include "perf/BenchmarkCsvWriter.h"
+#include "perf/FrameMetrics.h"
 #include "perf/FrameStatistics.h"
 #include "perf/PerformanceMonitor.h"
 #include "perf/ProcessTreeSampler.h"
@@ -49,6 +50,7 @@ private slots:
         statistics.addInteractionFrameTime(30.0);
         statistics.addInteractionFrameTime(40.0);
         statistics.addInteractionFrameTime(100.0);
+        statistics.addSettlingFrameTime(350.0);
         statistics.addInteractionFrameTime(0.0); // Invalid frame interval is ignored.
 
         QCOMPARE(statistics.averageFps(), 0.0);
@@ -57,9 +59,15 @@ private slots:
         QCOMPARE(statistics.interactionFrameTimePercentile(50.0), 30.0);
         QCOMPARE(statistics.interactionFrameTimePercentile(95.0), 100.0);
         QCOMPARE(statistics.interactionFrameTimePercentile(99.0), 100.0);
+        QCOMPARE(statistics.interactionFrameTimeOverThresholdCount(99.0), 1);
+        QCOMPARE(statistics.interactionFrameTimeOverThresholdCount(100.0), 0);
+        QCOMPARE(statistics.settlingFrameCount(), 1);
+        QCOMPARE(statistics.settlingFrameAverageMilliseconds(), 350.0);
+        QCOMPARE(statistics.settlingFrameMaximumMilliseconds(), 350.0);
 
         statistics.reset();
         QCOMPARE(statistics.interactionFrameCount(), 0);
+        QCOMPARE(statistics.settlingFrameCount(), 0);
         QCOMPARE(statistics.interactionFrameTimePercentile(95.0), 0.0);
     }
 
@@ -71,6 +79,23 @@ private slots:
         statistics.addInteractionFrameTime(40.0);
         QCOMPARE(statistics.interactionFrameCount(), 2);
         QCOMPARE(statistics.interactionFrameTimePercentile(50.0), 20.0);
+    }
+
+    void finalInteractionIntervalBecomesSettlingSample()
+    {
+        FrameMetrics metrics;
+        metrics.beginInteractionWindow(80);
+        QVERIFY(QMetaObject::invokeMethod(&metrics, "recordFrame"));
+        QTest::qWait(5);
+        QVERIFY(QMetaObject::invokeMethod(&metrics, "recordFrame"));
+        QTest::qWait(5);
+        QVERIFY(QMetaObject::invokeMethod(&metrics, "recordFrame"));
+        QCOMPARE(metrics.interactionFrameCount(), 1);
+        QCOMPARE(metrics.settlingFrameCount(), 0);
+
+        QTRY_COMPARE_WITH_TIMEOUT(metrics.settlingFrameCount(), 1, 200);
+        QCOMPARE(metrics.interactionFrameCount(), 1);
+        QVERIFY(metrics.settlingFrameMaximumMilliseconds() > 0.0);
     }
 
     void processAggregationIncludesDescendantsAndCpuDelta()
@@ -148,9 +173,13 @@ private slots:
         QVERIFY(file.open(QIODevice::ReadOnly | QIODevice::Text));
         const QList<QByteArray> lines = file.readAll().split('\n');
         QCOMPARE(lines.at(0), BenchmarkCsvWriter::columns().join(QLatin1Char(',')).toUtf8());
-        QCOMPARE(BenchmarkCsvWriter::schemaVersion(), QStringLiteral("qtmaps-perf-v2"));
+        QCOMPARE(BenchmarkCsvWriter::schemaVersion(), QStringLiteral("qtmaps-perf-v3"));
         QVERIFY(BenchmarkCsvWriter::columns().contains(
             QStringLiteral("interaction_frame_time_p99_ms")));
+        QVERIFY(BenchmarkCsvWriter::columns().contains(
+            QStringLiteral("interaction_frames_over_100ms")));
+        QVERIFY(BenchmarkCsvWriter::columns().contains(
+            QStringLiteral("settling_frame_maximum_ms")));
         QCOMPARE(lines.size(), 4); // header, two rows, trailing empty entry
         QVERIFY(lines.at(1).contains("\"pan, \"\"zoom\"\"\""));
     }

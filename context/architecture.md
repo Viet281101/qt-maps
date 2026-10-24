@@ -16,9 +16,9 @@
 | Build system | CMake with Ninja | Committed; Release path validated in accepted unit 01 environment scope | Primary configure/generate/build path; exact commands are recorded in `progress-tracker.md` and `code-standards.md` |
 | Raster map | QtLocation `osm` plugin over localhost | Committed fallback; production data path pending unit 03 | Recovery path when vector startup/package/rendering fails |
 | Vector map | Dynamically linked MapLibre Native Qt v3.0.0 on Qt 5.15.13 | Committed baseline after Unit 01b evidence and owner approval | Local vector rendering, camera behavior, and navigation presentation |
-| Map source data | Geofabrik Vietnam OSM PBF | Proposed | Input for map, routing, and search datasets |
-| Vector pipeline | Planetiler to MBTiles | Proposed | Generate vector tiles |
-| Tile access | Direct MBTiles through `QSqlDatabase`, or Martin/mbtileserver child process | Proposed | Serve or read local tiles |
+| Map source data | Approved local Geofabrik Vietnam OSM PBF | Committed for bounded Hanoi Unit 03 package | Input for the local map pipeline |
+| Vector pipeline | Planetiler v0.10.2 to versioned MBTiles package | Committed for Unit 03 | Generate bounded Hanoi vector tiles and manifest |
+| Tile access | In-process `TileSource`; loopback HTTP plus `QSqlDatabase` on a worker thread | Committed for Unit 03 | Serve validated MBTiles/resources on a random `127.0.0.1` port |
 | Routing | Valhalla child process | Proposed | Offline route, maneuvers, and map matching |
 | Search | SQLite FTS5 index | Proposed | Offline geocoding/search |
 | Position simulation | QtPositioning and route/NMEA replay | Proposed | Simulated GPS for navigation |
@@ -45,7 +45,7 @@ These directories describe intended ownership. Application-code directories are 
 
 ## Storage Model
 
-- **MBTiles**: proposed container for local vector and raster tiles. Direct SQLite access versus a local server remains an implementation decision.
+- **MBTiles**: committed Unit 03 vector-tile container inside ignored `data/packages/hanoi-<yyyymmdd>-v1/`; the package includes a checksummed manifest and style/glyph/sprite resources plus an ignored `current` pointer.
 - **Routing graph**: generated Valhalla graph tiles, versioned by source extract and build configuration outside Git.
 - **Geocoding database**: proposed SQLite database with FTS5 tables generated from selected source data.
 - **Orthography files or tiles**: bounded by the agreed region, zoom range, license, and attribution requirements.
@@ -56,13 +56,14 @@ Large generated datasets, caches, routing graphs, and third-party artifacts must
 
 ## Services and Process Model
 
-- QtMaps owns the lifecycle of any routing or tile-server child process through `QProcess`.
+- Unit 03 vector tiles are served by an in-process `TileSource` implementation. Its loopback HTTP server and SQLite connection live on a dedicated worker thread; the interface preserves a future QProcess-backed implementation boundary.
+- QtMaps owns the lifecycle of any later routing or external tile-server child process through `QProcess`.
 - Child services start only when required, expose readiness/failure state, and shut down when the application exits.
 - Startup must use bounded timeouts and actionable errors; it must never wait indefinitely on the UI thread.
 - Routing, tile I/O, search, process monitoring, and service output parsing must not block the UI thread.
 - Service endpoints default to loopback-only access unless a later requirement explicitly changes this boundary.
 - Thread and worker counts must be configurable and conservatively limited for the two-core/four-thread reference CPU.
-- Performance totals include the main process and every child service started by it.
+- Performance totals include the main process and every child service started by it. In-process tile-service work is naturally included in the app process.
 - Unit 02 performance collection uses bounded GUI-thread frame counters plus a dedicated worker thread for `/proc` enumeration, parsing, directory creation, and CSV writes. `PerformanceMonitor` owns the worker, requests cancellation, flushes output, and performs a bounded shutdown.
 
 ## Invariants
