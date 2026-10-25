@@ -91,3 +91,41 @@ E and F remain unstarted; work stops for the D4 review gate.
 After the recenter and failed-reroute preservation follow-ups, the final Qt
 5.15.13 Release `make test` passed 7/7 executables in 6.88 seconds;
 `git diff --check` passed.
+
+## PR #22 merge-gate click-through (2026-10-25)
+
+This pass used the Qt 5.15.13 Release build and the local Hanoi map package.
+The success scenarios below used the real managed Valhalla 3.9.1 service, not
+the recorded route fixture.
+
+- At 900x580, the initial Hoàn Kiếm–Thái Hà request returned 7,294 m,
+  523.659 s, and 14 maneuvers. Starting replay showed the guidance banner while
+  leaving the connection pill below it. Clicking the map while replay was
+  running left the two endpoint fields, route summary, visible route, and
+  running guidance unchanged. Pause and the explicit recenter action remained
+  operable.
+- At 900x580, the route-control area scrolled to expose the deviation action,
+  while the maneuver list retained its own viewport and scrolled from the
+  current early maneuvers to maneuvers 13 and 14. A real-Valhalla deviation
+  request succeeded with a replacement route of 7,647 m, 548.184 s, and 15
+  maneuvers; replay resumed with updated banner/list content.
+- At 1366x768, the active banner, connection pill, controls, and maneuver list
+  were simultaneously visible without overlap. Replay and the same explicit
+  controls remained usable at this size.
+- For a short route selected on the map, real Valhalla returned 336 m,
+  45.638 s, and 4 maneuvers. At 4x replay the UI reached `Đã đến đích`, showed
+  `Đi lại từ đầu` instead of `Tạm dừng`, and invoking it restarted the same
+  route with active guidance from the beginning.
+
+The HTTP 503 scenario was observed separately with the deterministic fake
+loopback backend from `qtmaps_valhalla_runtime_tests`; it was not attributed to
+the real Valhalla process. The initial failed request loaded the explicitly
+labeled fixture fallback. After replay started, the simulated deviation
+received `503 Service Unavailable`; replay stopped, the error was visible, and
+the prior 7.29 km summary and maneuver list remained available without a second
+fixture substitution. Automated coverage additionally compares the preserved
+polyline, maneuver count, distance, duration, and source.
+
+Screenshots were used only for local visual inspection and remain untracked.
+No FPS/CPU navigation measurement was performed in this pass; Unit 05E and F
+remain unstarted.

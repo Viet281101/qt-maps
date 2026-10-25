@@ -156,6 +156,11 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
 - The Arrived primary action is now `Đi lại từ đầu`, not a disabled-looking
   pause action. Its QML behavior test reaches arrival, invokes the visible
   action, and verifies the same route restarts from the beginning.
+- The PR #22 merge-gate click-through covered real-Valhalla replay, guarded map
+  clicks, successful re-routing, recenter, independent control/maneuver
+  scrolling, arrival/restart, and both 900x580 and 1366x768 layouts. A separate
+  deterministic fake-loopback run observed HTTP 503 failure/preservation and
+  is labeled as such; navigation FPS/CPU measurement remains deferred to E/F.
 
 ## Active Decisions
 
