@@ -157,6 +157,52 @@ private slots:
         QTRY_COMPARE(tapHandler->property("enabled").toBool(), true);
     }
 
+    void arrivedActionRestartsSameRoute()
+    {
+        RoutingController routing;
+        RouteNavigationController navigation;
+        connect(&routing, &RoutingController::routeChanged, &navigation, [&]() {
+            if (routing.routeAvailable())
+                navigation.setRoute(routing.route(), routing.sourceLabel());
+            else
+                navigation.clearRoute();
+        });
+        routing.calculateFixtureRoute();
+        navigation.start();
+        navigation.advanceBySeconds(routing.durationSeconds() * 2.0);
+        QVERIFY(navigation.arrived());
+        const double routeLength = navigation.routeLengthMeters();
+        QVERIFY(routeLength > 0.0);
+
+        ApplicationShutdownCoordinator shutdown(&routing);
+        PerformanceMonitor performance;
+        QQmlEngine engine;
+        engine.rootContext()->setContextProperty(QStringLiteral("routingController"), &routing);
+        engine.rootContext()->setContextProperty(QStringLiteral("routeNavigationController"),
+                                                 &navigation);
+        engine.rootContext()->setContextProperty(QStringLiteral("shutdownCoordinator"),
+                                                 &shutdown);
+        engine.rootContext()->setContextProperty(QStringLiteral("performanceMonitor"),
+                                                 &performance);
+        engine.rootContext()->setContextProperty(QStringLiteral("routingFixtureOnly"), false);
+        engine.rootContext()->setContextProperty(QStringLiteral("instrumentationEnabled"), false);
+        engine.rootContext()->setContextProperty(QStringLiteral("vectorStyleUrl"), QString());
+
+        QQmlComponent component(&engine, QUrl(QStringLiteral("qrc:/qml/RoutingProbe.qml")));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> root(component.create());
+        QVERIFY2(root, qPrintable(component.errorString()));
+        QObject *action = root->findChild<QObject *>(QStringLiteral("navigationPrimaryAction"));
+        QVERIFY(action);
+        QCOMPARE(action->property("text").toString(), QStringLiteral("Đi lại từ đầu"));
+
+        QVERIFY(QMetaObject::invokeMethod(action, "triggered"));
+        QTRY_VERIFY(navigation.running());
+        QVERIFY(!navigation.arrived());
+        QVERIFY(navigation.travelledMeters() < routeLength);
+        QVERIFY(navigation.travelledMeters() < 1.0);
+    }
+
     void maneuverRowHasPersistentSelectedStyle()
     {
         QQmlEngine engine;

@@ -460,15 +460,22 @@ Window {
                 visible: routeNavigationController.active
                 spacing: Theme.spaceSm
                 KeyboardActionButton {
+                    id: navigationPrimaryAction
+                    objectName: "navigationPrimaryAction"
                     width: (parent.width - parent.spacing) / 2
-                    text: routeNavigationController.paused ? qsTr("Tiếp tục")
-                                                          : qsTr("Tạm dừng")
+                    text: routeNavigationController.arrived ? qsTr("Đi lại từ đầu")
+                          : routeNavigationController.paused ? qsTr("Tiếp tục")
+                                                             : qsTr("Tạm dừng")
                     normalColor: Theme.warning
                     pressedColor: "#d89b19"
                     textColor: "#2d2308"
-                    onTriggered: routeNavigationController.paused
-                                 ? routeNavigationController.start()
-                                 : routeNavigationController.pause()
+                    onTriggered: {
+                        if (routeNavigationController.arrived
+                                || routeNavigationController.paused)
+                            routeNavigationController.start()
+                        else
+                            routeNavigationController.pause()
+                    }
                 }
                 KeyboardActionButton {
                     width: (parent.width - parent.spacing) / 2

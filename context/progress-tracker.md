@@ -153,6 +153,9 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
   scrolls independently so the maneuver list retains at least 120 px and can
   scroll its full model. The connection pill moves below the active navigation
   banner; QML geometry tests cover both window sizes and their non-overlap.
+- The Arrived primary action is now `Đi lại từ đầu`, not a disabled-looking
+  pause action. Its QML behavior test reaches arrival, invokes the visible
+  action, and verifies the same route restarts from the beginning.
 
 ## Active Decisions
 
