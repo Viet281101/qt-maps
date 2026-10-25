@@ -168,6 +168,7 @@ if(BUILD_TESTING)
         QTMAPS_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
     target_link_libraries(qtmaps_valhalla_runtime_tests PRIVATE
         qtmaps_app_core
+        qtmaps_perf
         qtmaps_routing
         Qt5::Network
         Qt5::Test

@@ -14,6 +14,14 @@ Window {
     visible: true
     title: qsTr("QtMaps — Lập tuyến Hà Nội")
     property bool performanceOverlayVisible: instrumentationEnabled
+    property bool panelCollapsed: false
+    property string compactSource: routingController.sourceLabel === "Valhalla local"
+                                   ? qsTr("Valhalla") : qsTr("Fixture")
+    property color routeSummaryColor: routingController.loading ? Theme.warning
+                                      : !routingController.routeAvailable ? Theme.error
+                                      : routingController.sourceLabel === "Valhalla local"
+                                        && routingController.connectionLabel.indexOf("loopback") >= 0
+                                        ? Theme.success : Theme.warning
 
     function applyEndpoints() {
         if (routingController.setOriginInput(originField.text))
@@ -28,6 +36,52 @@ Window {
             else
                 routingController.calculateRoute()
         }
+    }
+
+    function fitRouteWithPanelPadding() {
+        if (!routingController.routeAvailable || routingController.routePath.length < 2)
+            return
+        var path = routingController.routePath
+        var minLatitude = path[0].latitude
+        var maxLatitude = path[0].latitude
+        var minLongitude = path[0].longitude
+        var maxLongitude = path[0].longitude
+        for (var index = 1; index < path.length; ++index) {
+            minLatitude = Math.min(minLatitude, path[index].latitude)
+            maxLatitude = Math.max(maxLatitude, path[index].latitude)
+            minLongitude = Math.min(minLongitude, path[index].longitude)
+            maxLongitude = Math.max(maxLongitude, path[index].longitude)
+        }
+        var leftPadding = root.panelCollapsed ? Theme.spaceLg
+                                              : routePanel.width + Theme.spaceLg * 2
+        var rightPadding = Theme.spaceLg * 3
+        var verticalPadding = Theme.spaceLg * 2
+        var usableWidth = Math.max(240, map.width - leftPadding - rightPadding)
+        var usableHeight = Math.max(240, map.height - verticalPadding * 2)
+        var longitudeSpan = Math.max(0.000001, maxLongitude - minLongitude)
+        function mercatorY(latitude) {
+            var radians = latitude * Math.PI / 180
+            return (1 - Math.log(Math.tan(radians) + 1 / Math.cos(radians))
+                    / Math.PI) / 2
+        }
+        function latitudeFromMercator(y) {
+            return Math.atan(Math.sinh(Math.PI * (1 - 2 * y))) * 180 / Math.PI
+        }
+        var northY = mercatorY(maxLatitude)
+        var southY = mercatorY(minLatitude)
+        var latitudeSpan = Math.max(0.000001, southY - northY)
+        var zoomX = Math.log(usableWidth * 360 / (256 * longitudeSpan)) / Math.LN2
+        var zoomY = Math.log(usableHeight / (256 * latitudeSpan)) / Math.LN2
+        var fittedZoom = Math.min(zoomX, zoomY, map.maximumZoomLevel)
+        var worldPixels = 256 * Math.pow(2, fittedZoom)
+        var routeCenterLongitude = (minLongitude + maxLongitude) / 2
+        var routeCenterLatitude = latitudeFromMercator((northY + southY) / 2)
+        var routeTargetX = leftPadding + usableWidth / 2
+        var centerShiftPixels = routeTargetX - map.width / 2
+        var mapCenterLongitude = routeCenterLongitude
+                - centerShiftPixels * 360 / worldPixels
+        map.zoomLevel = Math.max(map.minimumZoomLevel, fittedZoom)
+        map.center = QtPositioning.coordinate(routeCenterLatitude, mapCenterLongitude)
     }
 
     Plugin {
@@ -71,7 +125,7 @@ Window {
         MapPolyline {
             id: routeOutline
             path: routingController.routePath
-            line.width: 9
+            line.width: 12
             line.color: Theme.routeOutline
             opacity: 0.92
             z: 5
@@ -80,7 +134,7 @@ Window {
         MapPolyline {
             id: routeLine
             path: routingController.routePath
-            line.width: 5
+            line.width: 7
             line.color: Theme.route
             z: 6
         }
@@ -89,15 +143,15 @@ Window {
             coordinate: routingController.origin
             anchorPoint.x: originMarker.width / 2
             anchorPoint.y: originMarker.height / 2
-            z: 8
+            z: 10
             sourceItem: Rectangle {
                 id: originMarker
-                width: 22
-                height: 22
-                radius: 11
+                width: 30
+                height: 30
+                radius: 15
                 color: Theme.success
-                border.color: "white"
-                border.width: 3
+                border.color: Theme.surfaceElevated
+                border.width: 5
                 Text { anchors.centerIn: parent; text: "A"; font.bold: true; color: "#102018" }
             }
         }
@@ -106,16 +160,42 @@ Window {
             coordinate: routingController.destination
             anchorPoint.x: destinationMarker.width / 2
             anchorPoint.y: destinationMarker.height / 2
-            z: 8
+            z: 10
             sourceItem: Rectangle {
                 id: destinationMarker
-                width: 22
-                height: 22
-                radius: 11
+                width: 30
+                height: 30
+                radius: 15
                 color: Theme.error
-                border.color: "white"
-                border.width: 3
+                border.color: Theme.surfaceElevated
+                border.width: 5
                 Text { anchors.centerIn: parent; text: "B"; font.bold: true; color: "#301010" }
+            }
+        }
+
+        MapItemView {
+            model: map.zoomLevel >= 15 ? routingController.streetLabels : []
+            delegate: MapQuickItem {
+                coordinate: modelData.coordinate
+                anchorPoint.x: streetLabel.width / 2
+                anchorPoint.y: streetLabel.height + 8
+                z: 9
+                sourceItem: Rectangle {
+                    id: streetLabel
+                    width: streetName.implicitWidth + 12
+                    height: streetName.implicitHeight + 6
+                    radius: Theme.radiusPanel
+                    color: "#eeffffff"
+                    border.color: Theme.route
+                    Text {
+                        id: streetName
+                        anchors.centerIn: parent
+                        text: modelData.streetName
+                        color: "#10243a"
+                        font.pixelSize: Theme.fontSizeCaption
+                        font.bold: true
+                    }
+                }
             }
         }
     }
@@ -127,6 +207,7 @@ Window {
         anchors.left: parent.left
         anchors.margins: Theme.spaceMd
         width: 330
+        visible: !root.panelCollapsed
         radius: Theme.radiusPanel
         color: Theme.surfaceElevated
         border.color: Theme.border
@@ -224,30 +305,25 @@ Window {
 
             Rectangle {
                 width: parent.width
-                height: 64
+                height: 40
                 radius: Theme.radiusPanel
                 color: "#cc1b2530"
                 border.color: Theme.border
 
-                Column {
+                Text {
                     anchors.fill: parent
                     anchors.margins: Theme.spaceSm
-                    spacing: Theme.spaceXs
-                    Text {
-                        color: Theme.textPrimary
-                        font.bold: true
-                        text: routingController.routeAvailable
-                              ? qsTr("%1 km  •  %2 phút")
-                                    .arg((routingController.distanceMeters / 1000).toFixed(2))
-                                    .arg(Math.ceil(routingController.durationSeconds / 60))
-                              : qsTr("Chưa có tuyến")
-                    }
-                    Text {
-                        color: Theme.warning
-                        text: qsTr("Nguồn: %1  •  %2")
-                            .arg(routingController.sourceLabel)
-                            .arg(routingController.connectionLabel)
-                    }
+                    verticalAlignment: Text.AlignVCenter
+                    elide: Text.ElideRight
+                    color: root.routeSummaryColor
+                    font.bold: true
+                    text: routingController.routeAvailable
+                          ? qsTr("%1 • %2 km • %3 phút")
+                                .arg(root.compactSource)
+                                .arg((routingController.distanceMeters / 1000).toFixed(2))
+                                .arg(Math.ceil(routingController.durationSeconds / 60))
+                          : routingController.loading ? qsTr("Đang tính tuyến…")
+                                                      : qsTr("Không có tuyến")
                 }
             }
 
@@ -281,14 +357,47 @@ Window {
             spacing: Theme.spaceXs
             model: routingController.maneuvers
             currentIndex: routingController.currentManeuverIndex
+            activeFocusOnTab: true
+
+            Keys.onDownPressed: {
+                routingController.focusManeuver(
+                            Math.min(count - 1,
+                                     routingController.currentManeuverIndex + 1))
+                event.accepted = true
+            }
+            Keys.onUpPressed: {
+                routingController.focusManeuver(
+                            Math.max(0, routingController.currentManeuverIndex - 1))
+                event.accepted = true
+            }
 
             delegate: ManeuverRow {
                 width: maneuverList.width
                 maneuverIndex: index
                 maneuver: modelData
-                selected: ListView.isCurrentItem
-                onActivated: routingController.focusManeuver(maneuverIndex)
+                selected: index === routingController.currentManeuverIndex
+                onActivated: {
+                    routingController.focusManeuver(maneuverIndex)
+                    maneuverList.forceActiveFocus()
+                }
             }
+        }
+    }
+
+    KeyboardActionButton {
+        id: panelToggle
+        x: root.panelCollapsed ? Theme.spaceMd
+                               : routePanel.x + routePanel.width + Theme.spaceSm
+        y: Theme.spaceMd
+        width: 38
+        z: 24
+        text: root.panelCollapsed ? "›" : "‹"
+        normalColor: "#dd1b2530"
+        pressedColor: "#334352"
+        textColor: Theme.textPrimary
+        onTriggered: {
+            root.panelCollapsed = !root.panelCollapsed
+            Qt.callLater(root.fitRouteWithPanelPadding)
         }
     }
 
@@ -309,7 +418,7 @@ Window {
             Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
                 width: 10; height: 10; radius: 5
-                color: Theme.warning
+                color: root.routeSummaryColor
             }
             Text { color: Theme.textPrimary; text: routingController.connectionLabel }
         }
@@ -366,6 +475,7 @@ Window {
             routeLine.path = []
             routeOutline.path = currentPath
             routeLine.path = currentPath
+            root.fitRouteWithPanelPadding()
         }
     }
 

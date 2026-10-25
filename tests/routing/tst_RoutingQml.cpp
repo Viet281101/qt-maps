@@ -70,6 +70,19 @@ private slots:
         QVERIFY(qml.contains("KeyNavigation.tab: routeButton"));
         QVERIFY(qml.contains("KeyNavigation.tab: originField"));
     }
+
+    void routingProbeKeepsRouteClearOfPanelAndExposesUiState()
+    {
+        QFile file(QStringLiteral(":/qml/RoutingProbe.qml"));
+        QVERIFY(file.open(QIODevice::ReadOnly));
+        const QByteArray qml = file.readAll();
+        QVERIFY(qml.contains("routePanel.width + Theme.spaceLg * 2"));
+        QVERIFY(qml.contains("property bool panelCollapsed"));
+        QVERIFY(qml.contains("routingController.streetLabels"));
+        QVERIFY(qml.contains("map.zoomLevel >= 15"));
+        QVERIFY(qml.contains("routingController.currentManeuverIndex"));
+        QVERIFY(qml.contains("routeSummaryColor"));
+    }
 };
 
 QTEST_MAIN(RoutingQmlTest)

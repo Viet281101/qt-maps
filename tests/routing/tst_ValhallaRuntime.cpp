@@ -1,6 +1,7 @@
 #include <QtTest>
 
 #include "core/ApplicationShutdownCoordinator.h"
+#include "perf/ProcessTreeSampler.h"
 #include "routing/ValhallaRouteClient.h"
 #include "routing/ValhallaServiceManager.h"
 #include "routing/RoutingController.h"
@@ -30,6 +31,7 @@ using qtmaps::routing::RoutingController;
 using qtmaps::routing::ValhallaRouteClient;
 using qtmaps::routing::ValhallaServiceManager;
 using qtmaps::core::ApplicationShutdownCoordinator;
+using qtmaps::perf::ProcessTreeSampler;
 
 namespace {
 
@@ -200,6 +202,9 @@ private slots:
         QVERIFY2(readySpy.wait(3000), qPrintable(service.errorMessage()));
         QCOMPARE(service.state(), ValhallaServiceManager::State::Ready);
         QCOMPARE(service.endpoint(), QUrl(QStringLiteral("http://127.0.0.1:%1").arg(port)));
+        const QList<qint64> descendants = ProcessTreeSampler::descendantPids(
+            QCoreApplication::applicationPid(), ProcessTreeSampler::readProc());
+        QVERIFY(descendants.contains(service.processId()));
 
         service.stop();
         QTRY_COMPARE_WITH_TIMEOUT(service.state(), ValhallaServiceManager::State::Stopped, 3000);
@@ -402,6 +407,7 @@ private slots:
         QCOMPARE(controller.connectionLabel(), QStringLiteral("offline — fixture"));
         QCOMPARE(controller.distanceMeters(), 4262.0);
         QCOMPARE(controller.maneuvers().size(), 11);
+        QVERIFY(!controller.streetLabels().isEmpty());
         QVERIFY(controller.routePath().size() > 200);
 
         QSignalSpy focusSpy(&controller, &RoutingController::focusCoordinateRequested);

@@ -5,6 +5,7 @@
 
 #include <QFile>
 #include <QLocale>
+#include <QSet>
 #include <QVariantMap>
 
 namespace qtmaps {
@@ -59,6 +60,7 @@ QGeoCoordinate RoutingController::origin() const { return origin_; }
 QGeoCoordinate RoutingController::destination() const { return destination_; }
 QVariantList RoutingController::routePath() const { return routePath_; }
 QVariantList RoutingController::maneuvers() const { return maneuvers_; }
+QVariantList RoutingController::streetLabels() const { return streetLabels_; }
 double RoutingController::distanceMeters() const { return route_.distanceMeters; }
 double RoutingController::durationSeconds() const { return route_.durationSeconds; }
 QString RoutingController::sourceLabel() const { return sourceLabel_; }
@@ -271,6 +273,7 @@ void RoutingController::clearRoute()
     route_ = Route();
     routePath_.clear();
     maneuvers_.clear();
+    streetLabels_.clear();
     sourceLabel_ = QStringLiteral("fixture/mô phỏng");
     emit routeChanged();
 }
@@ -297,6 +300,8 @@ void RoutingController::applyRoute(const Route &route, const QString &sourceLabe
         routePath_.append(QVariant::fromValue(coordinate));
     }
     maneuvers_.clear();
+    streetLabels_.clear();
+    QSet<QString> labeledStreets;
     for (const RouteManeuver &maneuver : route.maneuvers) {
         QVariantMap item;
         item.insert(QStringLiteral("type"), maneuver.type);
@@ -306,6 +311,15 @@ void RoutingController::applyRoute(const Route &route, const QString &sourceLabe
         item.insert(QStringLiteral("durationSeconds"), maneuver.durationSeconds);
         item.insert(QStringLiteral("coordinate"), QVariant::fromValue(maneuver.position));
         maneuvers_.append(item);
+        const QString streetName = maneuver.streetName.trimmed();
+        if (!streetName.isEmpty() && !labeledStreets.contains(streetName)) {
+            QVariantMap label;
+            label.insert(QStringLiteral("streetName"), streetName);
+            label.insert(QStringLiteral("coordinate"),
+                         QVariant::fromValue(maneuver.position));
+            streetLabels_.append(label);
+            labeledStreets.insert(streetName);
+        }
     }
     emit routeChanged();
     emit stateChanged();

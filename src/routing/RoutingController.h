@@ -21,6 +21,7 @@ class RoutingController final : public QObject
     Q_PROPERTY(QGeoCoordinate destination READ destination NOTIFY endpointsChanged)
     Q_PROPERTY(QVariantList routePath READ routePath NOTIFY routeChanged)
     Q_PROPERTY(QVariantList maneuvers READ maneuvers NOTIFY routeChanged)
+    Q_PROPERTY(QVariantList streetLabels READ streetLabels NOTIFY routeChanged)
     Q_PROPERTY(double distanceMeters READ distanceMeters NOTIFY routeChanged)
     Q_PROPERTY(double durationSeconds READ durationSeconds NOTIFY routeChanged)
     Q_PROPERTY(QString sourceLabel READ sourceLabel NOTIFY stateChanged)
@@ -41,6 +42,7 @@ public:
     QGeoCoordinate destination() const;
     QVariantList routePath() const;
     QVariantList maneuvers() const;
+    QVariantList streetLabels() const;
     double distanceMeters() const;
     double durationSeconds() const;
     QString sourceLabel() const;
@@ -89,6 +91,7 @@ private:
     Route route_;
     QVariantList routePath_;
     QVariantList maneuvers_;
+    QVariantList streetLabels_;
     QString sourceLabel_ = QStringLiteral("fixture/mô phỏng");
     QString connectionLabel_ = QStringLiteral("offline — fixture");
     QString statusMessage_ = QStringLiteral("Chọn hai điểm rồi bấm Tính đường");
