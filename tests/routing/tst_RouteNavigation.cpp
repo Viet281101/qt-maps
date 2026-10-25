@@ -209,6 +209,37 @@ private slots:
         QVERIFY(!controller.routeAvailable());
         QVERIFY(controller.statusMessage().contains(QStringLiteral("thiếu quãng đường")));
     }
+
+    void deviationThresholdUsesNearestPolylineSegment()
+    {
+        const Route route = simpleRoute();
+        RouteNavigationController controller;
+        controller.setRoute(route, QStringLiteral("Valhalla local"));
+        controller.start();
+        QSignalSpy deviationSpy(&controller, &RouteNavigationController::deviationDetected);
+        const QGeoCoordinate middle(21.0, 105.0005);
+        const QGeoCoordinate near = middle.atDistanceAndAzimuth(39.0, 0.0);
+        const QGeoCoordinate far = middle.atDistanceAndAzimuth(41.0, 0.0);
+        QVERIFY(controller.distanceFromRouteMeters(near) < 40.0);
+        QVERIFY(controller.distanceFromRouteMeters(far) > 40.0);
+        QVERIFY(!controller.considerDeviation(near));
+        QVERIFY(!controller.considerDeviation(QGeoCoordinate()));
+        QVERIFY(controller.considerDeviation(far));
+        QCOMPARE(deviationSpy.size(), 1);
+        QCOMPARE(deviationSpy.takeFirst().at(0).value<QGeoCoordinate>(), far);
+    }
+
+    void simulatedDeviationIsActuallyOffRoute()
+    {
+        RouteNavigationController controller;
+        controller.setRoute(simpleRoute(), QStringLiteral("Valhalla local"));
+        controller.start();
+        QSignalSpy deviationSpy(&controller, &RouteNavigationController::deviationDetected);
+        controller.simulateDeviation();
+        QCOMPARE(deviationSpy.size(), 1);
+        const QGeoCoordinate position = deviationSpy.takeFirst().at(0).value<QGeoCoordinate>();
+        QVERIFY(controller.distanceFromRouteMeters(position) > 40.0);
+    }
 };
 
 QTEST_GUILESS_MAIN(RouteNavigationTest)

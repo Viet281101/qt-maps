@@ -117,8 +117,7 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
   missing routes, invalid speeds, pause/resume, and remaining values.
 - QML tests instantiate the banner and verify maneuver, distance, remaining,
   source, and arrival presentation. Keyboard order now includes the start action.
-- D1-D3 are feature-complete locally and await owner review. Re-routing and all
-  E/F work remain explicitly unstarted.
+- D1-D3 received preliminary owner approval. E/F remain unstarted.
 
 ### Unit 05 pre-D4 follow-up
 
@@ -128,6 +127,17 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
 - Tests cover a delayed GUI tick, endpoint changes during replay, and a delayed
   canceled request. A non-fixture Release smoke applied a real Valhalla route;
   its limited log evidence is in `docs/routing/unit-05-navigation.md`.
+
+### Unit 05D4 — simulated re-routing
+
+- A button simulates an offset; the nearest distance to the full polyline must
+  exceed 40 m before requesting Valhalla from that position to the destination.
+  The old route/replay is invalidated, replaced requests are canceled, and only
+  successful replies resume navigation. Backend errors are visible without a
+  fixture fallback. Live GPS/drag is not claimed.
+- Tests cover the threshold, outgoing endpoints, replacement of a delayed
+  request, successful replay resumption, and backend failure. D4 awaits owner
+  review; E and F remain unstarted.
 
 ## Active Decisions
 
@@ -145,12 +155,12 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
 
 ## In Progress
 
-- Unit 05 D1-D3 have preliminary owner approval. D4 is in progress; stop at its
-  review gate before starting E or F.
+- Unit 05 D4 is implemented locally and stopped at the owner review gate. E and
+  F have not started.
 
 ## Next Up
 
-1. Implement and verify D4 re-routing, then stop for owner review.
+1. Owner review of D4 and its verification evidence.
 2. Do not start E or F before the D4 review gate is released.
 
 ## Open Questions and Risks
@@ -204,3 +214,7 @@ Licensing and packaging evidence:
   passed 7/7 executables in 5.52 seconds. Focused navigation and QML tests pass,
   fixture startup reached `mapReady=true`, and `git diff --check` passed. No
   generated data, graph, virtual environment, binary, or screenshot is tracked.
+- Unit 05 D4 review gate on 2026-10-25: Qt 5.15.13 Release `make test` passed
+  7/7 executables in 6.97 seconds, and `git diff --check` passed. The real
+  Valhalla route smoke is logged separately; D4 re-routing was tested against a
+  fake backend and has not had a real-backend UI click-through.

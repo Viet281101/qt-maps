@@ -45,15 +45,26 @@ RoutingController::RoutingController(QObject *parent)
     connect(&service_, &ValhallaServiceManager::stopped,
             this, &RoutingController::backendStopped);
     connect(client_, &ValhallaRouteClient::routeReady, this, [this](const Route &route) {
+        const bool completedReroute = rerouting_;
+        rerouting_ = false;
         setLoading(false);
         applyRoute(route, QStringLiteral("Valhalla local"));
         qInfo().noquote() << "Valhalla route applied:" << route.distanceMeters
                           << "m," << route.durationSeconds << "s,"
                           << route.maneuvers.size() << "maneuvers";
-        setStatus(QStringLiteral("Đã tính tuyến bằng Valhalla local"));
+        setStatus(completedReroute ? QStringLiteral("Đã tính lại tuyến bằng Valhalla local")
+                                   : QStringLiteral("Đã tính tuyến bằng Valhalla local"));
+        if (completedReroute) {
+            emit rerouteSucceeded();
+        }
     });
     connect(client_, &ValhallaRouteClient::routeFailed, this, [this](const QString &error) {
         setLoading(false);
+        if (rerouting_) {
+            rerouting_ = false;
+            setStatus(QStringLiteral("Không thể tính lại tuyến: %1").arg(error));
+            return;
+        }
         loadFixtureRoute(QStringLiteral("%1; đã chuyển sang fixture").arg(error));
     });
 }
@@ -134,6 +145,7 @@ void RoutingController::selectMapPoint(const QGeoCoordinate &coordinate)
 
 void RoutingController::calculateFixtureRoute()
 {
+    clearRoute();
     loadFixtureRoute();
 }
 
@@ -150,6 +162,23 @@ void RoutingController::calculateRoute()
         ? QStringLiteral("Valhalla chưa chạy: %1").arg(service_.errorMessage())
         : QStringLiteral("Valhalla chưa chạy: dịch vụ chưa sẵn sàng");
     setStatus(reason);
+}
+
+void RoutingController::requestReroute(const QGeoCoordinate &position)
+{
+    clearRoute();
+    if (!position.isValid()) {
+        setStatus(QStringLiteral("Không thể tính lại tuyến: vị trí lệch không hợp lệ"));
+        return;
+    }
+    if (service_.state() != ValhallaServiceManager::State::Ready) {
+        setStatus(QStringLiteral("Không thể tính lại tuyến: Valhalla chưa sẵn sàng"));
+        return;
+    }
+    rerouting_ = true;
+    setLoading(true);
+    setStatus(QStringLiteral("Đang tính lại tuyến bằng Valhalla local…"));
+    client_->requestRoute(position, destination_);
 }
 
 void RoutingController::startBackend(const QString &program, const QString &configPath,
@@ -270,6 +299,7 @@ bool RoutingController::parseLocation(const QString &input, QGeoCoordinate *coor
 void RoutingController::clearRoute()
 {
     client_->cancel();
+    rerouting_ = false;
     setLoading(false);
     if (currentManeuverIndex_ != -1) {
         currentManeuverIndex_ = -1;

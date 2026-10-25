@@ -79,6 +79,12 @@ Large generated datasets, caches, routing graphs, and third-party artifacts must
   thread. Replay position uses a monotonic elapsed-time anchor; speed changes
   and pauses establish a new anchor. Route source labels remain visible during
   replay. Endpoint changes or a new route request invalidate the old route.
+- D4 uses a simulated position offset and measures its nearest distance to the
+  selected polyline. A deviation strictly greater than 40 m invalidates replay
+  and requests Valhalla from that position to the existing destination. The
+  existing reply cancellation/generation guard owns request replacement; only
+  a successful reroute resumes replay, and failure is visible without a fixture
+  fallback. This does not claim live GPS or draggable-marker support.
 - Child services start only when required, expose readiness/failure state, and shut down when the application exits.
 - Startup must use bounded timeouts and actionable errors; it must never wait indefinitely on the UI thread.
 - Routing, tile I/O, search, process monitoring, and service output parsing must not block the UI thread.

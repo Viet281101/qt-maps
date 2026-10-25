@@ -133,8 +133,9 @@ Kết quả thực tế được ghi theo [mẫu benchmark](docs/benchmarks/benc
 - Raster fallback chỉ là ảnh chẩn đoán local để kiểm tra phát hiện lỗi và chuyển nguồn, chưa phải raster Hà Nội thật.
 - Navigation replay theo tuyến đã chọn đã có tốc độ 1x/2x/4x, tạm dừng/dừng,
   camera follow, xoay/nghiêng, banner maneuver có nhãn nguồn, quãng đường/thời
-  gian còn lại và trạng thái đến đích. Re-routing, benchmark toàn cây tiến trình
-  QtMaps + Valhalla, routing graph toàn quốc, search offline, orthography, UI sản
+  gian còn lại và trạng thái đến đích. Có thể mô phỏng đi lệch trên 40 m để yêu
+  cầu Valhalla tính lại tuyến; chưa có phát hiện lệch bằng GPS thật. Benchmark
+  toàn cây tiến trình QtMaps + Valhalla, routing graph toàn quốc, search offline, orthography, UI sản
   phẩm hoàn chỉnh, installer và kiểm chứng ổn định dài hạn chưa được triển khai.
 
 Trạng thái chi tiết và bước tiếp theo nằm trong [progress tracker](context/progress-tracker.md). Kiến trúc, UI, coding standards và workflow nằm trong thư mục [`context/`](context/).

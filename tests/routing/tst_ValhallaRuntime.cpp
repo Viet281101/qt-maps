@@ -12,6 +12,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QJsonDocument>
+#include <QJsonArray>
 #include <QJsonObject>
 #include <QProcess>
 #include <QSignalSpy>
@@ -105,16 +106,18 @@ int runFakeValhallaService(int argc, char **argv, const QJsonObject &config)
     }
     const QByteArray routeBody = fixture.readAll();
     const int routeDelayMs = config.value(QStringLiteral("fake_route_delay_ms")).toInt();
+    const bool routeError = config.value(QStringLiteral("fake_route_error")).toBool();
+    const QString requestLogPath = config.value(QStringLiteral("fake_request_log")).toString();
     QTcpServer server;
     const quint16 port = static_cast<quint16>(config.value(QStringLiteral("fake_service_port")).toInt());
     if (!server.listen(QHostAddress::LocalHost, port)) {
         return 2;
     }
     QObject::connect(&server, &QTcpServer::newConnection, &application,
-                     [&server, routeBody, routeDelayMs]() {
+                     [&server, routeBody, routeDelayMs, routeError, requestLogPath]() {
         while (QTcpSocket *socket = server.nextPendingConnection()) {
             QObject::connect(socket, &QTcpSocket::readyRead, socket,
-                             [socket, routeBody, routeDelayMs]() {
+                             [socket, routeBody, routeDelayMs, routeError, requestLogPath]() {
                 const QByteArray request = socket->property("request").toByteArray()
                     + socket->readAll();
                 socket->setProperty("request", request);
@@ -123,12 +126,21 @@ int runFakeValhallaService(int argc, char **argv, const QJsonObject &config)
                     return;
                 }
                 socket->setProperty("responseScheduled", true);
+                if (!requestLogPath.isEmpty() && request.startsWith("GET /route?")) {
+                    QFile log(requestLogPath);
+                    if (log.open(QIODevice::WriteOnly | QIODevice::Append)) {
+                        log.write(request.split('\n').constFirst());
+                        log.write("\n");
+                    }
+                }
                 const QByteArray body = request.startsWith("GET /route?")
                     ? routeBody : QByteArrayLiteral("{\"version\":\"test\"}");
                 const int delayMs = request.startsWith("GET /route?") ? routeDelayMs : 0;
-                QTimer::singleShot(delayMs, socket, [socket, body]() {
-                    socket->write(QByteArrayLiteral(
-                                      "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nConnection: close\r\nContent-Length: ")
+                const bool fail = routeError && request.startsWith("GET /route?");
+                QTimer::singleShot(delayMs, socket, [socket, body, fail]() {
+                    socket->write((fail ? QByteArrayLiteral("HTTP/1.1 503 Service Unavailable\r\n")
+                                        : QByteArrayLiteral("HTTP/1.1 200 OK\r\n"))
+                                  + QByteArrayLiteral("Content-Type: application/json\r\nConnection: close\r\nContent-Length: ")
                                   + QByteArray::number(body.size())
                                   + QByteArrayLiteral("\r\n\r\n") + body);
                     socket->disconnectFromHost();
@@ -546,6 +558,100 @@ private slots:
         QVERIFY(controller.setDestinationInput(QStringLiteral("Ba Đình")));
         QVERIFY(!navigation.active());
         QVERIFY(!navigation.routeAvailable());
+    }
+
+    void rerouteReplacesDelayedRequestAndResumesNavigation()
+    {
+        QTemporaryDir temporary;
+        QVERIFY(temporary.isValid());
+        const quint16 port = unusedLoopbackPort();
+        QVERIFY(port != 0);
+        const QJsonObject service{{QStringLiteral("listen"),
+                                   QStringLiteral("tcp://127.0.0.1:%1").arg(port)}};
+        const QString logPath = temporary.path() + QStringLiteral("/requests.log");
+        const QJsonObject config{{QStringLiteral("fake_service_port"), static_cast<int>(port)},
+                                 {QStringLiteral("fake_route_delay_ms"), 500},
+                                 {QStringLiteral("fake_request_log"), logPath},
+                                 {QStringLiteral("httpd"),
+                                  QJsonObject{{QStringLiteral("service"), service}}}};
+        const QString configPath = temporary.path() + QStringLiteral("/reroute.json");
+        writeFile(configPath, QJsonDocument(config).toJson(QJsonDocument::Compact));
+
+        RoutingController controller;
+        RouteNavigationController navigation;
+        connect(&controller, &RoutingController::routeChanged, &navigation, [&]() {
+            if (controller.routeAvailable())
+                navigation.setRoute(controller.route(), controller.sourceLabel());
+            else
+                navigation.clearRoute();
+        });
+        connect(&navigation, &RouteNavigationController::deviationDetected,
+                &controller, &RoutingController::requestReroute);
+        connect(&controller, &RoutingController::rerouteSucceeded,
+                &navigation, &RouteNavigationController::start);
+        controller.startBackend(QCoreApplication::applicationFilePath(), configPath, port);
+        QTRY_VERIFY_WITH_TIMEOUT(controller.routeAvailable(), 4000);
+        navigation.start();
+        const QGeoCoordinate destination = controller.destination();
+        QSignalSpy successSpy(&controller, &RoutingController::rerouteSucceeded);
+        navigation.simulateDeviation();
+        QVERIFY(controller.loading());
+        QVERIFY(!navigation.active());
+        QTest::qWait(250);
+        controller.requestReroute(QGeoCoordinate(21.029, 105.855));
+        QTest::qWait(320);
+        QCOMPARE(successSpy.size(), 0);
+        QVERIFY(controller.loading());
+        QVERIFY(!controller.routeAvailable());
+        QTRY_COMPARE_WITH_TIMEOUT(successSpy.size(), 1, 2000);
+        QVERIFY(navigation.running());
+        QCOMPARE(controller.sourceLabel(), QStringLiteral("Valhalla local"));
+        QCOMPARE(controller.destination(), destination);
+        QFile log(logPath);
+        QVERIFY(log.open(QIODevice::ReadOnly));
+        const QList<QByteArray> lines = log.readAll().trimmed().split('\n');
+        QVERIFY(lines.size() >= 3);
+        const QList<QByteArray> requestParts = lines.constLast().trimmed().split(' ');
+        QCOMPARE(requestParts.size(), 3);
+        const QJsonObject payload = QJsonDocument::fromJson(
+            QUrlQuery(QUrl(QString::fromLatin1(requestParts.at(1))))
+                .queryItemValue(QStringLiteral("json")).toUtf8()).object();
+        const QJsonArray locations = payload.value(QStringLiteral("locations")).toArray();
+        QCOMPARE(locations.size(), 2);
+        QCOMPARE(locations.at(0).toObject().value(QStringLiteral("lat")).toDouble(), 21.029);
+        QCOMPARE(locations.at(0).toObject().value(QStringLiteral("lon")).toDouble(), 105.855);
+        QCOMPARE(locations.at(1).toObject().value(QStringLiteral("lat")).toDouble(),
+                 destination.latitude());
+        QCOMPARE(locations.at(1).toObject().value(QStringLiteral("lon")).toDouble(),
+                 destination.longitude());
+        controller.stopBackend();
+    }
+
+    void rerouteBackendFailureIsVisibleWithoutFixtureFallback()
+    {
+        QTemporaryDir temporary;
+        QVERIFY(temporary.isValid());
+        const quint16 port = unusedLoopbackPort();
+        QVERIFY(port != 0);
+        const QJsonObject service{{QStringLiteral("listen"),
+                                   QStringLiteral("tcp://127.0.0.1:%1").arg(port)}};
+        const QJsonObject config{{QStringLiteral("fake_service_port"), static_cast<int>(port)},
+                                 {QStringLiteral("fake_route_error"), true},
+                                 {QStringLiteral("httpd"),
+                                  QJsonObject{{QStringLiteral("service"), service}}}};
+        const QString configPath = temporary.path() + QStringLiteral("/error.json");
+        writeFile(configPath, QJsonDocument(config).toJson(QJsonDocument::Compact));
+        RoutingController controller;
+        QSignalSpy readySpy(&controller, &RoutingController::backendReady);
+        controller.startBackend(QCoreApplication::applicationFilePath(), configPath, port);
+        QVERIFY(readySpy.wait(3000));
+        QTRY_VERIFY_WITH_TIMEOUT(!controller.loading(), 2000);
+        controller.requestReroute(QGeoCoordinate(21.029, 105.855));
+        QTRY_VERIFY_WITH_TIMEOUT(!controller.loading(), 2000);
+        QVERIFY(!controller.routeAvailable());
+        QVERIFY(controller.statusMessage().contains(QStringLiteral("Không thể tính lại tuyến")));
+        QVERIFY(!controller.statusMessage().contains(QStringLiteral("fixture")));
+        controller.stopBackend();
     }
 };
 

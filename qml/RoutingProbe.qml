@@ -436,6 +436,16 @@ Window {
                 }
             }
 
+            KeyboardActionButton {
+                width: parent.width
+                visible: routeNavigationController.running || routeNavigationController.paused
+                text: qsTr("Mô phỏng đi lệch (>40 m)")
+                normalColor: "#334352"
+                pressedColor: "#455869"
+                textColor: Theme.textPrimary
+                onTriggered: routeNavigationController.simulateDeviation()
+            }
+
             Text {
                 width: parent.width
                 visible: routingController.routeAvailable

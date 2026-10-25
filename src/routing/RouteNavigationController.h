@@ -68,6 +68,9 @@ public:
     Q_INVOKABLE void pause();
     Q_INVOKABLE void stop();
     Q_INVOKABLE bool setSpeedMultiplier(int multiplier);
+    Q_INVOKABLE double distanceFromRouteMeters(const QGeoCoordinate &position) const;
+    Q_INVOKABLE bool considerDeviation(const QGeoCoordinate &position);
+    Q_INVOKABLE void simulateDeviation();
 
 signals:
     void routeChanged();
@@ -76,6 +79,7 @@ signals:
     void speedMultiplierChanged();
     void destinationReached();
     void guidanceChanged();
+    void deviationDetected(const QGeoCoordinate &position);
 
 private slots:
     void advance();

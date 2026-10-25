@@ -64,4 +64,20 @@ are proportional estimates from progress along the replay polyline. Starting a
 new request or changing either endpoint invalidates the old route and stops
 replay. Focused tests include a blocked GUI tick and delayed canceled reply.
 
-D4 is in progress after preliminary D1-D3 approval; E and F remain unstarted.
+## D4 simulated re-routing
+
+The simulation chooses a position more than 40 m from the nearest polyline
+segment. The existing Valhalla client cancels and generation-guards replaced
+requests; the request uses that position and the existing destination. A
+successful response replaces the route and resumes replay. A backend error stops
+replay and is shown explicitly, without a fixture fallback. This is simulated
+deviation, not live GPS or marker dragging.
+
+Focused Release tests cover positions at 39/41 m, simulated offset, outgoing
+coordinates, a delayed replaced request, successful replay resumption, and an
+HTTP 503 failure. These use a fake loopback backend; D4 click-through against
+real Valhalla has not been manually observed. E and F remain unstarted; work
+stops for the D4 review gate.
+
+The final Qt 5.15.13 Release `make test` passed 7/7 executables in 6.97 seconds;
+`git diff --check` passed.

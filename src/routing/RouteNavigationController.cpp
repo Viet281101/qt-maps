@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 
 namespace qtmaps {
 namespace routing {
@@ -227,6 +228,60 @@ bool RouteNavigationController::setSpeedMultiplier(int multiplier)
                      .arg(speedMultiplier_).arg(sourceLabel_));
     }
     return true;
+}
+
+double RouteNavigationController::distanceFromRouteMeters(const QGeoCoordinate &position) const
+{
+    if (!position.isValid() || !route_.isValid()) {
+        return -1.0;
+    }
+    // Express each vertex as local east/north offsets from the measured point.
+    auto offsets = [&position](const QGeoCoordinate &point) {
+        const double distance = position.distanceTo(point);
+        const double radians = position.azimuthTo(point) * 3.14159265358979323846 / 180.0;
+        return qMakePair(distance * std::sin(radians), distance * std::cos(radians));
+    };
+    double nearest = std::numeric_limits<double>::infinity();
+    auto start = offsets(route_.polyline.constFirst());
+    for (int index = 1; index < route_.polyline.size(); ++index) {
+        const auto end = offsets(route_.polyline.at(index));
+        const double dx = end.first - start.first;
+        const double dy = end.second - start.second;
+        const double lengthSquared = dx * dx + dy * dy;
+        const double t = lengthSquared > 0.0
+            ? std::max(0.0, std::min(1.0, -(start.first * dx + start.second * dy)
+                                             / lengthSquared)) : 0.0;
+        nearest = std::min(nearest, std::hypot(start.first + t * dx,
+                                               start.second + t * dy));
+        start = end;
+    }
+    return nearest;
+}
+
+bool RouteNavigationController::considerDeviation(const QGeoCoordinate &position)
+{
+    if ((!running() && !paused()) || distanceFromRouteMeters(position) <= 40.0) {
+        return false;
+    }
+    emit deviationDetected(position);
+    return true;
+}
+
+void RouteNavigationController::simulateDeviation()
+{
+    if (!running() && !paused()) {
+        return;
+    }
+    for (double distance : {80.0, 160.0, 320.0}) {
+        for (int direction = 0; direction < 8; ++direction) {
+            const QGeoCoordinate candidate = coordinate_.atDistanceAndAzimuth(
+                distance, direction * 45.0);
+            if (considerDeviation(candidate)) {
+                return;
+            }
+        }
+    }
+    setState(state_, QStringLiteral("Không thể mô phỏng điểm lệch quá 40 m"));
 }
 
 void RouteNavigationController::advanceBySeconds(double seconds)

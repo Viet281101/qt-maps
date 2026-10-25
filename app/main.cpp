@@ -164,6 +164,11 @@ int main(int argc, char *argv[])
             routeNavigationController.clearRoute();
         }
     });
+    QObject::connect(&routeNavigationController,
+                     &qtmaps::routing::RouteNavigationController::deviationDetected,
+                     &routingController, &qtmaps::routing::RoutingController::requestReroute);
+    QObject::connect(&routingController, &qtmaps::routing::RoutingController::rerouteSucceeded,
+                     &routeNavigationController, &qtmaps::routing::RouteNavigationController::start);
     engine.rootContext()->setContextProperty(QStringLiteral("instrumentationEnabled"), instrumentationEnabled);
     engine.rootContext()->setContextProperty(QStringLiteral("benchmarkAutomation"),
                                              parser.isSet(QStringLiteral("automated-pan-zoom")));

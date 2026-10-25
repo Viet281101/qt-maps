@@ -105,8 +105,9 @@ missing path and does not silently draw a fixture route.
 - Raster fallback is a local diagnostic image that proves failure detection and switching; it is not real Hanoi raster coverage.
 - Selected-route navigation replay now provides 1x/2x/4x playback, pause/stop,
   camera follow, heading/tilt, source-labeled maneuver guidance, remaining
-  distance/time, and arrival. Re-routing, full QtMaps-plus-Valhalla process-tree
-  benchmarking, nationwide graph generation, offline search, orthography, final
+  distance/time, and arrival. A simulated deviation over 40 m can request a new
+  Valhalla route; live GPS deviation detection is not implemented. Full
+  QtMaps-plus-Valhalla process-tree benchmarking, nationwide graph generation, offline search, orthography, final
   product UI, installer packaging, and long-duration stability validation are
   not implemented yet.
 
