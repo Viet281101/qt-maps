@@ -132,7 +132,7 @@ Kết quả thực tế được ghi theo [mẫu benchmark](docs/benchmarks/benc
 - Luồng lập tuyến Unit 04 hiện chạy Valhalla 3.9.1 local do ứng dụng quản lý, chỉ bind loopback, và trả về geometry, quãng đường, thời gian cùng chỉ dẫn tiếng Việt thật cho routing graph vùng đại Hà Nội giới hạn. Fixture ghi sẵn chỉ dùng trong chế độ fixture có nhãn rõ hoặc fallback khi request lỗi được hiển thị; thiếu file khởi động không kích hoạt fixture.
 - Raster fallback chỉ là ảnh chẩn đoán local để kiểm tra phát hiện lỗi và chuyển nguồn, chưa phải raster Hà Nội thật.
 - Navigation replay theo tuyến đã chọn đã có tốc độ 1x/2x/4x, tạm dừng/dừng,
-  camera follow, xoay/nghiêng, banner maneuver có nhãn nguồn, quãng đường/thời
+  camera follow/recenter, xoay/nghiêng, banner maneuver có nhãn nguồn, quãng đường/thời
   gian còn lại và trạng thái đến đích. Có thể mô phỏng đi lệch trên 40 m để yêu
   cầu Valhalla tính lại tuyến; chưa có phát hiện lệch bằng GPS thật. Benchmark
   toàn cây tiến trình QtMaps + Valhalla, routing graph toàn quốc, search offline, orthography, UI sản

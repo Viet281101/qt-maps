@@ -104,7 +104,7 @@ missing path and does not silently draw a fixture route.
 - The Unit 04 route-planning flow now runs a managed, loopback-only Valhalla 3.9.1 service and returns real route geometry, distance, duration, and Vietnamese maneuvers for the bounded greater-Hanoi graph. Recorded fixtures remain available only through the explicitly labeled fixture mode or a visible request-failure fallback; missing startup files do not trigger them.
 - Raster fallback is a local diagnostic image that proves failure detection and switching; it is not real Hanoi raster coverage.
 - Selected-route navigation replay now provides 1x/2x/4x playback, pause/stop,
-  camera follow, heading/tilt, source-labeled maneuver guidance, remaining
+  camera follow/recenter, heading/tilt, source-labeled maneuver guidance, remaining
   distance/time, and arrival. A simulated deviation over 40 m can request a new
   Valhalla route; live GPS deviation detection is not implemented. Full
   QtMaps-plus-Valhalla process-tree benchmarking, nationwide graph generation, offline search, orthography, final

@@ -11,8 +11,8 @@ reported route duration defines 1x replay, with selectable 2x/4x multipliers.
 The 33 ms timer advances only lightweight in-memory interpolation on the GUI
 thread; it performs no network, filesystem, process, or blocking work.
 
-The route screen exposes start, pause/resume, stop, speed selection, a distinct
-position marker, camera follow, heading, and 45-degree tilt. The visible source
+The route screen exposes start, pause/resume, stop, explicit recenter, speed
+selection, a distinct position marker, camera follow, heading, and 45-degree tilt. The visible source
 label remains `Valhalla` or `Fixture`. Focused Release tests cover missing route,
 interpolation, 2x progress, pause retention, resume/arrival, stop/reset, and an
 unsupported speed. The D1 visual fixture smoke rendered the new controls and
@@ -35,9 +35,10 @@ the banner and verifies instruction, metric formatting, source, and arrival
 state; the route screen contract verifies banner wiring and active-list sync.
 
 The Release fixture startup reached `mapReady=true` over the local Hanoi map.
-The existing D1 visual smoke showed the replay controls and source label; the
-desktop automation surface did not expose the Qt window for an additional
-click-through in this pass, so no stronger manual interaction claim is made.
+A later real-Valhalla click-through exercised start, pause/resume, stop, the
+guidance banner, maneuver synchronization, and the D4 flow described below. The
+follow-up recenter control remained explicitly visible while replay was active
+and paused.
 
 Final D3 gate: Qt 5.15.13 Release `make test` passed 7/7 executables in 5.52
 seconds, and `git diff --check` passed. The branch tracks no generated dataset,
@@ -75,9 +76,13 @@ deviation, not live GPS or marker dragging.
 
 Focused Release tests cover positions at 39/41 m, simulated offset, outgoing
 coordinates, a delayed replaced request, successful replay resumption, and an
-HTTP 503 failure. These use a fake loopback backend; D4 click-through against
-real Valhalla has not been manually observed. E and F remain unstarted; work
-stops for the D4 review gate.
+HTTP 503 failure. These use a fake loopback backend. A real-Valhalla UI
+click-through started the 7,294 m/14-maneuver route, paused and resumed replay,
+then simulated a deviation. Valhalla returned a replacement 7,622 m route in
+560.93 seconds with 16 maneuvers; replay resumed, the banner and maneuver list
+updated, the explicit recenter and stop actions remained available, and stop
+exited navigation.
+E and F remain unstarted; work stops for the D4 review gate.
 
-The final Qt 5.15.13 Release `make test` passed 7/7 executables in 6.97 seconds;
-`git diff --check` passed.
+After the recenter follow-up, the final Qt 5.15.13 Release `make test` passed 7/7
+executables in 6.63 seconds; `git diff --check` passed.

@@ -45,6 +45,17 @@ Window {
         }
     }
 
+    function recenterNavigation() {
+        if (!routeNavigationController.active
+                || !routeNavigationController.coordinate.isValid)
+            return
+        map.center = routeNavigationController.coordinate
+        map.bearing = routeNavigationController.bearing
+        map.tilt = 45
+        if (map.zoomLevel < 16)
+            map.zoomLevel = 16
+    }
+
     function fitRouteWithPanelPadding() {
         if (!routingController.routeAvailable || routingController.routePath.length < 2)
             return
@@ -376,6 +387,16 @@ Window {
                           : routingController.loading ? qsTr("Đang tính tuyến…")
                                                       : qsTr("Không có tuyến")
                 }
+            }
+
+            KeyboardActionButton {
+                width: parent.width
+                visible: routeNavigationController.active
+                text: qsTr("Theo vị trí hiện tại")
+                normalColor: "#334352"
+                pressedColor: "#455869"
+                textColor: Theme.textPrimary
+                onTriggered: root.recenterNavigation()
             }
 
             KeyboardActionButton {

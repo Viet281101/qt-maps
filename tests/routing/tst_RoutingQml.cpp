@@ -112,6 +112,8 @@ private slots:
         QVERIFY(qml.contains("routingController.currentManeuverIndex"));
         QVERIFY(qml.contains("routeNavigationController.currentManeuverIndex"));
         QVERIFY(qml.contains("NavigationBanner"));
+        QVERIFY(qml.contains("text: qsTr(\"Theo vị trí hiện tại\")"));
+        QVERIFY(qml.contains("root.recenterNavigation()"));
         QVERIFY(qml.contains("routeNavigationController.simulateDeviation()"));
         QVERIFY(qml.contains("routeSummaryColor"));
         QVERIFY(qml.contains("shutdownCoordinator.requestQuit()"));

@@ -5,7 +5,7 @@ Update this file after every meaningful implementation change. Keep it below the
 ## Current Phase
 
 - Unit 03 was squash-merged through PR #20 as `1358c3c`.
-- Unit 04 was squash-merged through PR #21 as `d4a07bb`. Unit 05 is active on local branch `feat/05-navigation`; no push or PR is authorized. Feature freeze is 2026-11-01, with 2026-11-02 through 2026-11-03 reserved for bug fixes, rehearsal, and reporting.
+- Unit 04 was squash-merged through PR #21 as `d4a07bb`. Unit 05 is under review in PR #22 from `feat/05-navigation`. Feature freeze is 2026-11-01, with 2026-11-02 through 2026-11-03 reserved for bug fixes, rehearsal, and reporting.
 - The owner approved Qt 5.15.13 plus dynamically linked MapLibre Native Qt v3.0.0 as the application baseline, retaining Qt 5.13.2 for comparison and localhost raster as fallback.
 - Performance schema v3 is complete: interaction-only FPS and frame-time p50/p95/p99 exclude the final settling swap, which is reported separately; legacy CSV fields remain for historical comparison.
 
@@ -98,7 +98,7 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
   preserves the source label, interpolates position/heading on a non-blocking
   timer, and supports 1x/2x/4x, pause/resume, stop/reset, and arrival.
 - The route screen now provides replay controls, a distinct current-position
-  marker, camera follow, bearing rotation, and 45-degree tilt. Focused lifecycle,
+  marker, camera follow/recenter, bearing rotation, and 45-degree tilt. Focused lifecycle,
   interpolation, speed, pause, stop, arrival, and missing-route tests pass.
 
 ### Unit 05D2 — maneuver guidance
@@ -136,8 +136,10 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
   successful replies resume navigation. Backend errors are visible without a
   fixture fallback. Live GPS/drag is not claimed.
 - Tests cover the threshold, outgoing endpoints, replacement of a delayed
-  request, successful replay resumption, and backend failure. D4 awaits owner
-  review; E and F remain unstarted.
+  request, successful replay resumption, and backend failure. A real-Valhalla
+  UI click-through also verified pause/resume, banner updates, re-routing,
+  automatic replay resumption, recenter, and stop. D4 awaits owner review; E
+  and F remain unstarted.
 
 ## Active Decisions
 
@@ -155,8 +157,8 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
 
 ## In Progress
 
-- Unit 05 D4 is implemented locally and stopped at the owner review gate. E and
-  F have not started.
+- Unit 05 D4 is implemented in PR #22 and stopped at the owner review gate. E
+  and F have not started.
 
 ## Next Up
 
@@ -215,6 +217,10 @@ Licensing and packaging evidence:
   fixture startup reached `mapReady=true`, and `git diff --check` passed. No
   generated data, graph, virtual environment, binary, or screenshot is tracked.
 - Unit 05 D4 review gate on 2026-10-25: Qt 5.15.13 Release `make test` passed
-  7/7 executables in 6.97 seconds, and `git diff --check` passed. The real
-  Valhalla route smoke is logged separately; D4 re-routing was tested against a
-  fake backend and has not had a real-backend UI click-through.
+  7/7 executables in 6.63 seconds after the recenter follow-up, and
+  `git diff --check` passed. The real
+  Valhalla click-through started, paused, and resumed replay, then replaced the
+  7,294 m/14-maneuver route with a 7,622 m/16-maneuver route after simulated
+  deviation. Replay, banner, maneuver selection, the explicit recenter/stop
+  actions, and stop behavior all updated correctly. The fake-backend tests
+  remain the deterministic failure and race coverage.
