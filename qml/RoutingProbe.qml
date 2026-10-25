@@ -16,6 +16,9 @@ Window {
     property bool performanceOverlayVisible: instrumentationEnabled
     property bool panelCollapsed: false
     property bool navigationActive: routeNavigationController.active
+    readonly property bool endpointSelectionEnabled:
+        !routeNavigationController.active
+        && !(routingController.loading && routeNavigationController.routeAvailable)
     property string compactSource: routingController.sourceLabel === "Valhalla local"
                                    ? qsTr("Valhalla") : qsTr("Fixture")
     property color routeSummaryColor: routingController.loading ? Theme.warning
@@ -112,6 +115,7 @@ Window {
 
     Map {
         id: map
+        objectName: "routingMap"
         anchors.fill: parent
         plugin: mapPlugin
         center: QtPositioning.coordinate(21.0278, 105.8342)
@@ -136,6 +140,8 @@ Window {
         }
 
         TapHandler {
+            objectName: "routeMapTapHandler"
+            enabled: root.endpointSelectionEnabled
             acceptedButtons: Qt.LeftButton
             onTapped: routingController.selectMapPoint(map.toCoordinate(point.position))
         }

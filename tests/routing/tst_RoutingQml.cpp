@@ -3,16 +3,91 @@
 #include <QColor>
 #include <QFile>
 #include <QQmlComponent>
+#include <QQmlContext>
 #include <QQmlEngine>
 #include <QQuickItem>
 #include <QQuickWindow>
 #include <QSignalSpy>
+
+#include "core/ApplicationShutdownCoordinator.h"
+#include "perf/PerformanceMonitor.h"
+#include "routing/RouteNavigationController.h"
+#include "routing/RoutingController.h"
+
+using qtmaps::core::ApplicationShutdownCoordinator;
+using qtmaps::perf::PerformanceMonitor;
+using qtmaps::routing::RouteNavigationController;
+using qtmaps::routing::RoutingController;
 
 class RoutingQmlTest final : public QObject
 {
     Q_OBJECT
 
 private slots:
+    void mapClickDoesNotChangeRouteDuringReplay()
+    {
+        RoutingController routing;
+        RouteNavigationController navigation;
+        connect(&routing, &RoutingController::routeChanged, &navigation, [&]() {
+            if (routing.routeAvailable())
+                navigation.setRoute(routing.route(), routing.sourceLabel());
+            else
+                navigation.clearRoute();
+        });
+        routing.calculateFixtureRoute();
+        QVERIFY(routing.routeAvailable());
+        navigation.start();
+        QVERIFY(navigation.running());
+
+        ApplicationShutdownCoordinator shutdown(&routing);
+        PerformanceMonitor performance;
+        QQmlEngine engine;
+        engine.rootContext()->setContextProperty(QStringLiteral("routingController"), &routing);
+        engine.rootContext()->setContextProperty(QStringLiteral("routeNavigationController"),
+                                                 &navigation);
+        engine.rootContext()->setContextProperty(QStringLiteral("shutdownCoordinator"),
+                                                 &shutdown);
+        engine.rootContext()->setContextProperty(QStringLiteral("performanceMonitor"),
+                                                 &performance);
+        engine.rootContext()->setContextProperty(QStringLiteral("routingFixtureOnly"), false);
+        engine.rootContext()->setContextProperty(QStringLiteral("instrumentationEnabled"), false);
+        engine.rootContext()->setContextProperty(QStringLiteral("vectorStyleUrl"), QString());
+
+        QQmlComponent component(&engine, QUrl(QStringLiteral("qrc:/qml/RoutingProbe.qml")));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> root(component.create());
+        QVERIFY2(root, qPrintable(component.errorString()));
+        QQuickWindow *window = qobject_cast<QQuickWindow *>(root.data());
+        QVERIFY(window);
+        window->setWidth(1120);
+        window->setHeight(700);
+        window->show();
+        QVERIFY(QTest::qWaitForWindowExposed(window));
+
+        QObject *tapHandler = root->findChild<QObject *>(QStringLiteral("routeMapTapHandler"));
+        QVERIFY(tapHandler);
+        QCOMPARE(tapHandler->property("enabled").toBool(), false);
+
+        const QGeoCoordinate origin = routing.origin();
+        const QGeoCoordinate destination = routing.destination();
+        const int routePointCount = routing.routePath().size();
+        QSignalSpy endpointsSpy(&routing, &RoutingController::endpointsChanged);
+        QSignalSpy routeSpy(&routing, &RoutingController::routeChanged);
+
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(800, 400));
+        QTest::qWait(50);
+        QCOMPARE(endpointsSpy.size(), 0);
+        QCOMPARE(routeSpy.size(), 0);
+        QCOMPARE(routing.origin(), origin);
+        QCOMPARE(routing.destination(), destination);
+        QCOMPARE(routing.routePath().size(), routePointCount);
+        QVERIFY(routing.routeAvailable());
+        QVERIFY(navigation.running());
+
+        navigation.stop();
+        QTRY_COMPARE(tapHandler->property("enabled").toBool(), true);
+    }
+
     void maneuverRowHasPersistentSelectedStyle()
     {
         QQmlEngine engine;
@@ -115,6 +190,7 @@ private slots:
         QVERIFY(qml.contains("text: qsTr(\"Theo vị trí hiện tại\")"));
         QVERIFY(qml.contains("root.recenterNavigation()"));
         QVERIFY(qml.contains("routeNavigationController.simulateDeviation()"));
+        QVERIFY(qml.contains("routingController.loading && routeNavigationController.routeAvailable"));
         QVERIFY(qml.contains("routeSummaryColor"));
         QVERIFY(qml.contains("shutdownCoordinator.requestQuit()"));
     }

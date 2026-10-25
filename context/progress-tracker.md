@@ -142,6 +142,14 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
   automatic replay resumption, recenter, and stop. D4 awaits owner review; E
   and F remain unstarted.
 
+### Unit 05 PR #22 merge-gate fixes
+
+- Map endpoint selection is disabled while replay is active and while a
+  re-route request keeps the last valid route visible. A QML interaction test
+  clicks the map during replay and verifies that endpoints, route geometry,
+  route availability, and navigation state do not change; it also verifies
+  that endpoint selection is restored after navigation stops.
+
 ## Active Decisions
 
 ### Committed

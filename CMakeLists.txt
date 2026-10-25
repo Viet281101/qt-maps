@@ -191,6 +191,9 @@ if(BUILD_TESTING)
         ${QTMAPS_RESOURCES}
     )
     target_link_libraries(qtmaps_routing_qml_tests PRIVATE
+        qtmaps_app_core
+        qtmaps_perf
+        qtmaps_routing
         Qt5::Gui
         Qt5::Qml
         Qt5::Quick
