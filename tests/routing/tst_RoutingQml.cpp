@@ -60,6 +60,34 @@ private slots:
         QCOMPARE(triggered.size(), 2);
     }
 
+    void navigationBannerFormatsGuidanceAndArrival()
+    {
+        QQmlEngine engine;
+        QQmlComponent component(
+            &engine, QUrl(QStringLiteral("qrc:/qml/components/NavigationBanner.qml")));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> banner(component.create());
+        QVERIFY2(banner, qPrintable(component.errorString()));
+
+        banner->setProperty("instruction", QStringLiteral("Rẽ trái"));
+        banner->setProperty("streetName", QStringLiteral("Phố Huế"));
+        banner->setProperty("sourceLabel", QStringLiteral("fixture/mô phỏng"));
+        banner->setProperty("distanceToManeuverMeters", 850.0);
+        banner->setProperty("remainingDistanceMeters", 1540.0);
+        banner->setProperty("remainingDurationSeconds", 121.0);
+
+        QCOMPARE(banner->property("primaryText").toString(), QStringLiteral("Rẽ trái"));
+        QCOMPARE(banner->property("maneuverDistanceText").toString(), QStringLiteral("850 m"));
+        QCOMPARE(banner->property("remainingText").toString(),
+                 QStringLiteral("Còn 1.5 km • 3 phút"));
+        QCOMPARE(banner->property("sourceText").toString(),
+                 QStringLiteral("Nguồn: fixture/mô phỏng"));
+
+        banner->setProperty("arrived", true);
+        QCOMPARE(banner->property("primaryText").toString(), QStringLiteral("Đã đến đích"));
+        QCOMPARE(banner->property("maneuverDistanceText").toString(), QStringLiteral("0 m"));
+    }
+
     void routingProbeDeclaresExpectedTabOrder()
     {
         QFile file(QStringLiteral(":/qml/RoutingProbe.qml"));
@@ -68,7 +96,8 @@ private slots:
         QVERIFY(qml.contains("KeyNavigation.tab: destinationField"));
         QVERIFY(qml.contains("KeyNavigation.tab: applyButton"));
         QVERIFY(qml.contains("KeyNavigation.tab: routeButton"));
-        QVERIFY(qml.contains("KeyNavigation.tab: originField"));
+        QVERIFY(qml.contains("KeyNavigation.tab: startNavigationButton"));
+        QVERIFY(qml.contains("KeyNavigation.backtab: routeButton"));
     }
 
     void routingProbeKeepsRouteClearOfPanelAndExposesUiState()
@@ -81,6 +110,8 @@ private slots:
         QVERIFY(qml.contains("routingController.streetLabels"));
         QVERIFY(qml.contains("map.zoomLevel >= 15"));
         QVERIFY(qml.contains("routingController.currentManeuverIndex"));
+        QVERIFY(qml.contains("routeNavigationController.currentManeuverIndex"));
+        QVERIFY(qml.contains("NavigationBanner"));
         QVERIFY(qml.contains("routeSummaryColor"));
         QVERIFY(qml.contains("shutdownCoordinator.requestQuit()"));
     }

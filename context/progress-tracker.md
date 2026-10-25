@@ -110,6 +110,16 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
   remaining values, and an explicit arrival state. Focused controller tests pass;
   D3 boundary and QML coverage remain the active review-gate work.
 
+### Unit 05D3 — navigation review gate
+
+- Controller tests cover route start, turn boundaries, route end/arrival,
+  duplicate maneuver positions, invalid maneuver indices, zero replay duration,
+  missing routes, invalid speeds, pause/resume, and remaining values.
+- QML tests instantiate the banner and verify maneuver, distance, remaining,
+  source, and arrival presentation. Keyboard order now includes the start action.
+- D1-D3 are feature-complete locally and await owner review. Re-routing and all
+  E/F work remain explicitly unstarted.
+
 ## Active Decisions
 
 ### Committed
@@ -126,13 +136,13 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
 
 ## In Progress
 
-- Unit 05 D1-D2 are implemented locally. D3 boundary/QML tests and manual
-  evidence are next; stop for owner review after D3. D4, E, and F have not started.
+- Unit 05 D1-D3 are implemented locally and stopped at the required owner review
+  gate. D4, E, and F have not started.
 
 ## Next Up
 
-1. Complete D3 boundary and QML tests, Release/manual evidence, then stop for owner review.
-2. Do not start D4 or E before the D3 review gate.
+1. Owner review of D1-D3 and the recorded verification evidence.
+2. Do not start D4 or E until the owner releases this review gate.
 
 ## Open Questions and Risks
 
@@ -181,3 +191,7 @@ Licensing and packaging evidence:
 - Valhalla survey evidence: `docs/routing/valhalla-availability-survey.md`. Ubuntu apt/release binaries are unavailable; the official 37.5 MB `pyvalhalla` 3.9.1 wheel is preferred over the 156.3 MiB compressed container or a 328-package source-build dependency set.
 - Unit 04B/C closure verification on 2026-10-25: all 6 CTest executables pass; stale delayed replies, active maneuver state, QML keyboard/selection contracts, application-level graceful/forced shutdown, and Linux parent-death cleanup are covered. The real service is one counted direct child on `127.0.0.1:18002`; Alt+F4 and timed exit leave no process/listener, while `kill -9` releases both within 90 ms. The demo script also succeeds from `/tmp`, and missing Valhalla files are logged/shown without fixture fallback.
 - PR #21 verification on 2026-10-25: the Qt 5.15.13 Release build passed 5/5 CTest executables, `git diff --check origin/main...HEAD` passed, and the PR is mergeable. CodeRabbit succeeded on the preceding routing head; the latest docs-only tracking head had no check result reported at final verification. Live metadata confirms the issue references, assignee, milestone, six labels, and Project #6 fields described above. The pre-existing `.vscode/settings.json` change remains user-owned and excluded from every commit.
+- Unit 05 D3 review gate on 2026-10-25: Qt 5.15.13 Release `make test`
+  passed 7/7 executables in 5.52 seconds. Focused navigation and QML tests pass,
+  fixture startup reached `mapReady=true`, and `git diff --check` passed. No
+  generated data, graph, virtual environment, binary, or screenshot is tracked.

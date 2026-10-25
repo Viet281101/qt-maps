@@ -131,7 +131,11 @@ Kết quả thực tế được ghi theo [mẫu benchmark](docs/benchmarks/benc
 - PR #20 đã merge. Tuyến 5,47 km và chuyển động 40 km/h của Unit 03 vẫn là fixture navigation mô phỏng xác định trước, chưa phải kết quả từ routing engine.
 - Luồng lập tuyến Unit 04 hiện chạy Valhalla 3.9.1 local do ứng dụng quản lý, chỉ bind loopback, và trả về geometry, quãng đường, thời gian cùng chỉ dẫn tiếng Việt thật cho routing graph vùng đại Hà Nội giới hạn. Fixture ghi sẵn chỉ dùng trong chế độ fixture có nhãn rõ hoặc fallback khi request lỗi được hiển thị; thiếu file khởi động không kích hoạt fixture.
 - Raster fallback chỉ là ảnh chẩn đoán local để kiểm tra phát hiện lỗi và chuyển nguồn, chưa phải raster Hà Nội thật.
-- Navigation replay theo tuyến đã chọn, re-routing, benchmark toàn cây tiến trình QtMaps + Valhalla, routing graph toàn quốc, search offline, orthography, UI sản phẩm hoàn chỉnh, installer và kiểm chứng ổn định dài hạn chưa được triển khai.
+- Navigation replay theo tuyến đã chọn đã có tốc độ 1x/2x/4x, tạm dừng/dừng,
+  camera follow, xoay/nghiêng, banner maneuver có nhãn nguồn, quãng đường/thời
+  gian còn lại và trạng thái đến đích. Re-routing, benchmark toàn cây tiến trình
+  QtMaps + Valhalla, routing graph toàn quốc, search offline, orthography, UI sản
+  phẩm hoàn chỉnh, installer và kiểm chứng ổn định dài hạn chưa được triển khai.
 
 Trạng thái chi tiết và bước tiếp theo nằm trong [progress tracker](context/progress-tracker.md). Kiến trúc, UI, coding standards và workflow nằm trong thư mục [`context/`](context/).
 

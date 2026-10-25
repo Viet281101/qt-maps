@@ -26,5 +26,22 @@ that maneuver, total distance/time remaining, arrival, and the retained route
 source. The maneuver list follows the same active index during replay. Focused
 Release controller and QML smoke tests pass.
 
-The full D3 boundary/QML review evidence remains pending. D4 re-routing, E
-measurement, and F follow-ups have not started.
+## D3 review gate
+
+Focused controller coverage includes start, maneuver boundaries, final arrival,
+duplicate maneuver positions, invalid maneuver indices, zero duration, missing
+routes, invalid speed, pause/resume, and remaining values. The QML test creates
+the banner and verifies instruction, metric formatting, source, and arrival
+state; the route screen contract verifies banner wiring and active-list sync.
+
+The Release fixture startup reached `mapReady=true` over the local Hanoi map.
+The existing D1 visual smoke showed the replay controls and source label; the
+desktop automation surface did not expose the Qt window for an additional
+click-through in this pass, so no stronger manual interaction claim is made.
+
+Final D3 gate: Qt 5.15.13 Release `make test` passed 7/7 executables in 5.52
+seconds, and `git diff --check` passed. The branch tracks no generated dataset,
+graph, virtual environment, binary, or screenshot.
+
+D4 re-routing, E measurement, and F follow-ups have not started. Work stops here
+for the required owner review.

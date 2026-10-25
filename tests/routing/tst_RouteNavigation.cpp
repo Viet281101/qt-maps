@@ -113,6 +113,84 @@ private slots:
         QVERIFY(controller.remainingDistanceMeters() < route.distanceMeters);
         QVERIFY(controller.remainingDurationSeconds() < route.durationSeconds);
     }
+
+    void handlesRouteStartTurnBoundaryAndArrival()
+    {
+        RouteNavigationController controller;
+        Route route = simpleRoute();
+        RouteManeuver turn;
+        turn.instruction = QStringLiteral("Rẽ trái");
+        turn.shapeIndex = 1;
+        turn.position = route.polyline.at(1);
+        route.maneuvers.insert(1, turn);
+        controller.setRoute(route, QStringLiteral("fixture/mô phỏng"));
+
+        QCOMPARE(controller.currentManeuverIndex(), 0);
+        QCOMPARE(controller.distanceToManeuverMeters(), 0.0);
+
+        controller.start();
+        controller.advanceBySeconds(0.1);
+        QCOMPARE(controller.currentManeuverIndex(), 1);
+
+        const double firstSegment = route.polyline.at(0).distanceTo(route.polyline.at(1));
+        const double secondsToTurn = firstSegment / controller.routeLengthMeters()
+            * route.durationSeconds;
+        controller.advanceBySeconds(secondsToTurn);
+        QCOMPARE(controller.currentManeuverIndex(), 2);
+
+        controller.advanceBySeconds(route.durationSeconds);
+        QVERIFY(controller.arrived());
+        QCOMPARE(controller.currentManeuverIndex(), 2);
+        QCOMPARE(controller.distanceToManeuverMeters(), 0.0);
+        QVERIFY(qAbs(controller.remainingDistanceMeters()) < 0.001);
+        QVERIFY(qAbs(controller.remainingDurationSeconds()) < 0.001);
+    }
+
+    void skipsDuplicateManeuverPositionsAfterDeparture()
+    {
+        Route route = simpleRoute();
+        RouteManeuver duplicateDeparture;
+        duplicateDeparture.instruction = QStringLiteral("Tiếp tục");
+        duplicateDeparture.shapeIndex = 0;
+        duplicateDeparture.position = route.polyline.at(0);
+        RouteManeuver turn;
+        turn.instruction = QStringLiteral("Rẽ phải");
+        turn.shapeIndex = 1;
+        turn.position = route.polyline.at(1);
+        route.maneuvers.insert(1, duplicateDeparture);
+        route.maneuvers.insert(2, turn);
+
+        RouteNavigationController controller;
+        controller.setRoute(route, QStringLiteral("Valhalla local"));
+        QCOMPARE(controller.currentManeuverIndex(), 0);
+        controller.start();
+        controller.advanceBySeconds(0.1);
+        QCOMPARE(controller.currentManeuverIndex(), 2);
+        QCOMPARE(controller.maneuverInstruction(), QStringLiteral("Rẽ phải"));
+    }
+
+    void rejectsManeuverOutsideRouteGeometry()
+    {
+        Route route = simpleRoute();
+        route.maneuvers[0].shapeIndex = route.polyline.size();
+
+        RouteNavigationController controller;
+        controller.setRoute(route, QStringLiteral("fixture/mô phỏng"));
+        QVERIFY(!controller.routeAvailable());
+        QCOMPARE(controller.currentManeuverIndex(), -1);
+        QVERIFY(controller.statusMessage().contains(QStringLiteral("maneuver ngoài hình học")));
+    }
+
+    void rejectsRouteWithoutReplayDuration()
+    {
+        Route route = simpleRoute();
+        route.durationSeconds = 0.0;
+
+        RouteNavigationController controller;
+        controller.setRoute(route, QStringLiteral("fixture/mô phỏng"));
+        QVERIFY(!controller.routeAvailable());
+        QVERIFY(controller.statusMessage().contains(QStringLiteral("thiếu quãng đường")));
+    }
 };
 
 QTEST_GUILESS_MAIN(RouteNavigationTest)

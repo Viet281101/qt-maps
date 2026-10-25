@@ -302,7 +302,7 @@ Window {
                     selectByMouse: true
                     activeFocusOnTab: true
                     KeyNavigation.tab: destinationField
-                    KeyNavigation.backtab: routeButton
+                    KeyNavigation.backtab: startNavigationButton
                     text: routingController.originInput
                     onAccepted: routingController.setOriginInput(text)
                 }
@@ -348,7 +348,7 @@ Window {
                     width: (parent.width - parent.spacing) / 2
                     enabled: !routingController.loading
                     text: routingController.loading ? qsTr("Đang tính…") : qsTr("Tính đường")
-                    KeyNavigation.tab: originField
+                    KeyNavigation.tab: startNavigationButton
                     KeyNavigation.backtab: applyButton
                     onTriggered: root.calculateRequestedRoute()
                 }
@@ -384,6 +384,8 @@ Window {
                 visible: routingController.routeAvailable
                          && !routeNavigationController.active
                 text: qsTr("Bắt đầu chỉ đường")
+                KeyNavigation.tab: originField
+                KeyNavigation.backtab: routeButton
                 normalColor: Theme.success
                 pressedColor: "#4fab70"
                 textColor: "#102018"
