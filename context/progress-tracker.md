@@ -149,6 +149,10 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
   clicks the map during replay and verifies that endpoints, route geometry,
   route availability, and navigation state do not change; it also verifies
   that endpoint selection is restored after navigation stops.
+- At the 900x580 minimum and 1366x768 demo sizes, the route-control stack now
+  scrolls independently so the maneuver list retains at least 120 px and can
+  scroll its full model. The connection pill moves below the active navigation
+  banner; QML geometry tests cover both window sizes and their non-overlap.
 
 ## Active Decisions
 

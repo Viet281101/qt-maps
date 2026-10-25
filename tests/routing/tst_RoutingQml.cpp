@@ -24,6 +24,75 @@ class RoutingQmlTest final : public QObject
     Q_OBJECT
 
 private slots:
+    void maneuverListKeepsMinimumHeight_data()
+    {
+        QTest::addColumn<QSize>("windowSize");
+        QTest::newRow("minimum-window") << QSize(900, 580);
+        QTest::newRow("demo-window") << QSize(1366, 768);
+    }
+
+    void maneuverListKeepsMinimumHeight()
+    {
+        QFETCH(QSize, windowSize);
+
+        RoutingController routing;
+        RouteNavigationController navigation;
+        connect(&routing, &RoutingController::routeChanged, &navigation, [&]() {
+            if (routing.routeAvailable())
+                navigation.setRoute(routing.route(), routing.sourceLabel());
+            else
+                navigation.clearRoute();
+        });
+        routing.calculateFixtureRoute();
+        navigation.start();
+
+        ApplicationShutdownCoordinator shutdown(&routing);
+        PerformanceMonitor performance;
+        QQmlEngine engine;
+        engine.rootContext()->setContextProperty(QStringLiteral("routingController"), &routing);
+        engine.rootContext()->setContextProperty(QStringLiteral("routeNavigationController"),
+                                                 &navigation);
+        engine.rootContext()->setContextProperty(QStringLiteral("shutdownCoordinator"),
+                                                 &shutdown);
+        engine.rootContext()->setContextProperty(QStringLiteral("performanceMonitor"),
+                                                 &performance);
+        engine.rootContext()->setContextProperty(QStringLiteral("routingFixtureOnly"), false);
+        engine.rootContext()->setContextProperty(QStringLiteral("instrumentationEnabled"), false);
+        engine.rootContext()->setContextProperty(QStringLiteral("vectorStyleUrl"), QString());
+
+        QQmlComponent component(&engine, QUrl(QStringLiteral("qrc:/qml/RoutingProbe.qml")));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> root(component.create());
+        QVERIFY2(root, qPrintable(component.errorString()));
+        QQuickWindow *window = qobject_cast<QQuickWindow *>(root.data());
+        QVERIFY(window);
+        window->resize(windowSize);
+        window->show();
+        QVERIFY(QTest::qWaitForWindowExposed(window));
+
+        QQuickItem *maneuvers = root->findChild<QQuickItem *>(QStringLiteral("maneuverList"));
+        QQuickItem *controls = root->findChild<QQuickItem *>(QStringLiteral("routeControlsScroll"));
+        QQuickItem *banner = root->findChild<QQuickItem *>(QStringLiteral("navigationBanner"));
+        QQuickItem *status = root->findChild<QQuickItem *>(QStringLiteral("connectionStatusPill"));
+        QVERIFY(maneuvers);
+        QVERIFY(controls);
+        QVERIFY(banner);
+        QVERIFY(status);
+        QTRY_VERIFY(maneuvers->height() >= 120.0);
+        QVERIFY(maneuvers->property("contentHeight").toReal() > maneuvers->height());
+        if (windowSize.height() == 580)
+            QVERIFY(controls->property("contentHeight").toReal() > controls->height());
+
+        const QRectF bannerRect(banner->mapToScene(QPointF(0, 0)), banner->size());
+        const QRectF statusRect(status->mapToScene(QPointF(0, 0)), status->size());
+        QVERIFY2(!bannerRect.intersects(statusRect),
+                 qPrintable(QStringLiteral("banner %1,%2 %3x%4 intersects status %5,%6 %7x%8")
+                                .arg(bannerRect.x()).arg(bannerRect.y())
+                                .arg(bannerRect.width()).arg(bannerRect.height())
+                                .arg(statusRect.x()).arg(statusRect.y())
+                                .arg(statusRect.width()).arg(statusRect.height())));
+    }
+
     void mapClickDoesNotChangeRouteDuringReplay()
     {
         RoutingController routing;

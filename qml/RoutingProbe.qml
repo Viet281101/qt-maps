@@ -250,6 +250,7 @@ Window {
 
     NavigationBanner {
         id: navigationBanner
+        objectName: "navigationBanner"
         visible: routeNavigationController.active
         x: root.panelCollapsed
            ? (root.width - width) / 2
@@ -270,6 +271,7 @@ Window {
 
     Rectangle {
         id: routePanel
+        readonly property real maneuverListMinimumHeight: 120
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         anchors.left: parent.left
@@ -281,13 +283,28 @@ Window {
         border.color: Theme.border
         z: 20
 
-        Column {
-            id: routeControls
+        Flickable {
+            id: routeControlsScroll
+            objectName: "routeControlsScroll"
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.top: parent.top
             anchors.margins: Theme.spaceLg
-            spacing: Theme.spaceSm
+            height: Math.max(0, Math.min(routeControls.implicitHeight,
+                                         routePanel.height
+                                         - routePanel.maneuverListMinimumHeight
+                                         - Theme.spaceLg * 2
+                                         - Theme.spaceSm))
+            contentWidth: width
+            contentHeight: routeControls.implicitHeight
+            clip: true
+            boundsBehavior: Flickable.StopAtBounds
+            flickableDirection: Flickable.VerticalFlick
+
+            Column {
+                id: routeControls
+                width: routeControlsScroll.width
+                spacing: Theme.spaceSm
 
             Text {
                 text: qsTr("Lập tuyến Hà Nội")
@@ -489,20 +506,22 @@ Window {
                 wrapMode: Text.WordWrap
             }
 
-            Text {
-                text: qsTr("Các bước chỉ đường")
-                color: Theme.textPrimary
-                font.bold: true
-                visible: routingController.routeAvailable
-            }
+                Text {
+                    text: qsTr("Các bước chỉ đường")
+                    color: Theme.textPrimary
+                    font.bold: true
+                    visible: routingController.routeAvailable
+                }
 
+            }
         }
 
         ListView {
             id: maneuverList
+            objectName: "maneuverList"
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.top: routeControls.bottom
+            anchors.top: routeControlsScroll.bottom
             anchors.bottom: parent.bottom
             anchors.leftMargin: Theme.spaceLg
             anchors.rightMargin: Theme.spaceLg
@@ -561,9 +580,14 @@ Window {
     }
 
     Rectangle {
+        id: connectionStatusPill
+        objectName: "connectionStatusPill"
         anchors.right: parent.right
         anchors.top: parent.top
-        anchors.margins: Theme.spaceMd
+        anchors.rightMargin: Theme.spaceMd
+        anchors.topMargin: routeNavigationController.active
+                           ? navigationBanner.height + Theme.spaceMd * 2
+                           : Theme.spaceMd
         width: statusRow.implicitWidth + 20
         height: 34
         radius: 17
