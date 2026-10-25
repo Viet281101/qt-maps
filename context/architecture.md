@@ -76,7 +76,9 @@ Large generated datasets, caches, routing graphs, and third-party artifacts must
   adds a routing-owned selected-route replay controller. It interpolates the
   current `Route` asynchronously on a precise timer, exposes only presentation
   state to QML, and drives camera follow/heading/tilt without blocking the UI
-  thread. Route source labels remain visible during replay.
+  thread. Replay position uses a monotonic elapsed-time anchor; speed changes
+  and pauses establish a new anchor. Route source labels remain visible during
+  replay. Endpoint changes or a new route request invalidate the old route.
 - Child services start only when required, expose readiness/failure state, and shut down when the application exits.
 - Startup must use bounded timeouts and actionable errors; it must never wait indefinitely on the UI thread.
 - Routing, tile I/O, search, process monitoring, and service output parsing must not block the UI thread.

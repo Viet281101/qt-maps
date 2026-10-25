@@ -174,6 +174,7 @@ void RouteNavigationController::start()
     if (state_ == State::Arrived) {
         updatePosition(0.0);
     }
+    clockAnchorMeters_ = travelledMeters_;
     tickElapsed_.restart();
     timer_.start();
     setState(State::Running,
@@ -182,6 +183,10 @@ void RouteNavigationController::start()
 
 void RouteNavigationController::pause()
 {
+    if (state_ != State::Running) {
+        return;
+    }
+    syncElapsedTime();
     if (state_ != State::Running) {
         return;
     }
@@ -209,6 +214,11 @@ bool RouteNavigationController::setSpeedMultiplier(int multiplier)
     if (speedMultiplier_ == multiplier) {
         return true;
     }
+    if (state_ == State::Running) {
+        syncElapsedTime();
+        clockAnchorMeters_ = travelledMeters_;
+        tickElapsed_.restart();
+    }
     speedMultiplier_ = multiplier;
     emit speedMultiplierChanged();
     if (state_ == State::Running) {
@@ -225,10 +235,15 @@ void RouteNavigationController::advanceBySeconds(double seconds)
         return;
     }
     const double replayMetersPerSecond = routeLengthMeters_ / route_.durationSeconds;
-    const double nextDistance = travelledMeters_
-        + replayMetersPerSecond * speedMultiplier_ * seconds;
-    updatePosition(std::min(nextDistance, routeLengthMeters_));
-    if (nextDistance >= routeLengthMeters_) {
+    advanceToDistance(travelledMeters_ + replayMetersPerSecond * speedMultiplier_ * seconds);
+    clockAnchorMeters_ = travelledMeters_;
+    tickElapsed_.restart();
+}
+
+void RouteNavigationController::advanceToDistance(double distanceMeters)
+{
+    updatePosition(std::min(distanceMeters, routeLengthMeters_));
+    if (distanceMeters >= routeLengthMeters_) {
         timer_.stop();
         setState(State::Arrived, QStringLiteral("Đã đến đích"));
         emit destinationReached();
@@ -237,9 +252,16 @@ void RouteNavigationController::advanceBySeconds(double seconds)
 
 void RouteNavigationController::advance()
 {
-    const qint64 elapsedMilliseconds = tickElapsed_.restart();
-    if (elapsedMilliseconds > 0) {
-        advanceBySeconds(elapsedMilliseconds / 1000.0);
+    syncElapsedTime();
+}
+
+void RouteNavigationController::syncElapsedTime()
+{
+    if (state_ == State::Running && tickElapsed_.isValid()) {
+        const double elapsedSeconds = tickElapsed_.elapsed() / 1000.0;
+        const double replayMetersPerSecond = routeLengthMeters_ / route_.durationSeconds;
+        advanceToDistance(clockAnchorMeters_
+                          + replayMetersPerSecond * speedMultiplier_ * elapsedSeconds);
     }
 }
 

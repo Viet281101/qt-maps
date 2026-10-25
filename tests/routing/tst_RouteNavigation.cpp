@@ -3,6 +3,7 @@
 #include "routing/RouteNavigationController.h"
 
 #include <QSignalSpy>
+#include <QElapsedTimer>
 
 using qtmaps::routing::Route;
 using qtmaps::routing::RouteManeuver;
@@ -85,6 +86,23 @@ private slots:
         QVERIFY(!controller.setSpeedMultiplier(3));
         QCOMPARE(controller.speedMultiplier(), 1);
         QVERIFY(controller.statusMessage().contains(QStringLiteral("1x, 2x hoặc 4x")));
+    }
+
+    void delayedGuiTickUsesMonotonicElapsedTime()
+    {
+        Route route = simpleRoute();
+        route.durationSeconds = 1.0;
+        RouteNavigationController controller;
+        controller.setRoute(route, QStringLiteral("Valhalla local"));
+        QElapsedTimer elapsed;
+        elapsed.start();
+        controller.start();
+        QTest::qSleep(250); // Simulate a busy GUI thread without delivering timer events.
+        QCoreApplication::processEvents();
+        const double expectedFraction = elapsed.elapsed() / 1000.0;
+        const double actualFraction = controller.travelledMeters() / controller.routeLengthMeters();
+        QVERIFY(qAbs(actualFraction - expectedFraction) < 0.06);
+        QVERIFY(actualFraction > 0.18);
     }
 
     void advancesManeuverAndRemainingGuidance()

@@ -47,6 +47,9 @@ RoutingController::RoutingController(QObject *parent)
     connect(client_, &ValhallaRouteClient::routeReady, this, [this](const Route &route) {
         setLoading(false);
         applyRoute(route, QStringLiteral("Valhalla local"));
+        qInfo().noquote() << "Valhalla route applied:" << route.distanceMeters
+                          << "m," << route.durationSeconds << "s,"
+                          << route.maneuvers.size() << "maneuvers";
         setStatus(QStringLiteral("Đã tính tuyến bằng Valhalla local"));
     });
     connect(client_, &ValhallaRouteClient::routeFailed, this, [this](const QString &error) {
@@ -136,6 +139,7 @@ void RoutingController::calculateFixtureRoute()
 
 void RoutingController::calculateRoute()
 {
+    clearRoute();
     if (service_.state() == ValhallaServiceManager::State::Ready) {
         setLoading(true);
         setStatus(QStringLiteral("Đang tính tuyến bằng Valhalla local…"));

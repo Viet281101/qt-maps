@@ -5,6 +5,7 @@
 #include "routing/ValhallaRouteClient.h"
 #include "routing/ValhallaServiceManager.h"
 #include "routing/RoutingController.h"
+#include "routing/RouteNavigationController.h"
 
 #include <QCoreApplication>
 #include <QElapsedTimer>
@@ -28,6 +29,7 @@
 using qtmaps::routing::Route;
 using qtmaps::routing::RouteSource;
 using qtmaps::routing::RoutingController;
+using qtmaps::routing::RouteNavigationController;
 using qtmaps::routing::ValhallaRouteClient;
 using qtmaps::routing::ValhallaServiceManager;
 using qtmaps::core::ApplicationShutdownCoordinator;
@@ -494,18 +496,56 @@ private slots:
         writeFile(configPath, QJsonDocument(config).toJson(QJsonDocument::Compact));
 
         RoutingController controller;
+        RouteNavigationController navigation;
+        connect(&controller, &RoutingController::routeChanged, &navigation, [&]() {
+            if (controller.routeAvailable())
+                navigation.setRoute(controller.route(), controller.sourceLabel());
+            else
+                navigation.clearRoute();
+        });
+        controller.calculateFixtureRoute();
+        navigation.start();
+        QVERIFY(navigation.running());
         controller.startBackend(QCoreApplication::applicationFilePath(), configPath, port);
         QTRY_VERIFY_WITH_TIMEOUT(controller.loading(), 3000);
+        QVERIFY(!navigation.active());
+        QVERIFY(!navigation.routeAvailable());
 
         QVERIFY(controller.setDestinationInput(QStringLiteral("Ba Đình")));
         QVERIFY(!controller.loading());
         QVERIFY(!controller.routeAvailable());
+        QVERIFY(!navigation.active());
         QTest::qWait(700);
 
         QVERIFY(!controller.routeAvailable());
         QCOMPARE(controller.destinationInput(), QStringLiteral("Ba Đình"));
         QVERIFY(controller.sourceLabel() != QStringLiteral("Valhalla local"));
         controller.stopBackend();
+    }
+
+    void changingEitherEndpointStopsReplay()
+    {
+        RoutingController controller;
+        RouteNavigationController navigation;
+        connect(&controller, &RoutingController::routeChanged, &navigation, [&]() {
+            if (controller.routeAvailable())
+                navigation.setRoute(controller.route(), controller.sourceLabel());
+            else
+                navigation.clearRoute();
+        });
+        controller.calculateFixtureRoute();
+        navigation.start();
+        QVERIFY(navigation.running());
+        QVERIFY(controller.setOriginInput(QStringLiteral("Hoàn Kiếm")));
+        QVERIFY(!navigation.active());
+        QVERIFY(!navigation.routeAvailable());
+
+        controller.calculateFixtureRoute();
+        navigation.start();
+        QVERIFY(navigation.running());
+        QVERIFY(controller.setDestinationInput(QStringLiteral("Ba Đình")));
+        QVERIFY(!navigation.active());
+        QVERIFY(!navigation.routeAvailable());
     }
 };
 

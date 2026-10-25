@@ -1,7 +1,7 @@
 # Unit 05D: Selected-route navigation evidence
 
-Date: 2026-10-25. This report is intentionally short and grows only through
-the D3 review gate.
+Date: 2026-10-25. This report is intentionally short and records the current
+navigation review gates.
 
 ## D1 selected-route replay
 
@@ -43,5 +43,25 @@ Final D3 gate: Qt 5.15.13 Release `make test` passed 7/7 executables in 5.52
 seconds, and `git diff --check` passed. The branch tracks no generated dataset,
 graph, virtual environment, binary, or screenshot.
 
-D4 re-routing, E measurement, and F follow-ups have not started. Work stops here
-for the required owner review.
+## Pre-D4 real-backend smoke and replay audit
+
+With the Release build, `./tools/run-demo.sh --disable-instrumentation
+--exit-after 8` ran without `--routing-fixture-only`. Selected log lines:
+
+```text
+probeMode= unit04-routing-valhalla
+qml: routing mapReady=true error=0 errorString=
+GET /status ... 200
+GET /route ... 200 10211
+Valhalla route applied: 7294 m, 523.659 s, 14 maneuvers
+```
+
+The process exited normally. These logs establish backend route application and
+map readiness, not a manual start/pause/banner inspection. Valhalla also emitted
+the previously known tile/traffic-extract warnings. Replay now uses a monotonic
+elapsed-time anchor rather than accumulated tick steps; remaining route totals
+are proportional estimates from progress along the replay polyline. Starting a
+new request or changing either endpoint invalidates the old route and stops
+replay. Focused tests include a blocked GUI tick and delayed canceled reply.
+
+D4 is in progress after preliminary D1-D3 approval; E and F remain unstarted.

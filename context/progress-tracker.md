@@ -120,6 +120,15 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
 - D1-D3 are feature-complete locally and await owner review. Re-routing and all
   E/F work remain explicitly unstarted.
 
+### Unit 05 pre-D4 follow-up
+
+- D1-D3 received preliminary approval and branch `feat/05-navigation` was
+  pushed without a PR. Replay now derives position from a monotonic elapsed-time
+  anchor, and a new route request invalidates the old route and replay.
+- Tests cover a delayed GUI tick, endpoint changes during replay, and a delayed
+  canceled request. A non-fixture Release smoke applied a real Valhalla route;
+  its limited log evidence is in `docs/routing/unit-05-navigation.md`.
+
 ## Active Decisions
 
 ### Committed
@@ -136,13 +145,13 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
 
 ## In Progress
 
-- Unit 05 D1-D3 are implemented locally and stopped at the required owner review
-  gate. D4, E, and F have not started.
+- Unit 05 D1-D3 have preliminary owner approval. D4 is in progress; stop at its
+  review gate before starting E or F.
 
 ## Next Up
 
-1. Owner review of D1-D3 and the recorded verification evidence.
-2. Do not start D4 or E until the owner releases this review gate.
+1. Implement and verify D4 re-routing, then stop for owner review.
+2. Do not start E or F before the D4 review gate is released.
 
 ## Open Questions and Risks
 

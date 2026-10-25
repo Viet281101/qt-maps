@@ -93,6 +93,8 @@ private:
     void setState(State state, const QString &message);
     void updatePosition(double distanceMeters);
     void updateGuidance();
+    void syncElapsedTime();
+    void advanceToDistance(double distanceMeters);
 
     Route route_;
     QString sourceLabel_;
@@ -104,6 +106,7 @@ private:
     double bearing_ = 0.0;
     double routeLengthMeters_ = 0.0;
     double travelledMeters_ = 0.0;
+    double clockAnchorMeters_ = 0.0;
     int speedMultiplier_ = 1;
     int currentManeuverIndex_ = -1;
     double distanceToManeuverMeters_ = 0.0;
