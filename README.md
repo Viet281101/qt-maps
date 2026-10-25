@@ -106,7 +106,8 @@ missing path and does not silently draw a fixture route.
 - Selected-route navigation replay now provides 1x/2x/4x playback, pause/stop,
   camera follow/recenter, heading/tilt, source-labeled maneuver guidance, remaining
   distance/time, and arrival. A simulated deviation over 40 m can request a new
-  Valhalla route; live GPS deviation detection is not implemented. Full
+  Valhalla route; a failed request keeps the last valid route available for
+  retry. Live GPS deviation detection is not implemented. Full
   QtMaps-plus-Valhalla process-tree benchmarking, nationwide graph generation, offline search, orthography, final
   product UI, installer packaging, and long-duration stability validation are
   not implemented yet.

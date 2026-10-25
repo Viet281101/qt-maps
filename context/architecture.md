@@ -83,8 +83,9 @@ Large generated datasets, caches, routing graphs, and third-party artifacts must
   selected polyline. A deviation strictly greater than 40 m invalidates replay
   and requests Valhalla from that position to the existing destination. The
   existing reply cancellation/generation guard owns request replacement; only
-  a successful reroute resumes replay, and failure is visible without a fixture
-  fallback. This does not claim live GPS or draggable-marker support.
+  a successful reroute replaces the selected route and resumes replay. Failure
+  is visible without a fixture fallback and leaves the last valid route
+  available for retry. This does not claim live GPS or draggable-marker support.
 - Child services start only when required, expose readiness/failure state, and shut down when the application exits.
 - Startup must use bounded timeouts and actionable errors; it must never wait indefinitely on the UI thread.
 - Routing, tile I/O, search, process monitoring, and service output parsing must not block the UI thread.

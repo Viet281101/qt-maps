@@ -602,7 +602,7 @@ private slots:
         QTest::qWait(320);
         QCOMPARE(successSpy.size(), 0);
         QVERIFY(controller.loading());
-        QVERIFY(!controller.routeAvailable());
+        QVERIFY(controller.routeAvailable());
         QTRY_COMPARE_WITH_TIMEOUT(successSpy.size(), 1, 2000);
         QVERIFY(navigation.running());
         QCOMPARE(controller.sourceLabel(), QStringLiteral("Valhalla local"));
@@ -646,9 +646,17 @@ private slots:
         controller.startBackend(QCoreApplication::applicationFilePath(), configPath, port);
         QVERIFY(readySpy.wait(3000));
         QTRY_VERIFY_WITH_TIMEOUT(!controller.loading(), 2000);
+        QVERIFY(controller.routeAvailable());
+        const Route previousRoute = controller.route();
+        const QString previousSource = controller.sourceLabel();
         controller.requestReroute(QGeoCoordinate(21.029, 105.855));
         QTRY_VERIFY_WITH_TIMEOUT(!controller.loading(), 2000);
-        QVERIFY(!controller.routeAvailable());
+        QVERIFY(controller.routeAvailable());
+        QCOMPARE(controller.route().polyline, previousRoute.polyline);
+        QCOMPARE(controller.route().maneuvers.size(), previousRoute.maneuvers.size());
+        QCOMPARE(controller.route().distanceMeters, previousRoute.distanceMeters);
+        QCOMPARE(controller.route().durationSeconds, previousRoute.durationSeconds);
+        QCOMPARE(controller.sourceLabel(), previousSource);
         QVERIFY(controller.statusMessage().contains(QStringLiteral("Không thể tính lại tuyến")));
         QVERIFY(!controller.statusMessage().contains(QStringLiteral("fixture")));
         controller.stopBackend();

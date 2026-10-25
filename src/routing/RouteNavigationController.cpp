@@ -263,6 +263,8 @@ bool RouteNavigationController::considerDeviation(const QGeoCoordinate &position
     if ((!running() && !paused()) || distanceFromRouteMeters(position) <= 40.0) {
         return false;
     }
+    timer_.stop();
+    setState(State::Ready, QStringLiteral("Đã phát hiện lệch tuyến; đang tính lại tuyến"));
     emit deviationDetected(position);
     return true;
 }

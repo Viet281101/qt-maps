@@ -166,7 +166,6 @@ void RoutingController::calculateRoute()
 
 void RoutingController::requestReroute(const QGeoCoordinate &position)
 {
-    clearRoute();
     if (!position.isValid()) {
         setStatus(QStringLiteral("Không thể tính lại tuyến: vị trí lệch không hợp lệ"));
         return;
@@ -175,6 +174,7 @@ void RoutingController::requestReroute(const QGeoCoordinate &position)
         setStatus(QStringLiteral("Không thể tính lại tuyến: Valhalla chưa sẵn sàng"));
         return;
     }
+    client_->cancel();
     rerouting_ = true;
     setLoading(true);
     setStatus(QStringLiteral("Đang tính lại tuyến bằng Valhalla local…"));

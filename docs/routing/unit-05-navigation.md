@@ -71,8 +71,9 @@ The simulation chooses a position more than 40 m from the nearest polyline
 segment. The existing Valhalla client cancels and generation-guards replaced
 requests; the request uses that position and the existing destination. A
 successful response replaces the route and resumes replay. A backend error stops
-replay and is shown explicitly, without a fixture fallback. This is simulated
-deviation, not live GPS or marker dragging.
+replay and is shown explicitly, without a fixture fallback; the last valid route
+remains available for retry. This is simulated deviation, not live GPS or
+marker dragging.
 
 Focused Release tests cover positions at 39/41 m, simulated offset, outgoing
 coordinates, a delayed replaced request, successful replay resumption, and an
@@ -82,7 +83,11 @@ then simulated a deviation. Valhalla returned a replacement 7,622 m route in
 560.93 seconds with 16 maneuvers; replay resumed, the banner and maneuver list
 updated, the explicit recenter and stop actions remained available, and stop
 exited navigation.
+A repeat click-through after the failed-reroute preservation fix replaced the
+same initial route with a 7,307 m/522.622 s route with 14 maneuvers and resumed
+replay normally.
 E and F remain unstarted; work stops for the D4 review gate.
 
-After the recenter follow-up, the final Qt 5.15.13 Release `make test` passed 7/7
-executables in 6.63 seconds; `git diff --check` passed.
+After the recenter and failed-reroute preservation follow-ups, the final Qt
+5.15.13 Release `make test` passed 7/7 executables in 6.88 seconds;
+`git diff --check` passed.

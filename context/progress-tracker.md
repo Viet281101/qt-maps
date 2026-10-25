@@ -132,9 +132,10 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
 
 - A button simulates an offset; the nearest distance to the full polyline must
   exceed 40 m before requesting Valhalla from that position to the destination.
-  The old route/replay is invalidated, replaced requests are canceled, and only
-  successful replies resume navigation. Backend errors are visible without a
-  fixture fallback. Live GPS/drag is not claimed.
+  Replay stops while the last valid route remains visible, replaced requests
+  are canceled, and only successful replies replace the route and resume
+  navigation. Backend errors are visible without a fixture fallback and retain
+  the last valid route for retry. Live GPS/drag is not claimed.
 - Tests cover the threshold, outgoing endpoints, replacement of a delayed
   request, successful replay resumption, and backend failure. A real-Valhalla
   UI click-through also verified pause/resume, banner updates, re-routing,
@@ -217,10 +218,13 @@ Licensing and packaging evidence:
   fixture startup reached `mapReady=true`, and `git diff --check` passed. No
   generated data, graph, virtual environment, binary, or screenshot is tracked.
 - Unit 05 D4 review gate on 2026-10-25: Qt 5.15.13 Release `make test` passed
-  7/7 executables in 6.63 seconds after the recenter follow-up, and
-  `git diff --check` passed. The real
+  7/7 executables in 6.88 seconds after the recenter and failed-reroute
+  preservation follow-ups, and `git diff --check` passed. The real
   Valhalla click-through started, paused, and resumed replay, then replaced the
   7,294 m/14-maneuver route with a 7,622 m/16-maneuver route after simulated
   deviation. Replay, banner, maneuver selection, the explicit recenter/stop
   actions, and stop behavior all updated correctly. The fake-backend tests
-  remain the deterministic failure and race coverage.
+  remain the deterministic failure and race coverage, including preservation
+  of the last valid route after an HTTP 503 reroute failure.
+  A post-fix real-Valhalla repeat replaced the initial route with a 7,307 m,
+  522.622 s, 14-maneuver route and resumed replay normally.

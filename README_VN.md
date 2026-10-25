@@ -134,7 +134,8 @@ Kết quả thực tế được ghi theo [mẫu benchmark](docs/benchmarks/benc
 - Navigation replay theo tuyến đã chọn đã có tốc độ 1x/2x/4x, tạm dừng/dừng,
   camera follow/recenter, xoay/nghiêng, banner maneuver có nhãn nguồn, quãng đường/thời
   gian còn lại và trạng thái đến đích. Có thể mô phỏng đi lệch trên 40 m để yêu
-  cầu Valhalla tính lại tuyến; chưa có phát hiện lệch bằng GPS thật. Benchmark
+  cầu Valhalla tính lại tuyến; request lỗi vẫn giữ tuyến hợp lệ gần nhất để thử
+  lại. Chưa có phát hiện lệch bằng GPS thật. Benchmark
   toàn cây tiến trình QtMaps + Valhalla, routing graph toàn quốc, search offline, orthography, UI sản
   phẩm hoàn chỉnh, installer và kiểm chứng ổn định dài hạn chưa được triển khai.
 

@@ -227,6 +227,9 @@ private slots:
         QVERIFY(controller.considerDeviation(far));
         QCOMPARE(deviationSpy.size(), 1);
         QCOMPARE(deviationSpy.takeFirst().at(0).value<QGeoCoordinate>(), far);
+        QVERIFY(controller.routeAvailable());
+        QVERIFY(!controller.active());
+        QVERIFY(controller.statusMessage().contains(QStringLiteral("đang tính lại tuyến")));
     }
 
     void simulatedDeviationIsActuallyOffRoute()
@@ -239,6 +242,8 @@ private slots:
         QCOMPARE(deviationSpy.size(), 1);
         const QGeoCoordinate position = deviationSpy.takeFirst().at(0).value<QGeoCoordinate>();
         QVERIFY(controller.distanceFromRouteMeters(position) > 40.0);
+        QVERIFY(controller.routeAvailable());
+        QVERIFY(!controller.active());
     }
 };
 
