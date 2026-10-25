@@ -486,11 +486,8 @@ Window {
     }
 
     Component.onCompleted: {
-        if (!routingController.routeAvailable && !routingController.loading) {
-            if (routingFixtureOnly)
-                routingController.calculateFixtureRoute()
-            else
-                routingController.calculateRoute()
-        }
+        if (routingFixtureOnly && !routingController.routeAvailable
+                && !routingController.loading)
+            routingController.calculateFixtureRoute()
     }
 }

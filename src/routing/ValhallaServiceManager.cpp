@@ -99,12 +99,20 @@ void ValhallaServiceManager::start(const QString &program, const QString &config
     }
     const QFileInfo programInfo(program);
     const QFileInfo configInfo(configPath);
-    if (!programInfo.isFile() || !programInfo.isExecutable()) {
-        fail(QStringLiteral("Valhalla executable is missing or not executable"));
+    if (!programInfo.isFile()) {
+        fail(QStringLiteral("thiếu %1").arg(programInfo.absoluteFilePath()));
         return;
     }
-    if (!configInfo.isFile() || !configInfo.isReadable()) {
-        fail(QStringLiteral("Valhalla config is missing or unreadable"));
+    if (!programInfo.isExecutable()) {
+        fail(QStringLiteral("không thể chạy %1").arg(programInfo.absoluteFilePath()));
+        return;
+    }
+    if (!configInfo.isFile()) {
+        fail(QStringLiteral("thiếu %1").arg(configInfo.absoluteFilePath()));
+        return;
+    }
+    if (!configInfo.isReadable()) {
+        fail(QStringLiteral("không thể đọc %1").arg(configInfo.absoluteFilePath()));
         return;
     }
     if (port == 0) {

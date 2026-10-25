@@ -4,6 +4,7 @@
 #include "ValhallaRouteClient.h"
 
 #include <QFile>
+#include <QDebug>
 #include <QLocale>
 #include <QSet>
 #include <QVariantMap>
@@ -141,10 +142,9 @@ void RoutingController::calculateRoute()
         return;
     }
     const QString reason = service_.state() == ValhallaServiceManager::State::Error
-        ? QStringLiteral("Valhalla local lỗi: %1; đang dùng fixture")
-              .arg(service_.errorMessage())
-        : QStringLiteral("Valhalla local chưa sẵn sàng; đang dùng fixture");
-    loadFixtureRoute(reason);
+        ? QStringLiteral("Valhalla chưa chạy: %1").arg(service_.errorMessage())
+        : QStringLiteral("Valhalla chưa chạy: dịch vụ chưa sẵn sàng");
+    setStatus(reason);
 }
 
 void RoutingController::startBackend(const QString &program, const QString &configPath,
@@ -153,6 +153,9 @@ void RoutingController::startBackend(const QString &program, const QString &conf
     connectionLabel_ = QStringLiteral("đang khởi động Valhalla local");
     emit stateChanged();
     service_.start(program, configPath, port, 2, 10000);
+    if (service_.state() == ValhallaServiceManager::State::Error) {
+        qCritical().noquote() << statusMessage_;
+    }
 }
 
 void RoutingController::stopBackend()
@@ -356,8 +359,9 @@ void RoutingController::updateServiceState()
         connectionLabel_ = QStringLiteral("đang dừng Valhalla local");
         break;
     case ValhallaServiceManager::State::Error:
-        connectionLabel_ = QStringLiteral("offline — fixture fallback");
-        setStatus(QStringLiteral("Valhalla local lỗi: %1").arg(service_.errorMessage()));
+        connectionLabel_ = QStringLiteral("Valhalla chưa chạy: %1")
+                               .arg(service_.errorMessage());
+        setStatus(connectionLabel_);
         break;
     case ValhallaServiceManager::State::Stopped:
         connectionLabel_ = QStringLiteral("offline — fixture");

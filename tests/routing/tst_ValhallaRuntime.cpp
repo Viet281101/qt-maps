@@ -216,7 +216,12 @@ private slots:
         service.start(QStringLiteral("/missing/valhalla_service"),
                       QStringLiteral("/missing/valhalla.json"), 8002);
         QCOMPARE(service.state(), ValhallaServiceManager::State::Error);
-        QVERIFY(service.errorMessage().contains(QStringLiteral("executable")));
+        QCOMPARE(service.errorMessage(), QStringLiteral("thiếu /missing/valhalla_service"));
+
+        service.start(QCoreApplication::applicationFilePath(),
+                      QStringLiteral("/missing/valhalla.json"), 8002);
+        QCOMPARE(service.state(), ValhallaServiceManager::State::Error);
+        QCOMPARE(service.errorMessage(), QStringLiteral("thiếu /missing/valhalla.json"));
 
         QTemporaryDir temporary;
         QVERIFY(temporary.isValid());
@@ -444,8 +449,9 @@ private slots:
         RoutingController controller;
         QSignalSpy routeChangedSpy(&controller, &RoutingController::routeChanged);
         controller.calculateRoute();
-        QCOMPARE(controller.sourceLabel(), QStringLiteral("fixture/mô phỏng"));
-        QCOMPARE(routeChangedSpy.size(), 1);
+        QVERIFY(!controller.routeAvailable());
+        QVERIFY(controller.statusMessage().contains(QStringLiteral("chưa sẵn sàng")));
+        QCOMPARE(routeChangedSpy.size(), 0);
         controller.startBackend(QCoreApplication::applicationFilePath(), configPath, port);
         QTRY_COMPARE_WITH_TIMEOUT(controller.sourceLabel(), QStringLiteral("Valhalla local"), 4000);
         QCOMPARE(routeChangedSpy.size(), 1);
@@ -453,6 +459,20 @@ private slots:
         QVERIFY(controller.routeAvailable());
         QVERIFY(!controller.loading());
         controller.stopBackend();
+    }
+
+    void controllerReportsMissingBackendPathWithoutFixtureFallback()
+    {
+        RoutingController controller;
+        const QString missingProgram = QStringLiteral("/missing/unit04/valhalla_service");
+        controller.startBackend(missingProgram,
+                                QStringLiteral("/missing/unit04/valhalla.json"), 18002);
+
+        QVERIFY(!controller.routeAvailable());
+        QCOMPARE(controller.statusMessage(),
+                 QStringLiteral("Valhalla chưa chạy: thiếu %1").arg(missingProgram));
+        QCOMPARE(controller.connectionLabel(), controller.statusMessage());
+        QCOMPARE(controller.sourceLabel(), QStringLiteral("fixture/mô phỏng"));
     }
 
     void controllerIgnoresDelayedRouteAfterEndpointsChange()
