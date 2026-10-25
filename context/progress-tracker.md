@@ -5,7 +5,7 @@ Update this file after every meaningful implementation change. Keep it below the
 ## Current Phase
 
 - Unit 03 was squash-merged through PR #20 as `1358c3c`.
-- Unit 04 increments A-C are complete on `feat/04-routing` and under review in PR #21. The owner approved `osmium-tool` plus checksum-pinned `pyvalhalla==3.9.1`; the bounded Hanoi graph, managed backend, and route-planning UI are verified. Route replay/guidance and full process-tree measurement remain deferred.
+- Unit 04 increments A-C are complete on `feat/04-routing` and under review in PR #21. The bounded Hanoi graph, managed backend, stale-reply cancellation, asynchronous shutdown, and polished route-planning UI are verified. Route replay/guidance and the full interactive process-tree benchmark remain deferred.
 - The owner approved Qt 5.15.13 plus dynamically linked MapLibre Native Qt v3.0.0 as the application baseline, retaining Qt 5.13.2 for comparison and localhost raster as fallback.
 - Performance schema v3 is complete: interaction-only FPS and frame-time p50/p95/p99 exclude the final settling swap, which is reported separately; legacy CSV fields remain for historical comparison.
 
@@ -86,7 +86,9 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
 - Added a map-first Qt Quick screen with map-click and alias/coordinate endpoint selection, calculate action, route polyline, A/B markers, summary, Vietnamese maneuver list, maneuver focus, source/connectivity/error state, attribution, and the existing F3 overlay.
 - The first Release smoke intentionally used the recorded fixture only. `mapReady=true`; the 7.294 km Hoàn Kiếm–Thái Hà route visually followed the local Hanoi vector roads and displayed all 14 maneuvers with explicit `fixture/mô phỏng` and `offline — fixture` labels.
 - The render-facing controller flow is covered by Qt Test. Current minimal runtime lacks Qt Quick Controls/Layouts, so the screen uses dependency-free Qt Quick core primitives. Evidence: `docs/routing/unit-04-routing-ui.md`.
-- The same controller is now connected to the managed backend: it validates the exact loopback listen config, switches the visible source to `Valhalla local`, preserves an explicit fixture fallback for startup/failure, and refuses unsupported fallback endpoints. Release smoke showed the real route polyline and 14 Vietnamese maneuvers; timed exit removed both app/service processes and released port 18002.
+- The same controller is now connected to the managed backend: it validates the exact loopback listen config, switches the visible source to `Valhalla local`, reports exact missing service/config paths without silently loading a fixture, and refuses unsupported fallback endpoints. Release smoke showed the real route polyline and Vietnamese maneuvers; timed/window exit removed both app/service processes and released port 18002.
+- Route replies are generation-bound and canceled when endpoints change. Shutdown is coordinated asynchronously with a two-second hard-kill bound and Linux parent-death signal. The UI now has persistent maneuver selection, keyboard actions/tab order, panel-aware bounds/collapse, stronger route contrast, zoom-15 street labels, opaque markers, and compact source health colors.
+- Three 15-second idle/render-on-demand Release diagnostics consistently counted one Valhalla child and two total processes; mean process-tree RSS was 423.4-429.9 MiB and mean CPU 2.20-2.53%. This verifies accounting after UI polish, not the deferred full interactive Unit 04E benchmark.
 - PR #21 references Issues #4 and #5, is assigned to `Viet281101`, and uses the `First Management Demo` milestone plus the `feature`, `demo`, `priority:P0`, `area:routing`, `area:map`, and `area:ui` labels. The PR and both issues are in Project #6 with Status `In Progress`, Priority `P0`, and Demo Phase `Week 1`.
 
 ## Active Decisions
@@ -105,13 +107,13 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
 
 ## In Progress
 
-- Unit 04 increments A-C are under review in PR #21. Issues #4 and #5 remain open while their acceptance criteria are reviewed. Steps D (route replay/guidance) and E (full process-tree benchmark) remain explicitly unstarted.
+- Unit 04 increments A-C are under review in PR #21. Issues #4 and #5 remain open while their acceptance criteria are reviewed. Step D (route replay/guidance) remains explicitly unstarted; only a short static process-tree diagnostic was run, not the full interactive Unit 04E benchmark.
 
 ## Next Up
 
 1. Review PR #21 and merge it with GitHub `Squash and merge` only after approval.
 2. Implement route replay, guidance presentation, and maneuver progression against the selected route.
-3. Measure the Release app plus Valhalla process tree and record clean-shell reproducibility evidence.
+3. Run the full interactive Release benchmark for QtMaps plus Valhalla after the Unit 04A-C merge gate.
 
 ## Open Questions and Risks
 
@@ -158,5 +160,5 @@ Licensing and packaging evidence:
 - Unit 04A Qt 5.15.13 Release verification: `make test` passed 4/4 executables in 0.64 seconds with no new compiler warning; `git diff --check` passed. Only source, tests, compact JSON fixtures, context, and evidence are changed.
 - Unit conversion follow-up: omitted units default to kilometers, explicit kilometers/miles normalize to meters, and seconds remain unchanged; Release `make test` passes 4/4. Branch backup matched `origin/feat/04-routing` at `6aa1c8e` with no PR.
 - Valhalla survey evidence: `docs/routing/valhalla-availability-survey.md`. Ubuntu apt/release binaries are unavailable; the official 37.5 MB `pyvalhalla` 3.9.1 wheel is preferred over the 156.3 MiB compressed container or a 328-package source-build dependency set.
-- Unit 04B/C Release verification on 2026-10-25: all 5 CTest executables pass, the managed service is a direct child listening only at `127.0.0.1:18002`, the UI displays the real Valhalla route/source and Vietnamese maneuvers over the local map, and the timed exit leaves no service process or listener.
+- Unit 04B/C closure verification on 2026-10-25: all 6 CTest executables pass; stale delayed replies, active maneuver state, QML keyboard/selection contracts, application-level graceful/forced shutdown, and Linux parent-death cleanup are covered. The real service is one counted direct child on `127.0.0.1:18002`; Alt+F4 and timed exit leave no process/listener, while `kill -9` releases both within 90 ms. The demo script also succeeds from `/tmp`, and missing Valhalla files are logged/shown without fixture fallback.
 - PR #21 verification on 2026-10-25: the Qt 5.15.13 Release build passed 5/5 CTest executables, `git diff --check origin/main...HEAD` passed, and the PR is mergeable. CodeRabbit succeeded on the preceding routing head; the latest docs-only tracking head had no check result reported at final verification. Live metadata confirms the issue references, assignee, milestone, six labels, and Project #6 fields described above. The pre-existing `.vscode/settings.json` change remains user-owned and excluded from every commit.

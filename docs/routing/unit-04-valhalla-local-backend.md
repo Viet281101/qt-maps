@@ -99,6 +99,8 @@ kill, Valhalla was its direct child and owned `127.0.0.1:18002`. Linux
 `PR_SET_PDEATHSIG=SIGTERM` removed the child and released the port in 31 ms.
 The inspected PIDs were 14740 for QtMaps and 14767 for `valhalla_service`;
 these are transient verification identifiers, not runtime configuration.
+The final post-polish repeat removed the direct child and released port 18002
+within 90 ms after `kill -9` of QtMaps.
 
 ## Real routes and latency
 
