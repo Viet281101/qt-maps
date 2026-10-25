@@ -5,7 +5,7 @@ Update this file after every meaningful implementation change. Keep it below the
 ## Current Phase
 
 - Unit 03 was squash-merged through PR #20 as `1358c3c`.
-- Unit 04 increments A-C are complete on `feat/04-routing` and under review in PR #21. The bounded Hanoi graph, managed backend, stale-reply cancellation, asynchronous shutdown, and polished route-planning UI are verified. Route replay/guidance and the full interactive process-tree benchmark remain deferred.
+- Unit 04 was squash-merged through PR #21 as `d4a07bb`. Unit 05 is active on local branch `feat/05-navigation`; no push or PR is authorized. Feature freeze is 2026-11-01, with 2026-11-02 through 2026-11-03 reserved for bug fixes, rehearsal, and reporting.
 - The owner approved Qt 5.15.13 plus dynamically linked MapLibre Native Qt v3.0.0 as the application baseline, retaining Qt 5.13.2 for comparison and localhost raster as fallback.
 - Performance schema v3 is complete: interaction-only FPS and frame-time p50/p95/p99 exclude the final settling swap, which is reported separately; legacy CSV fields remain for historical comparison.
 
@@ -91,6 +91,16 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
 - Three 15-second idle/render-on-demand Release diagnostics consistently counted one Valhalla child and two total processes; mean process-tree RSS was 423.4-429.9 MiB and mean CPU 2.20-2.53%. This verifies accounting after UI polish, not the deferred full interactive Unit 04E benchmark.
 - PR #21 references Issues #4 and #5, is assigned to `Viet281101`, and uses the `First Management Demo` milestone plus the `feature`, `demo`, `priority:P0`, `area:routing`, `area:map`, and `area:ui` labels. The PR and both issues are in Project #6 with Status `In Progress`, Priority `P0`, and Demo Phase `Week 1`.
 
+### Unit 05D1 — selected-route replay
+
+- Added a route-owned replay controller without changing the Unit 03 5.47 km
+  benchmark fixture. It accepts the current Valhalla or recorded-fixture route,
+  preserves the source label, interpolates position/heading on a non-blocking
+  timer, and supports 1x/2x/4x, pause/resume, stop/reset, and arrival.
+- The route screen now provides replay controls, a distinct current-position
+  marker, camera follow, bearing rotation, and 45-degree tilt. Focused lifecycle,
+  interpolation, speed, pause, stop, arrival, and missing-route tests pass.
+
 ## Active Decisions
 
 ### Committed
@@ -107,13 +117,14 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
 
 ## In Progress
 
-- Unit 04 increments A-C are under review in PR #21. Issues #4 and #5 remain open while their acceptance criteria are reviewed. Step D (route replay/guidance) remains explicitly unstarted; only a short static process-tree diagnostic was run, not the full interactive Unit 04E benchmark.
+- Unit 05 D1 is implemented locally. D2 maneuver guidance and D3 boundary/QML
+  tests are next; stop for owner review after D3. D4, E, and F have not started.
 
 ## Next Up
 
-1. Review PR #21 and merge it with GitHub `Squash and merge` only after approval.
-2. Implement route replay, guidance presentation, and maneuver progression against the selected route.
-3. Run the full interactive Release benchmark for QtMaps plus Valhalla after the Unit 04A-C merge gate.
+1. Implement D2 maneuver guidance against cumulative selected-route progress.
+2. Complete D3 boundary and QML tests, Release/manual evidence, then stop for owner review.
+3. Do not start D4 or E before the D3 review gate.
 
 ## Open Questions and Risks
 

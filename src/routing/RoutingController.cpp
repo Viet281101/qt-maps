@@ -74,6 +74,7 @@ QString RoutingController::nextMapSelection() const
     return selectOriginNext_ ? QStringLiteral("điểm đi") : QStringLiteral("điểm đến");
 }
 int RoutingController::currentManeuverIndex() const { return currentManeuverIndex_; }
+const Route &RoutingController::route() const { return route_; }
 
 bool RoutingController::setOriginInput(const QString &input)
 {
@@ -293,6 +294,7 @@ void RoutingController::applyRoute(const Route &route, const QString &sourceLabe
         && route_.durationSeconds == route.durationSeconds) {
         route_ = route;
         sourceLabel_ = sourceLabel;
+        emit routeChanged();
         emit stateChanged();
         return;
     }

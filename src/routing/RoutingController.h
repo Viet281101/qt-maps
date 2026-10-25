@@ -52,6 +52,7 @@ public:
     bool loading() const;
     QString nextMapSelection() const;
     int currentManeuverIndex() const;
+    const Route &route() const;
 
     Q_INVOKABLE bool setOriginInput(const QString &input);
     Q_INVOKABLE bool setDestinationInput(const QString &input);

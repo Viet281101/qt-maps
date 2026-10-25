@@ -93,6 +93,8 @@ add_library(qtmaps_routing STATIC
     src/routing/Polyline6Decoder.cpp
     src/routing/Polyline6Decoder.h
     src/routing/Route.h
+    src/routing/RouteNavigationController.cpp
+    src/routing/RouteNavigationController.h
     src/routing/RoutingController.cpp
     src/routing/RoutingController.h
     src/routing/ValhallaRouteClient.cpp
@@ -159,6 +161,15 @@ if(BUILD_TESTING)
         QTMAPS_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
     target_link_libraries(qtmaps_routing_tests PRIVATE qtmaps_routing Qt5::Test)
     add_test(NAME qtmaps_routing_tests COMMAND qtmaps_routing_tests)
+
+    add_executable(qtmaps_route_navigation_tests
+        tests/routing/tst_RouteNavigation.cpp
+    )
+    target_link_libraries(qtmaps_route_navigation_tests PRIVATE
+        qtmaps_routing
+        Qt5::Test
+    )
+    add_test(NAME qtmaps_route_navigation_tests COMMAND qtmaps_route_navigation_tests)
 
     add_executable(qtmaps_valhalla_runtime_tests
         tests/routing/tst_ValhallaRuntime.cpp

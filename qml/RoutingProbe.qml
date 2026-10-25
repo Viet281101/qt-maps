@@ -15,6 +15,7 @@ Window {
     title: qsTr("QtMaps — Lập tuyến Hà Nội")
     property bool performanceOverlayVisible: instrumentationEnabled
     property bool panelCollapsed: false
+    property bool navigationActive: routeNavigationController.active
     property string compactSource: routingController.sourceLabel === "Valhalla local"
                                    ? qsTr("Valhalla") : qsTr("Fixture")
     property color routeSummaryColor: routingController.loading ? Theme.warning
@@ -104,7 +105,7 @@ Window {
         plugin: mapPlugin
         center: QtPositioning.coordinate(21.0278, 105.8342)
         zoomLevel: 14
-        gesture.enabled: true
+        gesture.enabled: !routeNavigationController.running
         focus: true
 
         onMapReadyChanged: {
@@ -159,6 +160,30 @@ Window {
                 border.color: Theme.surfaceElevated
                 border.width: 5
                 Text { anchors.centerIn: parent; text: "A"; font.bold: true; color: "#102018" }
+            }
+        }
+
+        MapQuickItem {
+            visible: routeNavigationController.active
+            coordinate: routeNavigationController.coordinate
+            anchorPoint.x: navigationMarker.width / 2
+            anchorPoint.y: navigationMarker.height / 2
+            z: 12
+            sourceItem: Rectangle {
+                id: navigationMarker
+                width: 28
+                height: 28
+                radius: 14
+                color: Theme.accent
+                border.color: Theme.routeOutline
+                border.width: 4
+                Text {
+                    anchors.centerIn: parent
+                    text: "▲"
+                    color: "#10243a"
+                    font.bold: true
+                    font.pixelSize: 13
+                }
             }
         }
 
@@ -333,6 +358,71 @@ Window {
                 }
             }
 
+            KeyboardActionButton {
+                id: startNavigationButton
+                width: parent.width
+                visible: routingController.routeAvailable
+                         && !routeNavigationController.active
+                text: qsTr("Bắt đầu chỉ đường")
+                normalColor: Theme.success
+                pressedColor: "#4fab70"
+                textColor: "#102018"
+                onTriggered: routeNavigationController.start()
+            }
+
+            Row {
+                width: parent.width
+                visible: routingController.routeAvailable
+                spacing: Theme.spaceXs
+                Repeater {
+                    model: [1, 2, 4]
+                    delegate: KeyboardActionButton {
+                        width: (routeControls.width - Theme.spaceXs * 2) / 3
+                        text: modelData + "x"
+                        normalColor: routeNavigationController.speedMultiplier === modelData
+                                     ? Theme.accent : "#334352"
+                        pressedColor: "#455869"
+                        textColor: routeNavigationController.speedMultiplier === modelData
+                                   ? "#10243a" : Theme.textPrimary
+                        onTriggered: routeNavigationController.setSpeedMultiplier(modelData)
+                    }
+                }
+            }
+
+            Row {
+                width: parent.width
+                visible: routeNavigationController.active
+                spacing: Theme.spaceSm
+                KeyboardActionButton {
+                    width: (parent.width - parent.spacing) / 2
+                    text: routeNavigationController.paused ? qsTr("Tiếp tục")
+                                                          : qsTr("Tạm dừng")
+                    normalColor: Theme.warning
+                    pressedColor: "#d89b19"
+                    textColor: "#2d2308"
+                    onTriggered: routeNavigationController.paused
+                                 ? routeNavigationController.start()
+                                 : routeNavigationController.pause()
+                }
+                KeyboardActionButton {
+                    width: (parent.width - parent.spacing) / 2
+                    text: qsTr("Dừng")
+                    normalColor: Theme.error
+                    pressedColor: "#d95f5f"
+                    textColor: "#301010"
+                    onTriggered: routeNavigationController.stop()
+                }
+            }
+
+            Text {
+                width: parent.width
+                visible: routingController.routeAvailable
+                text: routeNavigationController.statusMessage
+                color: routeNavigationController.arrived ? Theme.success
+                                                          : Theme.textSecondary
+                wrapMode: Text.WordWrap
+            }
+
             Text {
                 width: parent.width
                 text: routingController.statusMessage
@@ -468,6 +558,26 @@ Window {
         function onFocusCoordinateRequested(coordinate, zoomLevel) {
             map.center = coordinate
             map.zoomLevel = zoomLevel
+        }
+    }
+
+    Connections {
+        target: routeNavigationController
+        function onPositionChanged() {
+            if (!routeNavigationController.active)
+                return
+            map.center = routeNavigationController.coordinate
+            map.bearing = routeNavigationController.bearing
+            map.tilt = 45
+            if (map.zoomLevel < 16)
+                map.zoomLevel = 16
+        }
+        function onStateChanged() {
+            if (!routeNavigationController.active) {
+                map.bearing = 0
+                map.tilt = 0
+                routeRefreshTimer.restart()
+            }
         }
     }
 

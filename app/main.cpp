@@ -21,6 +21,7 @@
 #include "map/SimulatedNavigationController.h"
 #include "perf/PerformanceMonitor.h"
 #include "routing/RoutingController.h"
+#include "routing/RouteNavigationController.h"
 
 #ifndef QTMAPS_BUILD_ID
 #define QTMAPS_BUILD_ID "unknown"
@@ -111,6 +112,7 @@ int main(int argc, char *argv[])
                                                          &diagnosticRasterSource);
     qtmaps::map::SimulatedNavigationController navigationController;
     qtmaps::routing::RoutingController routingController;
+    qtmaps::routing::RouteNavigationController routeNavigationController;
     qtmaps::core::ApplicationShutdownCoordinator shutdownCoordinator(&routingController);
     qtmaps::perf::PerformanceMonitor performanceMonitor;
     QQmlApplicationEngine engine;
@@ -145,11 +147,23 @@ int main(int argc, char *argv[])
                                              &navigationController);
     engine.rootContext()->setContextProperty(QStringLiteral("routingController"),
                                              &routingController);
+    engine.rootContext()->setContextProperty(QStringLiteral("routeNavigationController"),
+                                             &routeNavigationController);
     engine.rootContext()->setContextProperty(QStringLiteral("shutdownCoordinator"),
                                              &shutdownCoordinator);
     engine.rootContext()->setContextProperty(
         QStringLiteral("routingFixtureOnly"),
         parser.isSet(QStringLiteral("routing-fixture-only")));
+    QObject::connect(&routingController, &qtmaps::routing::RoutingController::routeChanged,
+                     &routeNavigationController, [&routingController,
+                                                  &routeNavigationController]() {
+        if (routingController.routeAvailable()) {
+            routeNavigationController.setRoute(routingController.route(),
+                                               routingController.sourceLabel());
+        } else {
+            routeNavigationController.clearRoute();
+        }
+    });
     engine.rootContext()->setContextProperty(QStringLiteral("instrumentationEnabled"), instrumentationEnabled);
     engine.rootContext()->setContextProperty(QStringLiteral("benchmarkAutomation"),
                                              parser.isSet(QStringLiteral("automated-pan-zoom")));

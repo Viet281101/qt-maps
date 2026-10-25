@@ -19,9 +19,9 @@
 | Map source data | Approved local Geofabrik Vietnam OSM PBF | Committed for bounded Hanoi Unit 03 package | Input for the local map pipeline |
 | Vector pipeline | Planetiler v0.10.2 to versioned MBTiles package | Committed for Unit 03 | Generate bounded Hanoi vector tiles and manifest |
 | Tile access | In-process `TileSource`; loopback HTTP plus `QSqlDatabase` on a worker thread | Committed for Unit 03 | Serve validated MBTiles/resources on a random `127.0.0.1` port |
-| Routing | Valhalla child process | Committed for Unit 04; build/runtime validation pending | Offline route and maneuvers behind a fixture-compatible route contract |
+| Routing | Valhalla child process | Committed and verified in Unit 04 | Offline route and maneuvers behind a fixture-compatible route contract |
 | Search | SQLite FTS5 index | Proposed | Offline geocoding/search |
-| Position simulation | QtPositioning and route/NMEA replay | Proposed | Simulated GPS for navigation |
+| Position simulation | QtPositioning selected-route replay | Committed for Unit 05 D1-D3 | Simulated GPS progress, guidance, and camera following over the current route |
 | Performance | `QQuickWindow::frameSwapped` metrics plus Linux `/proc` process-tree CSV logger | Implemented and verified in unit 02 | Capture FPS, RAM, and CPU for the app process tree |
 
 No engine or library marked Proposed or Spike required becomes committed merely by appearing in this table.
@@ -72,6 +72,11 @@ Large generated datasets, caches, routing graphs, and third-party artifacts must
   loopback service, requests `auto` costing, kilometre units, and `vi-VN`
   directions, then normalizes the response into the backend-independent route
   contract. QML never owns network replies or child-process state.
+- Unit 05 keeps the Unit 03 fixed navigation benchmark controller unchanged and
+  adds a routing-owned selected-route replay controller. It interpolates the
+  current `Route` asynchronously on a precise timer, exposes only presentation
+  state to QML, and drives camera follow/heading/tilt without blocking the UI
+  thread. Route source labels remain visible during replay.
 - Child services start only when required, expose readiness/failure state, and shut down when the application exits.
 - Startup must use bounded timeouts and actionable errors; it must never wait indefinitely on the UI thread.
 - Routing, tile I/O, search, process monitoring, and service output parsing must not block the UI thread.
