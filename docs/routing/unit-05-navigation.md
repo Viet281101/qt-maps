@@ -129,3 +129,8 @@ polyline, maneuver count, distance, duration, and source.
 Screenshots were used only for local visual inspection and remain untracked.
 No FPS/CPU navigation measurement was performed in this pass; Unit 05E and F
 remain unstarted.
+
+Final post-fix gate: Qt 5.15.13 Release `make test` passed all 7/7 CTest
+executables in 7.46 seconds, and `git diff --check origin/main...HEAD` passed.
+All six acceptance criteria in Issue #6 remain satisfied; the deferred E/F
+process-tree measurement is not one of those criteria.
