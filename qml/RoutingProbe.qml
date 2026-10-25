@@ -34,13 +34,17 @@ Window {
     }
 
     function applyEndpoints() {
-        if (routingController.setOriginInput(originField.text))
-            routingController.setDestinationInput(destinationField.text)
+        var requestedOrigin = originField.text
+        var requestedDestination = destinationField.text
+        if (routingController.setOriginInput(requestedOrigin))
+            routingController.setDestinationInput(requestedDestination)
     }
 
     function calculateRequestedRoute() {
-        if (routingController.setOriginInput(originField.text)
-                && routingController.setDestinationInput(destinationField.text)) {
+        var requestedOrigin = originField.text
+        var requestedDestination = destinationField.text
+        if (routingController.setOriginInput(requestedOrigin)
+                && routingController.setDestinationInput(requestedDestination)) {
             if (routingFixtureOnly)
                 routingController.calculateFixtureRoute()
             else
@@ -329,6 +333,7 @@ Window {
                 border.color: originField.activeFocus ? Theme.accent : Theme.border
                 TextInput {
                     id: originField
+                    objectName: "originField"
                     anchors.fill: parent
                     anchors.margins: Theme.spaceSm
                     color: "#17212b"
@@ -350,6 +355,7 @@ Window {
                 border.color: destinationField.activeFocus ? Theme.accent : Theme.border
                 TextInput {
                     id: destinationField
+                    objectName: "destinationField"
                     anchors.fill: parent
                     anchors.margins: Theme.spaceSm
                     color: "#17212b"

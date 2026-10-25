@@ -24,6 +24,40 @@ class RoutingQmlTest final : public QObject
     Q_OBJECT
 
 private slots:
+    void editedEndpointsAreAppliedTogether()
+    {
+        RoutingController routing;
+        RouteNavigationController navigation;
+        ApplicationShutdownCoordinator shutdown(&routing);
+        PerformanceMonitor performance;
+        QQmlEngine engine;
+        engine.rootContext()->setContextProperty(QStringLiteral("routingController"), &routing);
+        engine.rootContext()->setContextProperty(QStringLiteral("routeNavigationController"),
+                                                 &navigation);
+        engine.rootContext()->setContextProperty(QStringLiteral("shutdownCoordinator"),
+                                                 &shutdown);
+        engine.rootContext()->setContextProperty(QStringLiteral("performanceMonitor"),
+                                                 &performance);
+        engine.rootContext()->setContextProperty(QStringLiteral("routingFixtureOnly"), false);
+        engine.rootContext()->setContextProperty(QStringLiteral("instrumentationEnabled"), false);
+        engine.rootContext()->setContextProperty(QStringLiteral("vectorStyleUrl"), QString());
+
+        QQmlComponent component(&engine, QUrl(QStringLiteral("qrc:/qml/RoutingProbe.qml")));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> root(component.create());
+        QVERIFY2(root, qPrintable(component.errorString()));
+        QObject *origin = root->findChild<QObject *>(QStringLiteral("originField"));
+        QObject *destination = root->findChild<QObject *>(QStringLiteral("destinationField"));
+        QVERIFY(origin);
+        QVERIFY(destination);
+        origin->setProperty("text", QStringLiteral("21.021352,105.832698"));
+        destination->setProperty("text", QStringLiteral("21.021352,105.834744"));
+
+        QVERIFY(QMetaObject::invokeMethod(root.data(), "applyEndpoints"));
+        QCOMPARE(routing.origin(), QGeoCoordinate(21.021352, 105.832698));
+        QCOMPARE(routing.destination(), QGeoCoordinate(21.021352, 105.834744));
+    }
+
     void maneuverListKeepsMinimumHeight_data()
     {
         QTest::addColumn<QSize>("windowSize");

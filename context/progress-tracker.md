@@ -161,6 +161,10 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
   scrolling, arrival/restart, and both 900x580 and 1366x768 layouts. A separate
   deterministic fake-loopback run observed HTTP 503 failure/preservation and
   is labeled as such; navigation FPS/CPU measurement remains deferred to E/F.
+- The same click-through exposed and fixed an endpoint-form binding race: the
+  Apply/Calculate actions now snapshot both edited fields before either setter
+  can re-evaluate QML bindings. A regression test applies two new coordinates
+  together and checks both controller endpoints.
 
 ## Active Decisions
 
@@ -249,7 +253,7 @@ Licensing and packaging evidence:
   A post-fix real-Valhalla repeat replaced the initial route with a 7,307 m,
   522.622 s, 14-maneuver route and resumed replay normally.
 - PR #22 post-fix gate on 2026-10-25: Qt 5.15.13 Release `make test` passed
-  7/7 in 7.46 seconds and `git diff --check origin/main...HEAD` passed. QML
+  7/7 in 7.42 seconds and `git diff --check origin/main...HEAD` passed. QML
   behavior coverage now includes guarded map clicks during replay, independent
   scrolling with a maneuver viewport of at least 120 px at 900x580 and
   1366x768, banner/status non-overlap, and replay-again after arrival. All six
