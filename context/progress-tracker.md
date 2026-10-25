@@ -4,7 +4,8 @@ Update this file after every meaningful implementation change. Keep it below the
 
 ## Current Phase
 
-- Unit 03 is complete, reviewed, and pushed on `feat/03-local-map-data-pipeline`, including corrected full-window benchmark evidence. It has not been merged.
+- Unit 03 was squash-merged through PR #20 as `1358c3c`.
+- Unit 04 increments A-C are complete on `feat/04-routing` and under review in PR #21. The bounded Hanoi graph, managed backend, stale-reply cancellation, asynchronous shutdown, and polished route-planning UI are verified. Route replay/guidance and the full interactive process-tree benchmark remain deferred.
 - The owner approved Qt 5.15.13 plus dynamically linked MapLibre Native Qt v3.0.0 as the application baseline, retaining Qt 5.13.2 for comparison and localhost raster as fallback.
 - Performance schema v3 is complete: interaction-only FPS and frame-time p50/p95/p99 exclude the final settling swap, which is reported separately; legacy CSV fields remain for historical comparison.
 
@@ -62,8 +63,33 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
 - Commit review found and fixed a 3,600-frame buffer that had truncated the original 120-second statistics plus a missing style tile-URL contract check. The final runs retain 7,168-7,179 frames and reject non-local style URLs.
 - Corrected three-run schema-v3 medians are: cold 60.011 FPS, p50/p95/p99 16.642/17.969/19.322 ms, 17.569% CPU, 208.934 MiB mean RSS; warm 60.012 FPS, 16.646/17.922/19.248 ms, 17.102% CPU, 202.294 MiB mean RSS. Both have zero frames over 100 ms and pass the proposed p50/p95 review thresholds. Full evidence: `docs/benchmarks/unit-03-local-map-data-pipeline.md`.
 - PR #20 Release verification also passed inside a network namespace with only loopback enabled: `mapReady=true`, the captured Hanoi view retained Vietnamese labels, roads, buildings, marker, and attribution, and `strace -f -e connect` found no non-loopback IP target.
-- PR #20 is open against `main`, closes Issue #14, references Issues #7/#11/#6, and is assigned to `Viet281101`. It uses the `First Management Demo` milestone and the `feature`, `demo`, `priority:P1`, `spike`, and `area:map` labels.
-- PR #20 and its primary Issue #14 are tracked in Project #6 (`QtMaps`); the PR fields are Status `In Progress`, Priority `P1`, and Demo Phase `Week 1`. Repository merge settings allow squash merge only.
+- PR #20 was squash-merged into `main` as `1358c3c`, closing the Unit 03 branch review. Repository merge settings continue to allow squash merge only.
+
+### Unit 04A — route model and fixtures
+
+- Added a backend-independent route contract with polyline, total meters/seconds, source label, and ordered maneuver type/instruction/street/distance/time/position fields.
+- Added strict Valhalla polyline6 decoding and response parsing with explicit errors for malformed geometry, units, numeric bounds, and maneuver indices.
+- Valhalla response units are normalized at the parser boundary: omitted units default to kilometres, explicit kilometres/miles convert to metres, and duration remains seconds; focused Qt Tests cover each case.
+- Added two fixture-labeled Valhalla-shaped Hanoi responses: Hoàn Kiếm–Thái Hà (5.475 km) and Hoàn Kiếm–Ba Đình (2.600 km). They use real bounded coordinates but are hand-authored, not backend-calculated driving routes.
+- Evidence: `docs/routing/unit-04-route-model-fixtures.md`. Qt 5.15.13 Release `make test` passes 4/4.
+
+### Unit 04B — bounded local Valhalla backend
+
+- Owner-installed `osmium-tool` 1.16.0 cut bbox `105.20,20.45,106.20,21.45` with the smart complete-way/relation strategy: 41,468,052 bytes in 20.57 seconds with 3,906,660 KiB peak RSS.
+- The checksum-pinned `pyvalhalla` 3.9.1 wheel lives only under ignored `generated/unit-04/`. Its native builder produced a 175,042,264-byte/35-file Hanoi graph with two threads in 64.83 seconds and 699,660 KiB peak RSS.
+- Native `valhalla_service` binds only `127.0.0.1`; the managed `QProcess` lifecycle has bounded asynchronous readiness and graceful-interrupt/forced-kill shutdown. The asynchronous client enforces loopback, `auto`, kilometres, `vi-VN`, timeout, cancellation, and explicit errors.
+- Twenty alternating real-route requests had 56.138 ms overall median latency. Hoàn Kiếm–Thái Hà is 7.294 km/523.659 s and Hoàn Kiếm–Ba Đình is 4.262 km/392.156 s; native Vietnamese maneuvers are available.
+- The two fixtures are now recorded Valhalla 3.9.1 responses with version/date/dataset metadata. Detailed evidence: `docs/routing/unit-04-valhalla-local-backend.md`.
+
+### Unit 04C — fixture-first routing UI
+
+- Added a map-first Qt Quick screen with map-click and alias/coordinate endpoint selection, calculate action, route polyline, A/B markers, summary, Vietnamese maneuver list, maneuver focus, source/connectivity/error state, attribution, and the existing F3 overlay.
+- The first Release smoke intentionally used the recorded fixture only. `mapReady=true`; the 7.294 km Hoàn Kiếm–Thái Hà route visually followed the local Hanoi vector roads and displayed all 14 maneuvers with explicit `fixture/mô phỏng` and `offline — fixture` labels.
+- The render-facing controller flow is covered by Qt Test. Current minimal runtime lacks Qt Quick Controls/Layouts, so the screen uses dependency-free Qt Quick core primitives. Evidence: `docs/routing/unit-04-routing-ui.md`.
+- The same controller is now connected to the managed backend: it validates the exact loopback listen config, switches the visible source to `Valhalla local`, reports exact missing service/config paths without silently loading a fixture, and refuses unsupported fallback endpoints. Release smoke showed the real route polyline and Vietnamese maneuvers; timed/window exit removed both app/service processes and released port 18002.
+- Route replies are generation-bound and canceled when endpoints change. Shutdown is coordinated asynchronously with a two-second hard-kill bound and Linux parent-death signal. The UI now has persistent maneuver selection, keyboard actions/tab order, panel-aware bounds/collapse, stronger route contrast, zoom-15 street labels, opaque markers, and compact source health colors.
+- Three 15-second idle/render-on-demand Release diagnostics consistently counted one Valhalla child and two total processes; mean process-tree RSS was 423.4-429.9 MiB and mean CPU 2.20-2.53%. This verifies accounting after UI polish, not the deferred full interactive Unit 04E benchmark.
+- PR #21 references Issues #4 and #5, is assigned to `Viet281101`, and uses the `First Management Demo` milestone plus the `feature`, `demo`, `priority:P0`, `area:routing`, `area:map`, and `area:ui` labels. The PR and both issues are in Project #6 with Status `In Progress`, Priority `P0`, and Demo Phase `Week 1`.
 
 ## Active Decisions
 
@@ -73,24 +99,25 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
 - Current application baseline: Qt 5.15.13, dynamically linked MapLibre Native Qt v3.0.0, C++14, QML/Qt Quick, CMake with Ninja, and Qt 5-compatible CMake APIs. Qt 5.13.2 is comparison-only.
 - No public tile-server downloads. Real map artifacts come from the approved Geofabrik/Planetiler/local-service pipeline and stay outside Git.
 - Reference machine: Dell Latitude 5480, i5-6300U, 16 GiB RAM, Intel HD Graphics 520, Mesa direct rendering.
+- Valhalla is the committed Unit 04 routing direction, subject to the availability, Hanoi graph-build, lifecycle, and route-client validation gates in the Unit 04 spec.
 
 ### Proposed — owner approval required
 
-- Use Valhalla for routing and SQLite FTS5 for offline search; both remain unapproved implementation choices.
+- SQLite FTS5 remains an unapproved offline-search direction.
 
 ## In Progress
 
-- Unit 03 is under review in PR #20. No routing or final UI implementation has started.
+- Unit 04 increments A-C are under review in PR #21. Issues #4 and #5 remain open while their acceptance criteria are reviewed. Step D (route replay/guidance) remains explicitly unstarted; only a short static process-tree diagnostic was run, not the full interactive Unit 04E benchmark.
 
 ## Next Up
 
-1. Review PR #20 and merge it with GitHub `Squash and merge` only after approval.
-2. Obtain owner approval for the proposed Valhalla routing direction plus graph-build time/peak-RAM thresholds.
-3. Implement the minimum two-point routing backend and route/maneuver model before final route-planning and navigation UI polish.
+1. Review PR #21 and merge it with GitHub `Squash and merge` only after approval.
+2. Implement route replay, guidance presentation, and maneuver progression against the selected route.
+3. Run the full interactive Release benchmark for QtMaps plus Valhalla after the Unit 04A-C merge gate.
 
 ## Open Questions and Risks
 
-1. What graph-build time and peak-RAM thresholds should trigger reducing the initial nationwide routing scope?
+1. Nationwide graph generation is deferred; record feasibility only if peak RSS stays within the owner-set 10-12 GiB ceiling, and obtain an exact time/limit decision before scheduling the full build.
 2. Is zoom 16 practical for Hanoi/Red River Delta after storage, generation-time, visual-quality, and performance measurements?
 3. Which orthography source, license, attribution, geographic bounds, zoom range, and storage cap are acceptable?
 4. How complete are Vietnam OSM `ref` tags for QL and DT/ĐT roads, and what fallback routing behavior is acceptable?
@@ -123,11 +150,15 @@ Licensing and packaging evidence:
 
 ## Latest Verification
 
-- PR #20 closure gate on 2026-10-24: Qt 5.15.13 Release rebuilt without a new compiler warning; `make test` passed 3/3, `git diff --check` passed, all internal links across 23 tracked Markdown files resolved, and `git ls-files` found no prohibited generated/downloaded artifact. The live PR remains mergeable/clean with CodeRabbit success, the approved assignee/labels/milestone/Project fields, and squash-only repository settings.
+- PR #20 closure gate on 2026-10-24: Qt 5.15.13 Release rebuilt without a new compiler warning; `make test` passed 3/3, `git diff --check` passed, all internal links across 23 tracked Markdown files resolved, and `git ls-files` found no prohibited generated/downloaded artifact. Before its squash merge, the PR was mergeable/clean with CodeRabbit success and the approved tracking metadata.
 - **BUILD PASS:** default Qt 5.15.13 Release `make test` in `build-qt515`: 3/3 executables passed, including manifest corruption, service lifecycle/bounded failure/port conflict, fallback, and navigation-route coverage; `ldd` resolves Qt Core from the system Qt 5.15 runtime.
 - Last pre-Unit03 isolated Qt 5.13.2 comparison: 2/2 passed and `ldd` resolved Qt Core from `/home/viet/Qt/5.13.2/gcc_64`; Unit 03 is intentionally not gated or rerun on the comparison kit.
 - Unit 03 corrected benchmark: three cold plus three warm-cache real-data runs reported `mapReady=true`, 7,168-7,179 interaction frames, no CSV errors, and only loopback IP connections.
 - PR #20 offline recheck used the Release binary with no external network interface or route; style, glyph, sprite, and tile requests resolved only through the random in-process `127.0.0.1` endpoint.
 - `README.md` and `README_VN.md` now document only the validated Qt 5.15.13/MapLibre workflow, current run/benchmark/package commands, and the bounded data, simulated-route, diagnostic-raster, and unimplemented-feature limitations.
 - `.gitignore` explicitly rejects PBF, jar, MBTiles, PMTiles, benchmark CSV/log, cache directories, and screenshot directories regardless of where a local tool creates them; none of these artifact classes is tracked.
-- Local `main` and `origin/main` both resolve to `39f6b0f`, the squash merge of PR #19. Unit 03 is published at `origin/feat/03-local-map-data-pipeline` and open as PR #20; it has not been merged. The pre-existing `.vscode/settings.json` change is user-owned and excluded from every commit.
+- Unit 04A Qt 5.15.13 Release verification: `make test` passed 4/4 executables in 0.64 seconds with no new compiler warning; `git diff --check` passed. Only source, tests, compact JSON fixtures, context, and evidence are changed.
+- Unit conversion follow-up: omitted units default to kilometers, explicit kilometers/miles normalize to meters, and seconds remain unchanged; Release `make test` passes 4/4. Branch backup matched `origin/feat/04-routing` at `6aa1c8e` with no PR.
+- Valhalla survey evidence: `docs/routing/valhalla-availability-survey.md`. Ubuntu apt/release binaries are unavailable; the official 37.5 MB `pyvalhalla` 3.9.1 wheel is preferred over the 156.3 MiB compressed container or a 328-package source-build dependency set.
+- Unit 04B/C closure verification on 2026-10-25: all 6 CTest executables pass; stale delayed replies, active maneuver state, QML keyboard/selection contracts, application-level graceful/forced shutdown, and Linux parent-death cleanup are covered. The real service is one counted direct child on `127.0.0.1:18002`; Alt+F4 and timed exit leave no process/listener, while `kill -9` releases both within 90 ms. The demo script also succeeds from `/tmp`, and missing Valhalla files are logged/shown without fixture fallback.
+- PR #21 verification on 2026-10-25: the Qt 5.15.13 Release build passed 5/5 CTest executables, `git diff --check origin/main...HEAD` passed, and the PR is mergeable. CodeRabbit succeeded on the preceding routing head; the latest docs-only tracking head had no check result reported at final verification. Live metadata confirms the issue references, assignee, milestone, six labels, and Project #6 fields described above. The pre-existing `.vscode/settings.json` change remains user-owned and excluded from every commit.

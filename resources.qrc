@@ -4,8 +4,13 @@
         <file>qml/BlankProbe.qml</file>
         <file>qml/MapboxGlProbe.qml</file>
         <file>qml/NavigationProbe.qml</file>
+        <file>qml/RoutingProbe.qml</file>
         <file>qml/components/PerformanceOverlay.qml</file>
+        <file>qml/components/ManeuverRow.qml</file>
+        <file>qml/components/KeyboardActionButton.qml</file>
         <file>qml/theme/qmldir</file>
         <file>qml/theme/Theme.qml</file>
+        <file alias="fixtures/routing/hanoi_hoan_kiem_to_ba_dinh.json">tests/fixtures/routing/hanoi_hoan_kiem_to_ba_dinh.json</file>
+        <file alias="fixtures/routing/hanoi_hoan_kiem_to_thai_ha.json">tests/fixtures/routing/hanoi_hoan_kiem_to_thai_ha.json</file>
     </qresource>
 </RCC>

@@ -1,0 +1,285 @@
+{
+  "trip": {
+    "locations": [
+      {
+        "type": "break",
+        "lat": 21.0285,
+        "lon": 105.8542,
+        "original_index": 0
+      },
+      {
+        "type": "break",
+        "lat": 21.0369,
+        "lon": 105.834,
+        "side_of_street": "left",
+        "original_index": 1
+      }
+    ],
+    "legs": [
+      {
+        "maneuvers": [
+          {
+            "type": 1,
+            "instruction": "Lái về phía tây.",
+            "verbal_succinct_transition_instruction": "Lái về phía tây. Rồi Rẽ phải vào Phố Đinh Tiên Hoàng.",
+            "verbal_pre_transition_instruction": "Lái về phía tây. Rồi Rẽ phải vào Phố Đinh Tiên Hoàng.",
+            "verbal_post_transition_instruction": "Tiếp tục đi thêm 10 mét.",
+            "bearing_after": 280,
+            "time": 3.6,
+            "length": 0.01,
+            "cost": 4.23,
+            "begin_shape_index": 0,
+            "end_shape_index": 2,
+            "verbal_multi_cue": true,
+            "travel_mode": "drive",
+            "travel_type": "car"
+          },
+          {
+            "type": 10,
+            "instruction": "Rẽ phải vào Phố Đinh Tiên Hoàng.",
+            "verbal_transition_alert_instruction": "Rẽ phải vào Phố Đinh Tiên Hoàng.",
+            "verbal_succinct_transition_instruction": "Rẽ phải. Rồi Giữ bên trái để đi trên Phố Đinh Tiên Hoàng.",
+            "verbal_pre_transition_instruction": "Rẽ phải vào Phố Đinh Tiên Hoàng. Rồi Giữ bên trái để đi trên Phố Đinh Tiên Hoàng.",
+            "verbal_post_transition_instruction": "Tiếp tục đi thêm 200 mét.",
+            "street_names": [
+              "Phố Đinh Tiên Hoàng"
+            ],
+            "bearing_before": 280,
+            "bearing_after": 8,
+            "time": 14.493,
+            "length": 0.206,
+            "cost": 39.193,
+            "begin_shape_index": 2,
+            "end_shape_index": 15,
+            "has_time_restrictions": true,
+            "verbal_multi_cue": true,
+            "travel_mode": "drive",
+            "travel_type": "car"
+          },
+          {
+            "type": 16,
+            "instruction": "Giữ bên trái để đi trên Phố Đinh Tiên Hoàng.",
+            "verbal_transition_alert_instruction": "Giữ bên trái để đi trên Phố Đinh Tiên Hoàng.",
+            "verbal_succinct_transition_instruction": "Giữ bên trái.",
+            "verbal_pre_transition_instruction": "Giữ bên trái để đi trên Phố Đinh Tiên Hoàng.",
+            "verbal_post_transition_instruction": "Tiếp tục đi thêm 400 mét.",
+            "street_names": [
+              "Phố Đinh Tiên Hoàng"
+            ],
+            "bearing_before": 2,
+            "bearing_after": 333,
+            "time": 23.106,
+            "length": 0.352,
+            "cost": 46.192,
+            "begin_shape_index": 15,
+            "end_shape_index": 46,
+            "has_time_restrictions": true,
+            "travel_mode": "drive",
+            "travel_type": "car"
+          },
+          {
+            "type": 16,
+            "instruction": "Giữ bên trái vào Phố Lê Thái Tổ.",
+            "verbal_transition_alert_instruction": "Giữ bên trái vào Phố Lê Thái Tổ.",
+            "verbal_succinct_transition_instruction": "Giữ bên trái.",
+            "verbal_pre_transition_instruction": "Giữ bên trái vào Phố Lê Thái Tổ.",
+            "verbal_post_transition_instruction": "Tiếp tục đi thêm 700 mét.",
+            "street_names": [
+              "Phố Lê Thái Tổ"
+            ],
+            "bearing_before": 257,
+            "bearing_after": 213,
+            "time": 43.845,
+            "length": 0.684,
+            "cost": 78.775,
+            "begin_shape_index": 46,
+            "end_shape_index": 91,
+            "has_time_restrictions": true,
+            "travel_mode": "drive",
+            "travel_type": "car"
+          },
+          {
+            "type": 10,
+            "instruction": "Rẽ phải vào Phố Tràng Thi.",
+            "verbal_transition_alert_instruction": "Rẽ phải vào Phố Tràng Thi.",
+            "verbal_succinct_transition_instruction": "Rẽ phải.",
+            "verbal_pre_transition_instruction": "Rẽ phải vào Phố Tràng Thi.",
+            "verbal_post_transition_instruction": "Tiếp tục đi thêm 1.5 ki-lô-mét.",
+            "street_names": [
+              "Phố Tràng Thi"
+            ],
+            "bearing_before": 155,
+            "bearing_after": 288,
+            "time": 88.269,
+            "length": 1.256,
+            "cost": 192.663,
+            "begin_shape_index": 91,
+            "end_shape_index": 149,
+            "has_time_restrictions": true,
+            "travel_mode": "drive",
+            "travel_type": "car"
+          },
+          {
+            "type": 16,
+            "instruction": "Giữ bên trái vào Phố Trần Phú.",
+            "verbal_transition_alert_instruction": "Giữ bên trái vào Phố Trần Phú.",
+            "verbal_succinct_transition_instruction": "Giữ bên trái.",
+            "verbal_pre_transition_instruction": "Giữ bên trái vào Phố Trần Phú.",
+            "verbal_post_transition_instruction": "Tiếp tục đi thêm 800 mét.",
+            "street_names": [
+              "Phố Trần Phú"
+            ],
+            "bearing_before": 317,
+            "bearing_after": 282,
+            "time": 55.933,
+            "length": 0.824,
+            "cost": 102.314,
+            "begin_shape_index": 149,
+            "end_shape_index": 183,
+            "travel_mode": "drive",
+            "travel_type": "car"
+          },
+          {
+            "type": 10,
+            "instruction": "Rẽ phải vào Phố Ông Ích Khiêm.",
+            "verbal_transition_alert_instruction": "Rẽ phải vào Phố Ông Ích Khiêm.",
+            "verbal_succinct_transition_instruction": "Rẽ phải.",
+            "verbal_pre_transition_instruction": "Rẽ phải vào Phố Ông Ích Khiêm.",
+            "verbal_post_transition_instruction": "Tiếp tục đi thêm 200 mét.",
+            "street_names": [
+              "Phố Ông Ích Khiêm"
+            ],
+            "bearing_before": 283,
+            "bearing_after": 10,
+            "time": 18.845,
+            "length": 0.235,
+            "cost": 46.726,
+            "begin_shape_index": 183,
+            "end_shape_index": 194,
+            "travel_mode": "drive",
+            "travel_type": "car"
+          },
+          {
+            "type": 15,
+            "instruction": "Rẽ trái vào Phố Lê Hồng Phong.",
+            "verbal_transition_alert_instruction": "Rẽ trái vào Phố Lê Hồng Phong.",
+            "verbal_succinct_transition_instruction": "Rẽ trái.",
+            "verbal_pre_transition_instruction": "Rẽ trái vào Phố Lê Hồng Phong.",
+            "verbal_post_transition_instruction": "Tiếp tục đi thêm 200 mét.",
+            "street_names": [
+              "Phố Lê Hồng Phong"
+            ],
+            "bearing_before": 9,
+            "bearing_after": 275,
+            "time": 18.434,
+            "length": 0.207,
+            "cost": 56.507,
+            "begin_shape_index": 194,
+            "end_shape_index": 201,
+            "travel_mode": "drive",
+            "travel_type": "car"
+          },
+          {
+            "type": 10,
+            "instruction": "Rẽ phải vào Phố Ngọc Hà.",
+            "verbal_transition_alert_instruction": "Rẽ phải vào Phố Ngọc Hà.",
+            "verbal_succinct_transition_instruction": "Rẽ phải.",
+            "verbal_pre_transition_instruction": "Rẽ phải vào Phố Ngọc Hà.",
+            "verbal_post_transition_instruction": "Tiếp tục đi thêm 300 mét.",
+            "street_names": [
+              "Phố Ngọc Hà"
+            ],
+            "bearing_before": 248,
+            "bearing_after": 6,
+            "time": 28.858,
+            "length": 0.296,
+            "cost": 80.107,
+            "begin_shape_index": 201,
+            "end_shape_index": 222,
+            "travel_mode": "drive",
+            "travel_type": "car"
+          },
+          {
+            "type": 10,
+            "instruction": "Rẽ phải.",
+            "verbal_transition_alert_instruction": "Rẽ phải.",
+            "verbal_succinct_transition_instruction": "Rẽ phải.",
+            "verbal_pre_transition_instruction": "Rẽ phải.",
+            "verbal_post_transition_instruction": "Tiếp tục đi thêm 200 mét.",
+            "bearing_before": 359,
+            "bearing_after": 91,
+            "time": 96.768,
+            "length": 0.19,
+            "cost": 1400.321,
+            "begin_shape_index": 222,
+            "end_shape_index": 232,
+            "travel_mode": "drive",
+            "travel_type": "car"
+          },
+          {
+            "type": 6,
+            "instruction": "Điểm đến của bạn nằm ở trái.",
+            "verbal_transition_alert_instruction": "Địa điểm của bạn sẽ nằm ở trái.",
+            "verbal_pre_transition_instruction": "Điểm đến của bạn nằm ở trái.",
+            "bearing_before": 96,
+            "time": 0.0,
+            "length": 0.0,
+            "cost": 0.0,
+            "begin_shape_index": 232,
+            "end_shape_index": 232,
+            "travel_mode": "drive",
+            "travel_type": "car"
+          }
+        ],
+        "summary": {
+          "has_time_restrictions": true,
+          "has_toll": false,
+          "has_highway": false,
+          "has_ferry": false,
+          "min_lat": 21.025945,
+          "min_lon": 105.831063,
+          "max_lat": 21.03701,
+          "max_lon": 105.853889,
+          "time": 392.156,
+          "length": 4.262,
+          "cost": 2047.031
+        },
+        "shape": "ohnbg@oyx{hEARYbDa@E_Ik@i@E_BIaBMgCGeEKoJYoQY_BE}@Aqn@cAmCE{AlA{Br@wCfAsB~@eCtA{@r@_A|@o@`@c@T_LhGyI|Dg@TwFzA}An@gKxFsAz@kA|@[j@gBjEiBnAQ~BiB~X_Cf^E`A?|@n@nA[`GDnFb@dDx@xDj@jEvA|@d@ZlEdEpBjBnDvBvA~@lAnBzCd@zCjA~Ed@xBDzBM`HcApB_@jCe@|GiA~FaA|H}@x@Mb~@gNdFk@d@GdDSxDGfD?xDJ~NdBlIvAvEdAzA`@dAVj@PxGpA`Fn@|B\\pBSrAQp@Mrz@cOj@Kfc@aHHCjDy@bBo@fCsAsC~MCLQbAsKdl@GXi@nCG`@y@hEmCjNKl@y@nEiAfGKj@eHx_@iKxk@Q|@Kl@aClMQ~@Q~@mErUS`AcBpIeArFg@fCiIpb@uMfu@WjAgAnGaAvF[~A_Qr_A_@pBg@~BuDnQsBdIoEjN_C`Ji@~Bi@|BgAlE_A~CcAvC_B`CmS~RyBxB_QrPaE|DkP`PkChCqIhIcJ|ImArCsLnLmLhLaG~F{GvGkChCm@nFs@jG_ArI]|CaAvIyArMgDbZ}@bIkEh`@cAvIYnCQtAg@vEQvAYjC}Hpr@wE~a@wGxl@EXg@jESbFATkBxQuBzQS|A{A~NuArMQxA_Ffb@uAfLuAfL}@~IoDfZ_@pC{LoAuYyCgDa@iOwF{Be@wBSeLIq_@[{CGyAOkE_@sATgAtA]zAcC|p@kCxt@V~DzArBsDSyFnAeD|@wCt@qGfBoIvBgFnA_AXkIfBwDz@gGlAuKxB_F~@}MnBaInAqDn@_Fv@oD^eFNkD@oHD@_E?u@FuExEBd@eE`Ec^wKOLwElBs`@??"
+      }
+    ],
+    "summary": {
+      "has_time_restrictions": true,
+      "has_toll": false,
+      "has_highway": false,
+      "has_ferry": false,
+      "min_lat": 21.025945,
+      "min_lon": 105.831063,
+      "max_lat": 21.03701,
+      "max_lon": 105.853889,
+      "time": 392.156,
+      "length": 4.262,
+      "cost": 2047.031
+    },
+    "status_message": "Found route between points",
+    "status": 0,
+    "units": "kilometers",
+    "language": "vi-VN"
+  },
+  "fixture_metadata": {
+    "id": "hanoi-hoan-kiem-to-ba-dinh-valhalla-3.9.1",
+    "source": "recorded from local Valhalla 3.9.1",
+    "recorded_date": "2026-10-24",
+    "backend_calculated": true,
+    "input_dataset": "Geofabrik Vietnam replication timestamp 2026-10-22T20:21:33Z; Hanoi buffered extract",
+    "origin": {
+      "label": "Hoàn Kiếm",
+      "lat": 21.0285,
+      "lon": 105.8542
+    },
+    "destination": {
+      "label": "Ba Đình",
+      "lat": 21.0369,
+      "lon": 105.8340
+    }
+  }
+}

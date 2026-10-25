@@ -19,7 +19,7 @@
 | Map source data | Approved local Geofabrik Vietnam OSM PBF | Committed for bounded Hanoi Unit 03 package | Input for the local map pipeline |
 | Vector pipeline | Planetiler v0.10.2 to versioned MBTiles package | Committed for Unit 03 | Generate bounded Hanoi vector tiles and manifest |
 | Tile access | In-process `TileSource`; loopback HTTP plus `QSqlDatabase` on a worker thread | Committed for Unit 03 | Serve validated MBTiles/resources on a random `127.0.0.1` port |
-| Routing | Valhalla child process | Proposed | Offline route, maneuvers, and map matching |
+| Routing | Valhalla child process | Committed for Unit 04; build/runtime validation pending | Offline route and maneuvers behind a fixture-compatible route contract |
 | Search | SQLite FTS5 index | Proposed | Offline geocoding/search |
 | Position simulation | QtPositioning and route/NMEA replay | Proposed | Simulated GPS for navigation |
 | Performance | `QQuickWindow::frameSwapped` metrics plus Linux `/proc` process-tree CSV logger | Implemented and verified in unit 02 | Capture FPS, RAM, and CPU for the app process tree |
@@ -58,6 +58,20 @@ Large generated datasets, caches, routing graphs, and third-party artifacts must
 
 - Unit 03 vector tiles are served by an in-process `TileSource` implementation. Its loopback HTTP server and SQLite connection live on a dedicated worker thread; the interface preserves a future QProcess-backed implementation boundary.
 - QtMaps owns the lifecycle of any later routing or external tile-server child process through `QProcess`.
+- Unit 04 runs the native `valhalla_service` executable shipped inside the
+  ignored, checksum-pinned `pyvalhalla` virtualenv as a direct `QProcess`
+  child. The service receives an explicit generated config, uses at most two
+  workers, and listens only on a configured `127.0.0.1` port. A bounded
+  asynchronous `/status` probe controls readiness; shutdown first sends the
+  service's graceful interrupt signal. An application-level asynchronous
+  shutdown coordinator waits for the stopped signal, applies a forced kill
+  after two seconds if needed, and only then allows the application to exit.
+  On Linux, the `QProcess` child sets `PR_SET_PDEATHSIG` to `SIGTERM` before
+  exec so an ungraceful parent death cannot orphan Valhalla.
+- The routing client uses asynchronous `QNetworkAccessManager` requests to the
+  loopback service, requests `auto` costing, kilometre units, and `vi-VN`
+  directions, then normalizes the response into the backend-independent route
+  contract. QML never owns network replies or child-process state.
 - Child services start only when required, expose readiness/failure state, and shut down when the application exits.
 - Startup must use bounded timeouts and actionable errors; it must never wait indefinitely on the UI thread.
 - Routing, tile I/O, search, process monitoring, and service output parsing must not block the UI thread.

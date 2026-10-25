@@ -86,6 +86,16 @@ make hanoi-package \
 
 Quy trình kiểm chứng mất mạng hoàn toàn và benchmark đầy đủ nằm trong [evidence Unit 03](docs/benchmarks/unit-03-local-map-data-pipeline.md).
 
+Có thể chạy demo routing từ bất kỳ thư mục nào bằng:
+
+```bash
+/duong/dan/tuyet/doi/toi/QtMaps/tools/run-demo.sh
+```
+
+Script tự chuyển về thư mục gốc repo và truyền đường dẫn tuyệt đối cho map,
+service và config. Nếu thiếu file Valhalla, UI hiện đúng đường dẫn bị thiếu và
+không âm thầm vẽ tuyến fixture.
+
 ## Nguyên tắc triển khai
 
 - Chỉ dùng API tương thích Qt 5.15.13; không dùng API chỉ có trên Qt 6.
@@ -118,10 +128,10 @@ Kết quả thực tế được ghi theo [mẫu benchmark](docs/benchmarks/benc
 - Qt 5.15.13 hệ thống và MapLibre Native Qt v3.0.0 liên kết động là baseline đã duyệt; Qt 5.13.2 tại `/home/viet/Qt/5.13.2/gcc_64` được giữ để đối chiếu.
 - CMake/Ninja/ccache Release build và CTest đã được xác nhận. Việc chọn Qt dùng `CMAKE_PREFIX_PATH` hoặc biến Makefile, không đổi `PATH` toàn cục.
 - Package vector có checksum hiện chỉ bao phủ vùng Hà Nội giới hạn ở zoom 12–15; chưa phải dữ liệu toàn quốc.
-- Tuyến 5,47 km và chuyển động 40 km/h đang hiển thị là fixture mô phỏng xác định trước, chưa phải kết quả từ routing engine.
+- PR #20 đã merge. Tuyến 5,47 km và chuyển động 40 km/h của Unit 03 vẫn là fixture navigation mô phỏng xác định trước, chưa phải kết quả từ routing engine.
+- Luồng lập tuyến Unit 04 hiện chạy Valhalla 3.9.1 local do ứng dụng quản lý, chỉ bind loopback, và trả về geometry, quãng đường, thời gian cùng chỉ dẫn tiếng Việt thật cho routing graph vùng đại Hà Nội giới hạn. Fixture ghi sẵn chỉ dùng trong chế độ fixture có nhãn rõ hoặc fallback khi request lỗi được hiển thị; thiếu file khởi động không kích hoạt fixture.
 - Raster fallback chỉ là ảnh chẩn đoán local để kiểm tra phát hiện lỗi và chuyển nguồn, chưa phải raster Hà Nội thật.
-- Routing, search offline, orthography, UI sản phẩm hoàn chỉnh, installer và kiểm chứng ổn định dài hạn chưa được triển khai.
-- Unit 03 đã hoàn tất trên PR #20: package có version/checksum, tile service in-process chỉ bind loopback, fallback chẩn đoán có lý do và benchmark navigation cold/warm đủ 120 giây; PR chưa merge.
+- Navigation replay theo tuyến đã chọn, re-routing, benchmark toàn cây tiến trình QtMaps + Valhalla, routing graph toàn quốc, search offline, orthography, UI sản phẩm hoàn chỉnh, installer và kiểm chứng ổn định dài hạn chưa được triển khai.
 
 Trạng thái chi tiết và bước tiếp theo nằm trong [progress tracker](context/progress-tracker.md). Kiến trúc, UI, coding standards và workflow nằm trong thư mục [`context/`](context/).
 

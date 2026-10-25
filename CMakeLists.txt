@@ -89,6 +89,29 @@ target_link_libraries(qtmaps_map_probe PUBLIC
     Qt5::Sql
 )
 
+add_library(qtmaps_routing STATIC
+    src/routing/Polyline6Decoder.cpp
+    src/routing/Polyline6Decoder.h
+    src/routing/Route.h
+    src/routing/RoutingController.cpp
+    src/routing/RoutingController.h
+    src/routing/ValhallaRouteClient.cpp
+    src/routing/ValhallaRouteClient.h
+    src/routing/ValhallaRouteParser.cpp
+    src/routing/ValhallaRouteParser.h
+    src/routing/ValhallaServiceManager.cpp
+    src/routing/ValhallaServiceManager.h
+)
+target_include_directories(qtmaps_routing PUBLIC "${CMAKE_SOURCE_DIR}/src")
+target_link_libraries(qtmaps_routing PUBLIC Qt5::Core Qt5::Network Qt5::Positioning)
+
+add_library(qtmaps_app_core STATIC
+    src/core/ApplicationShutdownCoordinator.cpp
+    src/core/ApplicationShutdownCoordinator.h
+)
+target_include_directories(qtmaps_app_core PUBLIC "${CMAKE_SOURCE_DIR}/src")
+target_link_libraries(qtmaps_app_core PUBLIC qtmaps_routing Qt5::Core)
+
 qt5_add_resources(QTMAPS_RESOURCES resources.qrc)
 
 add_executable(qtmaps
@@ -97,8 +120,10 @@ add_executable(qtmaps
 )
 
 target_link_libraries(qtmaps PRIVATE
+    qtmaps_app_core
     qtmaps_map_probe
     qtmaps_perf
+    qtmaps_routing
     Qt5::Core
     Qt5::Gui
     Qt5::Location
@@ -128,4 +153,41 @@ if(BUILD_TESTING)
         Qt5::Test
     )
     add_test(NAME qtmaps_map_pipeline_tests COMMAND qtmaps_map_pipeline_tests)
+
+    add_executable(qtmaps_routing_tests tests/routing/tst_Routing.cpp)
+    target_compile_definitions(qtmaps_routing_tests PRIVATE
+        QTMAPS_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+    target_link_libraries(qtmaps_routing_tests PRIVATE qtmaps_routing Qt5::Test)
+    add_test(NAME qtmaps_routing_tests COMMAND qtmaps_routing_tests)
+
+    add_executable(qtmaps_valhalla_runtime_tests
+        tests/routing/tst_ValhallaRuntime.cpp
+        ${QTMAPS_RESOURCES}
+    )
+    target_compile_definitions(qtmaps_valhalla_runtime_tests PRIVATE
+        QTMAPS_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+    target_link_libraries(qtmaps_valhalla_runtime_tests PRIVATE
+        qtmaps_app_core
+        qtmaps_perf
+        qtmaps_routing
+        Qt5::Network
+        Qt5::Test
+    )
+    add_test(NAME qtmaps_valhalla_runtime_tests COMMAND qtmaps_valhalla_runtime_tests)
+
+    add_executable(qtmaps_routing_qml_tests
+        tests/routing/tst_RoutingQml.cpp
+        ${QTMAPS_RESOURCES}
+    )
+    target_link_libraries(qtmaps_routing_qml_tests PRIVATE
+        Qt5::Gui
+        Qt5::Qml
+        Qt5::Quick
+        Qt5::Test
+    )
+    add_test(NAME qtmaps_routing_qml_tests COMMAND qtmaps_routing_qml_tests)
+    set_tests_properties(qtmaps_routing_qml_tests PROPERTIES
+        ENVIRONMENT
+            "QT_QPA_PLATFORM=offscreen;QML2_IMPORT_PATH=${CMAKE_SOURCE_DIR}/generated/unit-01b/qml-runtime/usr/lib/x86_64-linux-gnu/qt5/qml")
+
 endif()
