@@ -18,5 +18,13 @@ interpolation, 2x progress, pause retention, resume/arrival, stop/reset, and an
 unsupported speed. The D1 visual fixture smoke rendered the new controls and
 source label over the real local Hanoi map.
 
-D2 guidance and the full D3 review evidence remain pending. D4 re-routing, E
+## D2 maneuver guidance
+
+Replay progress is mapped to cumulative polyline distance and maneuver shape
+indices. The active banner shows the next instruction, street name, distance to
+that maneuver, total distance/time remaining, arrival, and the retained route
+source. The maneuver list follows the same active index during replay. Focused
+Release controller and QML smoke tests pass.
+
+The full D3 boundary/QML review evidence remains pending. D4 re-routing, E
 measurement, and F follow-ups have not started.

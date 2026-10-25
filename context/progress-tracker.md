@@ -101,6 +101,15 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
   marker, camera follow, bearing rotation, and 45-degree tilt. Focused lifecycle,
   interpolation, speed, pause, stop, arrival, and missing-route tests pass.
 
+### Unit 05D2 — maneuver guidance
+
+- Replay progress now selects the next maneuver from cumulative route geometry,
+  reports distance to that maneuver plus remaining route distance/time, and
+  keeps the maneuver list synchronized while navigation is active.
+- A source-labeled navigation banner presents the current instruction, street,
+  remaining values, and an explicit arrival state. Focused controller tests pass;
+  D3 boundary and QML coverage remain the active review-gate work.
+
 ## Active Decisions
 
 ### Committed
@@ -117,14 +126,13 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
 
 ## In Progress
 
-- Unit 05 D1 is implemented locally. D2 maneuver guidance and D3 boundary/QML
-  tests are next; stop for owner review after D3. D4, E, and F have not started.
+- Unit 05 D1-D2 are implemented locally. D3 boundary/QML tests and manual
+  evidence are next; stop for owner review after D3. D4, E, and F have not started.
 
 ## Next Up
 
-1. Implement D2 maneuver guidance against cumulative selected-route progress.
-2. Complete D3 boundary and QML tests, Release/manual evidence, then stop for owner review.
-3. Do not start D4 or E before the D3 review gate.
+1. Complete D3 boundary and QML tests, Release/manual evidence, then stop for owner review.
+2. Do not start D4 or E before the D3 review gate.
 
 ## Open Questions and Risks
 

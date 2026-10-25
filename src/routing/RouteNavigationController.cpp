@@ -28,6 +28,29 @@ bool RouteNavigationController::running() const { return state_ == State::Runnin
 bool RouteNavigationController::paused() const { return state_ == State::Paused; }
 bool RouteNavigationController::arrived() const { return state_ == State::Arrived; }
 QString RouteNavigationController::statusMessage() const { return statusMessage_; }
+int RouteNavigationController::currentManeuverIndex() const { return currentManeuverIndex_; }
+QString RouteNavigationController::maneuverInstruction() const
+{
+    return currentManeuverIndex_ >= 0 && currentManeuverIndex_ < route_.maneuvers.size()
+        ? route_.maneuvers.at(currentManeuverIndex_).instruction : QString();
+}
+QString RouteNavigationController::maneuverStreetName() const
+{
+    return currentManeuverIndex_ >= 0 && currentManeuverIndex_ < route_.maneuvers.size()
+        ? route_.maneuvers.at(currentManeuverIndex_).streetName : QString();
+}
+double RouteNavigationController::distanceToManeuverMeters() const
+{
+    return distanceToManeuverMeters_;
+}
+double RouteNavigationController::remainingDistanceMeters() const
+{
+    return remainingDistanceMeters_;
+}
+double RouteNavigationController::remainingDurationSeconds() const
+{
+    return remainingDurationSeconds_;
+}
 
 void RouteNavigationController::setRoute(const Route &route, const QString &sourceLabel)
 {
@@ -35,6 +58,7 @@ void RouteNavigationController::setRoute(const Route &route, const QString &sour
     route_ = route;
     sourceLabel_ = sourceLabel;
     cumulativeMeters_.clear();
+    maneuverDistances_.clear();
     routeLengthMeters_ = 0.0;
     travelledMeters_ = 0.0;
     bearing_ = 0.0;
@@ -66,6 +90,15 @@ void RouteNavigationController::setRoute(const Route &route, const QString &sour
         setState(State::Error, QStringLiteral("Tuyến thiếu quãng đường hoặc thời gian phát lại"));
         return;
     }
+    maneuverDistances_.reserve(route_.maneuvers.size());
+    for (const RouteManeuver &maneuver : route_.maneuvers) {
+        if (maneuver.shapeIndex < 0 || maneuver.shapeIndex >= cumulativeMeters_.size()) {
+            clearRoute();
+            setState(State::Error, QStringLiteral("Tuyến có maneuver ngoài hình học"));
+            return;
+        }
+        maneuverDistances_.append(cumulativeMeters_.at(maneuver.shapeIndex));
+    }
 
     updatePosition(0.0);
     setState(State::Ready, QStringLiteral("Sẵn sàng chỉ đường • %1").arg(sourceLabel_));
@@ -78,13 +111,19 @@ void RouteNavigationController::clearRoute()
     route_ = Route();
     sourceLabel_.clear();
     cumulativeMeters_.clear();
+    maneuverDistances_.clear();
     coordinate_ = QGeoCoordinate();
     bearing_ = 0.0;
     routeLengthMeters_ = 0.0;
     travelledMeters_ = 0.0;
+    currentManeuverIndex_ = -1;
+    distanceToManeuverMeters_ = 0.0;
+    remainingDistanceMeters_ = 0.0;
+    remainingDurationSeconds_ = 0.0;
     setState(State::NoRoute, QStringLiteral("Chưa có tuyến để chỉ đường"));
     emit routeChanged();
     emit positionChanged();
+    emit guidanceChanged();
 }
 
 QGeoCoordinate RouteNavigationController::coordinateAtDistance(double distanceMeters,
@@ -218,7 +257,40 @@ void RouteNavigationController::updatePosition(double distanceMeters)
 {
     travelledMeters_ = std::max(0.0, std::min(distanceMeters, routeLengthMeters_));
     coordinate_ = coordinateAtDistance(travelledMeters_, &bearing_);
+    updateGuidance();
     emit positionChanged();
+}
+
+void RouteNavigationController::updateGuidance()
+{
+    if (!route_.isValid() || maneuverDistances_.isEmpty() || routeLengthMeters_ <= 0.0) {
+        currentManeuverIndex_ = -1;
+        distanceToManeuverMeters_ = 0.0;
+        remainingDistanceMeters_ = 0.0;
+        remainingDurationSeconds_ = 0.0;
+        emit guidanceChanged();
+        return;
+    }
+
+    const double progress = std::max(
+        0.0, std::min(1.0, travelledMeters_ / routeLengthMeters_));
+    remainingDistanceMeters_ = route_.distanceMeters * (1.0 - progress);
+    remainingDurationSeconds_ = route_.durationSeconds * (1.0 - progress);
+
+    int selected = 0;
+    if (travelledMeters_ > 0.01) {
+        selected = maneuverDistances_.size() - 1;
+        for (int index = 0; index < maneuverDistances_.size(); ++index) {
+            if (maneuverDistances_.at(index) > travelledMeters_ + 0.01) {
+                selected = index;
+                break;
+            }
+        }
+    }
+    currentManeuverIndex_ = selected;
+    distanceToManeuverMeters_ = std::max(
+        0.0, maneuverDistances_.at(selected) - travelledMeters_);
+    emit guidanceChanged();
 }
 
 } // namespace routing

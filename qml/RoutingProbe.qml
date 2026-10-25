@@ -231,6 +231,26 @@ Window {
         }
     }
 
+    NavigationBanner {
+        id: navigationBanner
+        visible: routeNavigationController.active
+        x: root.panelCollapsed
+           ? (root.width - width) / 2
+           : routePanel.x + routePanel.width + Theme.spaceLg
+             + Math.max(0, (root.width - routePanel.x - routePanel.width
+                            - Theme.spaceLg - width) / 2)
+        anchors.top: parent.top
+        anchors.topMargin: Theme.spaceMd
+        z: 30
+        instruction: routeNavigationController.maneuverInstruction
+        streetName: routeNavigationController.maneuverStreetName
+        sourceLabel: routeNavigationController.sourceLabel
+        distanceToManeuverMeters: routeNavigationController.distanceToManeuverMeters
+        remainingDistanceMeters: routeNavigationController.remainingDistanceMeters
+        remainingDurationSeconds: routeNavigationController.remainingDurationSeconds
+        arrived: routeNavigationController.arrived
+    }
+
     Rectangle {
         id: routePanel
         anchors.top: parent.top
@@ -452,7 +472,9 @@ Window {
             clip: true
             spacing: Theme.spaceXs
             model: routingController.maneuvers
-            currentIndex: routingController.currentManeuverIndex
+            currentIndex: routeNavigationController.active
+                          ? routeNavigationController.currentManeuverIndex
+                          : routingController.currentManeuverIndex
             activeFocusOnTab: true
 
             Keys.onDownPressed: {
@@ -471,7 +493,9 @@ Window {
                 width: maneuverList.width
                 maneuverIndex: index
                 maneuver: modelData
-                selected: index === routingController.currentManeuverIndex
+                selected: index === (routeNavigationController.active
+                                     ? routeNavigationController.currentManeuverIndex
+                                     : routingController.currentManeuverIndex)
                 onActivated: {
                     routingController.focusManeuver(maneuverIndex)
                     maneuverList.forceActiveFocus()
