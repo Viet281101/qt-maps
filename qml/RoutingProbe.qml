@@ -23,6 +23,12 @@ Window {
                                         && routingController.connectionLabel.indexOf("loopback") >= 0
                                         ? Theme.success : Theme.warning
 
+    onClosing: {
+        close.accepted = false
+        root.visible = false
+        shutdownCoordinator.requestQuit()
+    }
+
     function applyEndpoints() {
         if (routingController.setOriginInput(originField.text))
             routingController.setDestinationInput(destinationField.text)

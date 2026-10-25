@@ -18,7 +18,7 @@ public:
     explicit ApplicationShutdownCoordinator(routing::RoutingController *routingController,
                                             QObject *parent = nullptr);
 
-    void requestQuit();
+    Q_INVOKABLE void requestQuit();
     bool isShuttingDown() const;
 
 signals:

@@ -82,6 +82,7 @@ private slots:
         QVERIFY(qml.contains("map.zoomLevel >= 15"));
         QVERIFY(qml.contains("routingController.currentManeuverIndex"));
         QVERIFY(qml.contains("routeSummaryColor"));
+        QVERIFY(qml.contains("shutdownCoordinator.requestQuit()"));
     }
 };
 

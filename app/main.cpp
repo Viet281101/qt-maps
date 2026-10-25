@@ -145,6 +145,8 @@ int main(int argc, char *argv[])
                                              &navigationController);
     engine.rootContext()->setContextProperty(QStringLiteral("routingController"),
                                              &routingController);
+    engine.rootContext()->setContextProperty(QStringLiteral("shutdownCoordinator"),
+                                             &shutdownCoordinator);
     engine.rootContext()->setContextProperty(
         QStringLiteral("routingFixtureOnly"),
         parser.isSet(QStringLiteral("routing-fixture-only")));
