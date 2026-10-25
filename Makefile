@@ -17,7 +17,7 @@ QMAKE := $(QT_PREFIX)/bin/qmake
 QTMAPS := $(BUILD_DIR)/qtmaps
 
 .PHONY: help requirements configure build test run diagnostic-tiles vector-fixture vector-real-style hanoi-package \
-	serve-diagnostic-tiles serve-vector-fixture run-mapboxgl-probe clean
+	serve-diagnostic-tiles serve-vector-fixture run-mapboxgl-probe clean clean-old-builds
 
 help:
 	@echo "QtMaps development targets"
@@ -34,6 +34,7 @@ help:
 	@echo "  make serve-vector-fixture  Serve the vector fixture on 127.0.0.1:8766"
 	@echo "  make run-mapboxgl-probe    Run probe (vector fixture server must be separate)"
 	@echo "  make clean                 Clean compiled outputs through CMake"
+	@echo "  make clean-old-builds      Remove other root build/build-* CMake directories; keep BUILD_DIR"
 	@echo
 	@echo "Overrides: QT_PREFIX, QT_EXPECTED_VERSION, QTMAPS_MIN_QT_VERSION, BUILD_DIR, BUILD_TYPE, CMAKE, PYTHON, QT_RUNTIME_PLUGIN_PATH, HANOI_PBF, PLANETILER_JAR"
 
@@ -103,3 +104,27 @@ clean:
 	else \
 		echo "clean: $(BUILD_DIR) does not exist"; \
 	fi
+
+clean-old-builds:
+	@set -eu; \
+		repository_root="$$(pwd -P)"; \
+		active_build="$$(realpath -m "$(BUILD_DIR)")"; \
+		removed=0; \
+		for candidate in build build-*; do \
+			test -d "$$candidate" || continue; \
+			candidate_path="$$(realpath -m "$$candidate")"; \
+			case "$$candidate_path" in "$$repository_root"/build|"$$repository_root"/build-*) ;; *) \
+				echo "clean-old-builds: refusing path outside root build directories: $$candidate" >&2; exit 1;; esac; \
+			if test "$$candidate_path" = "$$active_build"; then \
+				echo "clean-old-builds: keeping active BUILD_DIR $$candidate"; continue; \
+			fi; \
+			if test ! -f "$$candidate/CMakeCache.txt"; then \
+				echo "clean-old-builds: skipping non-CMake directory $$candidate"; continue; \
+			fi; \
+			echo "clean-old-builds: removing $$candidate"; \
+			rm -rf -- "$$candidate"; \
+			removed=1; \
+		done; \
+		if test "$$removed" = 0; then \
+			echo "clean-old-builds: no old CMake build directories found"; \
+		fi
