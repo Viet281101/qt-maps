@@ -37,21 +37,51 @@ Nationwide high-detail coverage, a complete data pipeline, installer packaging, 
 | Raster rendering    | Diagnostic localhost fallback validated; real raster data deferred    |
 | Vector rendering    | Approved MapLibre Native Qt v3.0.0 over validated local MBTiles       |
 | Map data            | Versioned Hanoi package from the approved Geofabrik PBF/Planetiler    |
-| Routing             | A local Valhalla child process is the proposed approach               |
+| Routing             | Committed local Valhalla child process managed by QtMaps              |
 | Offline search      | A project-built SQLite FTS5 index is the proposed approach            |
 | Position simulation | QtPositioning with route or NMEA replay                               |
 | Performance         | Rendered-frame FPS and process-tree CPU/RAM measurements              |
 
 A proposed technology is not committed until it has been built and exercised successfully with Qt 5.15.13 on the reference machine.
 
-## Build and run
+## Developer workflow
+
+The root `Makefile` is the shared developer interface; CMake and Ninja remain
+the authoritative build system. The common commands are intentionally short:
+
+| Goal | Command | Notes |
+| --- | --- | --- |
+| Run the complete local demo | `make run` | Incremental Release build, local Hanoi map, and managed Valhalla |
+| Debug the complete demo | `make debug-run` | Isolated `build-qt515-debug` build with symbols |
+| Debug native code in GDB | `make debug-gdb` | Same Debug demo, opened under GDB |
+| Run automated tests | `make test` | Incremental Release build and all CTest executables |
+| Check work before commit | `make check` | Formatting, Release tests, and unstaged/staged diff checks |
+| Review before merge | `make review` | Requires a clean worktree; isolated Release build plus branch diff checks |
+
+`make run`, `make debug-run`, and `make debug-gdb` provision the runtime paths
+and launch the full map/routing/navigation flow through `tools/run-demo.sh`.
+`make run` already depends on the build, so `make build && make run` is valid
+but redundant. Pass optional application arguments with `DEMO_ARGS`, for example:
+
+```bash
+make debug-run DEMO_ARGS='--disable-instrumentation --exit-after 15'
+```
+
+Use Debug builds for investigation only. Performance and management-facing
+evidence must come from the Release workflow.
+
+Run `make check` while developing, then commit or stash all changes before
+`make review`. This separation keeps daily feedback fast while ensuring the
+merge gate reviews exactly the committed branch state.
+
+## Build and run details
 
 The validated Release workflow selects system Qt 5.15.13 explicitly and does not change the global `PATH`:
 
 ```bash
 make requirements
-make build
 make test
+make run
 ```
 
 The current MapLibre development install and Qt QML/runtime plugins are ignored local dependencies. This successful local smoke command runs the checksummed Hanoi package for 15 seconds; the Unit 03 evidence wraps it in the network namespace used for the disconnected check:
@@ -86,15 +116,16 @@ make hanoi-package \
 
 Exact disconnected verification and benchmark procedures are recorded in [the Unit 03 evidence](docs/benchmarks/unit-03-local-map-data-pipeline.md).
 
-Run the local routing demo from any directory with:
+Advanced users can still run the local routing demo script directly from any directory:
 
 ```bash
 /absolute/path/to/QtMaps/tools/run-demo.sh
 ```
 
 The script changes to the repository root and passes absolute map, service,
-and config paths. If either Valhalla file is absent, the UI reports the exact
-missing path and does not silently draw a fixture route.
+and config paths. `QTMAPS_APP` may select another already-built binary, while
+`QTMAPS_GDB=1` launches it under GDB. If either Valhalla file is absent, the UI
+reports the exact missing path and does not silently draw a fixture route.
 
 ## Current status and limitations
 
@@ -103,7 +134,14 @@ missing path and does not silently draw a fixture route.
 - PR #20 is merged. Its visible 5.47 km path and 40 km/h movement remain deterministic Unit 03 navigation fixtures, not output from a routing engine.
 - The Unit 04 route-planning flow now runs a managed, loopback-only Valhalla 3.9.1 service and returns real route geometry, distance, duration, and Vietnamese maneuvers for the bounded greater-Hanoi graph. Recorded fixtures remain available only through the explicitly labeled fixture mode or a visible request-failure fallback; missing startup files do not trigger them.
 - Raster fallback is a local diagnostic image that proves failure detection and switching; it is not real Hanoi raster coverage.
-- Navigation replay over the selected route, re-routing, full QtMaps-plus-Valhalla process-tree benchmarking, nationwide graph generation, offline search, orthography, final product UI, installer packaging, and long-duration stability validation are not implemented yet.
+- Selected-route navigation replay now provides 1x/2x/4x playback, pause/stop,
+  camera follow/recenter, heading/tilt, source-labeled maneuver guidance, remaining
+  distance/time, and arrival. A simulated deviation over 40 m can request a new
+  Valhalla route; a failed request keeps the last valid route available for
+  retry. Live GPS deviation detection is not implemented. Full
+  QtMaps-plus-Valhalla process-tree benchmarking, nationwide graph generation, offline search, orthography, final
+  product UI, installer packaging, and long-duration stability validation are
+  not implemented yet.
 
 ## Implementation Principles
 

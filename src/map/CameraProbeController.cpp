@@ -25,35 +25,20 @@ constexpr int kStepCount = sizeof(kSteps) / sizeof(kSteps[0]);
 
 } // namespace
 
-CameraProbeController::CameraProbeController(QObject *parent)
-    : QObject(parent)
-{
-}
+CameraProbeController::CameraProbeController(QObject *parent) : QObject(parent) {}
 
-qreal CameraProbeController::requestedBearing() const
-{
-    return requestedBearing_;
-}
+qreal CameraProbeController::requestedBearing() const { return requestedBearing_; }
 
-qreal CameraProbeController::requestedTilt() const
-{
-    return requestedTilt_;
-}
+qreal CameraProbeController::requestedTilt() const { return requestedTilt_; }
 
-QString CameraProbeController::stepName() const
-{
-    return stepName_;
-}
+QString CameraProbeController::stepName() const { return stepName_; }
 
 void CameraProbeController::advance(qreal minimumTilt, qreal maximumTilt)
 {
     selectStep((stepIndex_ + 1) % kStepCount, minimumTilt, maximumTilt);
 }
 
-void CameraProbeController::reset()
-{
-    selectStep(0, 0.0, 90.0);
-}
+void CameraProbeController::reset() { selectStep(0, 0.0, 90.0); }
 
 qreal CameraProbeController::normalizedBearing(qreal bearing)
 {

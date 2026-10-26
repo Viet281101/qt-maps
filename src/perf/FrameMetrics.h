@@ -26,8 +26,10 @@ class FrameMetrics final : public QObject
     Q_PROPERTY(int framesOver100Milliseconds READ framesOver100Milliseconds NOTIFY metricsChanged)
     Q_PROPERTY(int interactionFrameCount READ interactionFrameCount NOTIFY metricsChanged)
     Q_PROPERTY(int settlingFrameCount READ settlingFrameCount NOTIFY metricsChanged)
-    Q_PROPERTY(double settlingFrameAverageMilliseconds READ settlingFrameAverageMilliseconds NOTIFY metricsChanged)
-    Q_PROPERTY(double settlingFrameMaximumMilliseconds READ settlingFrameMaximumMilliseconds NOTIFY metricsChanged)
+    Q_PROPERTY(double settlingFrameAverageMilliseconds READ settlingFrameAverageMilliseconds NOTIFY
+                   metricsChanged)
+    Q_PROPERTY(double settlingFrameMaximumMilliseconds READ settlingFrameMaximumMilliseconds NOTIFY
+                   metricsChanged)
     Q_PROPERTY(qulonglong frameCount READ frameCount NOTIFY metricsChanged)
     Q_PROPERTY(int sampleCount READ sampleCount NOTIFY metricsChanged)
 
@@ -61,8 +63,8 @@ signals:
                      bool interactionActive, int interactionFrameCount,
                      double interactionAverageFps, double frameTimeP50Milliseconds,
                      double frameTimeP95Milliseconds, double frameTimeP99Milliseconds,
-                     int framesOver100Milliseconds,
-                     int settlingFrameCount, double settlingFrameAverageMilliseconds,
+                     int framesOver100Milliseconds, int settlingFrameCount,
+                     double settlingFrameAverageMilliseconds,
                      double settlingFrameMaximumMilliseconds);
 
 private slots:

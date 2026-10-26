@@ -15,6 +15,10 @@ Window {
     title: qsTr("QtMaps — Lập tuyến Hà Nội")
     property bool performanceOverlayVisible: instrumentationEnabled
     property bool panelCollapsed: false
+    property bool navigationActive: routeNavigationController.active
+    readonly property bool endpointSelectionEnabled:
+        !routeNavigationController.active
+        && !(routingController.loading && routeNavigationController.routeAvailable)
     property string compactSource: routingController.sourceLabel === "Valhalla local"
                                    ? qsTr("Valhalla") : qsTr("Fixture")
     property color routeSummaryColor: routingController.loading ? Theme.warning
@@ -30,18 +34,33 @@ Window {
     }
 
     function applyEndpoints() {
-        if (routingController.setOriginInput(originField.text))
-            routingController.setDestinationInput(destinationField.text)
+        var requestedOrigin = originField.text
+        var requestedDestination = destinationField.text
+        if (routingController.setOriginInput(requestedOrigin))
+            routingController.setDestinationInput(requestedDestination)
     }
 
     function calculateRequestedRoute() {
-        if (routingController.setOriginInput(originField.text)
-                && routingController.setDestinationInput(destinationField.text)) {
+        var requestedOrigin = originField.text
+        var requestedDestination = destinationField.text
+        if (routingController.setOriginInput(requestedOrigin)
+                && routingController.setDestinationInput(requestedDestination)) {
             if (routingFixtureOnly)
                 routingController.calculateFixtureRoute()
             else
                 routingController.calculateRoute()
         }
+    }
+
+    function recenterNavigation() {
+        if (!routeNavigationController.active
+                || !routeNavigationController.coordinate.isValid)
+            return
+        map.center = routeNavigationController.coordinate
+        map.bearing = routeNavigationController.bearing
+        map.tilt = 45
+        if (map.zoomLevel < 16)
+            map.zoomLevel = 16
     }
 
     function fitRouteWithPanelPadding() {
@@ -100,11 +119,12 @@ Window {
 
     Map {
         id: map
+        objectName: "routingMap"
         anchors.fill: parent
         plugin: mapPlugin
         center: QtPositioning.coordinate(21.0278, 105.8342)
         zoomLevel: 14
-        gesture.enabled: true
+        gesture.enabled: !routeNavigationController.running
         focus: true
 
         onMapReadyChanged: {
@@ -124,6 +144,8 @@ Window {
         }
 
         TapHandler {
+            objectName: "routeMapTapHandler"
+            enabled: root.endpointSelectionEnabled
             acceptedButtons: Qt.LeftButton
             onTapped: routingController.selectMapPoint(map.toCoordinate(point.position))
         }
@@ -159,6 +181,30 @@ Window {
                 border.color: Theme.surfaceElevated
                 border.width: 5
                 Text { anchors.centerIn: parent; text: "A"; font.bold: true; color: "#102018" }
+            }
+        }
+
+        MapQuickItem {
+            visible: routeNavigationController.active
+            coordinate: routeNavigationController.coordinate
+            anchorPoint.x: navigationMarker.width / 2
+            anchorPoint.y: navigationMarker.height / 2
+            z: 12
+            sourceItem: Rectangle {
+                id: navigationMarker
+                width: 28
+                height: 28
+                radius: 14
+                color: Theme.accent
+                border.color: Theme.routeOutline
+                border.width: 4
+                Text {
+                    anchors.centerIn: parent
+                    text: "▲"
+                    color: "#10243a"
+                    font.bold: true
+                    font.pixelSize: 13
+                }
             }
         }
 
@@ -206,8 +252,30 @@ Window {
         }
     }
 
+    NavigationBanner {
+        id: navigationBanner
+        objectName: "navigationBanner"
+        visible: routeNavigationController.active
+        x: root.panelCollapsed
+           ? (root.width - width) / 2
+           : routePanel.x + routePanel.width + Theme.spaceLg
+             + Math.max(0, (root.width - routePanel.x - routePanel.width
+                            - Theme.spaceLg - width) / 2)
+        anchors.top: parent.top
+        anchors.topMargin: Theme.spaceMd
+        z: 30
+        instruction: routeNavigationController.maneuverInstruction
+        streetName: routeNavigationController.maneuverStreetName
+        sourceLabel: routeNavigationController.sourceLabel
+        distanceToManeuverMeters: routeNavigationController.distanceToManeuverMeters
+        remainingDistanceMeters: routeNavigationController.remainingDistanceMeters
+        remainingDurationSeconds: routeNavigationController.remainingDurationSeconds
+        arrived: routeNavigationController.arrived
+    }
+
     Rectangle {
         id: routePanel
+        readonly property real maneuverListMinimumHeight: 120
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         anchors.left: parent.left
@@ -219,13 +287,28 @@ Window {
         border.color: Theme.border
         z: 20
 
-        Column {
-            id: routeControls
+        Flickable {
+            id: routeControlsScroll
+            objectName: "routeControlsScroll"
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.top: parent.top
             anchors.margins: Theme.spaceLg
-            spacing: Theme.spaceSm
+            height: Math.max(0, Math.min(routeControls.implicitHeight,
+                                         routePanel.height
+                                         - routePanel.maneuverListMinimumHeight
+                                         - Theme.spaceLg * 2
+                                         - Theme.spaceSm))
+            contentWidth: width
+            contentHeight: routeControls.implicitHeight
+            clip: true
+            boundsBehavior: Flickable.StopAtBounds
+            flickableDirection: Flickable.VerticalFlick
+
+            Column {
+                id: routeControls
+                width: routeControlsScroll.width
+                spacing: Theme.spaceSm
 
             Text {
                 text: qsTr("Lập tuyến Hà Nội")
@@ -250,6 +333,7 @@ Window {
                 border.color: originField.activeFocus ? Theme.accent : Theme.border
                 TextInput {
                     id: originField
+                    objectName: "originField"
                     anchors.fill: parent
                     anchors.margins: Theme.spaceSm
                     color: "#17212b"
@@ -257,7 +341,7 @@ Window {
                     selectByMouse: true
                     activeFocusOnTab: true
                     KeyNavigation.tab: destinationField
-                    KeyNavigation.backtab: routeButton
+                    KeyNavigation.backtab: startNavigationButton
                     text: routingController.originInput
                     onAccepted: routingController.setOriginInput(text)
                 }
@@ -271,6 +355,7 @@ Window {
                 border.color: destinationField.activeFocus ? Theme.accent : Theme.border
                 TextInput {
                     id: destinationField
+                    objectName: "destinationField"
                     anchors.fill: parent
                     anchors.margins: Theme.spaceSm
                     color: "#17212b"
@@ -303,7 +388,7 @@ Window {
                     width: (parent.width - parent.spacing) / 2
                     enabled: !routingController.loading
                     text: routingController.loading ? qsTr("Đang tính…") : qsTr("Tính đường")
-                    KeyNavigation.tab: originField
+                    KeyNavigation.tab: startNavigationButton
                     KeyNavigation.backtab: applyButton
                     onTriggered: root.calculateRequestedRoute()
                 }
@@ -333,6 +418,100 @@ Window {
                 }
             }
 
+            KeyboardActionButton {
+                width: parent.width
+                visible: routeNavigationController.active
+                text: qsTr("Theo vị trí hiện tại")
+                normalColor: "#334352"
+                pressedColor: "#455869"
+                textColor: Theme.textPrimary
+                onTriggered: root.recenterNavigation()
+            }
+
+            KeyboardActionButton {
+                id: startNavigationButton
+                width: parent.width
+                visible: routingController.routeAvailable
+                         && !routeNavigationController.active
+                text: qsTr("Bắt đầu chỉ đường")
+                KeyNavigation.tab: originField
+                KeyNavigation.backtab: routeButton
+                normalColor: Theme.success
+                pressedColor: "#4fab70"
+                textColor: "#102018"
+                onTriggered: routeNavigationController.start()
+            }
+
+            Row {
+                width: parent.width
+                visible: routingController.routeAvailable
+                spacing: Theme.spaceXs
+                Repeater {
+                    model: [1, 2, 4]
+                    delegate: KeyboardActionButton {
+                        width: (routeControls.width - Theme.spaceXs * 2) / 3
+                        text: modelData + "x"
+                        normalColor: routeNavigationController.speedMultiplier === modelData
+                                     ? Theme.accent : "#334352"
+                        pressedColor: "#455869"
+                        textColor: routeNavigationController.speedMultiplier === modelData
+                                   ? "#10243a" : Theme.textPrimary
+                        onTriggered: routeNavigationController.setSpeedMultiplier(modelData)
+                    }
+                }
+            }
+
+            Row {
+                width: parent.width
+                visible: routeNavigationController.active
+                spacing: Theme.spaceSm
+                KeyboardActionButton {
+                    id: navigationPrimaryAction
+                    objectName: "navigationPrimaryAction"
+                    width: (parent.width - parent.spacing) / 2
+                    text: routeNavigationController.arrived ? qsTr("Đi lại từ đầu")
+                          : routeNavigationController.paused ? qsTr("Tiếp tục")
+                                                             : qsTr("Tạm dừng")
+                    normalColor: Theme.warning
+                    pressedColor: "#d89b19"
+                    textColor: "#2d2308"
+                    onTriggered: {
+                        if (routeNavigationController.arrived
+                                || routeNavigationController.paused)
+                            routeNavigationController.start()
+                        else
+                            routeNavigationController.pause()
+                    }
+                }
+                KeyboardActionButton {
+                    width: (parent.width - parent.spacing) / 2
+                    text: qsTr("Dừng")
+                    normalColor: Theme.error
+                    pressedColor: "#d95f5f"
+                    textColor: "#301010"
+                    onTriggered: routeNavigationController.stop()
+                }
+            }
+
+            KeyboardActionButton {
+                width: parent.width
+                visible: routeNavigationController.running || routeNavigationController.paused
+                text: qsTr("Mô phỏng đi lệch (>40 m)")
+                normalColor: "#334352"
+                pressedColor: "#455869"
+                textColor: Theme.textPrimary
+                onTriggered: routeNavigationController.simulateDeviation()
+            }
+
+            Text {
+                width: parent.width
+                visible: routingController.routeAvailable
+                text: routeNavigationController.statusMessage
+                color: routeNavigationController.arrived ? Theme.success
+                                                          : Theme.textSecondary
+                wrapMode: Text.WordWrap
+            }
+
             Text {
                 width: parent.width
                 text: routingController.statusMessage
@@ -340,20 +519,22 @@ Window {
                 wrapMode: Text.WordWrap
             }
 
-            Text {
-                text: qsTr("Các bước chỉ đường")
-                color: Theme.textPrimary
-                font.bold: true
-                visible: routingController.routeAvailable
-            }
+                Text {
+                    text: qsTr("Các bước chỉ đường")
+                    color: Theme.textPrimary
+                    font.bold: true
+                    visible: routingController.routeAvailable
+                }
 
+            }
         }
 
         ListView {
             id: maneuverList
+            objectName: "maneuverList"
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.top: routeControls.bottom
+            anchors.top: routeControlsScroll.bottom
             anchors.bottom: parent.bottom
             anchors.leftMargin: Theme.spaceLg
             anchors.rightMargin: Theme.spaceLg
@@ -362,7 +543,9 @@ Window {
             clip: true
             spacing: Theme.spaceXs
             model: routingController.maneuvers
-            currentIndex: routingController.currentManeuverIndex
+            currentIndex: routeNavigationController.active
+                          ? routeNavigationController.currentManeuverIndex
+                          : routingController.currentManeuverIndex
             activeFocusOnTab: true
 
             Keys.onDownPressed: {
@@ -381,7 +564,9 @@ Window {
                 width: maneuverList.width
                 maneuverIndex: index
                 maneuver: modelData
-                selected: index === routingController.currentManeuverIndex
+                selected: index === (routeNavigationController.active
+                                     ? routeNavigationController.currentManeuverIndex
+                                     : routingController.currentManeuverIndex)
                 onActivated: {
                     routingController.focusManeuver(maneuverIndex)
                     maneuverList.forceActiveFocus()
@@ -408,9 +593,14 @@ Window {
     }
 
     Rectangle {
+        id: connectionStatusPill
+        objectName: "connectionStatusPill"
         anchors.right: parent.right
         anchors.top: parent.top
-        anchors.margins: Theme.spaceMd
+        anchors.rightMargin: Theme.spaceMd
+        anchors.topMargin: routeNavigationController.active
+                           ? navigationBanner.height + Theme.spaceMd * 2
+                           : Theme.spaceMd
         width: statusRow.implicitWidth + 20
         height: 34
         radius: 17
@@ -468,6 +658,26 @@ Window {
         function onFocusCoordinateRequested(coordinate, zoomLevel) {
             map.center = coordinate
             map.zoomLevel = zoomLevel
+        }
+    }
+
+    Connections {
+        target: routeNavigationController
+        function onPositionChanged() {
+            if (!routeNavigationController.active)
+                return
+            map.center = routeNavigationController.coordinate
+            map.bearing = routeNavigationController.bearing
+            map.tilt = 45
+            if (map.zoomLevel < 16)
+                map.zoomLevel = 16
+        }
+        function onStateChanged() {
+            if (!routeNavigationController.active) {
+                map.bearing = 0
+                map.tilt = 0
+                routeRefreshTimer.restart()
+            }
         }
     }
 

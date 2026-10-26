@@ -25,8 +25,8 @@ class ProcessSamplerWorker final : public QObject
     Q_OBJECT
 
 public slots:
-    void start(qint64 rootPid, const QString &path, int intervalMilliseconds,
-               int warmupSeconds, const QVariantMap &metadata)
+    void start(qint64 rootPid, const QString &path, int intervalMilliseconds, int warmupSeconds,
+               const QVariantMap &metadata)
     {
         stop();
         const QFileInfo outputInfo(path);
@@ -48,9 +48,8 @@ public slots:
         previous_ = ProcessTreeSampler::readProc(&procError);
         if (!previous_.contains(rootPid_)) {
             writer_.close();
-            emit error(procError.isEmpty()
-                           ? QStringLiteral("QtMaps PID is not readable in /proc")
-                           : procError);
+            emit error(procError.isEmpty() ? QStringLiteral("QtMaps PID is not readable in /proc")
+                                           : procError);
             return;
         }
         elapsed_.start();
@@ -86,8 +85,8 @@ public slots:
                             bool interactionActive, int interactionFrameCount,
                             double interactionAverageFps, double frameTimeP50Milliseconds,
                             double frameTimeP95Milliseconds, double frameTimeP99Milliseconds,
-                            int framesOver100Milliseconds,
-                            int settlingFrameCount, double settlingFrameAverageMilliseconds,
+                            int framesOver100Milliseconds, int settlingFrameCount,
+                            double settlingFrameAverageMilliseconds,
                             double settlingFrameMaximumMilliseconds)
     {
         currentFps_ = currentFps;
@@ -168,8 +167,7 @@ private slots:
                    QString::number(frameTimeP95Milliseconds_, 'f', 3));
         row.insert(QStringLiteral("interaction_frame_time_p99_ms"),
                    QString::number(frameTimeP99Milliseconds_, 'f', 3));
-        row.insert(QStringLiteral("interaction_frames_over_100ms"),
-                   framesOver100Milliseconds_);
+        row.insert(QStringLiteral("interaction_frames_over_100ms"), framesOver100Milliseconds_);
         row.insert(QStringLiteral("settling_frame_count"), settlingFrameCount_);
         row.insert(QStringLiteral("settling_frame_average_ms"),
                    QString::number(settlingFrameAverageMilliseconds_, 'f', 3));
@@ -212,11 +210,10 @@ private:
     double settlingFrameMaximumMilliseconds_ = 0.0;
 };
 
-PerformanceMonitor::PerformanceMonitor(QObject *parent)
-    : QObject(parent)
+PerformanceMonitor::PerformanceMonitor(QObject *parent) : QObject(parent)
 {
-    connect(&frameMetrics_, &FrameMetrics::sampleReady,
-            this, &PerformanceMonitor::frameSampleChanged);
+    connect(&frameMetrics_, &FrameMetrics::sampleReady, this,
+            &PerformanceMonitor::frameSampleChanged);
     workerThread_.setObjectName(QStringLiteral("performance-process-sampler"));
 }
 
@@ -271,18 +268,14 @@ bool PerformanceMonitor::startBenchmark(const QString &requestedPath)
         connect(&workerThread_, &QThread::finished, worker_, &QObject::deleteLater);
         connect(this, &PerformanceMonitor::requestStart, worker_, &ProcessSamplerWorker::start);
         connect(this, &PerformanceMonitor::requestStop, worker_, &ProcessSamplerWorker::stop);
-        connect(this, &PerformanceMonitor::frameSampleChanged,
-                worker_, &ProcessSamplerWorker::updateFrameMetrics);
-        connect(worker_, &ProcessSamplerWorker::started,
-                this, &PerformanceMonitor::handleStarted);
-        connect(worker_, &ProcessSamplerWorker::stopped,
-                this, &PerformanceMonitor::handleStopped);
-        connect(worker_, &ProcessSamplerWorker::sampled,
-                this, &PerformanceMonitor::handleSample);
-        connect(worker_, &ProcessSamplerWorker::error,
-                this, &PerformanceMonitor::handleError);
-        connect(worker_, &ProcessSamplerWorker::warmupComplete,
-                &frameMetrics_, &FrameMetrics::reset);
+        connect(this, &PerformanceMonitor::frameSampleChanged, worker_,
+                &ProcessSamplerWorker::updateFrameMetrics);
+        connect(worker_, &ProcessSamplerWorker::started, this, &PerformanceMonitor::handleStarted);
+        connect(worker_, &ProcessSamplerWorker::stopped, this, &PerformanceMonitor::handleStopped);
+        connect(worker_, &ProcessSamplerWorker::sampled, this, &PerformanceMonitor::handleSample);
+        connect(worker_, &ProcessSamplerWorker::error, this, &PerformanceMonitor::handleError);
+        connect(worker_, &ProcessSamplerWorker::warmupComplete, &frameMetrics_,
+                &FrameMetrics::reset);
     }
     if (!workerThread_.isRunning()) {
         workerThread_.start();

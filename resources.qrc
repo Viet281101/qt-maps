@@ -7,6 +7,7 @@
         <file>qml/RoutingProbe.qml</file>
         <file>qml/components/PerformanceOverlay.qml</file>
         <file>qml/components/ManeuverRow.qml</file>
+        <file>qml/components/NavigationBanner.qml</file>
         <file>qml/components/KeyboardActionButton.qml</file>
         <file>qml/theme/qmldir</file>
         <file>qml/theme/Theme.qml</file>

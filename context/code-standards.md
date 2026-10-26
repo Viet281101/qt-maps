@@ -12,6 +12,7 @@
 ## C++
 
 - Use only the C++ language level selected in unit 01. C++14 is proposed; code must not assume a newer standard until the decision is committed.
+- Format tracked C/C++ sources and tests with the repository `.clang-format` by running `make format`; use `make format-check` for a non-mutating verification. Override `CLANG_FORMAT` only when selecting a compatible executable explicitly.
 - Use RAII for ownership and cleanup. Prefer values, `std::unique_ptr`, and `std::shared_ptr` only where ownership is genuinely shared.
 - For `QObject` hierarchies, use clear Qt parent ownership or an owning smart pointer, never ambiguous dual ownership.
 - Avoid raw owning pointers, manual `new`/`delete` pairs, global mutable state, and unchecked narrowing conversions.
@@ -33,6 +34,7 @@
 
 - Use CMake with the Ninja generator. The baseline Release configure command is `cmake -S . -B build-qt515 -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/usr -DQTMAPS_MIN_QT_VERSION=5.15.13 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache`; build with `cmake --build build-qt515 --parallel`.
 - The root `Makefile` is a convenience wrapper around the validated CMake/Ninja workflow, not a second build system. Keep CMake authoritative and expose machine-specific paths through overridable variables such as `QT_PREFIX`, `BUILD_DIR`, and `BUILD_TYPE`.
+- Keep the common developer interface short and intention-revealing: `make run` builds and starts the full local Release demo, `make debug-run` uses an isolated Debug build, `make debug-gdb` launches that Debug demo under GDB, `make check` runs the ordinary pre-commit checks, and `make review` runs the isolated Release merge gate. Debug output must never be reported as benchmark evidence.
 - Target Qt 5 explicitly with `find_package(Qt5 REQUIRED COMPONENTS ...)` and `Qt5::` imported targets.
 - Use the Qt 5-compatible building blocks `CMAKE_AUTOMOC`, `CMAKE_AUTORCC`, `qt5_add_resources`, and `add_executable` as required by the project layout.
 - Do not use Qt 6-only CMake APIs, including `qt_add_executable`, `qt_add_qml_module`, `qt_standard_project_setup`, or other unverified `qt_*` convenience APIs introduced after Qt 5.15.13.

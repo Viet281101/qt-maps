@@ -28,12 +28,11 @@ class ProcessTreeSampler
 public:
     static QHash<qint64, ProcessSnapshot> readProc(QString *errorMessage = nullptr);
     static QList<qint64> descendantPids(qint64 rootPid,
-                                       const QHash<qint64, ProcessSnapshot> &snapshots);
+                                        const QHash<qint64, ProcessSnapshot> &snapshots);
     static ProcessTreeSample aggregate(qint64 rootPid,
                                        const QHash<qint64, ProcessSnapshot> &current,
                                        const QHash<qint64, ProcessSnapshot> &previous,
-                                       long clockTicksPerSecond,
-                                       double elapsedSeconds);
+                                       long clockTicksPerSecond, double elapsedSeconds);
 };
 
 } // namespace perf

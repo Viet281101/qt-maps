@@ -1,7 +1,7 @@
 #include "ValhallaServiceManager.h"
 
-#include <QFileInfo>
 #include <QFile>
+#include <QFileInfo>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QNetworkAccessManager>
@@ -38,11 +38,9 @@ protected:
 
 } // namespace
 
-ValhallaServiceManager::ValhallaServiceManager(QObject *parent)
-    : QObject(parent), process_(new ValhallaProcess(this)),
-      network_(new QNetworkAccessManager(this)),
-      healthTimer_(new QTimer(this)), startupTimer_(new QTimer(this)),
-      killTimer_(new QTimer(this))
+ValhallaServiceManager::ValhallaServiceManager(QObject *parent) :
+    QObject(parent), process_(new ValhallaProcess(this)), network_(new QNetworkAccessManager(this)),
+    healthTimer_(new QTimer(this)), startupTimer_(new QTimer(this)), killTimer_(new QTimer(this))
 {
     healthTimer_->setSingleShot(true);
     healthTimer_->setInterval(100);
@@ -50,9 +48,8 @@ ValhallaServiceManager::ValhallaServiceManager(QObject *parent)
     killTimer_->setSingleShot(true);
 
     connect(healthTimer_, &QTimer::timeout, this, &ValhallaServiceManager::probeHealth);
-    connect(startupTimer_, &QTimer::timeout, this, [this]() {
-        fail(QStringLiteral("Valhalla readiness check timed out"));
-    });
+    connect(startupTimer_, &QTimer::timeout, this,
+            [this]() { fail(QStringLiteral("Valhalla readiness check timed out")); });
     connect(killTimer_, &QTimer::timeout, this, [this]() {
         if (process_->state() != QProcess::NotRunning) {
             process_->kill();
@@ -66,28 +63,28 @@ ValhallaServiceManager::ValhallaServiceManager(QObject *parent)
     });
     connect(process_, qOverload<int, QProcess::ExitStatus>(&QProcess::finished), this,
             [this](int exitCode, QProcess::ExitStatus exitStatus) {
-        healthTimer_->stop();
-        startupTimer_->stop();
-        killTimer_->stop();
-        if (healthReply_) {
-            healthReply_->abort();
-            healthReply_->deleteLater();
-            healthReply_ = nullptr;
-        }
-        if (state_ == State::Stopping) {
-            setState(State::Stopped);
-            emit stopped();
-        } else if (state_ != State::Error) {
-            fail(QStringLiteral("Valhalla exited before shutdown (code %1, status %2)")
-                     .arg(exitCode)
-                     .arg(static_cast<int>(exitStatus)));
-        }
-    });
+                healthTimer_->stop();
+                startupTimer_->stop();
+                killTimer_->stop();
+                if (healthReply_) {
+                    healthReply_->abort();
+                    healthReply_->deleteLater();
+                    healthReply_ = nullptr;
+                }
+                if (state_ == State::Stopping) {
+                    setState(State::Stopped);
+                    emit stopped();
+                } else if (state_ != State::Error) {
+                    fail(QStringLiteral("Valhalla exited before shutdown (code %1, status %2)")
+                             .arg(exitCode)
+                             .arg(static_cast<int>(exitStatus)));
+                }
+            });
     process_->setProcessChannelMode(QProcess::ForwardedChannels);
 }
 
-void ValhallaServiceManager::start(const QString &program, const QString &configPath,
-                                   quint16 port, int concurrency, int readinessTimeoutMs)
+void ValhallaServiceManager::start(const QString &program, const QString &configPath, quint16 port,
+                                   int concurrency, int readinessTimeoutMs)
 {
     if (process_->state() != QProcess::NotRunning) {
         fail(QStringLiteral("Valhalla process has not stopped yet"));
@@ -130,9 +127,12 @@ void ValhallaServiceManager::start(const QString &program, const QString &config
         return;
     }
     const QJsonObject config = QJsonDocument::fromJson(configFile.readAll()).object();
-    const QString listen = config.value(QStringLiteral("httpd")).toObject()
-                               .value(QStringLiteral("service")).toObject()
-                               .value(QStringLiteral("listen")).toString();
+    const QString listen = config.value(QStringLiteral("httpd"))
+                               .toObject()
+                               .value(QStringLiteral("service"))
+                               .toObject()
+                               .value(QStringLiteral("listen"))
+                               .toString();
     const QString requiredListen = QStringLiteral("tcp://127.0.0.1:%1").arg(port);
     if (listen != requiredListen) {
         fail(QStringLiteral("Valhalla config must listen only at %1").arg(requiredListen));
@@ -185,10 +185,7 @@ void ValhallaServiceManager::forceStop()
 }
 
 ValhallaServiceManager::State ValhallaServiceManager::state() const { return state_; }
-bool ValhallaServiceManager::isRunning() const
-{
-    return process_->state() != QProcess::NotRunning;
-}
+bool ValhallaServiceManager::isRunning() const { return process_->state() != QProcess::NotRunning; }
 qint64 ValhallaServiceManager::processId() const { return process_->processId(); }
 QString ValhallaServiceManager::errorMessage() const { return errorMessage_; }
 QUrl ValhallaServiceManager::endpoint() const { return endpoint_; }
@@ -215,7 +212,8 @@ void ValhallaServiceManager::probeHealth()
     if (state_ != State::Starting || healthReply_) {
         return;
     }
-    healthReply_ = network_->get(QNetworkRequest(endpoint_.resolved(QUrl(QStringLiteral("/status")))));
+    healthReply_ =
+        network_->get(QNetworkRequest(endpoint_.resolved(QUrl(QStringLiteral("/status")))));
     connect(healthReply_, &QNetworkReply::finished, this, [this]() {
         QNetworkReply *reply = healthReply_;
         healthReply_ = nullptr;
@@ -223,9 +221,14 @@ void ValhallaServiceManager::probeHealth()
             return;
         }
         const QByteArray body = reply->readAll();
-        const bool healthy = reply->error() == QNetworkReply::NoError
-            && reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 200
-            && !QJsonDocument::fromJson(body).object().value(QStringLiteral("version")).toString().isEmpty();
+        const bool healthy =
+            reply->error() == QNetworkReply::NoError &&
+            reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt() == 200 &&
+            !QJsonDocument::fromJson(body)
+                 .object()
+                 .value(QStringLiteral("version"))
+                 .toString()
+                 .isEmpty();
         reply->deleteLater();
         if (state_ != State::Starting) {
             return;

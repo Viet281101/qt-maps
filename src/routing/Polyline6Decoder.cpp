@@ -28,9 +28,8 @@ bool decodeComponent(const QByteArray &encoded, int *index, qint64 *value, QStri
                 *error = QStringLiteral("Polyline coordinate delta is out of range");
                 return false;
             }
-            *value = (result & 1U) != 0
-                ? -static_cast<qint64>(magnitude + 1U)
-                : static_cast<qint64>(magnitude);
+            *value = (result & 1U) != 0 ? -static_cast<qint64>(magnitude + 1U)
+                                        : static_cast<qint64>(magnitude);
             return true;
         }
         shift += 5;
@@ -55,8 +54,8 @@ PolylineDecodeResult Polyline6Decoder::decode(const QByteArray &encoded)
     while (index < encoded.size()) {
         qint64 latitudeDelta = 0;
         qint64 longitudeDelta = 0;
-        if (!decodeComponent(encoded, &index, &latitudeDelta, &decoded.error)
-            || !decodeComponent(encoded, &index, &longitudeDelta, &decoded.error)) {
+        if (!decodeComponent(encoded, &index, &latitudeDelta, &decoded.error) ||
+            !decodeComponent(encoded, &index, &longitudeDelta, &decoded.error)) {
             decoded.coordinates.clear();
             return decoded;
         }

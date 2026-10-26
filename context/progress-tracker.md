@@ -5,7 +5,7 @@ Update this file after every meaningful implementation change. Keep it below the
 ## Current Phase
 
 - Unit 03 was squash-merged through PR #20 as `1358c3c`.
-- Unit 04 increments A-C are complete on `feat/04-routing` and under review in PR #21. The bounded Hanoi graph, managed backend, stale-reply cancellation, asynchronous shutdown, and polished route-planning UI are verified. Route replay/guidance and the full interactive process-tree benchmark remain deferred.
+- Unit 04 was squash-merged through PR #21 as `d4a07bb`. Unit 05 is under review in PR #22 from `feat/05-navigation`. Feature freeze is 2026-11-01, with 2026-11-02 through 2026-11-03 reserved for bug fixes, rehearsal, and reporting.
 - The owner approved Qt 5.15.13 plus dynamically linked MapLibre Native Qt v3.0.0 as the application baseline, retaining Qt 5.13.2 for comparison and localhost raster as fallback.
 - Performance schema v3 is complete: interaction-only FPS and frame-time p50/p95/p99 exclude the final settling swap, which is reported separately; legacy CSV fields remain for historical comparison.
 
@@ -39,21 +39,13 @@ Deliver a stable management demo by 2026-11-03: polished map-first Release UI, v
 
 ### Unit 01b — vector feasibility
 
-- Generated a bounded Hanoi dataset from the owner-approved Geofabrik Vietnam PBF with Planetiler v0.10.2: bounds `105.78,20.97,105.90,21.10`, zooms 12-15, 226 tiles, 14,463,231 tile bytes, 62.94 seconds, 6 GiB heap limit, two workers, and 2,635,164 KiB peak RSS.
-- Verified checksums, licenses, OSM/ODbL attribution, Vietnamese `HÀ NỘI` labels, bearing/tilt, and loopback-only network access. No PBF, jar, generated tiles, logs, screenshots, or CSV entered Git.
-- Installed only the owner-approved minimal Qt 5.15.13 development packages after a dry run reported 0 upgrades, 32 new packages, 0 removals, and 1 held package. Qt 5.13.2 remains independently selectable.
-- Built signed MapLibre Native Qt v3.0.0 commit `d929c783737120787b43417d9ef05da88da75dfd` with Qt 5.15.13, GCC 13.3.0, Release, OpenGL, and `make -j2`. Build: 16:01.44 wall time, 1,149,676 KiB peak RSS, 92 MiB build tree, 12 MiB install tree.
-- GPU verification used real Mesa Intel HD Graphics 520 direct rendering, not llvmpipe. Qt Quick used the threaded render loop and a 16.66 ms/60 Hz vsync animation driver.
-- Both renderers used the same real Hanoi data, localhost style/glyph/sprite resources, camera sequence, Unit 02 instrumentation, three-second warm-up, and 15-second recording.
-
-| Renderer | Median avg FPS | Median interval 1% low | Median CPU | Median mean RSS |
-| --- | ---: | ---: | ---: | ---: |
-| Qt 5.13.2 `mapboxgl` | 24.362 | 5.000 | 6.600% | 177.087 MiB |
-| Qt 5.15.13 MapLibre v3 | 33.769 | 5.000 | 10.440% | 209.778 MiB |
-
-CPU uses 100% per logical core; the separately launched localhost server is excluded. The low one-second samples occurred during no-action/render-on-demand phases at low CPU and recovered during camera motion, so the current 1% low mainly reflects coarse sampling/frame pacing rather than sustained tile loading or GPU saturation. See `docs/benchmarks/unit-01b-vector-feasibility.md` for complete evidence.
-
-The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `mapboxgl` 33.407 FPS with frame-time p50/p95/p99 of 16.535/295.523/319.129 ms; Qt 5.15 MapLibre 50.054 FPS with 16.549/19.035/350.803 ms. CPU medians were 6.271% and 12.660%; mean-RSS medians were 176.684 MiB and 209.021 MiB. The long p99 tail occurs inside the explicit 450 ms response window, while idle phases between actions are excluded.
+- The approved bounded Hanoi Planetiler dataset, licenses/attribution, Vietnamese
+  labels, loopback-only access, and real Intel/Mesa GPU rendering were verified;
+  no generated/downloaded artifacts entered Git.
+- The signed MapLibre Native Qt v3.0.0 build on Qt 5.15.13 outperformed the
+  Qt 5.13 comparison in the matched schema-v2 interaction run: 50.054 versus
+  33.407 median FPS. Full build, resource, frame-time, CPU, and RSS evidence is
+  in `docs/benchmarks/unit-01b-vector-feasibility.md`.
 
 ### Unit 03 — local map data pipeline
 
@@ -91,6 +83,81 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
 - Three 15-second idle/render-on-demand Release diagnostics consistently counted one Valhalla child and two total processes; mean process-tree RSS was 423.4-429.9 MiB and mean CPU 2.20-2.53%. This verifies accounting after UI polish, not the deferred full interactive Unit 04E benchmark.
 - PR #21 references Issues #4 and #5, is assigned to `Viet281101`, and uses the `First Management Demo` milestone plus the `feature`, `demo`, `priority:P0`, `area:routing`, `area:map`, and `area:ui` labels. The PR and both issues are in Project #6 with Status `In Progress`, Priority `P0`, and Demo Phase `Week 1`.
 
+### Unit 05D1 — selected-route replay
+
+- Added a route-owned replay controller without changing the Unit 03 5.47 km
+  benchmark fixture. It accepts the current Valhalla or recorded-fixture route,
+  preserves the source label, interpolates position/heading on a non-blocking
+  timer, and supports 1x/2x/4x, pause/resume, stop/reset, and arrival.
+- The route screen now provides replay controls, a distinct current-position
+  marker, camera follow/recenter, bearing rotation, and 45-degree tilt. Focused lifecycle,
+  interpolation, speed, pause, stop, arrival, and missing-route tests pass.
+
+### Unit 05D2 — maneuver guidance
+
+- Replay progress now selects the next maneuver from cumulative route geometry,
+  reports distance to that maneuver plus remaining route distance/time, and
+  keeps the maneuver list synchronized while navigation is active.
+- A source-labeled navigation banner presents the current instruction, street,
+  remaining values, and an explicit arrival state. Focused controller tests pass;
+  D3 boundary and QML coverage remain the active review-gate work.
+
+### Unit 05D3 — navigation review gate
+
+- Controller tests cover route start, turn boundaries, route end/arrival,
+  duplicate maneuver positions, invalid maneuver indices, zero replay duration,
+  missing routes, invalid speeds, pause/resume, and remaining values.
+- QML tests instantiate the banner and verify maneuver, distance, remaining,
+  source, and arrival presentation. Keyboard order now includes the start action.
+- D1-D3 received preliminary owner approval. E/F remain unstarted.
+
+### Unit 05 pre-D4 follow-up
+
+- D1-D3 received preliminary approval and branch `feat/05-navigation` was
+  pushed without a PR. Replay now derives position from a monotonic elapsed-time
+  anchor, and a new route request invalidates the old route and replay.
+- Tests cover a delayed GUI tick, endpoint changes during replay, and a delayed
+  canceled request. A non-fixture Release smoke applied a real Valhalla route;
+  its limited log evidence is in `docs/routing/unit-05-navigation.md`.
+
+### Unit 05D4 — simulated re-routing
+
+- A button simulates an offset; the nearest distance to the full polyline must
+  exceed 40 m before requesting Valhalla from that position to the destination.
+  Replay stops while the last valid route remains visible, replaced requests
+  are canceled, and only successful replies replace the route and resume
+  navigation. Backend errors are visible without a fixture fallback and retain
+  the last valid route for retry. Live GPS/drag is not claimed.
+- Tests cover the threshold, outgoing endpoints, replacement of a delayed
+  request, successful replay resumption, and backend failure. A real-Valhalla
+  UI click-through also verified pause/resume, banner updates, re-routing,
+  automatic replay resumption, recenter, and stop. D4 awaits owner review; E
+  and F remain unstarted.
+
+### Unit 05 PR #22 merge-gate fixes
+
+- Map endpoint selection is disabled while replay is active and while a
+  re-route request keeps the last valid route visible. A QML interaction test
+  clicks the map during replay and verifies that endpoints, route geometry,
+  route availability, and navigation state do not change; it also verifies
+  that endpoint selection is restored after navigation stops.
+- At the 900x580 minimum and 1366x768 demo sizes, the route-control stack now
+  scrolls independently so the maneuver list retains at least 120 px and can
+  scroll its full model. The connection pill moves below the active navigation
+  banner; QML geometry tests cover both window sizes and their non-overlap.
+- The Arrived primary action is now `Đi lại từ đầu`, not a disabled-looking
+  pause action. Its QML behavior test reaches arrival, invokes the visible
+  action, and verifies the same route restarts from the beginning.
+- The PR #22 merge-gate click-through covered real-Valhalla replay, guarded map
+  clicks, successful re-routing, recenter, independent control/maneuver
+  scrolling, arrival/restart, and both 900x580 and 1366x768 layouts. A separate
+  deterministic fake-loopback run observed HTTP 503 failure/preservation and
+  is labeled as such; navigation FPS/CPU measurement remains deferred to E/F.
+- The same click-through exposed and fixed an endpoint-form binding race: the
+  Apply/Calculate actions now snapshot both edited fields before either setter
+  can re-evaluate QML bindings. A regression test applies two new coordinates
+  together and checks both controller endpoints.
+
 ## Active Decisions
 
 ### Committed
@@ -107,13 +174,13 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
 
 ## In Progress
 
-- Unit 04 increments A-C are under review in PR #21. Issues #4 and #5 remain open while their acceptance criteria are reviewed. Step D (route replay/guidance) remains explicitly unstarted; only a short static process-tree diagnostic was run, not the full interactive Unit 04E benchmark.
+- Unit 05 D4 is implemented in PR #22 and stopped at the owner review gate. E
+  and F have not started.
 
 ## Next Up
 
-1. Review PR #21 and merge it with GitHub `Squash and merge` only after approval.
-2. Implement route replay, guidance presentation, and maneuver progression against the selected route.
-3. Run the full interactive Release benchmark for QtMaps plus Valhalla after the Unit 04A-C merge gate.
+1. Owner review of D4 and its verification evidence.
+2. Do not start E or F before the D4 review gate is released.
 
 ## Open Questions and Risks
 
@@ -133,9 +200,11 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
 
 ```bash
 make requirements
-make build
-make test
 make run
+make debug-run
+make debug-gdb
+make check
+make review
 ```
 
 Authoritative benchmark evidence:
@@ -150,15 +219,12 @@ Licensing and packaging evidence:
 
 ## Latest Verification
 
-- PR #20 closure gate on 2026-10-24: Qt 5.15.13 Release rebuilt without a new compiler warning; `make test` passed 3/3, `git diff --check` passed, all internal links across 23 tracked Markdown files resolved, and `git ls-files` found no prohibited generated/downloaded artifact. Before its squash merge, the PR was mergeable/clean with CodeRabbit success and the approved tracking metadata.
-- **BUILD PASS:** default Qt 5.15.13 Release `make test` in `build-qt515`: 3/3 executables passed, including manifest corruption, service lifecycle/bounded failure/port conflict, fallback, and navigation-route coverage; `ldd` resolves Qt Core from the system Qt 5.15 runtime.
-- Last pre-Unit03 isolated Qt 5.13.2 comparison: 2/2 passed and `ldd` resolved Qt Core from `/home/viet/Qt/5.13.2/gcc_64`; Unit 03 is intentionally not gated or rerun on the comparison kit.
-- Unit 03 corrected benchmark: three cold plus three warm-cache real-data runs reported `mapReady=true`, 7,168-7,179 interaction frames, no CSV errors, and only loopback IP connections.
-- PR #20 offline recheck used the Release binary with no external network interface or route; style, glyph, sprite, and tile requests resolved only through the random in-process `127.0.0.1` endpoint.
-- `README.md` and `README_VN.md` now document only the validated Qt 5.15.13/MapLibre workflow, current run/benchmark/package commands, and the bounded data, simulated-route, diagnostic-raster, and unimplemented-feature limitations.
-- `.gitignore` explicitly rejects PBF, jar, MBTiles, PMTiles, benchmark CSV/log, cache directories, and screenshot directories regardless of where a local tool creates them; none of these artifact classes is tracked.
-- Unit 04A Qt 5.15.13 Release verification: `make test` passed 4/4 executables in 0.64 seconds with no new compiler warning; `git diff --check` passed. Only source, tests, compact JSON fixtures, context, and evidence are changed.
-- Unit conversion follow-up: omitted units default to kilometers, explicit kilometers/miles normalize to meters, and seconds remain unchanged; Release `make test` passes 4/4. Branch backup matched `origin/feat/04-routing` at `6aa1c8e` with no PR.
-- Valhalla survey evidence: `docs/routing/valhalla-availability-survey.md`. Ubuntu apt/release binaries are unavailable; the official 37.5 MB `pyvalhalla` 3.9.1 wheel is preferred over the 156.3 MiB compressed container or a 328-package source-build dependency set.
-- Unit 04B/C closure verification on 2026-10-25: all 6 CTest executables pass; stale delayed replies, active maneuver state, QML keyboard/selection contracts, application-level graceful/forced shutdown, and Linux parent-death cleanup are covered. The real service is one counted direct child on `127.0.0.1:18002`; Alt+F4 and timed exit leave no process/listener, while `kill -9` releases both within 90 ms. The demo script also succeeds from `/tmp`, and missing Valhalla files are logged/shown without fixture fallback.
-- PR #21 verification on 2026-10-25: the Qt 5.15.13 Release build passed 5/5 CTest executables, `git diff --check origin/main...HEAD` passed, and the PR is mergeable. CodeRabbit succeeded on the preceding routing head; the latest docs-only tracking head had no check result reported at final verification. Live metadata confirms the issue references, assignee, milestone, six labels, and Project #6 fields described above. The pre-existing `.vscode/settings.json` change remains user-owned and excluded from every commit.
+- Developer workflow follow-up on 2026-10-26: `make check` passed formatting,
+  diff checks, and 7/7 Release tests in 7.22 seconds. `make run` and
+  `make debug-run` both reached `mapReady=true`, started managed Valhalla, and
+  applied the real 7,294 m/14-maneuver route before their timed exits.
+- On the clean committed worktree, `make review` rebuilt the isolated
+  `build-review-qt515` Release application and passed 7/7 tests plus the branch
+  diff checks.
+- The full Unit 05 D4/PR #22 behavior evidence and remaining E/F limitation are
+  authoritative in `docs/routing/unit-05-navigation.md`.

@@ -19,7 +19,8 @@ class ValhallaServiceManager final : public QObject
     Q_PROPERTY(QUrl endpoint READ endpoint NOTIFY stateChanged)
 
 public:
-    enum class State {
+    enum class State
+    {
         Stopped,
         Starting,
         Ready,
@@ -29,8 +30,8 @@ public:
     Q_ENUM(State)
 
     explicit ValhallaServiceManager(QObject *parent = nullptr);
-    void start(const QString &program, const QString &configPath, quint16 port,
-               int concurrency = 2, int readinessTimeoutMs = 10000);
+    void start(const QString &program, const QString &configPath, quint16 port, int concurrency = 2,
+               int readinessTimeoutMs = 10000);
     void stop();
     void forceStop();
 

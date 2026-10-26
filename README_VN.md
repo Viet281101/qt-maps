@@ -37,21 +37,51 @@ Phạm vi dữ liệu toàn quốc ở độ chi tiết cao, pipeline dữ liệ
 | Raster         | Fallback diagnostic localhost đã xác nhận; raster thật để sau  |
 | Vector         | MapLibre Native Qt v3.0.0 đã duyệt, dùng MBTiles local hợp lệ  |
 | Dữ liệu bản đồ | Package Hà Nội có version từ Geofabrik PBF/Planetiler đã duyệt |
-| Routing        | Valhalla chạy local qua `QProcess` đang là phương án đề xuất   |
+| Routing        | Valhalla local do QtMaps quản lý qua `QProcess` đã được chốt   |
 | Search offline | SQLite FTS5 đang là phương án đề xuất                          |
 | GPS mô phỏng   | QtPositioning và route/NMEA replay                             |
 | Hiệu năng      | FPS từ frame render; CPU/RAM tính cả application process tree  |
 
 Các công nghệ mang trạng thái đề xuất không được xem là đã chốt cho đến khi có bằng chứng build/chạy trên Qt 5.15.13 và máy tham chiếu.
 
-## Build và chạy
+## Workflow phát triển
+
+`Makefile` ở thư mục gốc là giao diện chung cho developer; CMake và Ninja vẫn
+là hệ thống build có thẩm quyền. Các thao tác thường ngày được rút gọn:
+
+| Mục đích | Lệnh | Ý nghĩa |
+| --- | --- | --- |
+| Chạy demo local đầy đủ | `make run` | Build Release tăng dần, bản đồ Hà Nội local và Valhalla do app quản lý |
+| Debug demo đầy đủ | `make debug-run` | Debug build riêng tại `build-qt515-debug`, có symbol |
+| Debug native bằng GDB | `make debug-gdb` | Mở cùng Debug demo trong GDB |
+| Chạy automated test | `make test` | Build Release tăng dần và chạy toàn bộ CTest |
+| Kiểm tra trước commit | `make check` | Format, Release test và kiểm tra staged/unstaged diff |
+| Review trước merge | `make review` | Yêu cầu worktree sạch; Release build cô lập và kiểm tra branch diff |
+
+`make run`, `make debug-run` và `make debug-gdb` tự cấu hình runtime path rồi
+khởi chạy đầy đủ map/routing/navigation qua `tools/run-demo.sh`. `make run` đã
+phụ thuộc vào build, vì vậy `make build && make run` vẫn đúng nhưng bị lặp.
+Có thể truyền tham số tùy chọn qua `DEMO_ARGS`:
+
+```bash
+make debug-run DEMO_ARGS='--disable-instrumentation --exit-after 15'
+```
+
+Debug build chỉ dùng để điều tra lỗi. Mọi benchmark hoặc evidence trình bày với
+quản lý phải lấy từ Release workflow.
+
+Dùng `make check` trong lúc phát triển, sau đó commit hoặc stash toàn bộ thay
+đổi trước khi chạy `make review`. Cách tách này giữ phản hồi hằng ngày nhanh và
+đảm bảo merge gate kiểm tra đúng trạng thái branch đã commit.
+
+## Chi tiết build và chạy
 
 Workflow Release đã kiểm chứng chọn rõ Qt 5.15.13 của hệ thống và không đổi `PATH` toàn cục:
 
 ```bash
 make requirements
-make build
 make test
+make run
 ```
 
 MapLibre development install và các Qt QML/runtime plugin hiện là dependency local nằm ngoài Git. Lệnh smoke local đã chạy thành công dưới đây mở package Hà Nội có checksum trong 15 giây; evidence Unit 03 bọc lệnh này trong network namespace dùng cho kiểm chứng mất mạng:
@@ -86,15 +116,16 @@ make hanoi-package \
 
 Quy trình kiểm chứng mất mạng hoàn toàn và benchmark đầy đủ nằm trong [evidence Unit 03](docs/benchmarks/unit-03-local-map-data-pipeline.md).
 
-Có thể chạy demo routing từ bất kỳ thư mục nào bằng:
+Người dùng nâng cao vẫn có thể gọi trực tiếp script demo từ bất kỳ thư mục nào:
 
 ```bash
 /duong/dan/tuyet/doi/toi/QtMaps/tools/run-demo.sh
 ```
 
 Script tự chuyển về thư mục gốc repo và truyền đường dẫn tuyệt đối cho map,
-service và config. Nếu thiếu file Valhalla, UI hiện đúng đường dẫn bị thiếu và
-không âm thầm vẽ tuyến fixture.
+service và config. `QTMAPS_APP` có thể chọn binary đã build khác;
+`QTMAPS_GDB=1` mở binary đó bằng GDB. Nếu thiếu file Valhalla, UI hiện đúng
+đường dẫn bị thiếu và không âm thầm vẽ tuyến fixture.
 
 ## Nguyên tắc triển khai
 
@@ -131,7 +162,13 @@ Kết quả thực tế được ghi theo [mẫu benchmark](docs/benchmarks/benc
 - PR #20 đã merge. Tuyến 5,47 km và chuyển động 40 km/h của Unit 03 vẫn là fixture navigation mô phỏng xác định trước, chưa phải kết quả từ routing engine.
 - Luồng lập tuyến Unit 04 hiện chạy Valhalla 3.9.1 local do ứng dụng quản lý, chỉ bind loopback, và trả về geometry, quãng đường, thời gian cùng chỉ dẫn tiếng Việt thật cho routing graph vùng đại Hà Nội giới hạn. Fixture ghi sẵn chỉ dùng trong chế độ fixture có nhãn rõ hoặc fallback khi request lỗi được hiển thị; thiếu file khởi động không kích hoạt fixture.
 - Raster fallback chỉ là ảnh chẩn đoán local để kiểm tra phát hiện lỗi và chuyển nguồn, chưa phải raster Hà Nội thật.
-- Navigation replay theo tuyến đã chọn, re-routing, benchmark toàn cây tiến trình QtMaps + Valhalla, routing graph toàn quốc, search offline, orthography, UI sản phẩm hoàn chỉnh, installer và kiểm chứng ổn định dài hạn chưa được triển khai.
+- Navigation replay theo tuyến đã chọn đã có tốc độ 1x/2x/4x, tạm dừng/dừng,
+  camera follow/recenter, xoay/nghiêng, banner maneuver có nhãn nguồn, quãng đường/thời
+  gian còn lại và trạng thái đến đích. Có thể mô phỏng đi lệch trên 40 m để yêu
+  cầu Valhalla tính lại tuyến; request lỗi vẫn giữ tuyến hợp lệ gần nhất để thử
+  lại. Chưa có phát hiện lệch bằng GPS thật. Benchmark
+  toàn cây tiến trình QtMaps + Valhalla, routing graph toàn quốc, search offline, orthography, UI sản
+  phẩm hoàn chỉnh, installer và kiểm chứng ổn định dài hạn chưa được triển khai.
 
 Trạng thái chi tiết và bước tiếp theo nằm trong [progress tracker](context/progress-tracker.md). Kiến trúc, UI, coding standards và workflow nằm trong thư mục [`context/`](context/).
 

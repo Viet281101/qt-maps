@@ -30,8 +30,7 @@ class RoutingController final : public QObject
     Q_PROPERTY(bool routeAvailable READ routeAvailable NOTIFY routeChanged)
     Q_PROPERTY(bool loading READ loading NOTIFY stateChanged)
     Q_PROPERTY(QString nextMapSelection READ nextMapSelection NOTIFY endpointsChanged)
-    Q_PROPERTY(int currentManeuverIndex READ currentManeuverIndex
-               NOTIFY currentManeuverChanged)
+    Q_PROPERTY(int currentManeuverIndex READ currentManeuverIndex NOTIFY currentManeuverChanged)
 
 public:
     explicit RoutingController(QObject *parent = nullptr);
@@ -52,12 +51,14 @@ public:
     bool loading() const;
     QString nextMapSelection() const;
     int currentManeuverIndex() const;
+    const Route &route() const;
 
     Q_INVOKABLE bool setOriginInput(const QString &input);
     Q_INVOKABLE bool setDestinationInput(const QString &input);
     Q_INVOKABLE void selectMapPoint(const QGeoCoordinate &coordinate);
     Q_INVOKABLE void calculateRoute();
     Q_INVOKABLE void calculateFixtureRoute();
+    Q_INVOKABLE void requestReroute(const QGeoCoordinate &position);
     Q_INVOKABLE void focusManeuver(int index);
     void startBackend(const QString &program, const QString &configPath, quint16 port);
     void stopBackend();
@@ -73,6 +74,7 @@ signals:
     void backendReady();
     void backendStopped();
     void currentManeuverChanged();
+    void rerouteSucceeded();
 
 private:
     static bool parseLocation(const QString &input, QGeoCoordinate *coordinate,
@@ -96,6 +98,7 @@ private:
     QString connectionLabel_ = QStringLiteral("offline — fixture");
     QString statusMessage_ = QStringLiteral("Chọn hai điểm rồi bấm Tính đường");
     bool loading_ = false;
+    bool rerouting_ = false;
     bool selectOriginNext_ = true;
     int currentManeuverIndex_ = -1;
     ValhallaServiceManager service_;
