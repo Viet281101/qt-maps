@@ -200,10 +200,11 @@ Deliver a stable management demo by 2026-11-03: polished map-first Release UI, v
 
 ```bash
 make requirements
-make format-check
-make build
-make test
 make run
+make debug-run
+make debug-gdb
+make check
+make review
 ```
 
 Authoritative benchmark evidence:
@@ -218,32 +219,12 @@ Licensing and packaging evidence:
 
 ## Latest Verification
 
-- VS Code IntelliSense was repaired on 2026-10-26 by pointing the C/C++ extension at the generated Qt 5.15.13 `build-qt515/compile_commands.json` instead of nonexistent `build/compile_commands.json`; the database contains the `main.cpp` QtCore include path and Release `make test` passed 7/7 in 7.30 seconds.
-- Formatting workflow verified on 2026-10-26: `make format` normalized all
-  tracked C/C++ files, `make format-check` passed, and Qt 5.15.13 Release
-  `make test` passed 7/7 in 7.77 seconds. QML remains intentionally excluded.
-- Build-maintenance follow-up on 2026-10-25: `make clean-old-builds` removes
-  only root-level `build`/`build-*` CMake directories other than the selected
-  `BUILD_DIR`; it refuses paths outside that scope and skips non-CMake
-  directories. It is intentionally not run by `make clean`.
-- Unit 03 corrected benchmark: three cold plus three warm-cache real-data runs reported `mapReady=true`, 7,168-7,179 interaction frames, no CSV errors, and only loopback IP connections.
-- `README.md` and `README_VN.md` now document only the validated Qt 5.15.13/MapLibre workflow, current run/benchmark/package commands, and the bounded data, simulated-route, diagnostic-raster, and unimplemented-feature limitations.
-- `.gitignore` explicitly rejects PBF, jar, MBTiles, PMTiles, benchmark CSV/log, cache directories, and screenshot directories regardless of where a local tool creates them; none of these artifact classes is tracked.
-- Unit 04B/C closure verification on 2026-10-25: all 6 CTest executables pass; stale delayed replies, active maneuver state, QML keyboard/selection contracts, application-level graceful/forced shutdown, and Linux parent-death cleanup are covered. The real service is one counted direct child on `127.0.0.1:18002`; Alt+F4 and timed exit leave no process/listener, while `kill -9` releases both within 90 ms. The demo script also succeeds from `/tmp`, and missing Valhalla files are logged/shown without fixture fallback.
-- Unit 05 D4 review gate on 2026-10-25: Qt 5.15.13 Release `make test` passed
-  7/7 executables in 6.88 seconds after the recenter and failed-reroute
-  preservation follow-ups, and `git diff --check` passed. The real
-  Valhalla click-through started, paused, and resumed replay, then replaced the
-  7,294 m/14-maneuver route with a 7,622 m/16-maneuver route after simulated
-  deviation. Replay, banner, maneuver selection, the explicit recenter/stop
-  actions, and stop behavior all updated correctly. The fake-backend tests
-  remain the deterministic failure and race coverage, including preservation
-  of the last valid route after an HTTP 503 reroute failure.
-  A post-fix real-Valhalla repeat replaced the initial route with a 7,307 m,
-  522.622 s, 14-maneuver route and resumed replay normally.
-- PR #22 post-fix gate on 2026-10-25: Qt 5.15.13 Release `make test` passed
-  7/7 in 7.42 seconds and `git diff --check origin/main...HEAD` passed. QML
-  behavior coverage now includes guarded map clicks during replay, independent
-  scrolling with a maneuver viewport of at least 120 px at 900x580 and
-  1366x768, banner/status non-overlap, and replay-again after arrival. All six
-  Issue #6 criteria remain satisfied; Unit 05E/F measurement remains deferred.
+- Developer workflow follow-up on 2026-10-26: `make check` passed formatting,
+  diff checks, and 7/7 Release tests in 7.22 seconds. `make run` and
+  `make debug-run` both reached `mapReady=true`, started managed Valhalla, and
+  applied the real 7,294 m/14-maneuver route before their timed exits.
+- On the clean committed worktree, `make review` rebuilt the isolated
+  `build-review-qt515` Release application and passed 7/7 tests plus the branch
+  diff checks.
+- The full Unit 05 D4/PR #22 behavior evidence and remaining E/F limitation are
+  authoritative in `docs/routing/unit-05-navigation.md`.
