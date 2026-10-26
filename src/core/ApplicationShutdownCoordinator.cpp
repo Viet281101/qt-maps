@@ -8,15 +8,15 @@ namespace qtmaps {
 namespace core {
 
 ApplicationShutdownCoordinator::ApplicationShutdownCoordinator(
-    routing::RoutingController *routingController, QObject *parent)
-    : QObject(parent), routingController_(routingController), forceKillTimer_(new QTimer(this))
+    routing::RoutingController *routingController, QObject *parent) :
+    QObject(parent), routingController_(routingController), forceKillTimer_(new QTimer(this))
 {
     Q_ASSERT(routingController_);
     forceKillTimer_->setSingleShot(true);
     connect(forceKillTimer_, &QTimer::timeout, routingController_,
             &routing::RoutingController::forceStopBackend);
-    connect(routingController_, &routing::RoutingController::backendStopped,
-            this, &ApplicationShutdownCoordinator::finishShutdown);
+    connect(routingController_, &routing::RoutingController::backendStopped, this,
+            &ApplicationShutdownCoordinator::finishShutdown);
 }
 
 void ApplicationShutdownCoordinator::requestQuit()

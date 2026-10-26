@@ -33,12 +33,14 @@ int RouteNavigationController::currentManeuverIndex() const { return currentMane
 QString RouteNavigationController::maneuverInstruction() const
 {
     return currentManeuverIndex_ >= 0 && currentManeuverIndex_ < route_.maneuvers.size()
-        ? route_.maneuvers.at(currentManeuverIndex_).instruction : QString();
+               ? route_.maneuvers.at(currentManeuverIndex_).instruction
+               : QString();
 }
 QString RouteNavigationController::maneuverStreetName() const
 {
     return currentManeuverIndex_ >= 0 && currentManeuverIndex_ < route_.maneuvers.size()
-        ? route_.maneuvers.at(currentManeuverIndex_).streetName : QString();
+               ? route_.maneuvers.at(currentManeuverIndex_).streetName
+               : QString();
 }
 double RouteNavigationController::distanceToManeuverMeters() const
 {
@@ -76,8 +78,7 @@ void RouteNavigationController::setRoute(const Route &route, const QString &sour
     cumulativeMeters_.reserve(route_.polyline.size());
     cumulativeMeters_.append(0.0);
     for (int index = 1; index < route_.polyline.size(); ++index) {
-        const double segment = route_.polyline.at(index - 1)
-                                   .distanceTo(route_.polyline.at(index));
+        const double segment = route_.polyline.at(index - 1).distanceTo(route_.polyline.at(index));
         if (!std::isfinite(segment) || segment < 0.0) {
             clearRoute();
             setState(State::Error, QStringLiteral("Không thể phát lại hình học tuyến"));
@@ -128,7 +129,7 @@ void RouteNavigationController::clearRoute()
 }
 
 QGeoCoordinate RouteNavigationController::coordinateAtDistance(double distanceMeters,
-                                                                double *bearing) const
+                                                               double *bearing) const
 {
     if (!route_.isValid() || cumulativeMeters_.size() != route_.polyline.size()) {
         if (bearing) {
@@ -138,8 +139,7 @@ QGeoCoordinate RouteNavigationController::coordinateAtDistance(double distanceMe
     }
     const double bounded = std::max(0.0, std::min(distanceMeters, routeLengthMeters_));
     int segment = 0;
-    while (segment + 1 < cumulativeMeters_.size()
-           && cumulativeMeters_.at(segment + 1) < bounded) {
+    while (segment + 1 < cumulativeMeters_.size() && cumulativeMeters_.at(segment + 1) < bounded) {
         ++segment;
     }
     if (segment + 1 >= route_.polyline.size()) {
@@ -153,9 +153,9 @@ QGeoCoordinate RouteNavigationController::coordinateAtDistance(double distanceMe
     const QGeoCoordinate to = route_.polyline.at(segment + 1);
     const double segmentStart = cumulativeMeters_.at(segment);
     const double segmentLength = cumulativeMeters_.at(segment + 1) - segmentStart;
-    const double ratio = segmentLength > 0.0
-        ? std::max(0.0, std::min(1.0, (bounded - segmentStart) / segmentLength))
-        : 0.0;
+    const double ratio =
+        segmentLength > 0.0 ? std::max(0.0, std::min(1.0, (bounded - segmentStart) / segmentLength))
+                            : 0.0;
     if (bearing) {
         *bearing = from.azimuthTo(to);
     }
@@ -224,8 +224,7 @@ bool RouteNavigationController::setSpeedMultiplier(int multiplier)
     emit speedMultiplierChanged();
     if (state_ == State::Running) {
         setState(State::Running,
-                 QStringLiteral("Đang chỉ đường %1x • %2")
-                     .arg(speedMultiplier_).arg(sourceLabel_));
+                 QStringLiteral("Đang chỉ đường %1x • %2").arg(speedMultiplier_).arg(sourceLabel_));
     }
     return true;
 }
@@ -249,10 +248,10 @@ double RouteNavigationController::distanceFromRouteMeters(const QGeoCoordinate &
         const double dy = end.second - start.second;
         const double lengthSquared = dx * dx + dy * dy;
         const double t = lengthSquared > 0.0
-            ? std::max(0.0, std::min(1.0, -(start.first * dx + start.second * dy)
-                                             / lengthSquared)) : 0.0;
-        nearest = std::min(nearest, std::hypot(start.first + t * dx,
-                                               start.second + t * dy));
+                             ? std::max(0.0, std::min(1.0, -(start.first * dx + start.second * dy) /
+                                                               lengthSquared))
+                             : 0.0;
+        nearest = std::min(nearest, std::hypot(start.first + t * dx, start.second + t * dy));
         start = end;
     }
     return nearest;
@@ -276,8 +275,8 @@ void RouteNavigationController::simulateDeviation()
     }
     for (double distance : {80.0, 160.0, 320.0}) {
         for (int direction = 0; direction < 8; ++direction) {
-            const QGeoCoordinate candidate = coordinate_.atDistanceAndAzimuth(
-                distance, direction * 45.0);
+            const QGeoCoordinate candidate =
+                coordinate_.atDistanceAndAzimuth(distance, direction * 45.0);
             if (considerDeviation(candidate)) {
                 return;
             }
@@ -307,18 +306,15 @@ void RouteNavigationController::advanceToDistance(double distanceMeters)
     }
 }
 
-void RouteNavigationController::advance()
-{
-    syncElapsedTime();
-}
+void RouteNavigationController::advance() { syncElapsedTime(); }
 
 void RouteNavigationController::syncElapsedTime()
 {
     if (state_ == State::Running && tickElapsed_.isValid()) {
         const double elapsedSeconds = tickElapsed_.elapsed() / 1000.0;
         const double replayMetersPerSecond = routeLengthMeters_ / route_.durationSeconds;
-        advanceToDistance(clockAnchorMeters_
-                          + replayMetersPerSecond * speedMultiplier_ * elapsedSeconds);
+        advanceToDistance(clockAnchorMeters_ +
+                          replayMetersPerSecond * speedMultiplier_ * elapsedSeconds);
     }
 }
 
@@ -351,8 +347,7 @@ void RouteNavigationController::updateGuidance()
         return;
     }
 
-    const double progress = std::max(
-        0.0, std::min(1.0, travelledMeters_ / routeLengthMeters_));
+    const double progress = std::max(0.0, std::min(1.0, travelledMeters_ / routeLengthMeters_));
     remainingDistanceMeters_ = route_.distanceMeters * (1.0 - progress);
     remainingDurationSeconds_ = route_.durationSeconds * (1.0 - progress);
 
@@ -367,8 +362,7 @@ void RouteNavigationController::updateGuidance()
         }
     }
     currentManeuverIndex_ = selected;
-    distanceToManeuverMeters_ = std::max(
-        0.0, maneuverDistances_.at(selected) - travelledMeters_);
+    distanceToManeuverMeters_ = std::max(0.0, maneuverDistances_.at(selected) - travelledMeters_);
     emit guidanceChanged();
 }
 

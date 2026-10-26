@@ -10,17 +10,30 @@ QString BenchmarkCsvWriter::schemaVersion() { return QStringLiteral("qtmaps-perf
 
 QStringList BenchmarkCsvWriter::columns()
 {
-    return {QStringLiteral("schema_version"), QStringLiteral("timestamp_utc"),
-            QStringLiteral("timestamp_local"), QStringLiteral("timezone_offset"),
-            QStringLiteral("scenario"), QStringLiteral("build_id"), QStringLiteral("build_type"),
-            QStringLiteral("qt_version"), QStringLiteral("renderer"), QStringLiteral("driver"),
-            QStringLiteral("window_width_px"), QStringLiteral("window_height_px"),
-            QStringLiteral("network_mode"), QStringLiteral("dataset_id"),
-            QStringLiteral("dataset_coverage"), QStringLiteral("sampling_interval_ms"),
-            QStringLiteral("warmup_seconds"), QStringLiteral("app_pid"),
-            QStringLiteral("process_count"), QStringLiteral("child_count"),
-            QStringLiteral("current_fps"), QStringLiteral("average_fps"),
-            QStringLiteral("one_percent_low_fps"), QStringLiteral("interaction_active"),
+    return {QStringLiteral("schema_version"),
+            QStringLiteral("timestamp_utc"),
+            QStringLiteral("timestamp_local"),
+            QStringLiteral("timezone_offset"),
+            QStringLiteral("scenario"),
+            QStringLiteral("build_id"),
+            QStringLiteral("build_type"),
+            QStringLiteral("qt_version"),
+            QStringLiteral("renderer"),
+            QStringLiteral("driver"),
+            QStringLiteral("window_width_px"),
+            QStringLiteral("window_height_px"),
+            QStringLiteral("network_mode"),
+            QStringLiteral("dataset_id"),
+            QStringLiteral("dataset_coverage"),
+            QStringLiteral("sampling_interval_ms"),
+            QStringLiteral("warmup_seconds"),
+            QStringLiteral("app_pid"),
+            QStringLiteral("process_count"),
+            QStringLiteral("child_count"),
+            QStringLiteral("current_fps"),
+            QStringLiteral("average_fps"),
+            QStringLiteral("one_percent_low_fps"),
+            QStringLiteral("interaction_active"),
             QStringLiteral("interaction_frame_count"),
             QStringLiteral("interaction_average_fps"),
             QStringLiteral("interaction_frame_time_p50_ms"),
@@ -31,15 +44,16 @@ QStringList BenchmarkCsvWriter::columns()
             QStringLiteral("settling_frame_average_ms"),
             QStringLiteral("settling_frame_maximum_ms"),
             QStringLiteral("total_rss_bytes"),
-            QStringLiteral("total_cpu_percent_one_core_100"), QStringLiteral("error")};
+            QStringLiteral("total_cpu_percent_one_core_100"),
+            QStringLiteral("error")};
 }
 
 QString BenchmarkCsvWriter::escape(const QString &value)
 {
     QString escaped = value;
     escaped.replace(QLatin1Char('"'), QStringLiteral("\"\""));
-    if (escaped.contains(QLatin1Char(',')) || escaped.contains(QLatin1Char('"'))
-        || escaped.contains(QLatin1Char('\n')) || escaped.contains(QLatin1Char('\r'))) {
+    if (escaped.contains(QLatin1Char(',')) || escaped.contains(QLatin1Char('"')) ||
+        escaped.contains(QLatin1Char('\n')) || escaped.contains(QLatin1Char('\r'))) {
         return QLatin1Char('"') + escaped + QLatin1Char('"');
     }
     return escaped;

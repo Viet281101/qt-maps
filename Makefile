@@ -9,6 +9,7 @@ BUILD_DIR ?= build-qt515
 BUILD_TYPE ?= Release
 CMAKE ?= cmake
 PYTHON ?= python3
+CLANG_FORMAT ?= clang-format
 HANOI_PBF ?= generated/unit-01b/source/vietnam-latest.osm.pbf
 PLANETILER_JAR ?= generated/unit-01b/tools/planetiler.jar
 QT_RUNTIME_PLUGIN_PATH ?= generated/unit-01b/qml-runtime/usr/lib/x86_64-linux-gnu/qt5/plugins
@@ -16,8 +17,9 @@ QT_RUNTIME_PLUGIN_PATH ?= generated/unit-01b/qml-runtime/usr/lib/x86_64-linux-gn
 QMAKE := $(QT_PREFIX)/bin/qmake
 QTMAPS := $(BUILD_DIR)/qtmaps
 
-.PHONY: help requirements configure build test run diagnostic-tiles vector-fixture vector-real-style hanoi-package \
-	serve-diagnostic-tiles serve-vector-fixture run-mapboxgl-probe clean clean-old-builds
+.PHONY: help requirements configure build test run format format-check diagnostic-tiles vector-fixture \
+	vector-real-style hanoi-package serve-diagnostic-tiles serve-vector-fixture run-mapboxgl-probe \
+	clean clean-old-builds
 
 help:
 	@echo "QtMaps development targets"
@@ -26,6 +28,8 @@ help:
 	@echo "  make build                 Configure and build QtMaps"
 	@echo "  make test                  Build and run CTest with failures shown"
 	@echo "  make run                   Build and run (fixture server must be separate)"
+	@echo "  make format                Format tracked C/C++ sources and tests in place"
+	@echo "  make format-check          Check tracked C/C++ formatting without editing"
 	@echo "  make diagnostic-tiles      Generate the non-geographic XYZ fixture"
 	@echo "  make serve-diagnostic-tiles Serve the fixture on 127.0.0.1:8765"
 	@echo "  make vector-fixture        Generate the synthetic local MVT/style/glyph/sprite fixture"
@@ -36,7 +40,7 @@ help:
 	@echo "  make clean                 Clean compiled outputs through CMake"
 	@echo "  make clean-old-builds      Remove other root build/build-* CMake directories; keep BUILD_DIR"
 	@echo
-	@echo "Overrides: QT_PREFIX, QT_EXPECTED_VERSION, QTMAPS_MIN_QT_VERSION, BUILD_DIR, BUILD_TYPE, CMAKE, PYTHON, QT_RUNTIME_PLUGIN_PATH, HANOI_PBF, PLANETILER_JAR"
+	@echo "Overrides: QT_PREFIX, QT_EXPECTED_VERSION, QTMAPS_MIN_QT_VERSION, BUILD_DIR, BUILD_TYPE, CMAKE, PYTHON, CLANG_FORMAT, QT_RUNTIME_PLUGIN_PATH, HANOI_PBF, PLANETILER_JAR"
 
 requirements:
 	@command -v "$(CMAKE)" >/dev/null || { echo "error: CMake is required" >&2; exit 1; }
@@ -72,6 +76,24 @@ test: build
 
 run: build
 	"$(QTMAPS)"
+
+format:
+	@command -v "$(CLANG_FORMAT)" >/dev/null || { \
+		echo "error: clang-format is required; set CLANG_FORMAT to its executable" >&2; \
+		exit 1; \
+	}
+	@git ls-files -z -- '*.c' '*.cc' '*.cpp' '*.cxx' '*.h' '*.hh' '*.hpp' '*.hxx' | \
+		xargs -0 -r "$(CLANG_FORMAT)" --style=file -i
+	@echo "format: C/C++ sources formatted"
+
+format-check:
+	@command -v "$(CLANG_FORMAT)" >/dev/null || { \
+		echo "error: clang-format is required; set CLANG_FORMAT to its executable" >&2; \
+		exit 1; \
+	}
+	@git ls-files -z -- '*.c' '*.cc' '*.cpp' '*.cxx' '*.h' '*.hh' '*.hpp' '*.hxx' | \
+		xargs -0 -r "$(CLANG_FORMAT)" --style=file --dry-run --Werror
+	@echo "format-check: C/C++ formatting is clean"
 
 diagnostic-tiles:
 	"$(PYTHON)" tools/generate_diagnostic_tiles.py

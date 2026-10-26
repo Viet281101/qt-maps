@@ -2,8 +2,8 @@
 
 #include "routing/RouteNavigationController.h"
 
-#include <QSignalSpy>
 #include <QElapsedTimer>
+#include <QSignalSpy>
 
 using qtmaps::routing::Route;
 using qtmaps::routing::RouteManeuver;
@@ -14,11 +14,10 @@ namespace {
 Route simpleRoute()
 {
     Route route;
-    route.polyline = {QGeoCoordinate(21.0, 105.0),
-                      QGeoCoordinate(21.0, 105.001),
+    route.polyline = {QGeoCoordinate(21.0, 105.0), QGeoCoordinate(21.0, 105.001),
                       QGeoCoordinate(21.001, 105.001)};
-    route.distanceMeters = route.polyline.at(0).distanceTo(route.polyline.at(1))
-        + route.polyline.at(1).distanceTo(route.polyline.at(2));
+    route.distanceMeters = route.polyline.at(0).distanceTo(route.polyline.at(1)) +
+                           route.polyline.at(1).distanceTo(route.polyline.at(2));
     route.durationSeconds = 100.0;
     RouteManeuver depart;
     depart.instruction = QStringLiteral("Đi thẳng");
@@ -60,8 +59,7 @@ private slots:
         controller.start();
         QVERIFY(controller.running());
         controller.advanceBySeconds(25.0);
-        QVERIFY(qAbs(controller.travelledMeters() - controller.routeLengthMeters() / 2.0)
-                < 0.5);
+        QVERIFY(qAbs(controller.travelledMeters() - controller.routeLengthMeters() / 2.0) < 0.5);
         const double pausedDistance = controller.travelledMeters();
         controller.pause();
         QVERIFY(controller.paused());
@@ -151,8 +149,8 @@ private slots:
         QCOMPARE(controller.currentManeuverIndex(), 1);
 
         const double firstSegment = route.polyline.at(0).distanceTo(route.polyline.at(1));
-        const double secondsToTurn = firstSegment / controller.routeLengthMeters()
-            * route.durationSeconds;
+        const double secondsToTurn =
+            firstSegment / controller.routeLengthMeters() * route.durationSeconds;
         controller.advanceBySeconds(secondsToTurn);
         QCOMPARE(controller.currentManeuverIndex(), 2);
 

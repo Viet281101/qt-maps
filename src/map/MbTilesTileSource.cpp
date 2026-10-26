@@ -35,8 +35,7 @@ public slots:
             return result;
         }
         root_ = QDir(QFileInfo(packagePath).canonicalFilePath());
-        connectionName_ = QStringLiteral("qtmaps-mbtiles-%1")
-                              .arg(reinterpret_cast<quintptr>(this));
+        connectionName_ = QStringLiteral("qtmaps-mbtiles-%1").arg(reinterpret_cast<quintptr>(this));
         database_ = QSqlDatabase::addDatabase(QStringLiteral("QSQLITE"), connectionName_);
         database_.setDatabaseName(root_.filePath(QStringLiteral("tiles.mbtiles")));
         database_.setConnectOptions(QStringLiteral("QSQLITE_OPEN_READONLY"));
@@ -56,12 +55,13 @@ public slots:
             return result;
         }
         server_ = new QTcpServer(this);
-        connect(server_, &QTcpServer::newConnection,
-                this, &MbTilesTileSourceWorker::acceptConnections);
+        connect(server_, &QTcpServer::newConnection, this,
+                &MbTilesTileSourceWorker::acceptConnections);
         if (!server_->listen(QHostAddress::LocalHost, requestedPort)) {
             result.insert(QStringLiteral("error"),
                           QStringLiteral("Cannot bind tile service to 127.0.0.1:%1: %2")
-                              .arg(requestedPort).arg(server_->errorString()));
+                              .arg(requestedPort)
+                              .arg(server_->errorString()));
             server_->deleteLater();
             server_ = nullptr;
             closeDatabase();
@@ -95,9 +95,8 @@ private slots:
     {
         while (server_ && server_->hasPendingConnections()) {
             QTcpSocket *socket = server_->nextPendingConnection();
-            connect(socket, &QTcpSocket::readyRead, this, [this, socket]() {
-                handleRequest(socket);
-            });
+            connect(socket, &QTcpSocket::readyRead, this,
+                    [this, socket]() { handleRequest(socket); });
             connect(socket, &QTcpSocket::disconnected, socket, &QObject::deleteLater);
         }
     }
@@ -116,9 +115,9 @@ private:
     void writeResponse(QTcpSocket *socket, int status, const QByteArray &contentType,
                        const QByteArray &body)
     {
-        const QByteArray reason = status == 200 ? QByteArrayLiteral("OK")
-                                                : status == 404 ? QByteArrayLiteral("Not Found")
-                                                                : QByteArrayLiteral("Bad Request");
+        const QByteArray reason = status == 200   ? QByteArrayLiteral("OK")
+                                  : status == 404 ? QByteArrayLiteral("Not Found")
+                                                  : QByteArrayLiteral("Bad Request");
         QByteArray response = "HTTP/1.1 " + QByteArray::number(status) + " " + reason + "\r\n";
         response += "Content-Type: " + contentType + "\r\n";
         response += "Content-Length: " + QByteArray::number(body.size()) + "\r\n";
@@ -140,8 +139,8 @@ private:
 
     void handleRequest(QTcpSocket *socket)
     {
-        const QByteArray request = socket->property("requestBuffer").toByteArray()
-            + socket->readAll();
+        const QByteArray request =
+            socket->property("requestBuffer").toByteArray() + socket->readAll();
         if (!request.contains("\r\n\r\n")) {
             if (request.size() > 8192) {
                 writeResponse(socket, 400, QByteArrayLiteral("text/plain"),
@@ -159,8 +158,7 @@ private:
         }
         const QString path = QUrl::fromEncoded(requestLine.at(1)).path();
         if (path == QStringLiteral("/healthz")) {
-            writeResponse(socket, 200, QByteArrayLiteral("text/plain"),
-                          QByteArrayLiteral("ok\n"));
+            writeResponse(socket, 200, QByteArrayLiteral("text/plain"), QByteArrayLiteral("ok\n"));
             return;
         }
         if (path == QStringLiteral("/style/style.json")) {
@@ -171,8 +169,7 @@ private:
                 return;
             }
         }
-        const QRegularExpression tilePattern(
-            QStringLiteral("^/tiles/(\\d+)/(\\d+)/(\\d+)\\.pbf$"));
+        const QRegularExpression tilePattern(QStringLiteral("^/tiles/(\\d+)/(\\d+)/(\\d+)\\.pbf$"));
         const QRegularExpressionMatch tileMatch = tilePattern.match(path);
         if (tileMatch.hasMatch()) {
             const int zoom = tileMatch.captured(1).toInt();
@@ -181,8 +178,8 @@ private:
             if (zoom >= 0 && zoom < 31) {
                 const qint64 tmsY = (qint64(1) << zoom) - 1 - xyzY;
                 QSqlQuery query(database_);
-                query.prepare(QStringLiteral(
-                    "SELECT tile_data FROM tiles WHERE zoom_level=? AND tile_column=? AND tile_row=?"));
+                query.prepare(QStringLiteral("SELECT tile_data FROM tiles WHERE zoom_level=? AND "
+                                             "tile_column=? AND tile_row=?"));
                 query.addBindValue(zoom);
                 query.addBindValue(x);
                 query.addBindValue(tmsY);
@@ -202,7 +199,8 @@ private:
         } else if (path.startsWith(QStringLiteral("/sprites/"))) {
             relative = path.mid(1);
             contentType = path.endsWith(QStringLiteral(".png"))
-                ? QByteArrayLiteral("image/png") : QByteArrayLiteral("application/json");
+                              ? QByteArrayLiteral("image/png")
+                              : QByteArrayLiteral("application/json");
         }
         if (!relative.isEmpty()) {
             const QByteArray body = readStatic(relative);
@@ -222,8 +220,8 @@ private:
     QString baseUrl_;
 };
 
-MbTilesTileSource::MbTilesTileSource(QObject *parent)
-    : TileSource(parent), worker_(new MbTilesTileSourceWorker)
+MbTilesTileSource::MbTilesTileSource(QObject *parent) :
+    TileSource(parent), worker_(new MbTilesTileSourceWorker)
 {
     workerThread_.setObjectName(QStringLiteral("qtmaps-mbtiles-tile-source"));
     worker_->moveToThread(&workerThread_);
@@ -242,8 +240,8 @@ bool MbTilesTileSource::start(const QString &packagePath, quint16 requestedPort)
 {
     QVariantMap result;
     QMetaObject::invokeMethod(worker_, "start", Qt::BlockingQueuedConnection,
-                              Q_RETURN_ARG(QVariantMap, result),
-                              Q_ARG(QString, packagePath), Q_ARG(quint16, requestedPort));
+                              Q_RETURN_ARG(QVariantMap, result), Q_ARG(QString, packagePath),
+                              Q_ARG(quint16, requestedPort));
     running_ = result.value(QStringLiteral("running")).toBool();
     baseUrl_ = result.value(QStringLiteral("base_url")).toString();
     errorMessage_ = result.value(QStringLiteral("error")).toString();

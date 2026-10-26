@@ -119,8 +119,8 @@ private slots:
         current.insert(12, {12, 11, 5, 3000});
         current.insert(99, {99, 1, 900, 9000});
 
-        const ProcessTreeSample sample = ProcessTreeSampler::aggregate(
-            10, current, previous, 100, 1.0);
+        const ProcessTreeSample sample =
+            ProcessTreeSampler::aggregate(10, current, previous, 100, 1.0);
         QCOMPARE(sample.processCount, 3);
         QCOMPARE(sample.childCount, 2);
         QCOMPARE(sample.rssBytes, quint64(7000));
@@ -128,8 +128,8 @@ private slots:
 
         current.remove(11);
         current.remove(12);
-        const ProcessTreeSample afterExit = ProcessTreeSampler::aggregate(
-            10, current, previous, 100, 1.0);
+        const ProcessTreeSample afterExit =
+            ProcessTreeSampler::aggregate(10, current, previous, 100, 1.0);
         QCOMPARE(afterExit.processCount, 1);
         QCOMPARE(afterExit.childCount, 0);
     }
@@ -146,14 +146,17 @@ private slots:
         const bool childFound = descendants.contains(childPid);
         child.terminate();
         QVERIFY(child.waitForFinished());
-        QVERIFY2(childFound,
-                 qPrintable(QStringLiteral("root=%1 rootReadable=%2 child=%3 childReadable=%4 childPpid=%5 snapshots=%6")
-                                .arg(rootPid)
-                                .arg(during.contains(rootPid))
-                                .arg(childPid)
-                                .arg(during.contains(childPid))
-                                .arg(during.value(childPid).parentPid)
-                                .arg(during.size())));
+        QVERIFY2(
+            childFound,
+            qPrintable(
+                QStringLiteral(
+                    "root=%1 rootReadable=%2 child=%3 childReadable=%4 childPpid=%5 snapshots=%6")
+                    .arg(rootPid)
+                    .arg(during.contains(rootPid))
+                    .arg(childPid)
+                    .arg(during.contains(childPid))
+                    .arg(during.value(childPid).parentPid)
+                    .arg(during.size())));
         QTRY_VERIFY_WITH_TIMEOUT(
             !ProcessTreeSampler::descendantPids(rootPid, ProcessTreeSampler::readProc())
                  .contains(childPid),
@@ -188,8 +191,8 @@ private slots:
             QStringLiteral("interaction_frame_time_p99_ms")));
         QVERIFY(BenchmarkCsvWriter::columns().contains(
             QStringLiteral("interaction_frames_over_100ms")));
-        QVERIFY(BenchmarkCsvWriter::columns().contains(
-            QStringLiteral("settling_frame_maximum_ms")));
+        QVERIFY(
+            BenchmarkCsvWriter::columns().contains(QStringLiteral("settling_frame_maximum_ms")));
         QCOMPARE(lines.size(), 4); // header, two rows, trailing empty entry
         QVERIFY(lines.at(1).contains("\"pan, \"\"zoom\"\"\""));
     }

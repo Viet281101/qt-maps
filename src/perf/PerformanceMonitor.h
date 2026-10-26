@@ -58,8 +58,8 @@ signals:
                             bool interactionActive, int interactionFrameCount,
                             double interactionAverageFps, double frameTimeP50Milliseconds,
                             double frameTimeP95Milliseconds, double frameTimeP99Milliseconds,
-                            int framesOver100Milliseconds,
-                            int settlingFrameCount, double settlingFrameAverageMilliseconds,
+                            int framesOver100Milliseconds, int settlingFrameCount,
+                            double settlingFrameAverageMilliseconds,
                             double settlingFrameMaximumMilliseconds);
 
 private slots:

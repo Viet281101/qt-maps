@@ -12,6 +12,7 @@
 ## C++
 
 - Use only the C++ language level selected in unit 01. C++14 is proposed; code must not assume a newer standard until the decision is committed.
+- Format tracked C/C++ sources and tests with the repository `.clang-format` by running `make format`; use `make format-check` for a non-mutating verification. Override `CLANG_FORMAT` only when selecting a compatible executable explicitly.
 - Use RAII for ownership and cleanup. Prefer values, `std::unique_ptr`, and `std::shared_ptr` only where ownership is genuinely shared.
 - For `QObject` hierarchies, use clear Qt parent ownership or an owning smart pointer, never ambiguous dual ownership.
 - Avoid raw owning pointers, manual `new`/`delete` pairs, global mutable state, and unchecked narrowing conversions.

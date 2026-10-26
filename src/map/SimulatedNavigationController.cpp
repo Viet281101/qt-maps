@@ -5,15 +5,15 @@
 namespace qtmaps {
 namespace map {
 
-SimulatedNavigationController::SimulatedNavigationController(QObject *parent)
-    : QObject(parent),
-      route_({QGeoCoordinate(21.02790, 105.85230), // Hoan Kiem east
-              QGeoCoordinate(21.03210, 105.85120), // Hang Bai / Trang Tien area
-              QGeoCoordinate(21.03670, 105.84620), // old quarter west
-              QGeoCoordinate(21.03980, 105.83570), // Cua Nam / Ba Dinh direction
-              QGeoCoordinate(21.03440, 105.82770), // Giang Vo direction
-              QGeoCoordinate(21.02590, 105.82540), // Lang Ha direction
-              QGeoCoordinate(21.01820, 105.83240)}) // Thai Ha direction; ~5.5 km total
+SimulatedNavigationController::SimulatedNavigationController(QObject *parent) :
+    QObject(parent),
+    route_({QGeoCoordinate(21.02790, 105.85230),  // Hoan Kiem east
+            QGeoCoordinate(21.03210, 105.85120),  // Hang Bai / Trang Tien area
+            QGeoCoordinate(21.03670, 105.84620),  // old quarter west
+            QGeoCoordinate(21.03980, 105.83570),  // Cua Nam / Ba Dinh direction
+            QGeoCoordinate(21.03440, 105.82770),  // Giang Vo direction
+            QGeoCoordinate(21.02590, 105.82540),  // Lang Ha direction
+            QGeoCoordinate(21.01820, 105.83240)}) // Thai Ha direction; ~5.5 km total
 {
     cumulativeMeters_.reserve(route_.size());
     cumulativeMeters_.append(0.0);
@@ -42,8 +42,8 @@ QGeoCoordinate SimulatedNavigationController::coordinateAtDistance(double distan
 {
     const double boundedDistance = std::max(0.0, std::min(distanceMeters, routeLengthMeters_));
     int segment = 0;
-    while (segment + 1 < cumulativeMeters_.size()
-           && cumulativeMeters_.at(segment + 1) < boundedDistance) {
+    while (segment + 1 < cumulativeMeters_.size() &&
+           cumulativeMeters_.at(segment + 1) < boundedDistance) {
         ++segment;
     }
     if (segment + 1 >= route_.size()) {
@@ -56,9 +56,10 @@ QGeoCoordinate SimulatedNavigationController::coordinateAtDistance(double distan
     const QGeoCoordinate to = route_.at(segment + 1);
     const double segmentStart = cumulativeMeters_.at(segment);
     const double segmentLength = cumulativeMeters_.at(segment + 1) - segmentStart;
-    const double ratio = segmentLength > 0.0
-        ? std::max(0.0, std::min(1.0, (boundedDistance - segmentStart) / segmentLength))
-        : 0.0;
+    const double ratio =
+        segmentLength > 0.0
+            ? std::max(0.0, std::min(1.0, (boundedDistance - segmentStart) / segmentLength))
+            : 0.0;
     if (bearing) {
         *bearing = from.azimuthTo(to);
     }

@@ -1,9 +1,9 @@
-#include <QDebug>
 #include <QCommandLineOption>
 #include <QCommandLineParser>
+#include <QDebug>
 #include <QDir>
-#include <QGuiApplication>
 #include <QGeoServiceProvider>
+#include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QQuickWindow>
@@ -13,15 +13,15 @@
 
 #include <algorithm>
 
-#include "map/CameraProbeController.h"
 #include "core/ApplicationShutdownCoordinator.h"
+#include "map/CameraProbeController.h"
 #include "map/DirectoryTileSource.h"
 #include "map/MapSourceController.h"
 #include "map/MbTilesTileSource.h"
 #include "map/SimulatedNavigationController.h"
 #include "perf/PerformanceMonitor.h"
-#include "routing/RoutingController.h"
 #include "routing/RouteNavigationController.h"
+#include "routing/RoutingController.h"
 
 #ifndef QTMAPS_BUILD_ID
 #define QTMAPS_BUILD_ID "unknown"
@@ -34,16 +34,18 @@ void probeProvider(const QString &providerName)
     QGeoServiceProvider provider(providerName, QVariantMap(), true);
     const auto *mappingManager = provider.mappingManager();
 
-    qInfo().noquote()
-        << QStringLiteral("provider=%1 constructed=true mappingManager=%2 error=%3 errorString=%4 mappingError=%5 mappingErrorString=%6")
-               .arg(providerName,
-                    mappingManager != nullptr ? QStringLiteral("loaded") : QStringLiteral("null"),
-                    QString::number(static_cast<int>(provider.error())),
-                    provider.errorString().isEmpty() ? QStringLiteral("<empty>") : provider.errorString(),
-                    QString::number(static_cast<int>(provider.mappingError())),
-                    provider.mappingErrorString().isEmpty()
-                        ? QStringLiteral("<empty>")
-                        : provider.mappingErrorString());
+    qInfo().noquote() << QStringLiteral("provider=%1 constructed=true mappingManager=%2 error=%3 "
+                                        "errorString=%4 mappingError=%5 mappingErrorString=%6")
+                             .arg(providerName,
+                                  mappingManager != nullptr ? QStringLiteral("loaded")
+                                                            : QStringLiteral("null"),
+                                  QString::number(static_cast<int>(provider.error())),
+                                  provider.errorString().isEmpty() ? QStringLiteral("<empty>")
+                                                                   : provider.errorString(),
+                                  QString::number(static_cast<int>(provider.mappingError())),
+                                  provider.mappingErrorString().isEmpty()
+                                      ? QStringLiteral("<empty>")
+                                      : provider.mappingErrorString());
 }
 
 } // namespace
@@ -59,32 +61,72 @@ int main(int argc, char *argv[])
     parser.setApplicationDescription(QStringLiteral("QtMaps Qt 5.15 diagnostic application"));
     parser.addHelpOption();
     parser.addVersionOption();
-    parser.addOption({QStringLiteral("mapboxgl-probe"), QStringLiteral("Run the Mapbox GL local-resource probe")});
-    parser.addOption({QStringLiteral("maplibre-probe"), QStringLiteral("Run the MapLibre local-resource probe")});
-    parser.addOption({QStringLiteral("vector-style-url"), QStringLiteral("Local vector style URL"), QStringLiteral("url"), QStringLiteral("http://127.0.0.1:8766/style.json")});
-    parser.addOption({QStringLiteral("real-vector-data"), QStringLiteral("Label the vector probe as real OSM-derived data with attribution")});
-    parser.addOption({QStringLiteral("unit03-local-map"), QStringLiteral("Run the checksummed Unit 03 local map package")});
-    parser.addOption({QStringLiteral("map-package"), QStringLiteral("Unit 03 map package directory or current pointer"), QStringLiteral("path"), QStringLiteral("data/packages/current")});
-    parser.addOption({QStringLiteral("diagnostic-raster-root"), QStringLiteral("Local diagnostic raster fallback directory"), QStringLiteral("path"), QStringLiteral("generated/diagnostic-tiles")});
-    parser.addOption({QStringLiteral("force-vector-failure"), QStringLiteral("Force Unit 03 diagnostic raster fallback")});
-    parser.addOption({QStringLiteral("navigation-benchmark"), QStringLiteral("Run continuous simulated camera-follow navigation")});
-    parser.addOption({QStringLiteral("routing-demo"), QStringLiteral("Run the Unit 04 fixture-first routing UI")});
-    parser.addOption({QStringLiteral("routing-fixture-only"), QStringLiteral("Do not start Valhalla; keep the routing UI on its recorded fixture")});
-    parser.addOption({QStringLiteral("valhalla-service"), QStringLiteral("Native valhalla_service executable"), QStringLiteral("path"), QStringLiteral("generated/unit-04/valhalla-venv/lib/python3.12/site-packages/valhalla/bin/valhalla_service")});
-    parser.addOption({QStringLiteral("valhalla-config"), QStringLiteral("Generated loopback-only Valhalla config"), QStringLiteral("path"), QStringLiteral("generated/unit-04/valhalla/valhalla.json")});
-    parser.addOption({QStringLiteral("valhalla-port"), QStringLiteral("Configured Valhalla loopback port"), QStringLiteral("port"), QStringLiteral("18002")});
-    parser.addOption({QStringLiteral("blank-probe"), QStringLiteral("Run the blank-window performance probe")});
-    parser.addOption({QStringLiteral("disable-instrumentation"), QStringLiteral("Disable frame and process instrumentation")});
-    parser.addOption({QStringLiteral("automated-pan-zoom"), QStringLiteral("Run the deterministic raster pan/zoom sequence")});
-    parser.addOption({QStringLiteral("benchmark-output"), QStringLiteral("Record benchmark CSV to PATH"), QStringLiteral("path")});
-    parser.addOption({QStringLiteral("benchmark-duration"), QStringLiteral("Recorded duration after warm-up in seconds"), QStringLiteral("seconds"), QStringLiteral("15")});
-    parser.addOption({QStringLiteral("benchmark-warmup"), QStringLiteral("Warm-up excluded from CSV and summaries in seconds"), QStringLiteral("seconds"), QStringLiteral("3")});
-    parser.addOption({QStringLiteral("benchmark-interval"), QStringLiteral("Sampling interval in milliseconds"), QStringLiteral("milliseconds"), QStringLiteral("1000")});
-    parser.addOption({QStringLiteral("exit-after"), QStringLiteral("Exit after N seconds (useful for instrumentation-off runs)"), QStringLiteral("seconds")});
-    parser.addOption({QStringLiteral("scenario"), QStringLiteral("Benchmark scenario name"), QStringLiteral("name"), QStringLiteral("diagnostic-raster")});
-    parser.addOption({QStringLiteral("network-mode"), QStringLiteral("Recorded network mode"), QStringLiteral("mode"), QStringLiteral("localhost-offline-fixture")});
-    parser.addOption({QStringLiteral("dataset-id"), QStringLiteral("Recorded dataset identifier"), QStringLiteral("id"), QStringLiteral("unit01-diagnostic-v1")});
-    parser.addOption({QStringLiteral("dataset-coverage"), QStringLiteral("Recorded dataset coverage"), QStringLiteral("coverage"), QStringLiteral("non-geographic Hanoi XYZ grid z10-z14")});
+    parser.addOption({QStringLiteral("mapboxgl-probe"),
+                      QStringLiteral("Run the Mapbox GL local-resource probe")});
+    parser.addOption({QStringLiteral("maplibre-probe"),
+                      QStringLiteral("Run the MapLibre local-resource probe")});
+    parser.addOption({QStringLiteral("vector-style-url"), QStringLiteral("Local vector style URL"),
+                      QStringLiteral("url"), QStringLiteral("http://127.0.0.1:8766/style.json")});
+    parser.addOption(
+        {QStringLiteral("real-vector-data"),
+         QStringLiteral("Label the vector probe as real OSM-derived data with attribution")});
+    parser.addOption({QStringLiteral("unit03-local-map"),
+                      QStringLiteral("Run the checksummed Unit 03 local map package")});
+    parser.addOption({QStringLiteral("map-package"),
+                      QStringLiteral("Unit 03 map package directory or current pointer"),
+                      QStringLiteral("path"), QStringLiteral("data/packages/current")});
+    parser.addOption({QStringLiteral("diagnostic-raster-root"),
+                      QStringLiteral("Local diagnostic raster fallback directory"),
+                      QStringLiteral("path"), QStringLiteral("generated/diagnostic-tiles")});
+    parser.addOption({QStringLiteral("force-vector-failure"),
+                      QStringLiteral("Force Unit 03 diagnostic raster fallback")});
+    parser.addOption({QStringLiteral("navigation-benchmark"),
+                      QStringLiteral("Run continuous simulated camera-follow navigation")});
+    parser.addOption({QStringLiteral("routing-demo"),
+                      QStringLiteral("Run the Unit 04 fixture-first routing UI")});
+    parser.addOption(
+        {QStringLiteral("routing-fixture-only"),
+         QStringLiteral("Do not start Valhalla; keep the routing UI on its recorded fixture")});
+    parser.addOption({QStringLiteral("valhalla-service"),
+                      QStringLiteral("Native valhalla_service executable"), QStringLiteral("path"),
+                      QStringLiteral("generated/unit-04/valhalla-venv/lib/python3.12/site-packages/"
+                                     "valhalla/bin/valhalla_service")});
+    parser.addOption({QStringLiteral("valhalla-config"),
+                      QStringLiteral("Generated loopback-only Valhalla config"),
+                      QStringLiteral("path"),
+                      QStringLiteral("generated/unit-04/valhalla/valhalla.json")});
+    parser.addOption({QStringLiteral("valhalla-port"),
+                      QStringLiteral("Configured Valhalla loopback port"), QStringLiteral("port"),
+                      QStringLiteral("18002")});
+    parser.addOption(
+        {QStringLiteral("blank-probe"), QStringLiteral("Run the blank-window performance probe")});
+    parser.addOption({QStringLiteral("disable-instrumentation"),
+                      QStringLiteral("Disable frame and process instrumentation")});
+    parser.addOption({QStringLiteral("automated-pan-zoom"),
+                      QStringLiteral("Run the deterministic raster pan/zoom sequence")});
+    parser.addOption({QStringLiteral("benchmark-output"),
+                      QStringLiteral("Record benchmark CSV to PATH"), QStringLiteral("path")});
+    parser.addOption({QStringLiteral("benchmark-duration"),
+                      QStringLiteral("Recorded duration after warm-up in seconds"),
+                      QStringLiteral("seconds"), QStringLiteral("15")});
+    parser.addOption({QStringLiteral("benchmark-warmup"),
+                      QStringLiteral("Warm-up excluded from CSV and summaries in seconds"),
+                      QStringLiteral("seconds"), QStringLiteral("3")});
+    parser.addOption({QStringLiteral("benchmark-interval"),
+                      QStringLiteral("Sampling interval in milliseconds"),
+                      QStringLiteral("milliseconds"), QStringLiteral("1000")});
+    parser.addOption({QStringLiteral("exit-after"),
+                      QStringLiteral("Exit after N seconds (useful for instrumentation-off runs)"),
+                      QStringLiteral("seconds")});
+    parser.addOption({QStringLiteral("scenario"), QStringLiteral("Benchmark scenario name"),
+                      QStringLiteral("name"), QStringLiteral("diagnostic-raster")});
+    parser.addOption({QStringLiteral("network-mode"), QStringLiteral("Recorded network mode"),
+                      QStringLiteral("mode"), QStringLiteral("localhost-offline-fixture")});
+    parser.addOption({QStringLiteral("dataset-id"), QStringLiteral("Recorded dataset identifier"),
+                      QStringLiteral("id"), QStringLiteral("unit01-diagnostic-v1")});
+    parser.addOption({QStringLiteral("dataset-coverage"),
+                      QStringLiteral("Recorded dataset coverage"), QStringLiteral("coverage"),
+                      QStringLiteral("non-geographic Hanoi XYZ grid z10-z14")});
     parser.process(application);
 
     const bool useMapboxGlProbe = parser.isSet(QStringLiteral("mapboxgl-probe"));
@@ -117,10 +159,10 @@ int main(int argc, char *argv[])
     qtmaps::perf::PerformanceMonitor performanceMonitor;
     QQmlApplicationEngine engine;
 
-    if (useUnit03LocalMap
-        && !mapSourceController.start(parser.value(QStringLiteral("map-package")),
-                                      parser.value(QStringLiteral("diagnostic-raster-root")),
-                                      parser.isSet(QStringLiteral("force-vector-failure")))) {
+    if (useUnit03LocalMap &&
+        !mapSourceController.start(parser.value(QStringLiteral("map-package")),
+                                   parser.value(QStringLiteral("diagnostic-raster-root")),
+                                   parser.isSet(QStringLiteral("force-vector-failure")))) {
         qCritical().noquote() << "Unit 03 map startup failed:"
                               << mapSourceController.fallbackReason();
         return 3;
@@ -136,11 +178,14 @@ int main(int argc, char *argv[])
     metadata.insert(QStringLiteral("driver"), QStringLiteral("Mesa runtime on reference host"));
     metadata.insert(QStringLiteral("network_mode"), parser.value(QStringLiteral("network-mode")));
     metadata.insert(QStringLiteral("dataset_id"), parser.value(QStringLiteral("dataset-id")));
-    metadata.insert(QStringLiteral("dataset_coverage"), parser.value(QStringLiteral("dataset-coverage")));
+    metadata.insert(QStringLiteral("dataset_coverage"),
+                    parser.value(QStringLiteral("dataset-coverage")));
     performanceMonitor.setMetadata(metadata);
-    performanceMonitor.setSamplingInterval(parser.value(QStringLiteral("benchmark-interval")).toInt());
+    performanceMonitor.setSamplingInterval(
+        parser.value(QStringLiteral("benchmark-interval")).toInt());
     performanceMonitor.setWarmupSeconds(parser.value(QStringLiteral("benchmark-warmup")).toInt());
-    engine.rootContext()->setContextProperty(QStringLiteral("performanceMonitor"), &performanceMonitor);
+    engine.rootContext()->setContextProperty(QStringLiteral("performanceMonitor"),
+                                             &performanceMonitor);
     engine.rootContext()->setContextProperty(QStringLiteral("cameraProbeController"),
                                              &cameraProbeController);
     engine.rootContext()->setContextProperty(QStringLiteral("navigationController"),
@@ -151,35 +196,36 @@ int main(int argc, char *argv[])
                                              &routeNavigationController);
     engine.rootContext()->setContextProperty(QStringLiteral("shutdownCoordinator"),
                                              &shutdownCoordinator);
-    engine.rootContext()->setContextProperty(
-        QStringLiteral("routingFixtureOnly"),
-        parser.isSet(QStringLiteral("routing-fixture-only")));
+    engine.rootContext()->setContextProperty(QStringLiteral("routingFixtureOnly"),
+                                             parser.isSet(QStringLiteral("routing-fixture-only")));
     QObject::connect(&routingController, &qtmaps::routing::RoutingController::routeChanged,
-                     &routeNavigationController, [&routingController,
-                                                  &routeNavigationController]() {
-        if (routingController.routeAvailable()) {
-            routeNavigationController.setRoute(routingController.route(),
-                                               routingController.sourceLabel());
-        } else {
-            routeNavigationController.clearRoute();
-        }
-    });
+                     &routeNavigationController,
+                     [&routingController, &routeNavigationController]() {
+                         if (routingController.routeAvailable()) {
+                             routeNavigationController.setRoute(routingController.route(),
+                                                                routingController.sourceLabel());
+                         } else {
+                             routeNavigationController.clearRoute();
+                         }
+                     });
     QObject::connect(&routeNavigationController,
                      &qtmaps::routing::RouteNavigationController::deviationDetected,
                      &routingController, &qtmaps::routing::RoutingController::requestReroute);
     QObject::connect(&routingController, &qtmaps::routing::RoutingController::rerouteSucceeded,
-                     &routeNavigationController, &qtmaps::routing::RouteNavigationController::start);
-    engine.rootContext()->setContextProperty(QStringLiteral("instrumentationEnabled"), instrumentationEnabled);
+                     &routeNavigationController,
+                     &qtmaps::routing::RouteNavigationController::start);
+    engine.rootContext()->setContextProperty(QStringLiteral("instrumentationEnabled"),
+                                             instrumentationEnabled);
     engine.rootContext()->setContextProperty(QStringLiteral("benchmarkAutomation"),
                                              parser.isSet(QStringLiteral("automated-pan-zoom")));
     const QString vectorStyleUrl = useUnit03LocalMap && !mapSourceController.usingRasterFallback()
-        ? mapSourceController.vectorStyleUrl()
-        : parser.value(QStringLiteral("vector-style-url"));
+                                       ? mapSourceController.vectorStyleUrl()
+                                       : parser.value(QStringLiteral("vector-style-url"));
     engine.rootContext()->setContextProperty(QStringLiteral("vectorStyleUrl"), vectorStyleUrl);
-    engine.rootContext()->setContextProperty(
-        QStringLiteral("rasterTileBaseUrl"),
-        useUnit03LocalMap ? mapSourceController.rasterBaseUrl()
-                          : QStringLiteral("http://127.0.0.1:8765/"));
+    engine.rootContext()->setContextProperty(QStringLiteral("rasterTileBaseUrl"),
+                                             useUnit03LocalMap
+                                                 ? mapSourceController.rasterBaseUrl()
+                                                 : QStringLiteral("http://127.0.0.1:8765/"));
     engine.rootContext()->setContextProperty(QStringLiteral("fallbackReason"),
                                              mapSourceController.fallbackReason());
     engine.rootContext()->setContextProperty(QStringLiteral("vectorPluginName"),
@@ -194,20 +240,20 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty(QStringLiteral("datasetLabel"),
                                              parser.value(QStringLiteral("dataset-id")));
     engine.rootContext()->setContextProperty(QStringLiteral("vectorDataReal"),
-                                             useUnit03LocalMap
-                                                 || parser.isSet(QStringLiteral("real-vector-data")));
+                                             useUnit03LocalMap ||
+                                                 parser.isSet(QStringLiteral("real-vector-data")));
     const int interactionMilliseconds =
-        (std::max(0, parser.value(QStringLiteral("benchmark-warmup")).toInt())
-         + std::max(1, parser.value(QStringLiteral("benchmark-duration")).toInt())) * 1000;
+        (std::max(0, parser.value(QStringLiteral("benchmark-warmup")).toInt()) +
+         std::max(1, parser.value(QStringLiteral("benchmark-duration")).toInt())) *
+        1000;
     engine.rootContext()->setContextProperty(QStringLiteral("navigationInteractionMilliseconds"),
                                              interactionMilliseconds);
 
     const bool unit03Vector = useUnit03LocalMap && !mapSourceController.usingRasterFallback();
     bool valhallaPortOk = false;
     const int valhallaPort = parser.value(QStringLiteral("valhalla-port")).toInt(&valhallaPortOk);
-    if (unit03Vector && useRoutingDemo
-        && !parser.isSet(QStringLiteral("routing-fixture-only"))
-        && (!valhallaPortOk || valhallaPort < 1 || valhallaPort > 65535)) {
+    if (unit03Vector && useRoutingDemo && !parser.isSet(QStringLiteral("routing-fixture-only")) &&
+        (!valhallaPortOk || valhallaPort < 1 || valhallaPort > 65535)) {
         qCritical() << "--valhalla-port must be between 1 and 65535";
         return 4;
     }
@@ -216,58 +262,56 @@ int main(int argc, char *argv[])
         qCritical() << "--benchmark-output cannot be used with --disable-instrumentation";
         return 2;
     }
-    const QUrl qmlUrl(unit03Vector && useRoutingDemo
-                          ? QStringLiteral("qrc:/qml/RoutingProbe.qml")
-                      : unit03Vector && useNavigationBenchmark
-                          ? QStringLiteral("qrc:/qml/NavigationProbe.qml")
-                          : useVectorProbe || unit03Vector
-                              ? QStringLiteral("qrc:/qml/MapboxGlProbe.qml")
-                              : useBlankProbe ? QStringLiteral("qrc:/qml/BlankProbe.qml")
-                                              : QStringLiteral("qrc:/qml/Main.qml"));
+    const QUrl qmlUrl(
+        unit03Vector && useRoutingDemo           ? QStringLiteral("qrc:/qml/RoutingProbe.qml")
+        : unit03Vector && useNavigationBenchmark ? QStringLiteral("qrc:/qml/NavigationProbe.qml")
+        : useVectorProbe || unit03Vector         ? QStringLiteral("qrc:/qml/MapboxGlProbe.qml")
+        : useBlankProbe                          ? QStringLiteral("qrc:/qml/BlankProbe.qml")
+                                                 : QStringLiteral("qrc:/qml/Main.qml"));
     engine.load(qmlUrl);
     if (engine.rootObjects().isEmpty()) {
         qCritical() << "Failed to load" << qmlUrl;
         return 1;
     }
-    if (unit03Vector && useRoutingDemo
-        && !parser.isSet(QStringLiteral("routing-fixture-only"))) {
+    if (unit03Vector && useRoutingDemo && !parser.isSet(QStringLiteral("routing-fixture-only"))) {
         const QDir workingDirectory = QDir::current();
         routingController.startBackend(
             workingDirectory.absoluteFilePath(parser.value(QStringLiteral("valhalla-service"))),
             workingDirectory.absoluteFilePath(parser.value(QStringLiteral("valhalla-config"))),
             static_cast<quint16>(valhallaPort));
     }
-    QObject::connect(&application, &QGuiApplication::lastWindowClosed,
-                     &shutdownCoordinator,
+    QObject::connect(&application, &QGuiApplication::lastWindowClosed, &shutdownCoordinator,
                      &qtmaps::core::ApplicationShutdownCoordinator::requestQuit);
     QObject::connect(&shutdownCoordinator,
-                     &qtmaps::core::ApplicationShutdownCoordinator::shutdownReady,
-                     &application, &QCoreApplication::quit);
+                     &qtmaps::core::ApplicationShutdownCoordinator::shutdownReady, &application,
+                     &QCoreApplication::quit);
     qInfo().noquote() << "probeMode="
                       << (unit03Vector && useRoutingDemo
                               ? (parser.isSet(QStringLiteral("routing-fixture-only"))
                                      ? "unit04-routing-fixture"
                                      : "unit04-routing-valhalla")
                           : unit03Vector && useNavigationBenchmark ? "unit03-navigation"
-                          : unit03Vector ? "unit03-vector-package"
+                          : unit03Vector                           ? "unit03-vector-package"
                           : useUnit03LocalMap ? "unit03-diagnostic-raster-fallback"
-                          : useMapLibreProbe ? "maplibre-local-resources"
-                                          : useMapboxGlProbe ? "mapboxgl-local-resources"
-                                          : useBlankProbe ? "blank-performance"
-                                                          : "osm-diagnostic-raster");
+                          : useMapLibreProbe  ? "maplibre-local-resources"
+                          : useMapboxGlProbe  ? "mapboxgl-local-resources"
+                          : useBlankProbe     ? "blank-performance"
+                                              : "osm-diagnostic-raster");
     QQuickWindow *window = qobject_cast<QQuickWindow *>(engine.rootObjects().constFirst());
     if (instrumentationEnabled) {
         performanceMonitor.attachWindow(window);
     }
 
     if (!benchmarkOutput.isEmpty()) {
-        const int warmupSeconds = std::max(0, parser.value(QStringLiteral("benchmark-warmup")).toInt());
-        const int durationSeconds = std::max(1, parser.value(QStringLiteral("benchmark-duration")).toInt());
+        const int warmupSeconds =
+            std::max(0, parser.value(QStringLiteral("benchmark-warmup")).toInt());
+        const int durationSeconds =
+            std::max(1, parser.value(QStringLiteral("benchmark-duration")).toInt());
         QTimer::singleShot(250, [&performanceMonitor, benchmarkOutput]() {
             performanceMonitor.startBenchmark(benchmarkOutput);
         });
-        const int intervalMilliseconds = std::max(
-            100, parser.value(QStringLiteral("benchmark-interval")).toInt());
+        const int intervalMilliseconds =
+            std::max(100, parser.value(QStringLiteral("benchmark-interval")).toInt());
         QTimer::singleShot((warmupSeconds + durationSeconds) * 1000 + intervalMilliseconds,
                            &performanceMonitor, &qtmaps::perf::PerformanceMonitor::stopBenchmark);
         QTimer::singleShot((warmupSeconds + durationSeconds) * 1000 + intervalMilliseconds + 500,

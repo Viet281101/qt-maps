@@ -2,17 +2,17 @@
 
 #include "core/ApplicationShutdownCoordinator.h"
 #include "perf/ProcessTreeSampler.h"
+#include "routing/RouteNavigationController.h"
+#include "routing/RoutingController.h"
 #include "routing/ValhallaRouteClient.h"
 #include "routing/ValhallaServiceManager.h"
-#include "routing/RoutingController.h"
-#include "routing/RouteNavigationController.h"
 
 #include <QCoreApplication>
 #include <QElapsedTimer>
 #include <QFile>
 #include <QFileInfo>
-#include <QJsonDocument>
 #include <QJsonArray>
+#include <QJsonDocument>
 #include <QJsonObject>
 #include <QProcess>
 #include <QSignalSpy>
@@ -27,14 +27,14 @@
 #include <csignal>
 #endif
 
-using qtmaps::routing::Route;
-using qtmaps::routing::RouteSource;
-using qtmaps::routing::RoutingController;
-using qtmaps::routing::RouteNavigationController;
-using qtmaps::routing::ValhallaRouteClient;
-using qtmaps::routing::ValhallaServiceManager;
 using qtmaps::core::ApplicationShutdownCoordinator;
 using qtmaps::perf::ProcessTreeSampler;
+using qtmaps::routing::Route;
+using qtmaps::routing::RouteNavigationController;
+using qtmaps::routing::RouteSource;
+using qtmaps::routing::RoutingController;
+using qtmaps::routing::ValhallaRouteClient;
+using qtmaps::routing::ValhallaServiceManager;
 
 namespace {
 
@@ -60,8 +60,8 @@ class HttpFixtureServer final : public QObject
 
 public:
     explicit HttpFixtureServer(QByteArray response, bool replyToRequest = true,
-                               QObject *parent = nullptr)
-        : QObject(parent), response_(std::move(response)), replyToRequest_(replyToRequest)
+                               QObject *parent = nullptr) :
+        QObject(parent), response_(std::move(response)), replyToRequest_(replyToRequest)
     {
         connect(&server_, &QTcpServer::newConnection, this, [this]() {
             while (QTcpSocket *socket = server_.nextPendingConnection()) {
@@ -70,9 +70,11 @@ public:
                     if (!request_.contains("\r\n\r\n") || !replyToRequest_) {
                         return;
                     }
-                    const QByteArray header = QByteArrayLiteral(
-                        "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nConnection: close\r\nContent-Length: ")
-                        + QByteArray::number(response_.size()) + QByteArrayLiteral("\r\n\r\n");
+                    const QByteArray header =
+                        QByteArrayLiteral(
+                            "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nConnection: "
+                            "close\r\nContent-Length: ") +
+                        QByteArray::number(response_.size()) + QByteArrayLiteral("\r\n\r\n");
                     socket->write(header + response_);
                     socket->disconnectFromHost();
                 });
@@ -109,46 +111,52 @@ int runFakeValhallaService(int argc, char **argv, const QJsonObject &config)
     const bool routeError = config.value(QStringLiteral("fake_route_error")).toBool();
     const QString requestLogPath = config.value(QStringLiteral("fake_request_log")).toString();
     QTcpServer server;
-    const quint16 port = static_cast<quint16>(config.value(QStringLiteral("fake_service_port")).toInt());
+    const quint16 port =
+        static_cast<quint16>(config.value(QStringLiteral("fake_service_port")).toInt());
     if (!server.listen(QHostAddress::LocalHost, port)) {
         return 2;
     }
-    QObject::connect(&server, &QTcpServer::newConnection, &application,
-                     [&server, routeBody, routeDelayMs, routeError, requestLogPath]() {
-        while (QTcpSocket *socket = server.nextPendingConnection()) {
-            QObject::connect(socket, &QTcpSocket::readyRead, socket,
-                             [socket, routeBody, routeDelayMs, routeError, requestLogPath]() {
-                const QByteArray request = socket->property("request").toByteArray()
-                    + socket->readAll();
-                socket->setProperty("request", request);
-                if (!request.contains("\r\n\r\n")
-                    || socket->property("responseScheduled").toBool()) {
-                    return;
-                }
-                socket->setProperty("responseScheduled", true);
-                if (!requestLogPath.isEmpty() && request.startsWith("GET /route?")) {
-                    QFile log(requestLogPath);
-                    if (log.open(QIODevice::WriteOnly | QIODevice::Append)) {
-                        log.write(request.split('\n').constFirst());
-                        log.write("\n");
-                    }
-                }
-                const QByteArray body = request.startsWith("GET /route?")
-                    ? routeBody : QByteArrayLiteral("{\"version\":\"test\"}");
-                const int delayMs = request.startsWith("GET /route?") ? routeDelayMs : 0;
-                const bool fail = routeError && request.startsWith("GET /route?");
-                QTimer::singleShot(delayMs, socket, [socket, body, fail]() {
-                    socket->write((fail ? QByteArrayLiteral("HTTP/1.1 503 Service Unavailable\r\n")
-                                        : QByteArrayLiteral("HTTP/1.1 200 OK\r\n"))
-                                  + QByteArrayLiteral("Content-Type: application/json\r\nConnection: close\r\nContent-Length: ")
-                                  + QByteArray::number(body.size())
-                                  + QByteArrayLiteral("\r\n\r\n") + body);
-                    socket->disconnectFromHost();
-                });
-            });
-            QObject::connect(socket, &QTcpSocket::disconnected, socket, &QObject::deleteLater);
-        }
-    });
+    QObject::connect(
+        &server, &QTcpServer::newConnection, &application,
+        [&server, routeBody, routeDelayMs, routeError, requestLogPath]() {
+            while (QTcpSocket *socket = server.nextPendingConnection()) {
+                QObject::connect(
+                    socket, &QTcpSocket::readyRead, socket,
+                    [socket, routeBody, routeDelayMs, routeError, requestLogPath]() {
+                        const QByteArray request =
+                            socket->property("request").toByteArray() + socket->readAll();
+                        socket->setProperty("request", request);
+                        if (!request.contains("\r\n\r\n") ||
+                            socket->property("responseScheduled").toBool()) {
+                            return;
+                        }
+                        socket->setProperty("responseScheduled", true);
+                        if (!requestLogPath.isEmpty() && request.startsWith("GET /route?")) {
+                            QFile log(requestLogPath);
+                            if (log.open(QIODevice::WriteOnly | QIODevice::Append)) {
+                                log.write(request.split('\n').constFirst());
+                                log.write("\n");
+                            }
+                        }
+                        const QByteArray body = request.startsWith("GET /route?")
+                                                    ? routeBody
+                                                    : QByteArrayLiteral("{\"version\":\"test\"}");
+                        const int delayMs = request.startsWith("GET /route?") ? routeDelayMs : 0;
+                        const bool fail = routeError && request.startsWith("GET /route?");
+                        QTimer::singleShot(delayMs, socket, [socket, body, fail]() {
+                            socket->write(
+                                (fail ? QByteArrayLiteral("HTTP/1.1 503 Service Unavailable\r\n")
+                                      : QByteArrayLiteral("HTTP/1.1 200 OK\r\n")) +
+                                QByteArrayLiteral("Content-Type: application/json\r\nConnection: "
+                                                  "close\r\nContent-Length: ") +
+                                QByteArray::number(body.size()) + QByteArrayLiteral("\r\n\r\n") +
+                                body);
+                            socket->disconnectFromHost();
+                        });
+                    });
+                QObject::connect(socket, &QTcpSocket::disconnected, socket, &QObject::deleteLater);
+            }
+        });
     return application.exec();
 }
 
@@ -172,12 +180,11 @@ int runShutdownCoordinatorProbe(int argc, char **argv, bool waitForParentDeath)
             pidFile.write(QByteArray::number(controller.backendProcessId()));
             pidFile.close();
         } else {
-            QTimer::singleShot(0, &coordinator,
-                               &ApplicationShutdownCoordinator::requestQuit);
+            QTimer::singleShot(0, &coordinator, &ApplicationShutdownCoordinator::requestQuit);
         }
     });
-    QObject::connect(&coordinator, &ApplicationShutdownCoordinator::shutdownReady,
-                     &application, &QCoreApplication::quit);
+    QObject::connect(&coordinator, &ApplicationShutdownCoordinator::shutdownReady, &application,
+                     &QCoreApplication::quit);
     QTimer::singleShot(8000, &application, [&application]() { application.exit(6); });
     controller.startBackend(QCoreApplication::applicationFilePath(),
                             QString::fromLocal8Bit(argv[2]), port);
@@ -246,9 +253,8 @@ private slots:
         QJsonObject httpd;
         httpd.insert(QStringLiteral("service"), serviceConfig);
         const QString configPath = temporary.path() + QStringLiteral("/unsafe.json");
-        writeFile(configPath,
-                  QJsonDocument(QJsonObject{{QStringLiteral("httpd"), httpd}})
-                      .toJson(QJsonDocument::Compact));
+        writeFile(configPath, QJsonDocument(QJsonObject{{QStringLiteral("httpd"), httpd}})
+                                  .toJson(QJsonDocument::Compact));
         ValhallaServiceManager unsafeService;
         unsafeService.start(QCoreApplication::applicationFilePath(), configPath, port);
         QCOMPARE(unsafeService.state(), ValhallaServiceManager::State::Error);
@@ -273,9 +279,9 @@ private slots:
         writeFile(configPath, QJsonDocument(config).toJson(QJsonDocument::Compact));
 
         QProcess probe;
-        probe.start(QCoreApplication::applicationFilePath(),
-                    {QStringLiteral("--shutdown-coordinator-probe"), configPath,
-                     QString::number(port)});
+        probe.start(
+            QCoreApplication::applicationFilePath(),
+            {QStringLiteral("--shutdown-coordinator-probe"), configPath, QString::number(port)});
         QVERIFY(probe.waitForStarted(2000));
         QVERIFY2(probe.waitForFinished(5000), qPrintable(probe.errorString()));
         QCOMPARE(probe.exitStatus(), QProcess::NormalExit);
@@ -307,9 +313,9 @@ private slots:
         QElapsedTimer elapsed;
         elapsed.start();
         QProcess probe;
-        probe.start(QCoreApplication::applicationFilePath(),
-                    {QStringLiteral("--shutdown-coordinator-probe"), configPath,
-                     QString::number(port)});
+        probe.start(
+            QCoreApplication::applicationFilePath(),
+            {QStringLiteral("--shutdown-coordinator-probe"), configPath, QString::number(port)});
         QVERIFY(probe.waitForStarted(2000));
         QVERIFY2(probe.waitForFinished(6000), qPrintable(probe.errorString()));
         QCOMPARE(probe.exitStatus(), QProcess::NormalExit);
@@ -342,9 +348,9 @@ private slots:
         writeFile(configPath, QJsonDocument(config).toJson(QJsonDocument::Compact));
 
         QProcess probe;
-        probe.start(QCoreApplication::applicationFilePath(),
-                    {QStringLiteral("--pdeathsig-probe"), configPath,
-                     QString::number(port), pidPath});
+        probe.start(
+            QCoreApplication::applicationFilePath(),
+            {QStringLiteral("--pdeathsig-probe"), configPath, QString::number(port), pidPath});
         QVERIFY(probe.waitForStarted(2000));
         QTRY_VERIFY_WITH_TIMEOUT(QFileInfo::exists(pidPath), 3000);
         QFile pidFile(pidPath);
@@ -356,8 +362,8 @@ private slots:
 
         probe.kill();
         QVERIFY(probe.waitForFinished(2000));
-        QTRY_VERIFY_WITH_TIMEOUT(
-            (::kill(static_cast<pid_t>(childPid), 0) == -1 && errno == ESRCH), 3000);
+        QTRY_VERIFY_WITH_TIMEOUT((::kill(static_cast<pid_t>(childPid), 0) == -1 && errno == ESRCH),
+                                 3000);
         QTcpServer releasedPort;
         QVERIFY2(releasedPort.listen(QHostAddress::LocalHost, port),
                  qPrintable(releasedPort.errorString()));
@@ -374,12 +380,11 @@ private slots:
 
         ValhallaRouteClient client;
         QString error;
-        QVERIFY2(client.setEndpoint(
-                     QUrl(QStringLiteral("http://127.0.0.1:%1").arg(server.port())), &error),
+        QVERIFY2(client.setEndpoint(QUrl(QStringLiteral("http://127.0.0.1:%1").arg(server.port())),
+                                    &error),
                  qPrintable(error));
         QSignalSpy readySpy(&client, &ValhallaRouteClient::routeReady);
-        client.requestRoute(QGeoCoordinate(21.0285, 105.8542),
-                            QGeoCoordinate(21.0369, 105.8340));
+        client.requestRoute(QGeoCoordinate(21.0285, 105.8542), QGeoCoordinate(21.0369, 105.8340));
         QVERIFY(readySpy.wait(2000));
         QCOMPARE(readySpy.size(), 1);
         const Route route = qvariant_cast<Route>(readySpy.takeFirst().at(0));
@@ -390,8 +395,10 @@ private slots:
         const QList<QByteArray> parts = requestLine.split(' ');
         QCOMPARE(parts.size(), 3);
         const QUrl requestUrl(QString::fromLatin1(parts.at(1)));
-        const QJsonObject payload = QJsonDocument::fromJson(
-            QUrlQuery(requestUrl).queryItemValue(QStringLiteral("json")).toUtf8()).object();
+        const QJsonObject payload =
+            QJsonDocument::fromJson(
+                QUrlQuery(requestUrl).queryItemValue(QStringLiteral("json")).toUtf8())
+                .object();
         QCOMPARE(payload.value(QStringLiteral("costing")).toString(), QStringLiteral("auto"));
         QCOMPARE(payload.value(QStringLiteral("units")).toString(), QStringLiteral("kilometers"));
         QCOMPARE(payload.value(QStringLiteral("language")).toString(), QStringLiteral("vi-VN"));
@@ -405,11 +412,10 @@ private slots:
         QString error;
         QVERIFY(!client.setEndpoint(QUrl(QStringLiteral("http://192.0.2.1:8002")), &error));
         QVERIFY(error.contains(QStringLiteral("loopback")));
-        QVERIFY(client.setEndpoint(
-            QUrl(QStringLiteral("http://127.0.0.1:%1").arg(server.port()))));
+        QVERIFY(client.setEndpoint(QUrl(QStringLiteral("http://127.0.0.1:%1").arg(server.port()))));
         QSignalSpy failureSpy(&client, &ValhallaRouteClient::routeFailed);
-        client.requestRoute(QGeoCoordinate(21.0285, 105.8542),
-                            QGeoCoordinate(21.0369, 105.8340), 100);
+        client.requestRoute(QGeoCoordinate(21.0285, 105.8542), QGeoCoordinate(21.0369, 105.8340),
+                            100);
         QVERIFY(failureSpy.wait(1000));
         QVERIFY(failureSpy.takeFirst().at(0).toString().contains(QStringLiteral("timed out")));
         QVERIFY(!client.isRequestPending());
@@ -479,8 +485,8 @@ private slots:
     {
         RoutingController controller;
         const QString missingProgram = QStringLiteral("/missing/unit04/valhalla_service");
-        controller.startBackend(missingProgram,
-                                QStringLiteral("/missing/unit04/valhalla.json"), 18002);
+        controller.startBackend(missingProgram, QStringLiteral("/missing/unit04/valhalla.json"),
+                                18002);
 
         QVERIFY(!controller.routeAvailable());
         QCOMPARE(controller.statusMessage(),
@@ -566,14 +572,14 @@ private slots:
         QVERIFY(temporary.isValid());
         const quint16 port = unusedLoopbackPort();
         QVERIFY(port != 0);
-        const QJsonObject service{{QStringLiteral("listen"),
-                                   QStringLiteral("tcp://127.0.0.1:%1").arg(port)}};
+        const QJsonObject service{
+            {QStringLiteral("listen"), QStringLiteral("tcp://127.0.0.1:%1").arg(port)}};
         const QString logPath = temporary.path() + QStringLiteral("/requests.log");
-        const QJsonObject config{{QStringLiteral("fake_service_port"), static_cast<int>(port)},
-                                 {QStringLiteral("fake_route_delay_ms"), 500},
-                                 {QStringLiteral("fake_request_log"), logPath},
-                                 {QStringLiteral("httpd"),
-                                  QJsonObject{{QStringLiteral("service"), service}}}};
+        const QJsonObject config{
+            {QStringLiteral("fake_service_port"), static_cast<int>(port)},
+            {QStringLiteral("fake_route_delay_ms"), 500},
+            {QStringLiteral("fake_request_log"), logPath},
+            {QStringLiteral("httpd"), QJsonObject{{QStringLiteral("service"), service}}}};
         const QString configPath = temporary.path() + QStringLiteral("/reroute.json");
         writeFile(configPath, QJsonDocument(config).toJson(QJsonDocument::Compact));
 
@@ -585,10 +591,10 @@ private slots:
             else
                 navigation.clearRoute();
         });
-        connect(&navigation, &RouteNavigationController::deviationDetected,
-                &controller, &RoutingController::requestReroute);
-        connect(&controller, &RoutingController::rerouteSucceeded,
-                &navigation, &RouteNavigationController::start);
+        connect(&navigation, &RouteNavigationController::deviationDetected, &controller,
+                &RoutingController::requestReroute);
+        connect(&controller, &RoutingController::rerouteSucceeded, &navigation,
+                &RouteNavigationController::start);
         controller.startBackend(QCoreApplication::applicationFilePath(), configPath, port);
         QTRY_VERIFY_WITH_TIMEOUT(controller.routeAvailable(), 4000);
         navigation.start();
@@ -613,9 +619,11 @@ private slots:
         QVERIFY(lines.size() >= 3);
         const QList<QByteArray> requestParts = lines.constLast().trimmed().split(' ');
         QCOMPARE(requestParts.size(), 3);
-        const QJsonObject payload = QJsonDocument::fromJson(
-            QUrlQuery(QUrl(QString::fromLatin1(requestParts.at(1))))
-                .queryItemValue(QStringLiteral("json")).toUtf8()).object();
+        const QJsonObject payload =
+            QJsonDocument::fromJson(QUrlQuery(QUrl(QString::fromLatin1(requestParts.at(1))))
+                                        .queryItemValue(QStringLiteral("json"))
+                                        .toUtf8())
+                .object();
         const QJsonArray locations = payload.value(QStringLiteral("locations")).toArray();
         QCOMPARE(locations.size(), 2);
         QCOMPARE(locations.at(0).toObject().value(QStringLiteral("lat")).toDouble(), 21.029);
@@ -633,12 +641,12 @@ private slots:
         QVERIFY(temporary.isValid());
         const quint16 port = unusedLoopbackPort();
         QVERIFY(port != 0);
-        const QJsonObject service{{QStringLiteral("listen"),
-                                   QStringLiteral("tcp://127.0.0.1:%1").arg(port)}};
-        const QJsonObject config{{QStringLiteral("fake_service_port"), static_cast<int>(port)},
-                                 {QStringLiteral("fake_route_error"), true},
-                                 {QStringLiteral("httpd"),
-                                  QJsonObject{{QStringLiteral("service"), service}}}};
+        const QJsonObject service{
+            {QStringLiteral("listen"), QStringLiteral("tcp://127.0.0.1:%1").arg(port)}};
+        const QJsonObject config{
+            {QStringLiteral("fake_service_port"), static_cast<int>(port)},
+            {QStringLiteral("fake_route_error"), true},
+            {QStringLiteral("httpd"), QJsonObject{{QStringLiteral("service"), service}}}};
         const QString configPath = temporary.path() + QStringLiteral("/error.json");
         writeFile(configPath, QJsonDocument(config).toJson(QJsonDocument::Compact));
         RoutingController controller;

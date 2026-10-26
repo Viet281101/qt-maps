@@ -34,8 +34,7 @@ private slots:
         engine.rootContext()->setContextProperty(QStringLiteral("routingController"), &routing);
         engine.rootContext()->setContextProperty(QStringLiteral("routeNavigationController"),
                                                  &navigation);
-        engine.rootContext()->setContextProperty(QStringLiteral("shutdownCoordinator"),
-                                                 &shutdown);
+        engine.rootContext()->setContextProperty(QStringLiteral("shutdownCoordinator"), &shutdown);
         engine.rootContext()->setContextProperty(QStringLiteral("performanceMonitor"),
                                                  &performance);
         engine.rootContext()->setContextProperty(QStringLiteral("routingFixtureOnly"), false);
@@ -86,8 +85,7 @@ private slots:
         engine.rootContext()->setContextProperty(QStringLiteral("routingController"), &routing);
         engine.rootContext()->setContextProperty(QStringLiteral("routeNavigationController"),
                                                  &navigation);
-        engine.rootContext()->setContextProperty(QStringLiteral("shutdownCoordinator"),
-                                                 &shutdown);
+        engine.rootContext()->setContextProperty(QStringLiteral("shutdownCoordinator"), &shutdown);
         engine.rootContext()->setContextProperty(QStringLiteral("performanceMonitor"),
                                                  &performance);
         engine.rootContext()->setContextProperty(QStringLiteral("routingFixtureOnly"), false);
@@ -121,10 +119,14 @@ private slots:
         const QRectF statusRect(status->mapToScene(QPointF(0, 0)), status->size());
         QVERIFY2(!bannerRect.intersects(statusRect),
                  qPrintable(QStringLiteral("banner %1,%2 %3x%4 intersects status %5,%6 %7x%8")
-                                .arg(bannerRect.x()).arg(bannerRect.y())
-                                .arg(bannerRect.width()).arg(bannerRect.height())
-                                .arg(statusRect.x()).arg(statusRect.y())
-                                .arg(statusRect.width()).arg(statusRect.height())));
+                                .arg(bannerRect.x())
+                                .arg(bannerRect.y())
+                                .arg(bannerRect.width())
+                                .arg(bannerRect.height())
+                                .arg(statusRect.x())
+                                .arg(statusRect.y())
+                                .arg(statusRect.width())
+                                .arg(statusRect.height())));
     }
 
     void mapClickDoesNotChangeRouteDuringReplay()
@@ -148,8 +150,7 @@ private slots:
         engine.rootContext()->setContextProperty(QStringLiteral("routingController"), &routing);
         engine.rootContext()->setContextProperty(QStringLiteral("routeNavigationController"),
                                                  &navigation);
-        engine.rootContext()->setContextProperty(QStringLiteral("shutdownCoordinator"),
-                                                 &shutdown);
+        engine.rootContext()->setContextProperty(QStringLiteral("shutdownCoordinator"), &shutdown);
         engine.rootContext()->setContextProperty(QStringLiteral("performanceMonitor"),
                                                  &performance);
         engine.rootContext()->setContextProperty(QStringLiteral("routingFixtureOnly"), false);
@@ -214,8 +215,7 @@ private slots:
         engine.rootContext()->setContextProperty(QStringLiteral("routingController"), &routing);
         engine.rootContext()->setContextProperty(QStringLiteral("routeNavigationController"),
                                                  &navigation);
-        engine.rootContext()->setContextProperty(QStringLiteral("shutdownCoordinator"),
-                                                 &shutdown);
+        engine.rootContext()->setContextProperty(QStringLiteral("shutdownCoordinator"), &shutdown);
         engine.rootContext()->setContextProperty(QStringLiteral("performanceMonitor"),
                                                  &performance);
         engine.rootContext()->setContextProperty(QStringLiteral("routingFixtureOnly"), false);
@@ -287,8 +287,8 @@ private slots:
     void navigationBannerFormatsGuidanceAndArrival()
     {
         QQmlEngine engine;
-        QQmlComponent component(
-            &engine, QUrl(QStringLiteral("qrc:/qml/components/NavigationBanner.qml")));
+        QQmlComponent component(&engine,
+                                QUrl(QStringLiteral("qrc:/qml/components/NavigationBanner.qml")));
         QVERIFY2(component.isReady(), qPrintable(component.errorString()));
         QScopedPointer<QObject> banner(component.create());
         QVERIFY2(banner, qPrintable(component.errorString()));
@@ -339,7 +339,8 @@ private slots:
         QVERIFY(qml.contains("text: qsTr(\"Theo vị trí hiện tại\")"));
         QVERIFY(qml.contains("root.recenterNavigation()"));
         QVERIFY(qml.contains("routeNavigationController.simulateDeviation()"));
-        QVERIFY(qml.contains("routingController.loading && routeNavigationController.routeAvailable"));
+        QVERIFY(
+            qml.contains("routingController.loading && routeNavigationController.routeAvailable"));
         QVERIFY(qml.contains("routeSummaryColor"));
         QVERIFY(qml.contains("shutdownCoordinator.requestQuit()"));
     }

@@ -30,8 +30,7 @@ class RoutingController final : public QObject
     Q_PROPERTY(bool routeAvailable READ routeAvailable NOTIFY routeChanged)
     Q_PROPERTY(bool loading READ loading NOTIFY stateChanged)
     Q_PROPERTY(QString nextMapSelection READ nextMapSelection NOTIFY endpointsChanged)
-    Q_PROPERTY(int currentManeuverIndex READ currentManeuverIndex
-               NOTIFY currentManeuverChanged)
+    Q_PROPERTY(int currentManeuverIndex READ currentManeuverIndex NOTIFY currentManeuverChanged)
 
 public:
     explicit RoutingController(QObject *parent = nullptr);

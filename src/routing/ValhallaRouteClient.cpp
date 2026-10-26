@@ -15,8 +15,8 @@
 namespace qtmaps {
 namespace routing {
 
-ValhallaRouteClient::ValhallaRouteClient(QObject *parent)
-    : QObject(parent), network_(new QNetworkAccessManager(this)), timeout_(new QTimer(this))
+ValhallaRouteClient::ValhallaRouteClient(QObject *parent) :
+    QObject(parent), network_(new QNetworkAccessManager(this)), timeout_(new QTimer(this))
 {
     timeout_->setSingleShot(true);
     connect(timeout_, &QTimer::timeout, this, [this]() {
@@ -37,10 +37,11 @@ bool ValhallaRouteClient::setEndpoint(const QUrl &endpoint, QString *error)
 {
     QHostAddress address;
     const bool literalAddress = address.setAddress(endpoint.host());
-    if (endpoint.scheme() != QStringLiteral("http") || endpoint.port() <= 0
-        || !literalAddress || !address.isLoopback()) {
+    if (endpoint.scheme() != QStringLiteral("http") || endpoint.port() <= 0 || !literalAddress ||
+        !address.isLoopback()) {
         if (error) {
-            *error = QStringLiteral("Valhalla endpoint must be an HTTP loopback address with a port");
+            *error =
+                QStringLiteral("Valhalla endpoint must be an HTTP loopback address with a port");
         }
         return false;
     }
@@ -87,8 +88,9 @@ void ValhallaRouteClient::requestRoute(const QGeoCoordinate &origin,
 
     QUrl url = endpoint_.resolved(QUrl(QStringLiteral("/route")));
     QUrlQuery query;
-    query.addQueryItem(QStringLiteral("json"),
-                       QString::fromUtf8(QJsonDocument(requestObject).toJson(QJsonDocument::Compact)));
+    query.addQueryItem(
+        QStringLiteral("json"),
+        QString::fromUtf8(QJsonDocument(requestObject).toJson(QJsonDocument::Compact)));
     url.setQuery(query);
     const quint64 requestGeneration = ++requestGeneration_;
     reply_ = network_->get(QNetworkRequest(url));
@@ -107,8 +109,8 @@ void ValhallaRouteClient::requestRoute(const QGeoCoordinate &origin,
         emit requestPendingChanged();
         const QByteArray response = reply->readAll();
         if (reply->error() != QNetworkReply::NoError) {
-            const QString error = QStringLiteral("Valhalla request failed: %1")
-                                      .arg(reply->errorString());
+            const QString error =
+                QStringLiteral("Valhalla request failed: %1").arg(reply->errorString());
             reply->deleteLater();
             emit routeFailed(error);
             return;

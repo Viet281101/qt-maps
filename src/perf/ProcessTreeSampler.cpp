@@ -15,18 +15,21 @@ bool readSnapshot(qint64 pid, ProcessSnapshot *snapshot, QString *failure = null
 {
     QFile statFile(QStringLiteral("/proc/%1/stat").arg(pid));
     if (!statFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        if (failure) *failure = QStringLiteral("stat open: %1").arg(statFile.errorString());
+        if (failure)
+            *failure = QStringLiteral("stat open: %1").arg(statFile.errorString());
         return false;
     }
     const QByteArray stat = statFile.readAll().trimmed();
     const int closingParenthesis = stat.lastIndexOf(')');
     if (closingParenthesis < 0) {
-        if (failure) *failure = QStringLiteral("stat command terminator missing");
+        if (failure)
+            *failure = QStringLiteral("stat command terminator missing");
         return false;
     }
     const QList<QByteArray> fields = stat.mid(closingParenthesis + 2).split(' ');
     if (fields.size() < 22) {
-        if (failure) *failure = QStringLiteral("stat field count %1").arg(fields.size());
+        if (failure)
+            *failure = QStringLiteral("stat field count %1").arg(fields.size());
         return false;
     }
     bool parentOk = false;
@@ -36,13 +39,15 @@ bool readSnapshot(qint64 pid, ProcessSnapshot *snapshot, QString *failure = null
     const quint64 userTicks = fields.at(11).toULongLong(&userOk);
     const quint64 systemTicks = fields.at(12).toULongLong(&systemOk);
     if (!parentOk || !userOk || !systemOk) {
-        if (failure) *failure = QStringLiteral("stat numeric conversion");
+        if (failure)
+            *failure = QStringLiteral("stat numeric conversion");
         return false;
     }
 
     QFile statusFile(QStringLiteral("/proc/%1/status").arg(pid));
     if (!statusFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        if (failure) *failure = QStringLiteral("status open: %1").arg(statusFile.errorString());
+        if (failure)
+            *failure = QStringLiteral("status open: %1").arg(statusFile.errorString());
         return false;
     }
     quint64 rssBytes = 0;
@@ -66,7 +71,8 @@ bool readSnapshot(qint64 pid, ProcessSnapshot *snapshot, QString *failure = null
         break;
     }
     if (!rssFound) {
-        if (failure) *failure = QStringLiteral("VmRSS missing or malformed");
+        if (failure)
+            *failure = QStringLiteral("VmRSS missing or malformed");
         return false;
     }
 
@@ -102,7 +108,8 @@ QHash<qint64, ProcessSnapshot> ProcessTreeSampler::readProc(QString *errorMessag
         }
     }
     if (snapshots.isEmpty() && errorMessage) {
-        *errorMessage = QStringLiteral("No readable Linux /proc process entries were found (entries=%1 numeric=%2 first=%3)")
+        *errorMessage = QStringLiteral("No readable Linux /proc process entries were found "
+                                       "(entries=%1 numeric=%2 first=%3)")
                             .arg(entries.size())
                             .arg(numericEntries)
                             .arg(firstFailure);
@@ -110,8 +117,8 @@ QHash<qint64, ProcessSnapshot> ProcessTreeSampler::readProc(QString *errorMessag
     return snapshots;
 }
 
-QList<qint64> ProcessTreeSampler::descendantPids(
-    qint64 rootPid, const QHash<qint64, ProcessSnapshot> &snapshots)
+QList<qint64> ProcessTreeSampler::descendantPids(qint64 rootPid,
+                                                 const QHash<qint64, ProcessSnapshot> &snapshots)
 {
     QList<qint64> result;
     if (!snapshots.contains(rootPid)) {
@@ -134,12 +141,10 @@ QList<qint64> ProcessTreeSampler::descendantPids(
     return result;
 }
 
-ProcessTreeSample ProcessTreeSampler::aggregate(
-    qint64 rootPid,
-    const QHash<qint64, ProcessSnapshot> &current,
-    const QHash<qint64, ProcessSnapshot> &previous,
-    long clockTicksPerSecond,
-    double elapsedSeconds)
+ProcessTreeSample ProcessTreeSampler::aggregate(qint64 rootPid,
+                                                const QHash<qint64, ProcessSnapshot> &current,
+                                                const QHash<qint64, ProcessSnapshot> &previous,
+                                                long clockTicksPerSecond, double elapsedSeconds)
 {
     ProcessTreeSample sample;
     const QList<qint64> pids = descendantPids(rootPid, current);

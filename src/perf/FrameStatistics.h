@@ -8,8 +8,7 @@ namespace perf {
 class FrameStatistics
 {
 public:
-    explicit FrameStatistics(int maximumSamples = 3600,
-                             int maximumInteractionSamples = 216000);
+    explicit FrameStatistics(int maximumSamples = 3600, int maximumInteractionSamples = 216000);
 
     void addSample(double framesPerSecond);
     void addInteractionFrameTime(double milliseconds);

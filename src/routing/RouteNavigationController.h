@@ -29,12 +29,9 @@ class RouteNavigationController final : public QObject
     Q_PROPERTY(int currentManeuverIndex READ currentManeuverIndex NOTIFY guidanceChanged)
     Q_PROPERTY(QString maneuverInstruction READ maneuverInstruction NOTIFY guidanceChanged)
     Q_PROPERTY(QString maneuverStreetName READ maneuverStreetName NOTIFY guidanceChanged)
-    Q_PROPERTY(double distanceToManeuverMeters READ distanceToManeuverMeters
-               NOTIFY guidanceChanged)
-    Q_PROPERTY(double remainingDistanceMeters READ remainingDistanceMeters
-               NOTIFY guidanceChanged)
-    Q_PROPERTY(double remainingDurationSeconds READ remainingDurationSeconds
-               NOTIFY guidanceChanged)
+    Q_PROPERTY(double distanceToManeuverMeters READ distanceToManeuverMeters NOTIFY guidanceChanged)
+    Q_PROPERTY(double remainingDistanceMeters READ remainingDistanceMeters NOTIFY guidanceChanged)
+    Q_PROPERTY(double remainingDurationSeconds READ remainingDurationSeconds NOTIFY guidanceChanged)
 
 public:
     explicit RouteNavigationController(QObject *parent = nullptr);
@@ -60,8 +57,7 @@ public:
 
     void setRoute(const Route &route, const QString &sourceLabel);
     void clearRoute();
-    QGeoCoordinate coordinateAtDistance(double distanceMeters,
-                                        double *bearing = nullptr) const;
+    QGeoCoordinate coordinateAtDistance(double distanceMeters, double *bearing = nullptr) const;
     void advanceBySeconds(double seconds);
 
     Q_INVOKABLE void start();
@@ -85,7 +81,8 @@ private slots:
     void advance();
 
 private:
-    enum class State {
+    enum class State
+    {
         NoRoute,
         Ready,
         Running,

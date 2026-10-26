@@ -8,7 +8,8 @@
 namespace qtmaps {
 namespace routing {
 
-enum class RouteSource {
+enum class RouteSource
+{
     Fixture,
     Valhalla,
 };
@@ -34,8 +35,8 @@ struct Route
 
     bool isValid() const
     {
-        return polyline.size() >= 2 && distanceMeters >= 0.0 && durationSeconds >= 0.0
-            && !maneuvers.isEmpty();
+        return polyline.size() >= 2 && distanceMeters >= 0.0 && durationSeconds >= 0.0 &&
+               !maneuvers.isEmpty();
     }
 };
 

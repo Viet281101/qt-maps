@@ -5,16 +5,14 @@
 namespace qtmaps {
 namespace perf {
 
-FrameMetrics::FrameMetrics(QObject *parent)
-    : QObject(parent)
+FrameMetrics::FrameMetrics(QObject *parent) : QObject(parent)
 {
     publishTimer_.setInterval(1000);
     publishTimer_.setTimerType(Qt::PreciseTimer);
     connect(&publishTimer_, &QTimer::timeout, this, &FrameMetrics::publishInterval);
     interactionTimer_.setSingleShot(true);
     interactionTimer_.setTimerType(Qt::PreciseTimer);
-    connect(&interactionTimer_, &QTimer::timeout,
-            this, &FrameMetrics::endInteractionWindow);
+    connect(&interactionTimer_, &QTimer::timeout, this, &FrameMetrics::endInteractionWindow);
     frameTimer_.start();
 }
 
@@ -41,10 +39,7 @@ double FrameMetrics::currentFps() const { return currentFps_; }
 double FrameMetrics::averageFps() const { return statistics_.averageFps(); }
 double FrameMetrics::onePercentLowFps() const { return statistics_.onePercentLowFps(); }
 bool FrameMetrics::interactionActive() const { return interactionActive_; }
-double FrameMetrics::interactionAverageFps() const
-{
-    return statistics_.interactionAverageFps();
-}
+double FrameMetrics::interactionAverageFps() const { return statistics_.interactionAverageFps(); }
 double FrameMetrics::frameTimeP50Milliseconds() const
 {
     return statistics_.interactionFrameTimePercentile(50.0);
@@ -61,10 +56,7 @@ int FrameMetrics::framesOver100Milliseconds() const
 {
     return statistics_.interactionFrameTimeOverThresholdCount(100.0);
 }
-int FrameMetrics::interactionFrameCount() const
-{
-    return statistics_.interactionFrameCount();
-}
+int FrameMetrics::interactionFrameCount() const { return statistics_.interactionFrameCount(); }
 int FrameMetrics::settlingFrameCount() const { return statistics_.settlingFrameCount(); }
 double FrameMetrics::settlingFrameAverageMilliseconds() const
 {
@@ -110,8 +102,7 @@ void FrameMetrics::recordFrame()
     if (interactionActive_) {
         if (previousInteractionFrameNanoseconds_ >= 0) {
             if (pendingInteractionFrameTimeMilliseconds_ > 0.0) {
-                statistics_.addInteractionFrameTime(
-                    pendingInteractionFrameTimeMilliseconds_);
+                statistics_.addInteractionFrameTime(pendingInteractionFrameTimeMilliseconds_);
             }
             pendingInteractionFrameTimeMilliseconds_ =
                 (nowNanoseconds - previousInteractionFrameNanoseconds_) / 1000000.0;
@@ -133,11 +124,11 @@ void FrameMetrics::publishInterval()
         intervalFrames_ = 0;
         currentFps_ = 0.0;
         emit metricsChanged();
-        emit sampleReady(currentFps_, averageFps(), onePercentLowFps(),
-                         interactionActive_, interactionFrameCount(), interactionAverageFps(),
+        emit sampleReady(currentFps_, averageFps(), onePercentLowFps(), interactionActive_,
+                         interactionFrameCount(), interactionAverageFps(),
                          frameTimeP50Milliseconds(), frameTimeP95Milliseconds(),
-                         frameTimeP99Milliseconds(), framesOver100Milliseconds(), settlingFrameCount(),
-                         settlingFrameAverageMilliseconds(),
+                         frameTimeP99Milliseconds(), framesOver100Milliseconds(),
+                         settlingFrameCount(), settlingFrameAverageMilliseconds(),
                          settlingFrameMaximumMilliseconds());
         return;
     }
@@ -145,12 +136,11 @@ void FrameMetrics::publishInterval()
     intervalFrames_ = 0;
     statistics_.addSample(currentFps_);
     emit metricsChanged();
-    emit sampleReady(currentFps_, averageFps(), onePercentLowFps(),
-                     interactionActive_, interactionFrameCount(), interactionAverageFps(),
-                     frameTimeP50Milliseconds(), frameTimeP95Milliseconds(),
-                     frameTimeP99Milliseconds(), framesOver100Milliseconds(), settlingFrameCount(),
-                     settlingFrameAverageMilliseconds(),
-                     settlingFrameMaximumMilliseconds());
+    emit sampleReady(currentFps_, averageFps(), onePercentLowFps(), interactionActive_,
+                     interactionFrameCount(), interactionAverageFps(), frameTimeP50Milliseconds(),
+                     frameTimeP95Milliseconds(), frameTimeP99Milliseconds(),
+                     framesOver100Milliseconds(), settlingFrameCount(),
+                     settlingFrameAverageMilliseconds(), settlingFrameMaximumMilliseconds());
 }
 
 void FrameMetrics::endInteractionWindow()

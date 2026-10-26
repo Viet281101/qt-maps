@@ -25,8 +25,7 @@ struct MapPackageManifest
     QString attribution;
     QHash<QString, QString> fileSha256;
 
-    static bool loadAndValidate(const QString &packagePath,
-                                MapPackageManifest *manifest,
+    static bool loadAndValidate(const QString &packagePath, MapPackageManifest *manifest,
                                 QString *errorMessage);
 };
 

@@ -1,13 +1,25 @@
 {
-  "C_Cpp.default.compileCommands": "${workspaceFolder}/build/compile_commands.json",
+  "C_Cpp.default.compileCommands": "${workspaceFolder}/build-qt515/compile_commands.json",
   "cSpell.words": [
     "AUTOMOC",
     "AUTORCC",
+    "checksummed",
+    "ctest",
+    "DCMAKE",
+    "DQTMAPS",
+    "esac",
     "Geofabrik",
+    "libqsqlite",
+    "llvmpipe",
     "mapboxgl",
+    "maplibre",
     "NMEA",
+    "Planetiler",
     "qobject",
     "QTMAPS",
-    "serialnmea"
+    "serialnmea",
+    "sqldrivers",
+    "viet",
+    "vsync"
   ]
 }

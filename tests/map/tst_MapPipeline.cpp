@@ -50,27 +50,26 @@ QString digest(const QString &path)
 QString createPackage(QTemporaryDir &temporary)
 {
     const QString root = temporary.path() + QStringLiteral("/hanoi-20261024-v1");
-    if (!QDir().mkpath(root + QStringLiteral("/style"))
-        || !QDir().mkpath(root + QStringLiteral("/glyphs/Noto Sans Regular"))
-        || !QDir().mkpath(root + QStringLiteral("/sprites"))) {
+    if (!QDir().mkpath(root + QStringLiteral("/style")) ||
+        !QDir().mkpath(root + QStringLiteral("/glyphs/Noto Sans Regular")) ||
+        !QDir().mkpath(root + QStringLiteral("/sprites"))) {
         return QString();
     }
     writeFile(root + QStringLiteral("/style/style.json"),
-              QByteArrayLiteral(
-                  "{\"version\":8,\"sprite\":\"__QTMAPS_BASE_URL__/sprites/sprite\","
-                  "\"glyphs\":\"__QTMAPS_BASE_URL__/glyphs/{fontstack}/{range}.pbf\","
-                  "\"sources\":{\"qtmaps\":{\"type\":\"vector\",\"tiles\":["
-                  "\"__QTMAPS_BASE_URL__/tiles/{z}/{x}/{y}.pbf\"]}},\"layers\":["
-                  "{\"id\":\"building\",\"source-layer\":\"building\"},"
-                  "{\"id\":\"place\",\"source-layer\":\"place\"},"
-                  "{\"id\":\"road\",\"source-layer\":\"transportation\"}]}\n"));
+              QByteArrayLiteral("{\"version\":8,\"sprite\":\"__QTMAPS_BASE_URL__/sprites/sprite\","
+                                "\"glyphs\":\"__QTMAPS_BASE_URL__/glyphs/{fontstack}/{range}.pbf\","
+                                "\"sources\":{\"qtmaps\":{\"type\":\"vector\",\"tiles\":["
+                                "\"__QTMAPS_BASE_URL__/tiles/{z}/{x}/{y}.pbf\"]}},\"layers\":["
+                                "{\"id\":\"building\",\"source-layer\":\"building\"},"
+                                "{\"id\":\"place\",\"source-layer\":\"place\"},"
+                                "{\"id\":\"road\",\"source-layer\":\"transportation\"}]}\n"));
     writeFile(root + QStringLiteral("/glyphs/Noto Sans Regular/0-255.pbf"),
               QByteArrayLiteral("glyph-fixture"));
     writeFile(root + QStringLiteral("/sprites/sprite.json"), QByteArrayLiteral("{}\n"));
     writeFile(root + QStringLiteral("/sprites/sprite.png"), QByteArrayLiteral("png-fixture"));
 
-    const QString connection = QStringLiteral("package-fixture-%1")
-                                   .arg(QUuid::createUuid().toString());
+    const QString connection =
+        QStringLiteral("package-fixture-%1").arg(QUuid::createUuid().toString());
     {
         QSqlDatabase database = QSqlDatabase::addDatabase(QStringLiteral("QSQLITE"), connection);
         database.setDatabaseName(root + QStringLiteral("/tiles.mbtiles"));
@@ -78,8 +77,8 @@ QString createPackage(QTemporaryDir &temporary)
             return QString();
         }
         QSqlQuery query(database);
-        if (!query.exec(QStringLiteral(
-                "CREATE TABLE tiles (zoom_level INTEGER, tile_column INTEGER, tile_row INTEGER, tile_data BLOB)"))) {
+        if (!query.exec(QStringLiteral("CREATE TABLE tiles (zoom_level INTEGER, tile_column "
+                                       "INTEGER, tile_row INTEGER, tile_data BLOB)"))) {
             return QString();
         }
         query.prepare(QStringLiteral("INSERT INTO tiles VALUES (12, 3251, 2048, ?)"));
@@ -234,8 +233,7 @@ private slots:
         QVERIFY(corrupt.open(QIODevice::Append));
         corrupt.write("corrupt");
         corrupt.close();
-        QVERIFY(!qtmaps::map::MapPackageManifest::loadAndValidate(
-            corruptRoot, &manifest, &error));
+        QVERIFY(!qtmaps::map::MapPackageManifest::loadAndValidate(corruptRoot, &manifest, &error));
         QVERIFY(error.contains(QStringLiteral("Checksum mismatch")));
     }
 
@@ -250,8 +248,7 @@ private slots:
         mutateManifest(contractRoot, [](QJsonObject &object) {
             object.insert(QStringLiteral("style_contract_version"), QStringLiteral("future-v2"));
         });
-        QVERIFY(!qtmaps::map::MapPackageManifest::loadAndValidate(
-            contractRoot, &manifest, &error));
+        QVERIFY(!qtmaps::map::MapPackageManifest::loadAndValidate(contractRoot, &manifest, &error));
 
         QTemporaryDir layerTemporary;
         const QString layerRoot = createPackage(layerTemporary);
@@ -295,8 +292,8 @@ private slots:
             files.insert(QStringLiteral("style/style.json"), styleEntry);
             object.insert(QStringLiteral("files"), files);
         });
-        QVERIFY(!qtmaps::map::MapPackageManifest::loadAndValidate(
-            remoteStyleRoot, &manifest, &error));
+        QVERIFY(
+            !qtmaps::map::MapPackageManifest::loadAndValidate(remoteStyleRoot, &manifest, &error));
         QVERIFY(error.contains(QStringLiteral("Style resource URLs")));
     }
 

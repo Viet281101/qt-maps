@@ -39,21 +39,13 @@ Deliver a stable management demo by 2026-11-03: polished map-first Release UI, v
 
 ### Unit 01b — vector feasibility
 
-- Generated a bounded Hanoi dataset from the owner-approved Geofabrik Vietnam PBF with Planetiler v0.10.2: bounds `105.78,20.97,105.90,21.10`, zooms 12-15, 226 tiles, 14,463,231 tile bytes, 62.94 seconds, 6 GiB heap limit, two workers, and 2,635,164 KiB peak RSS.
-- Verified checksums, licenses, OSM/ODbL attribution, Vietnamese `HÀ NỘI` labels, bearing/tilt, and loopback-only network access. No PBF, jar, generated tiles, logs, screenshots, or CSV entered Git.
-- Installed only the owner-approved minimal Qt 5.15.13 development packages after a dry run reported 0 upgrades, 32 new packages, 0 removals, and 1 held package. Qt 5.13.2 remains independently selectable.
-- Built signed MapLibre Native Qt v3.0.0 commit `d929c783737120787b43417d9ef05da88da75dfd` with Qt 5.15.13, GCC 13.3.0, Release, OpenGL, and `make -j2`. Build: 16:01.44 wall time, 1,149,676 KiB peak RSS, 92 MiB build tree, 12 MiB install tree.
-- GPU verification used real Mesa Intel HD Graphics 520 direct rendering, not llvmpipe. Qt Quick used the threaded render loop and a 16.66 ms/60 Hz vsync animation driver.
-- Both renderers used the same real Hanoi data, localhost style/glyph/sprite resources, camera sequence, Unit 02 instrumentation, three-second warm-up, and 15-second recording.
-
-| Renderer | Median avg FPS | Median interval 1% low | Median CPU | Median mean RSS |
-| --- | ---: | ---: | ---: | ---: |
-| Qt 5.13.2 `mapboxgl` | 24.362 | 5.000 | 6.600% | 177.087 MiB |
-| Qt 5.15.13 MapLibre v3 | 33.769 | 5.000 | 10.440% | 209.778 MiB |
-
-CPU uses 100% per logical core; the separately launched localhost server is excluded. The low one-second samples occurred during no-action/render-on-demand phases at low CPU and recovered during camera motion, so the current 1% low mainly reflects coarse sampling/frame pacing rather than sustained tile loading or GPU saturation. See `docs/benchmarks/unit-01b-vector-feasibility.md` for complete evidence.
-
-The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `mapboxgl` 33.407 FPS with frame-time p50/p95/p99 of 16.535/295.523/319.129 ms; Qt 5.15 MapLibre 50.054 FPS with 16.549/19.035/350.803 ms. CPU medians were 6.271% and 12.660%; mean-RSS medians were 176.684 MiB and 209.021 MiB. The long p99 tail occurs inside the explicit 450 ms response window, while idle phases between actions are excluded.
+- The approved bounded Hanoi Planetiler dataset, licenses/attribution, Vietnamese
+  labels, loopback-only access, and real Intel/Mesa GPU rendering were verified;
+  no generated/downloaded artifacts entered Git.
+- The signed MapLibre Native Qt v3.0.0 build on Qt 5.15.13 outperformed the
+  Qt 5.13 comparison in the matched schema-v2 interaction run: 50.054 versus
+  33.407 median FPS. Full build, resource, frame-time, CPU, and RSS evidence is
+  in `docs/benchmarks/unit-01b-vector-feasibility.md`.
 
 ### Unit 03 — local map data pipeline
 
@@ -208,6 +200,7 @@ The schema-v2 interaction-only rerun produced these three-run medians: Qt 5.13 `
 
 ```bash
 make requirements
+make format-check
 make build
 make test
 make run
@@ -225,26 +218,18 @@ Licensing and packaging evidence:
 
 ## Latest Verification
 
+- VS Code IntelliSense was repaired on 2026-10-26 by pointing the C/C++ extension at the generated Qt 5.15.13 `build-qt515/compile_commands.json` instead of nonexistent `build/compile_commands.json`; the database contains the `main.cpp` QtCore include path and Release `make test` passed 7/7 in 7.30 seconds.
+- Formatting workflow verified on 2026-10-26: `make format` normalized all
+  tracked C/C++ files, `make format-check` passed, and Qt 5.15.13 Release
+  `make test` passed 7/7 in 7.77 seconds. QML remains intentionally excluded.
 - Build-maintenance follow-up on 2026-10-25: `make clean-old-builds` removes
   only root-level `build`/`build-*` CMake directories other than the selected
   `BUILD_DIR`; it refuses paths outside that scope and skips non-CMake
   directories. It is intentionally not run by `make clean`.
-- PR #20 closure gate on 2026-10-24: Qt 5.15.13 Release rebuilt without a new compiler warning; `make test` passed 3/3, `git diff --check` passed, all internal links across 23 tracked Markdown files resolved, and `git ls-files` found no prohibited generated/downloaded artifact. Before its squash merge, the PR was mergeable/clean with CodeRabbit success and the approved tracking metadata.
-- **BUILD PASS:** default Qt 5.15.13 Release `make test` in `build-qt515`: 3/3 executables passed, including manifest corruption, service lifecycle/bounded failure/port conflict, fallback, and navigation-route coverage; `ldd` resolves Qt Core from the system Qt 5.15 runtime.
-- Last pre-Unit03 isolated Qt 5.13.2 comparison: 2/2 passed and `ldd` resolved Qt Core from `/home/viet/Qt/5.13.2/gcc_64`; Unit 03 is intentionally not gated or rerun on the comparison kit.
 - Unit 03 corrected benchmark: three cold plus three warm-cache real-data runs reported `mapReady=true`, 7,168-7,179 interaction frames, no CSV errors, and only loopback IP connections.
-- PR #20 offline recheck used the Release binary with no external network interface or route; style, glyph, sprite, and tile requests resolved only through the random in-process `127.0.0.1` endpoint.
 - `README.md` and `README_VN.md` now document only the validated Qt 5.15.13/MapLibre workflow, current run/benchmark/package commands, and the bounded data, simulated-route, diagnostic-raster, and unimplemented-feature limitations.
 - `.gitignore` explicitly rejects PBF, jar, MBTiles, PMTiles, benchmark CSV/log, cache directories, and screenshot directories regardless of where a local tool creates them; none of these artifact classes is tracked.
-- Unit 04A Qt 5.15.13 Release verification: `make test` passed 4/4 executables in 0.64 seconds with no new compiler warning; `git diff --check` passed. Only source, tests, compact JSON fixtures, context, and evidence are changed.
-- Unit conversion follow-up: omitted units default to kilometers, explicit kilometers/miles normalize to meters, and seconds remain unchanged; Release `make test` passes 4/4. Branch backup matched `origin/feat/04-routing` at `6aa1c8e` with no PR.
-- Valhalla survey evidence: `docs/routing/valhalla-availability-survey.md`. Ubuntu apt/release binaries are unavailable; the official 37.5 MB `pyvalhalla` 3.9.1 wheel is preferred over the 156.3 MiB compressed container or a 328-package source-build dependency set.
 - Unit 04B/C closure verification on 2026-10-25: all 6 CTest executables pass; stale delayed replies, active maneuver state, QML keyboard/selection contracts, application-level graceful/forced shutdown, and Linux parent-death cleanup are covered. The real service is one counted direct child on `127.0.0.1:18002`; Alt+F4 and timed exit leave no process/listener, while `kill -9` releases both within 90 ms. The demo script also succeeds from `/tmp`, and missing Valhalla files are logged/shown without fixture fallback.
-- PR #21 verification on 2026-10-25: the Qt 5.15.13 Release build passed 5/5 CTest executables, `git diff --check origin/main...HEAD` passed, and the PR is mergeable. CodeRabbit succeeded on the preceding routing head; the latest docs-only tracking head had no check result reported at final verification. Live metadata confirms the issue references, assignee, milestone, six labels, and Project #6 fields described above. The pre-existing `.vscode/settings.json` change remains user-owned and excluded from every commit.
-- Unit 05 D3 review gate on 2026-10-25: Qt 5.15.13 Release `make test`
-  passed 7/7 executables in 5.52 seconds. Focused navigation and QML tests pass,
-  fixture startup reached `mapReady=true`, and `git diff --check` passed. No
-  generated data, graph, virtual environment, binary, or screenshot is tracked.
 - Unit 05 D4 review gate on 2026-10-25: Qt 5.15.13 Release `make test` passed
   7/7 executables in 6.88 seconds after the recenter and failed-reroute
   preservation follow-ups, and `git diff --check` passed. The real
