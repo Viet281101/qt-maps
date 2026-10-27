@@ -15,6 +15,7 @@ CLANG_FORMAT ?= clang-format
 GDB ?= gdb
 APP_ARGS ?=
 DEMO_ARGS ?=
+BENCHMARK_ARGS ?=
 HANOI_PBF ?= generated/unit-01b/source/vietnam-latest.osm.pbf
 PLANETILER_JAR ?= generated/unit-01b/tools/planetiler.jar
 QT_RUNTIME_PLUGIN_PATH ?= generated/unit-01b/qml-runtime/usr/lib/x86_64-linux-gnu/qt5/plugins
@@ -22,7 +23,7 @@ QT_RUNTIME_PLUGIN_PATH ?= generated/unit-01b/qml-runtime/usr/lib/x86_64-linux-gn
 QMAKE := $(QT_PREFIX)/bin/qmake
 QTMAPS := $(BUILD_DIR)/qtmaps
 
-.PHONY: help requirements configure build test run run-app debug-build debug-run debug-gdb check \
+.PHONY: help requirements configure build test run run-app benchmark debug-build debug-run debug-gdb check \
 	review format format-check diagnostic-tiles vector-fixture vector-real-style hanoi-package \
 	serve-diagnostic-tiles serve-vector-fixture run-mapboxgl-probe clean clean-old-builds
 
@@ -34,6 +35,7 @@ help:
 	@echo "  make test                  Build and run CTest with failures shown"
 	@echo "  make run                   Build and run the full local Release demo"
 	@echo "  make run-app               Build and run the raw application (APP_ARGS=...)"
+	@echo "  make benchmark             Run Unit 06 scenarios and generate Markdown/JSON reports"
 	@echo "  make debug-build           Build an isolated Debug configuration"
 	@echo "  make debug-run             Build and run the full local Debug demo"
 	@echo "  make debug-gdb             Build and debug the full local demo in GDB"
@@ -51,7 +53,7 @@ help:
 	@echo "  make clean                 Clean compiled outputs through CMake"
 	@echo "  make clean-old-builds      Remove other root build/build-* CMake directories; keep BUILD_DIR"
 	@echo
-	@echo "Overrides: QT_PREFIX, BUILD_DIR, BUILD_TYPE, DEBUG_BUILD_DIR, REVIEW_BUILD_DIR, DEMO_ARGS, APP_ARGS, GDB, CLANG_FORMAT"
+	@echo "Overrides: QT_PREFIX, BUILD_DIR, BUILD_TYPE, DEBUG_BUILD_DIR, REVIEW_BUILD_DIR, DEMO_ARGS, APP_ARGS, BENCHMARK_ARGS, GDB, CLANG_FORMAT"
 
 requirements:
 	@command -v "$(CMAKE)" >/dev/null || { echo "error: CMake is required" >&2; exit 1; }
@@ -90,6 +92,10 @@ run: build
 
 run-app: build
 	"$(QTMAPS)" $(APP_ARGS)
+
+benchmark: build
+	"$(PYTHON)" tools/benchmark/run_benchmarks.py \
+		--app "$(abspath $(QTMAPS))" --skip-build $(BENCHMARK_ARGS)
 
 debug-build:
 	+$(MAKE) BUILD_DIR="$(DEBUG_BUILD_DIR)" BUILD_TYPE=Debug build

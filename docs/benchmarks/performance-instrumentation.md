@@ -7,8 +7,15 @@
 - Zero-frame intervals: a visible, non-minimized window contributes a `0 FPS` sample. Hidden or minimized intervals display `0 FPS` but are excluded from the summary.
 - Legacy summary: `average_fps` remains the arithmetic mean of retained one-second FPS samples and `one_percent_low_fps` remains the mean of the lowest `ceil(sample_count * 0.01)` interval samples. These v1-compatible fields include visible idle intervals and must not be used as the primary render-on-demand responsiveness report.
 - Interaction windows: pan, zoom, camera-follow, or navigation automation explicitly opens a bounded interaction window. Only intervals between consecutive `QQuickWindow::frameSwapped` events while that window is active enter the interaction summary. The first swap in each separated window establishes the timing baseline and is not itself a frame-time sample. The final interval is held pending; when the window closes it becomes a `settling` sample and is excluded from interaction FPS and p50/p95/p99. Idle gaps, hidden/minimized time, time between windows, and the separated settling tail are therefore excluded from the primary responsiveness percentiles.
+- Unit 06 startup first arms on the QML `Map.mapReadyChanged` signal, then uses
+  the first `QQuickWindow::frameSwapped` completion after readiness. A swap
+  before map readiness is not the first rendered map frame.
 - Settling summary: `settling_frame_count`, `settling_frame_average_ms`, and `settling_frame_maximum_ms` report those final per-window intervals separately. For one continuous-navigation window, only the final interval of the full run is classified as settling.
 - Primary render-on-demand report: `interaction_average_fps` is `interaction frame intervals × 1000 / sum(frame times in ms)`. Frame-time p50/p95/p99 use the nearest-rank value from the retained interaction-only frame-time samples; `interaction_frames_over_100ms` counts confirmed interaction intervals strictly greater than 100 ms. Report FPS average, p50/p95/p99, and the over-100-ms count together; do not convert the legacy interval 1% low into a frame-time claim.
+- Unit 06 additionally reports nearest-rank FPS p5, the arithmetic mean of the
+  slowest one percent of per-frame FPS values, and average frame time from the
+  same interaction-only samples. These values are emitted in the structured
+  scenario result and summarized across repetitions.
 - Bound: at most 3,600 legacy FPS intervals and 216,000 interaction frame-time samples are retained. The interaction bound covers a 60-minute run at 60 FPS while using approximately 1.7 MiB for the raw doubles. CSV process samples are streamed and not retained in memory.
 - Warm-up: the default is three seconds. `/proc` baselines are updated during warm-up, but no CSV row is written. Frame summaries reset when warm-up completes.
 - Sampling: the default fast process/CSV interval is 500 ms; values below 100
