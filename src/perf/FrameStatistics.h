@@ -20,6 +20,9 @@ public:
     double onePercentLowFps() const;
     int interactionFrameCount() const;
     double interactionAverageFps() const;
+    double interactionFpsPercentile(double percentile) const;
+    double interactionOnePercentLowFps() const;
+    double interactionFrameTimeAverageMilliseconds() const;
     double interactionFrameTimePercentile(double percentile) const;
     int interactionFrameTimeOverThresholdCount(double thresholdMilliseconds) const;
     int settlingFrameCount() const;

@@ -114,7 +114,10 @@ int main(int argc, char *argv[])
                       QStringLiteral("seconds"), QStringLiteral("3")});
     parser.addOption({QStringLiteral("benchmark-interval"),
                       QStringLiteral("Sampling interval in milliseconds"),
-                      QStringLiteral("milliseconds"), QStringLiteral("1000")});
+                      QStringLiteral("milliseconds"), QStringLiteral("500")});
+    parser.addOption({QStringLiteral("benchmark-pss-interval"),
+                      QStringLiteral("PSS smaps_rollup interval in milliseconds"),
+                      QStringLiteral("milliseconds"), QStringLiteral("2000")});
     parser.addOption({QStringLiteral("exit-after"),
                       QStringLiteral("Exit after N seconds (useful for instrumentation-off runs)"),
                       QStringLiteral("seconds")});
@@ -183,6 +186,8 @@ int main(int argc, char *argv[])
     performanceMonitor.setMetadata(metadata);
     performanceMonitor.setSamplingInterval(
         parser.value(QStringLiteral("benchmark-interval")).toInt());
+    performanceMonitor.setPssSamplingInterval(
+        parser.value(QStringLiteral("benchmark-pss-interval")).toInt());
     performanceMonitor.setWarmupSeconds(parser.value(QStringLiteral("benchmark-warmup")).toInt());
     engine.rootContext()->setContextProperty(QStringLiteral("performanceMonitor"),
                                              &performanceMonitor);

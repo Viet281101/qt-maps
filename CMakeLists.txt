@@ -60,6 +60,8 @@ add_library(qtmaps_perf STATIC
     src/perf/FrameStatistics.h
     src/perf/PerformanceMonitor.cpp
     src/perf/PerformanceMonitor.h
+    src/perf/ProcessCsvWriter.cpp
+    src/perf/ProcessCsvWriter.h
     src/perf/ProcessTreeSampler.cpp
     src/perf/ProcessTreeSampler.h
 )

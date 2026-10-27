@@ -11,9 +11,22 @@
 - Primary render-on-demand report: `interaction_average_fps` is `interaction frame intervals × 1000 / sum(frame times in ms)`. Frame-time p50/p95/p99 use the nearest-rank value from the retained interaction-only frame-time samples; `interaction_frames_over_100ms` counts confirmed interaction intervals strictly greater than 100 ms. Report FPS average, p50/p95/p99, and the over-100-ms count together; do not convert the legacy interval 1% low into a frame-time claim.
 - Bound: at most 3,600 legacy FPS intervals and 216,000 interaction frame-time samples are retained. The interaction bound covers a 60-minute run at 60 FPS while using approximately 1.7 MiB for the raw doubles. CSV process samples are streamed and not retained in memory.
 - Warm-up: the default is three seconds. `/proc` baselines are updated during warm-up, but no CSV row is written. Frame summaries reset when warm-up completes.
-- Sampling: the default process/CSV interval is 1,000 ms; values below 100 ms are rejected in favor of 100 ms.
-- RAM: `total_rss_bytes` is the sum of `VmRSS` for the QtMaps PID and every readable descendant present at the sample.
-- CPU: deltas of `/proc/<pid>/stat` user plus system ticks are divided by `SC_CLK_TCK` and elapsed monotonic seconds. `100%` means one fully utilized logical CPU. New processes need one baseline sample, while exited or unreadable processes disappear from the current scope.
+- Sampling: the default fast process/CSV interval is 500 ms; values below 100
+  ms are rejected in favor of 100 ms. PSS uses a separate default 2,000 ms
+  interval because `smaps_rollup` is more expensive. Both intervals are stored
+  in metadata. A retained PSS value carries its sample age.
+- RAM: the legacy aggregate CSV retains `total_rss_bytes`, the sum of `VmRSS`
+  for the QtMaps PID and every readable descendant. Unit 06 adds PSS from
+  `/proc/<pid>/smaps_rollup` as the primary RAM measure because shared pages are
+  proportionally allocated; RSS remains accompanying evidence. Missing PSS
+  permission/support is explicit and non-fatal.
+- CPU: deltas of `/proc/<pid>/stat` user plus system ticks are divided by
+  `SC_CLK_TCK` and elapsed monotonic seconds. The raw value uses `100% = one
+  logical CPU`; the detailed sidecar also divides by the detected logical CPU
+  count so `100% = all logical CPUs` (four on the two-core/four-thread reference
+  i5-6300U). PID plus process start time protects deltas against PID reuse. New
+  processes need one baseline sample, while exited or unreadable processes
+  disappear from the current scope.
 
 ## Threading and lifecycle
 
@@ -21,7 +34,7 @@
 
 Read failures are skipped per process. A missing root QtMaps PID or a CSV open/write error stops recording and surfaces an error in the overlay; it does not terminate the map session.
 
-## CSV schema
+## Aggregate CSV schema
 
 Columns, in order:
 
@@ -30,6 +43,14 @@ schema_version,timestamp_utc,timestamp_local,timezone_offset,scenario,build_id,b
 ```
 
 The three legacy frame columns are retained in v3 for comparison with Unit 02 and the original Unit 01b runs. Interaction and settling columns are cumulative since the post-warm-up reset; use the last complete CSV row for a run summary. `interaction_active` describes the sampling instant and is not used to filter the cumulative percentile fields.
+
+Unit 06 deliberately leaves this `qtmaps-perf-v3` header unchanged. Each run
+also creates `<aggregate-base>-processes.csv` with schema
+`qtmaps-process-v1`. Every fast sample contains one row per readable tree
+process plus a `tree_total` row. It records app/Valhalla/other role, PID, PPID,
+start time, command/executable, threads, RSS, PSS availability and age, both CPU
+normalizations, process/child counts, both sampling intervals, sampler duration,
+and any `smaps_rollup` error. Warm-up rows are excluded from both CSV files.
 
 Text fields follow RFC 4180-style escaping: a field containing a comma, quote, carriage return, or newline is quoted, and embedded quotes are doubled. A new file receives one header. Appending to an existing file is allowed only when its header exactly matches the schema.
 
@@ -49,6 +70,7 @@ make serve-diagnostic-tiles
 ./build/qtmaps --automated-pan-zoom \
   --benchmark-output /tmp/qtmaps-raster.csv \
   --benchmark-warmup 3 --benchmark-duration 15 \
+  --benchmark-interval 500 --benchmark-pss-interval 2000 \
   --scenario diagnostic-raster-pan-zoom
 ```
 

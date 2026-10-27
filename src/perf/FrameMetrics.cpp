@@ -40,6 +40,15 @@ double FrameMetrics::averageFps() const { return statistics_.averageFps(); }
 double FrameMetrics::onePercentLowFps() const { return statistics_.onePercentLowFps(); }
 bool FrameMetrics::interactionActive() const { return interactionActive_; }
 double FrameMetrics::interactionAverageFps() const { return statistics_.interactionAverageFps(); }
+double FrameMetrics::interactionFpsP5() const { return statistics_.interactionFpsPercentile(5.0); }
+double FrameMetrics::interactionOnePercentLowFps() const
+{
+    return statistics_.interactionOnePercentLowFps();
+}
+double FrameMetrics::frameTimeAverageMilliseconds() const
+{
+    return statistics_.interactionFrameTimeAverageMilliseconds();
+}
 double FrameMetrics::frameTimeP50Milliseconds() const
 {
     return statistics_.interactionFrameTimePercentile(50.0);
