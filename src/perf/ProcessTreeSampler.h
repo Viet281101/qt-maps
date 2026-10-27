@@ -48,6 +48,8 @@ class ProcessTreeSampler
 {
 public:
     static QHash<qint64, ProcessSnapshot> readProc(QString *errorMessage = nullptr);
+    static QHash<qint64, ProcessSnapshot> readProcForTree(qint64 rootPid,
+                                                          QString *errorMessage = nullptr);
     static bool readPssRollup(qint64 pid, quint64 *pssBytes, QString *errorMessage = nullptr);
     static QList<qint64> descendantPids(qint64 rootPid,
                                         const QHash<qint64, ProcessSnapshot> &snapshots);

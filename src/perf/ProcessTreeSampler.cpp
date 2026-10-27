@@ -8,11 +8,13 @@
 #include <algorithm>
 #include <cmath>
 
+#include <unistd.h>
+
 namespace qtmaps {
 namespace perf {
 namespace {
 
-bool readSnapshot(qint64 pid, ProcessSnapshot *snapshot, QString *failure = nullptr)
+bool readStatSnapshot(qint64 pid, ProcessSnapshot *snapshot, QString *failure = nullptr)
 {
     QFile statFile(QStringLiteral("/proc/%1/stat").arg(pid));
     if (!statFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
@@ -29,7 +31,7 @@ bool readSnapshot(qint64 pid, ProcessSnapshot *snapshot, QString *failure = null
     }
     const int openingParenthesis = stat.indexOf('(');
     const QList<QByteArray> fields = stat.mid(closingParenthesis + 2).split(' ');
-    if (openingParenthesis < 0 || fields.size() < 20) {
+    if (openingParenthesis < 0 || fields.size() < 22) {
         if (failure)
             *failure = QStringLiteral("stat field count %1").arg(fields.size());
         return false;
@@ -38,16 +40,34 @@ bool readSnapshot(qint64 pid, ProcessSnapshot *snapshot, QString *failure = null
     bool userOk = false;
     bool systemOk = false;
     bool startTimeOk = false;
+    bool threadsOk = false;
+    bool rssOk = false;
     const qint64 parentPid = fields.at(1).toLongLong(&parentOk);
     const quint64 userTicks = fields.at(11).toULongLong(&userOk);
     const quint64 systemTicks = fields.at(12).toULongLong(&systemOk);
+    const int threadCount = fields.at(17).toInt(&threadsOk);
     const quint64 startTimeTicks = fields.at(19).toULongLong(&startTimeOk);
-    if (!parentOk || !userOk || !systemOk || !startTimeOk) {
+    const qint64 rssPages = fields.at(21).toLongLong(&rssOk);
+    if (!parentOk || !userOk || !systemOk || !startTimeOk || !threadsOk || !rssOk ||
+        threadCount < 0 || rssPages < 0) {
         if (failure)
             *failure = QStringLiteral("stat numeric conversion");
         return false;
     }
 
+    snapshot->pid = pid;
+    snapshot->parentPid = parentPid;
+    snapshot->cpuTicks = userTicks + systemTicks;
+    snapshot->rssBytes = static_cast<quint64>(rssPages) * ::sysconf(_SC_PAGESIZE);
+    snapshot->startTimeTicks = startTimeTicks;
+    snapshot->threadCount = threadCount;
+    snapshot->commandName = QString::fromLocal8Bit(
+        stat.mid(openingParenthesis + 1, closingParenthesis - openingParenthesis - 1));
+    return true;
+}
+
+bool readTreeDetails(qint64 pid, ProcessSnapshot *snapshot, QString *failure = nullptr)
+{
     QFile statusFile(QStringLiteral("/proc/%1/status").arg(pid));
     if (!statusFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
         if (failure)
@@ -84,14 +104,8 @@ bool readSnapshot(qint64 pid, ProcessSnapshot *snapshot, QString *failure = null
         return false;
     }
 
-    snapshot->pid = pid;
-    snapshot->parentPid = parentPid;
-    snapshot->cpuTicks = userTicks + systemTicks;
     snapshot->rssBytes = rssBytes;
-    snapshot->startTimeTicks = startTimeTicks;
     snapshot->threadCount = threadCount;
-    snapshot->commandName = QString::fromLocal8Bit(
-        stat.mid(openingParenthesis + 1, closingParenthesis - openingParenthesis - 1));
     snapshot->executablePath = QFileInfo(QStringLiteral("/proc/%1/exe").arg(pid)).symLinkTarget();
     return true;
 }
@@ -120,7 +134,7 @@ QHash<qint64, ProcessSnapshot> ProcessTreeSampler::readProc(QString *errorMessag
         ++numericEntries;
         ProcessSnapshot snapshot;
         QString failure;
-        if (readSnapshot(pid, &snapshot, &failure)) {
+        if (readStatSnapshot(pid, &snapshot, &failure)) {
             snapshots.insert(pid, snapshot);
         } else if (firstFailure.isEmpty()) {
             firstFailure = QStringLiteral("pid %1: %2").arg(pid).arg(failure);
@@ -132,6 +146,31 @@ QHash<qint64, ProcessSnapshot> ProcessTreeSampler::readProc(QString *errorMessag
                             .arg(entries.size())
                             .arg(numericEntries)
                             .arg(firstFailure);
+    }
+    return snapshots;
+}
+
+QHash<qint64, ProcessSnapshot> ProcessTreeSampler::readProcForTree(qint64 rootPid,
+                                                                   QString *errorMessage)
+{
+    QString scanError;
+    QHash<qint64, ProcessSnapshot> snapshots = readProc(&scanError);
+    const QList<qint64> treePids = descendantPids(rootPid, snapshots);
+    QString firstDetailFailure;
+    for (qint64 pid : treePids) {
+        ProcessSnapshot snapshot = snapshots.value(pid);
+        QString detailFailure;
+        if (readTreeDetails(pid, &snapshot, &detailFailure)) {
+            snapshots.insert(pid, snapshot);
+        } else {
+            snapshots.remove(pid);
+            if (firstDetailFailure.isEmpty()) {
+                firstDetailFailure = QStringLiteral("pid %1: %2").arg(pid).arg(detailFailure);
+            }
+        }
+    }
+    if (!snapshots.contains(rootPid) && errorMessage) {
+        *errorMessage = firstDetailFailure.isEmpty() ? scanError : firstDetailFailure;
     }
     return snapshots;
 }

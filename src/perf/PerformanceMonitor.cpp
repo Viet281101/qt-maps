@@ -53,7 +53,7 @@ public slots:
         warmupMilliseconds_ = std::max(0, warmupSeconds) * 1000;
         metadata_ = metadata;
         QString procError;
-        previous_ = ProcessTreeSampler::readProc(&procError);
+        previous_ = ProcessTreeSampler::readProcForTree(rootPid_, &procError);
         if (!previous_.contains(rootPid_)) {
             writer_.close();
             processWriter_.close();
@@ -130,7 +130,8 @@ public slots:
         QElapsedTimer samplerTimer;
         samplerTimer.start();
         QString procError;
-        QHash<qint64, ProcessSnapshot> current = ProcessTreeSampler::readProc(&procError);
+        QHash<qint64, ProcessSnapshot> current =
+            ProcessTreeSampler::readProcForTree(rootPid_, &procError);
         const qint64 nowMilliseconds = elapsed_.elapsed();
         const double intervalSeconds = (nowMilliseconds - previousSampleMilliseconds_) / 1000.0;
         const QList<qint64> treePids = ProcessTreeSampler::descendantPids(rootPid_, current);
