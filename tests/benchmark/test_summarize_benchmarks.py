@@ -122,6 +122,37 @@ class BenchmarkSummaryTest(unittest.TestCase):
             self.assertEqual(overhead["pss_overhead_mib"]["median"], 11.0)
             self.assertTrue(all(check["status"] == "FAIL / không đạt" for check in overhead["checks"]))
 
+    def test_startup_uses_memory_captured_at_first_frame(self):
+        with tempfile.TemporaryDirectory() as directory:
+            run_dir = Path(directory)
+            process_csv = run_dir / "metrics-processes.csv"
+            process_csv.write_text("row_type,pss_bytes,rss_bytes\n", encoding="utf-8")
+            (run_dir / "run.json").write_text(
+                json.dumps(
+                    {
+                        "scenario": "startup",
+                        "network_mode": "online",
+                        "repetition": 1,
+                        "run_id": "startup-online-r1",
+                        "exit_code": 0,
+                        "process_csv": process_csv.name,
+                        "events": [
+                            {
+                                "event": "result",
+                                "success": True,
+                                "startup_ms": 800,
+                                "pss_mib": 200,
+                                "rss_mib": 300,
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            run = summary.summarize_run(run_dir / "run.json")
+            self.assertEqual(run["metrics"]["pss_average_mib"], 200)
+            self.assertEqual(run["metrics"]["rss_peak_mib"], 300)
+
 
 if __name__ == "__main__":
     unittest.main()

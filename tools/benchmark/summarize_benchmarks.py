@@ -145,6 +145,15 @@ def summarize_run(run_file):
             "route_latency_max_ms": max(route_latencies) if route_latencies else None,
         }
     )
+    if run["scenario"] == "startup":
+        startup_pss = number(result.get("pss_mib"))
+        startup_rss = number(result.get("rss_mib"))
+        if metrics.get("pss_average_mib") is None and startup_pss is not None:
+            metrics["pss_average_mib"] = startup_pss
+            metrics["pss_peak_mib"] = startup_pss
+        if metrics.get("rss_average_mib") is None and startup_rss is not None:
+            metrics["rss_average_mib"] = startup_rss
+            metrics["rss_peak_mib"] = startup_rss
     return {
         "scenario": run["scenario"],
         "network_mode": run["network_mode"],
@@ -213,13 +222,16 @@ def evaluate_thresholds(group):
         threshold_result(
             "RSS peak MiB", metrics.get("rss_peak_mib"), "max", THRESHOLDS["rss_peak_mib_max"]
         ),
-        threshold_result(
-            "Sampler duration p95 ms",
-            metrics.get("sampler_duration_p95_ms"),
-            "max",
-            THRESHOLDS["sampler_duration_p95_ms_max"],
-        ),
     ]
+    if scenario != "startup":
+        checks.append(
+            threshold_result(
+                "Sampler duration p95 ms",
+                metrics.get("sampler_duration_p95_ms"),
+                "max",
+                THRESHOLDS["sampler_duration_p95_ms_max"],
+            )
+        )
     if scenario in ("pan_zoom", "navigation_replay"):
         checks.extend(
             [

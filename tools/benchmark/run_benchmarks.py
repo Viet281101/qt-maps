@@ -436,6 +436,7 @@ def run_once(args, root, session_dir, scenario, network_mode, repetition, enviro
     run_dir.mkdir(parents=True, exist_ok=False)
     aggregate_csv = run_dir / "metrics.csv"
     duration = args.duration if args.duration is not None else DEFAULT_DURATIONS[scenario]
+    warmup = 0 if scenario == "startup" else args.warmup
     command = [
         str(args.app),
         "--benchmark",
@@ -443,7 +444,7 @@ def run_once(args, root, session_dir, scenario, network_mode, repetition, enviro
         "--duration",
         str(duration),
         "--benchmark-warmup",
-        str(args.warmup),
+        str(warmup),
         "--benchmark-interval",
         str(args.interval),
         "--benchmark-pss-interval",
@@ -470,7 +471,7 @@ def run_once(args, root, session_dir, scenario, network_mode, repetition, enviro
     if args.fixture_only:
         command.append("--routing-fixture-only")
     executed = offline_prefix() + command if network_mode == "offline" else command
-    timeout_seconds = args.timeout or max(45, args.warmup + duration + 30)
+    timeout_seconds = args.timeout or max(45, warmup + duration + 30)
     try:
         result = subprocess.run(
             executed,
@@ -497,7 +498,7 @@ def run_once(args, root, session_dir, scenario, network_mode, repetition, enviro
         "network_mode": network_mode,
         "repetition": repetition,
         "duration_seconds": duration,
-        "warmup_seconds": args.warmup,
+        "warmup_seconds": warmup,
         "exit_code": exit_code,
         "timed_out": timed_out,
         "command": shlex.join(executed),
