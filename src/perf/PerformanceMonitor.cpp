@@ -124,7 +124,7 @@ signals:
     void warmupComplete();
     void error(const QString &message);
 
-private slots:
+public slots:
     void sample()
     {
         QElapsedTimer samplerTimer;
@@ -354,6 +354,7 @@ bool PerformanceMonitor::startBenchmark(const QString &requestedPath)
         connect(&workerThread_, &QThread::finished, worker_, &QObject::deleteLater);
         connect(this, &PerformanceMonitor::requestStart, worker_, &ProcessSamplerWorker::start);
         connect(this, &PerformanceMonitor::requestStop, worker_, &ProcessSamplerWorker::stop);
+        connect(this, &PerformanceMonitor::requestSample, worker_, &ProcessSamplerWorker::sample);
         connect(this, &PerformanceMonitor::frameSampleChanged, worker_,
                 &ProcessSamplerWorker::updateFrameMetrics);
         connect(worker_, &ProcessSamplerWorker::started, this, &PerformanceMonitor::handleStarted);
@@ -375,6 +376,7 @@ bool PerformanceMonitor::startBenchmark(const QString &requestedPath)
 }
 
 void PerformanceMonitor::stopBenchmark() { emit requestStop(); }
+void PerformanceMonitor::sampleNow() { emit requestSample(); }
 void PerformanceMonitor::resetFrameSummary() { frameMetrics_.reset(); }
 void PerformanceMonitor::beginInteractionWindow(int durationMilliseconds)
 {

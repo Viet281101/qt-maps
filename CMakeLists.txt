@@ -116,6 +116,19 @@ add_library(qtmaps_app_core STATIC
 target_include_directories(qtmaps_app_core PUBLIC "${CMAKE_SOURCE_DIR}/src")
 target_link_libraries(qtmaps_app_core PUBLIC qtmaps_routing Qt5::Core)
 
+add_library(qtmaps_benchmark STATIC
+    src/benchmark/BenchmarkScenarioController.cpp
+    src/benchmark/BenchmarkScenarioController.h
+)
+target_include_directories(qtmaps_benchmark PUBLIC "${CMAKE_SOURCE_DIR}/src")
+target_link_libraries(qtmaps_benchmark PUBLIC
+    qtmaps_perf
+    qtmaps_routing
+    Qt5::Core
+    Qt5::Positioning
+    Qt5::Quick
+)
+
 qt5_add_resources(QTMAPS_RESOURCES resources.qrc)
 
 add_executable(qtmaps
@@ -125,6 +138,7 @@ add_executable(qtmaps
 
 target_link_libraries(qtmaps PRIVATE
     qtmaps_app_core
+    qtmaps_benchmark
     qtmaps_map_probe
     qtmaps_perf
     qtmaps_routing
@@ -141,6 +155,28 @@ target_compile_definitions(qtmaps PRIVATE QTMAPS_BUILD_ID="${QTMAPS_BUILD_ID}")
 
 include(CTest)
 if(BUILD_TESTING)
+    find_package(Python3 REQUIRED COMPONENTS Interpreter)
+
+    add_executable(qtmaps_benchmark_tests
+        tests/benchmark/tst_BenchmarkScenario.cpp
+        ${QTMAPS_RESOURCES}
+    )
+    target_link_libraries(qtmaps_benchmark_tests PRIVATE
+        qtmaps_benchmark
+        qtmaps_perf
+        qtmaps_routing
+        Qt5::Test
+    )
+    add_test(NAME qtmaps_benchmark_tests COMMAND qtmaps_benchmark_tests)
+    add_test(NAME qtmaps_benchmark_summary_tests
+        COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_SOURCE_DIR}/tests/benchmark/test_summarize_benchmarks.py")
+    add_test(NAME qtmaps_benchmark_cli_smoke
+        COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_SOURCE_DIR}/tests/benchmark/smoke_cli.py"
+            "$<TARGET_FILE:qtmaps>"
+            "${CMAKE_SOURCE_DIR}")
+
     add_executable(qtmaps_perf_tests tests/perf/tst_Performance.cpp)
     target_link_libraries(qtmaps_perf_tests PRIVATE qtmaps_perf Qt5::Test)
     add_test(NAME qtmaps_perf_tests COMMAND qtmaps_perf_tests)

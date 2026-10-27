@@ -49,6 +49,7 @@ public:
 
     Q_INVOKABLE bool startBenchmark(const QString &requestedPath = QString());
     Q_INVOKABLE void stopBenchmark();
+    Q_INVOKABLE void sampleNow();
     Q_INVOKABLE void resetFrameSummary();
     Q_INVOKABLE void beginInteractionWindow(int durationMilliseconds = 450);
 
@@ -60,6 +61,7 @@ signals:
     void requestStart(qint64 rootPid, const QString &path, int intervalMilliseconds,
                       int pssIntervalMilliseconds, int warmupSeconds, const QVariantMap &metadata);
     void requestStop();
+    void requestSample();
     void frameSampleChanged(double currentFps, double averageFps, double onePercentLowFps,
                             bool interactionActive, int interactionFrameCount,
                             double interactionAverageFps, double frameTimeP50Milliseconds,
