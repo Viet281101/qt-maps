@@ -6,7 +6,7 @@
 - **MapLibre / Valhalla / data:** 3.0.0 / 3.9.1; Hanoi tiles 14.00 MiB, graph 166.93 MiB
 - **Sampling:** 500 ms CPU/RSS; 2,000 ms PSS; 5-second warm-up; 3 repetitions
 
-PSS is the primary RAM value; RSS accompanies it. CPU below is machine-normalized (`100% = all four logical CPUs`). Values are median `[min, max]`.
+PSS is the primary RAM value; RSS accompanies it. CPU below is machine-normalized (`100% = all four logical CPUs`). The table shows medians; per-run minimum/maximum ranges are retained in the linked generated report.
 
 ## Results
 
@@ -25,21 +25,23 @@ PSS is the primary RAM value; RSS accompanies it. CPU below is machine-normalize
 
 ## Locked-threshold comparison
 
-All locked targets passed. The closest primary-RAM result is navigation offline at **544.39 MiB PSS peak**, below the **640 MiB** limit. Interactive FPS p5 is at least 49.23 (target 24), 1% low at least 39.62 (target 20), and frame p95 at most 20.31 ms (target 50 ms). Idle CPU peak is at most 7.25% (target 15%); interactive CPU peak at most 53.20% (target 75%); Valhalla route CPU peak at most 10.48% (target 65%).
+All locked targets passed. The closest primary-RAM result is navigation PSS average: median **506.43–507.98 MiB** versus the **550 MiB** limit; its accompanying RSS average is **588.36–590.15 MiB** versus 650 MiB. Interactive FPS p5 median >=49.23 (target 24; worst run 48.93), 1% low median >=39.62 (target 20; worst run 38.20), and frame p95 median <=20.31 ms (target 50 ms). Idle CPU peak median <=7.25% (target 15%), though one online run reached 23.81%. Navigation CPU peak median <=53.20% (target 75%; worst run 56.96%). Valhalla route CPU peak median <=10.48% (target 65%).
 
-Sampler overhead passed: CPU **0.761** points `[0.738, 0.785]` versus <=1; PSS **4.740 MiB** `[3.565, 7.233]` versus <=10; sampler p95 at most 30.27 ms versus <=50.
+Sampler overhead passed: CPU **0.761** points `[0.738, 0.785]` versus <=1; PSS **4.740 MiB** `[3.565, 7.233]` versus <=10; sampler p95 median <=30.27 ms versus <=50 (worst run 44.7 ms).
 
 ## Report-only latency
 
-Startup: online **855 ms** `[738, 886]`; offline **857 ms** `[697, 959]`. Route latency: online **53 ms** `[52, 53]`; offline **55 ms** `[48, 59]`.
+Startup spans roughly 0.7–1.2 s across all 30 runs; the dedicated startup scenario median is online **855 ms** `[738, 886]` and offline **857 ms** `[697, 959]`. Route latency median is about 53 ms (online **53 ms** `[52, 53]`; offline **55 ms** `[48, 59]`), but the slowest individual route in a run is 192–235 ms, likely the first request/graph-page warm-up; this attribution is not yet independently verified.
 
 ## Management summary
 
-The demo benchmark passes every locked RAM, CPU, FPS, frame-time and sampler-overhead target on the reference laptop. RSS exceeds primary PSS by 82.03 MiB because RSS counts shared mappings in full. Online and offline results are equivalent for startup, local Valhalla routing and navigation replay. Pan/zoom PSS moved by no more than 2 MiB versus the prior table; navigation remains below the locked RAM limit. Route PSS now uses a forced fresh completion sample, eliminating stale-cache artifacts.
+The demo benchmark passes every locked RAM, CPU, FPS, frame-time and sampler-overhead target on the reference laptop. RSS exceeds primary PSS by 82.03 MiB because RSS counts shared mappings in full. Online and offline are expected to be similar because map data and Valhalla run locally. Valhalla accounts for about 217 MiB PSS while idle and about 360 MiB after route calculation; the remaining PSS belongs to the app. Pan/zoom PSS moved by no more than 2 MiB versus the prior table; route completion now forces a fresh PSS sample.
 
 ## Verification and limitations
 
 - Command/output: `make benchmark`; `generated/benchmarks/20261028-184033/`.
 - External cross-check: `ps` RSS matched sidecar within 0.004%; `smaps_rollup` PSS within 0.019%.
 - PSS remains 2-second sampling during long scenarios; first-frame and completion checkpoints force a fresh PSS read.
+- Startup and route each have only 1–3 PSS samples per run, so their PSS averages are less reliable than the long idle/pan/navigation scenarios.
+- `idle-online-r1` has a single 23.81% machine-CPU sample at 65.034 s: `qtmaps` used 95.238% on the one-core scale while Valhalla used 0%; adjacent samples were 0.50% and 1.00%. It is an isolated app-process spike; its internal cause is not identified by the collected `/proc` data.
 - No failed run, fallback, unavailable PSS, or threshold failure occurred.
