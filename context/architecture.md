@@ -22,7 +22,7 @@
 | Routing | Valhalla child process | Committed and verified in Unit 04 | Offline route and maneuvers behind a fixture-compatible route contract |
 | Search | SQLite FTS5 index | Proposed | Offline geocoding/search |
 | Position simulation | QtPositioning selected-route replay | Committed for Unit 05 D1-D3 | Simulated GPS progress, guidance, and camera following over the current route |
-| Performance | `QQuickWindow::frameSwapped` metrics plus Linux `/proc` process-tree CSV logger | Implemented and verified in unit 02 | Capture FPS, RAM, and CPU for the app process tree |
+| Performance | completed-map-frame metrics plus Linux `/proc` process-tree CSV loggers | Unit 02 implemented aggregate v3; Unit 06 detailed sampling approved | Capture FPS/frame time plus per-process and tree PSS, RSS, threads, and dual-normalized CPU |
 
 No engine or library marked Proposed or Spike required becomes committed merely by appearing in this table.
 
@@ -93,6 +93,14 @@ Large generated datasets, caches, routing graphs, and third-party artifacts must
 - Thread and worker counts must be configurable and conservatively limited for the two-core/four-thread reference CPU.
 - Performance totals include the main process and every child service started by it. In-process tile-service work is naturally included in the app process.
 - Unit 02 performance collection uses bounded GUI-thread frame counters plus a dedicated worker thread for `/proc` enumeration, parsing, directory creation, and CSV writes. `PerformanceMonitor` owns the worker, requests cancellation, flushes output, and performs a bounded shutdown.
+- Unit 06 preserves aggregate `qtmaps-perf-v3` and adds a separate detailed
+  process CSV. Fast CPU/RSS/thread sampling defaults to 500 ms; slower PSS
+  sampling reads `smaps_rollup` every 2,000 ms and degrades visibly when it is
+  unavailable. PSS is the primary RAM report, RSS remains accompanying
+  evidence, and PID plus process start time identifies samples across PID reuse.
+- CPU records both Linux process-style percentage (`100% = one logical CPU`)
+  and machine-normalized percentage (`100% = all detected logical CPUs`). The
+  reference i5-6300U has two physical cores and four logical CPUs.
 
 ## Invariants
 

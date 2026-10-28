@@ -1,0 +1,67 @@
+name: Engineering or maintenance task
+description: Track bounded refactoring, tooling, documentation, or infrastructure work
+title: "chore: "
+labels:
+  - infrastructure
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: What concrete repository or developer outcome should this task deliver?
+    validations:
+      required: true
+
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Rationale and current evidence
+      description: Explain the observed problem, references, and why the work is needed now.
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: In scope
+      placeholder: |
+        - Bounded change one
+        - Bounded change two
+    validations:
+      required: true
+
+  - type: textarea
+    id: non_goals
+    attributes:
+      label: Non-goals
+      description: List adjacent work that must not be pulled into this task.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance and verification
+      placeholder: |
+        - [ ] `make check` passes
+        - [ ] `make review` passes
+        - [ ] Relevant Release smoke scenario passes
+        - [ ] Documentation and progress tracker are current
+    validations:
+      required: true
+
+  - type: textarea
+    id: risk
+    attributes:
+      label: Behavior, performance, and rollback risk
+      description: State expected user-visible impact, measurement needs, and the recovery path.
+
+  - type: checkboxes
+    id: tracking
+    attributes:
+      label: Tracking checks
+      options:
+        - label: This task is bounded and does not hide a user-visible feature.
+          required: true
+        - label: The issue will be linked to the correct milestone and Project #6 fields during triage.
+          required: true

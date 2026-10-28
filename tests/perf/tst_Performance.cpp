@@ -2,6 +2,7 @@
 #include "perf/FrameMetrics.h"
 #include "perf/FrameStatistics.h"
 #include "perf/PerformanceMonitor.h"
+#include "perf/ProcessCsvWriter.h"
 #include "perf/ProcessTreeSampler.h"
 
 #include <QCoreApplication>
@@ -56,6 +57,9 @@ private slots:
         QCOMPARE(statistics.averageFps(), 0.0);
         QCOMPARE(statistics.interactionFrameCount(), 5);
         QCOMPARE(statistics.interactionAverageFps(), 25.0);
+        QCOMPARE(statistics.interactionFpsPercentile(5.0), 10.0);
+        QCOMPARE(statistics.interactionOnePercentLowFps(), 10.0);
+        QCOMPARE(statistics.interactionFrameTimeAverageMilliseconds(), 40.0);
         QCOMPARE(statistics.interactionFrameTimePercentile(50.0), 30.0);
         QCOMPARE(statistics.interactionFrameTimePercentile(95.0), 100.0);
         QCOMPARE(statistics.interactionFrameTimePercentile(99.0), 100.0);
@@ -134,6 +138,50 @@ private slots:
         QCOMPARE(afterExit.childCount, 0);
     }
 
+    void processAggregationReportsPssThreadsRolesAndDualCpu()
+    {
+        QHash<qint64, ProcessSnapshot> previous;
+        previous.insert(10, {10, 1, 100, 1000, 1000, 800, 3, true, QStringLiteral("qtmaps"),
+                             QStringLiteral("/tmp/qtmaps")});
+        previous.insert(11,
+                        {11, 10, 50, 2000, 2000, 1500, 2, true, QStringLiteral("valhalla_service"),
+                         QStringLiteral("/tmp/valhalla_service")});
+        QHash<qint64, ProcessSnapshot> current;
+        current.insert(10, {10, 1, 120, 1200, 1000, 900, 4, true, QStringLiteral("qtmaps"),
+                            QStringLiteral("/tmp/qtmaps")});
+        current.insert(11,
+                       {11, 10, 70, 2200, 2000, 1600, 3, true, QStringLiteral("valhalla_service"),
+                        QStringLiteral("/tmp/valhalla_service")});
+        current.insert(12, {12, 11, 5, 500, 3000, 0, 1, false, QStringLiteral("worker"),
+                            QStringLiteral("/tmp/worker")});
+
+        const ProcessTreeSample sample =
+            ProcessTreeSampler::aggregate(10, current, previous, 100, 1.0, 4);
+        QCOMPARE(sample.rssBytes, quint64(3900));
+        QCOMPARE(sample.pssBytes, quint64(2500));
+        QCOMPARE(sample.pssProcessCount, 2);
+        QCOMPARE(sample.threadCount, 8);
+        QCOMPARE(sample.cpuPercent, 40.0);
+        QCOMPARE(sample.cpuPercentAllCores, 10.0);
+        QCOMPARE(sample.logicalCpuCount, 4);
+        QCOMPARE(sample.processes.size(), 3);
+        QCOMPARE(sample.processes.at(0).role, QStringLiteral("app"));
+        QCOMPARE(sample.processes.at(1).role, QStringLiteral("valhalla"));
+        QCOMPARE(sample.processes.at(2).role, QStringLiteral("valhalla"));
+    }
+
+    void processAggregationRejectsCpuDeltaAfterPidReuse()
+    {
+        QHash<qint64, ProcessSnapshot> previous;
+        previous.insert(10, {10, 1, 900, 1000, 100});
+        QHash<qint64, ProcessSnapshot> current;
+        current.insert(10, {10, 1, 950, 1000, 200});
+        const ProcessTreeSample sample =
+            ProcessTreeSampler::aggregate(10, current, previous, 100, 1.0, 4);
+        QCOMPARE(sample.cpuPercent, 0.0);
+        QCOMPARE(sample.cpuPercentAllCores, 0.0);
+    }
+
     void liveProcessTreeFindsAndRemovesControlledChild()
     {
         QProcess child;
@@ -161,6 +209,16 @@ private slots:
             !ProcessTreeSampler::descendantPids(rootPid, ProcessTreeSampler::readProc())
                  .contains(childPid),
             1000);
+    }
+
+    void livePssRollupIsReadableForCurrentProcess()
+    {
+        quint64 pssBytes = 0;
+        QString error;
+        QVERIFY2(ProcessTreeSampler::readPssRollup(QCoreApplication::applicationPid(), &pssBytes,
+                                                   &error),
+                 qPrintable(error));
+        QVERIFY(pssBytes > 0);
     }
 
     void csvEscapesAndWritesHeaderOnce()
@@ -197,6 +255,60 @@ private slots:
         QVERIFY(lines.at(1).contains("\"pan, \"\"zoom\"\"\""));
     }
 
+    void processCsvWritesPerProcessAndTreeRows()
+    {
+        QTemporaryDir directory;
+        QVERIFY(directory.isValid());
+        const QString aggregatePath = directory.filePath(QStringLiteral("run.csv"));
+        const QString path = ProcessCsvWriter::sidecarPath(aggregatePath);
+        QCOMPARE(path, directory.filePath(QStringLiteral("run-processes.csv")));
+
+        ProcessTreeSample sample;
+        sample.rssBytes = 1000;
+        sample.pssBytes = 700;
+        sample.cpuPercent = 40.0;
+        sample.cpuPercentAllCores = 10.0;
+        sample.processCount = 1;
+        sample.pssProcessCount = 1;
+        sample.threadCount = 3;
+        sample.logicalCpuCount = 4;
+        ProcessMetric metric;
+        metric.snapshot = {10,
+                           1,
+                           120,
+                           1000,
+                           1000,
+                           700,
+                           3,
+                           true,
+                           QStringLiteral("qtmaps"),
+                           QStringLiteral("/tmp/qtmaps")};
+        metric.role = QStringLiteral("app");
+        metric.cpuPercentOneCore = 40.0;
+        metric.cpuPercentAllCores = 10.0;
+        sample.processes.append(metric);
+
+        ProcessCsvWriter writer;
+        QString error;
+        QVERIFY2(writer.open(path, &error), qPrintable(error));
+        QVariantMap metadata;
+        metadata.insert(QStringLiteral("scenario"), QStringLiteral("idle"));
+        metadata.insert(QStringLiteral("run_id"), QStringLiteral("idle-1"));
+        metadata.insert(QStringLiteral("fast_sampling_interval_ms"), 500);
+        metadata.insert(QStringLiteral("pss_sampling_interval_ms"), 2000);
+        QVERIFY2(writer.writeSample(metadata, sample, 500, 0, 2.5, QString(), &error),
+                 qPrintable(error));
+        writer.close();
+
+        QFile file(path);
+        QVERIFY(file.open(QIODevice::ReadOnly | QIODevice::Text));
+        const QByteArray contents = file.readAll();
+        QVERIFY(contents.startsWith(ProcessCsvWriter::columns().join(QLatin1Char(',')).toUtf8()));
+        QCOMPARE(contents.count('\n'), 3);
+        QVERIFY(contents.contains("qtmaps-process-v1"));
+        QVERIFY(contents.contains("tree_total,total"));
+    }
+
     void monitorStartsStopsAndRejectsUnwritablePath()
     {
         QTemporaryDir directory;
@@ -208,9 +320,11 @@ private slots:
         QVERIFY(monitor.startBenchmark(directory.filePath(QStringLiteral("run.csv"))));
         QTRY_VERIFY_WITH_TIMEOUT(monitor.recording() || !monitor.errorMessage().isEmpty(), 1000);
         QVERIFY2(monitor.recording(), qPrintable(monitor.errorMessage()));
+        QTest::qWait(250);
         monitor.stopBenchmark();
         QTRY_VERIFY_WITH_TIMEOUT(!monitor.recording(), 1000);
         QVERIFY(recordingSpy.count() >= 2);
+        QVERIFY(QFile::exists(directory.filePath(QStringLiteral("run-processes.csv"))));
 
         QVERIFY(monitor.startBenchmark(QStringLiteral("/proc/qtmaps-forbidden/run.csv")));
         QTRY_VERIFY_WITH_TIMEOUT(!monitor.errorMessage().isEmpty(), 1000);

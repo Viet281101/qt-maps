@@ -101,5 +101,13 @@ For this milestone, breadth, nationwide high-detail coverage, a complete data-ge
 3. Raster, vector, and orthography layers can each be selected and visibly rendered for their agreed demo coverage; limitations are documented.
 4. A route between two selected points is drawn with maneuvers, and navigation simulation demonstrates camera following, rotation, maneuver progression, and re-routing.
 5. Each fixed scenario produces a benchmark record containing FPS, total RAM, total CPU, build mode, child-process scope, dataset, and test duration.
-6. **Proposed, to be finalized after the unit 01 baseline:** interactive scenarios average at least 30 FPS; idle CPU averages at most 25% of one logical CPU; interactive CPU averages at most 150% in process-level Linux reporting; and combined resident memory for QtMaps and its child services remains at or below 2 GiB after a 30-minute run. These are planning targets, not committed requirements.
+6. Unit 06 uses owner-approved thresholds locked before measurement. Interactive
+   average FPS is at least 30, FPS p5 at least 24, 1% low at least 20, average
+   frame time at most 33.3 ms, and frame-time p95 at most 50 ms. PSS is the
+   primary RAM measure: tree average/peak are at most 550/640 MiB; accompanying
+   RSS average/peak are at most 650/768 MiB. On the two-core/four-thread
+   reference CPU, machine-normalized CPU (`100% = all four logical CPUs`) is at
+   most 5%/15% idle average/peak, 40%/75% interactive average/peak, and 65%
+   peak during Valhalla route computation. Results beyond a threshold are
+   reported as not meeting it; thresholds are not changed after measurement.
 7. `context/progress-tracker.md` and the latest weekly report accurately describe completed work, next work, risks, and the newest benchmark results.

@@ -2,6 +2,7 @@
 #include <QCommandLineParser>
 #include <QDebug>
 #include <QDir>
+#include <QElapsedTimer>
 #include <QGeoServiceProvider>
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
@@ -13,6 +14,7 @@
 
 #include <algorithm>
 
+#include "benchmark/BenchmarkScenarioController.h"
 #include "core/ApplicationShutdownCoordinator.h"
 #include "map/CameraProbeController.h"
 #include "map/DirectoryTileSource.h"
@@ -52,6 +54,8 @@ void probeProvider(const QString &providerName)
 
 int main(int argc, char *argv[])
 {
+    QElapsedTimer launchTimer;
+    launchTimer.start();
     QGuiApplication application(argc, argv);
     application.setQuitOnLastWindowClosed(false);
     QCoreApplication::setApplicationName(QStringLiteral("QtMaps"));
@@ -106,7 +110,10 @@ int main(int argc, char *argv[])
                       QStringLiteral("Run the deterministic raster pan/zoom sequence")});
     parser.addOption({QStringLiteral("benchmark-output"),
                       QStringLiteral("Record benchmark CSV to PATH"), QStringLiteral("path")});
-    parser.addOption({QStringLiteral("benchmark-duration"),
+    parser.addOption({QStringLiteral("benchmark"),
+                      QStringLiteral("Run a Unit 06 benchmark scenario and exit"),
+                      QStringLiteral("scenario")});
+    parser.addOption({QStringList{QStringLiteral("benchmark-duration"), QStringLiteral("duration")},
                       QStringLiteral("Recorded duration after warm-up in seconds"),
                       QStringLiteral("seconds"), QStringLiteral("15")});
     parser.addOption({QStringLiteral("benchmark-warmup"),
@@ -114,12 +121,18 @@ int main(int argc, char *argv[])
                       QStringLiteral("seconds"), QStringLiteral("3")});
     parser.addOption({QStringLiteral("benchmark-interval"),
                       QStringLiteral("Sampling interval in milliseconds"),
-                      QStringLiteral("milliseconds"), QStringLiteral("1000")});
+                      QStringLiteral("milliseconds"), QStringLiteral("500")});
+    parser.addOption({QStringLiteral("benchmark-pss-interval"),
+                      QStringLiteral("PSS smaps_rollup interval in milliseconds"),
+                      QStringLiteral("milliseconds"), QStringLiteral("2000")});
     parser.addOption({QStringLiteral("exit-after"),
                       QStringLiteral("Exit after N seconds (useful for instrumentation-off runs)"),
                       QStringLiteral("seconds")});
     parser.addOption({QStringLiteral("scenario"), QStringLiteral("Benchmark scenario name"),
                       QStringLiteral("name"), QStringLiteral("diagnostic-raster")});
+    parser.addOption({QStringLiteral("benchmark-run-id"),
+                      QStringLiteral("Stable identifier for this benchmark run"),
+                      QStringLiteral("id")});
     parser.addOption({QStringLiteral("network-mode"), QStringLiteral("Recorded network mode"),
                       QStringLiteral("mode"), QStringLiteral("localhost-offline-fixture")});
     parser.addOption({QStringLiteral("dataset-id"), QStringLiteral("Recorded dataset identifier"),
@@ -132,9 +145,13 @@ int main(int argc, char *argv[])
     const bool useMapboxGlProbe = parser.isSet(QStringLiteral("mapboxgl-probe"));
     const bool useMapLibreProbe = parser.isSet(QStringLiteral("maplibre-probe"));
     const bool useVectorProbe = useMapboxGlProbe || useMapLibreProbe;
-    const bool useUnit03LocalMap = parser.isSet(QStringLiteral("unit03-local-map"));
+    const QString benchmarkScenario = parser.value(QStringLiteral("benchmark"));
+    const bool useBenchmarkScenario = !benchmarkScenario.isEmpty();
+    const bool useUnit03LocalMap =
+        parser.isSet(QStringLiteral("unit03-local-map")) || useBenchmarkScenario;
     const bool useNavigationBenchmark = parser.isSet(QStringLiteral("navigation-benchmark"));
-    const bool useRoutingDemo = parser.isSet(QStringLiteral("routing-demo"));
+    const bool useRoutingDemo =
+        parser.isSet(QStringLiteral("routing-demo")) || useBenchmarkScenario;
     const bool useBlankProbe = parser.isSet(QStringLiteral("blank-probe"));
     const bool instrumentationEnabled = !parser.isSet(QStringLiteral("disable-instrumentation"));
 
@@ -157,6 +174,9 @@ int main(int argc, char *argv[])
     qtmaps::routing::RouteNavigationController routeNavigationController;
     qtmaps::core::ApplicationShutdownCoordinator shutdownCoordinator(&routingController);
     qtmaps::perf::PerformanceMonitor performanceMonitor;
+    qtmaps::benchmark::BenchmarkScenarioController benchmarkScenarioController(
+        &performanceMonitor, &routingController, &routeNavigationController,
+        launchTimer.msecsSinceReference());
     QQmlApplicationEngine engine;
 
     if (useUnit03LocalMap &&
@@ -168,7 +188,10 @@ int main(int argc, char *argv[])
         return 3;
     }
     QVariantMap metadata;
-    metadata.insert(QStringLiteral("scenario"), parser.value(QStringLiteral("scenario")));
+    metadata.insert(QStringLiteral("scenario"), useBenchmarkScenario
+                                                    ? benchmarkScenario
+                                                    : parser.value(QStringLiteral("scenario")));
+    metadata.insert(QStringLiteral("run_id"), parser.value(QStringLiteral("benchmark-run-id")));
     metadata.insert(QStringLiteral("build_id"), QStringLiteral(QTMAPS_BUILD_ID));
     metadata.insert(QStringLiteral("build_type"), QStringLiteral("Release"));
     metadata.insert(QStringLiteral("qt_version"), QString::fromLatin1(qVersion()));
@@ -183,6 +206,8 @@ int main(int argc, char *argv[])
     performanceMonitor.setMetadata(metadata);
     performanceMonitor.setSamplingInterval(
         parser.value(QStringLiteral("benchmark-interval")).toInt());
+    performanceMonitor.setPssSamplingInterval(
+        parser.value(QStringLiteral("benchmark-pss-interval")).toInt());
     performanceMonitor.setWarmupSeconds(parser.value(QStringLiteral("benchmark-warmup")).toInt());
     engine.rootContext()->setContextProperty(QStringLiteral("performanceMonitor"),
                                              &performanceMonitor);
@@ -196,6 +221,8 @@ int main(int argc, char *argv[])
                                              &routeNavigationController);
     engine.rootContext()->setContextProperty(QStringLiteral("shutdownCoordinator"),
                                              &shutdownCoordinator);
+    engine.rootContext()->setContextProperty(QStringLiteral("benchmarkScenarioController"),
+                                             &benchmarkScenarioController);
     engine.rootContext()->setContextProperty(QStringLiteral("routingFixtureOnly"),
                                              parser.isSet(QStringLiteral("routing-fixture-only")));
     QObject::connect(&routingController, &qtmaps::routing::RoutingController::routeChanged,
@@ -258,9 +285,20 @@ int main(int argc, char *argv[])
         return 4;
     }
     const QString benchmarkOutput = parser.value(QStringLiteral("benchmark-output"));
-    if (!benchmarkOutput.isEmpty() && !instrumentationEnabled) {
-        qCritical() << "--benchmark-output cannot be used with --disable-instrumentation";
+    if ((!benchmarkOutput.isEmpty() || useBenchmarkScenario) && !instrumentationEnabled) {
+        qCritical() << "Benchmark recording cannot be used with --disable-instrumentation";
         return 2;
+    }
+    QString benchmarkConfigurationError;
+    if (!benchmarkScenarioController.configure(
+            benchmarkScenario, parser.value(QStringLiteral("benchmark-duration")).toInt(),
+            parser.value(QStringLiteral("benchmark-warmup")).toInt(),
+            parser.isSet(QStringLiteral("routing-fixture-only")), &benchmarkConfigurationError)) {
+        qCritical().noquote() << benchmarkConfigurationError;
+        return 5;
+    }
+    if (useBenchmarkScenario) {
+        performanceMonitor.startBenchmark(benchmarkOutput);
     }
     const QUrl qmlUrl(
         unit03Vector && useRoutingDemo           ? QStringLiteral("qrc:/qml/RoutingProbe.qml")
@@ -301,8 +339,28 @@ int main(int argc, char *argv[])
     if (instrumentationEnabled) {
         performanceMonitor.attachWindow(window);
     }
+    benchmarkScenarioController.attachWindow(window);
 
-    if (!benchmarkOutput.isEmpty()) {
+    bool benchmarkCompletionPending = false;
+    QObject::connect(
+        &benchmarkScenarioController, &qtmaps::benchmark::BenchmarkScenarioController::completed,
+        &application,
+        [&benchmarkCompletionPending, &performanceMonitor, &shutdownCoordinator](bool) {
+            benchmarkCompletionPending = true;
+            performanceMonitor.stopBenchmark();
+            if (!performanceMonitor.recording()) {
+                shutdownCoordinator.requestQuit();
+            }
+        });
+    QObject::connect(&performanceMonitor, &qtmaps::perf::PerformanceMonitor::recordingChanged,
+                     &application,
+                     [&benchmarkCompletionPending, &performanceMonitor, &shutdownCoordinator]() {
+                         if (benchmarkCompletionPending && !performanceMonitor.recording()) {
+                             shutdownCoordinator.requestQuit();
+                         }
+                     });
+
+    if (!useBenchmarkScenario && !benchmarkOutput.isEmpty()) {
         const int warmupSeconds =
             std::max(0, parser.value(QStringLiteral("benchmark-warmup")).toInt());
         const int durationSeconds =

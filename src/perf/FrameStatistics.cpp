@@ -91,6 +91,48 @@ double FrameStatistics::interactionAverageFps() const
                : 0.0;
 }
 
+double FrameStatistics::interactionFpsPercentile(double percentile) const
+{
+    if (interactionFrameTimesMilliseconds_.isEmpty() || !std::isfinite(percentile)) {
+        return 0.0;
+    }
+    QVector<double> orderedFps;
+    orderedFps.reserve(interactionFrameTimesMilliseconds_.size());
+    for (double milliseconds : interactionFrameTimesMilliseconds_) {
+        orderedFps.append(1000.0 / milliseconds);
+    }
+    std::sort(orderedFps.begin(), orderedFps.end());
+    const double boundedPercentile = std::max(0.0, std::min(100.0, percentile));
+    const int nearestRank =
+        std::max(1, static_cast<int>(std::ceil(boundedPercentile * orderedFps.size() / 100.0)));
+    return orderedFps.at(std::min(nearestRank - 1, orderedFps.size() - 1));
+}
+
+double FrameStatistics::interactionOnePercentLowFps() const
+{
+    if (interactionFrameTimesMilliseconds_.isEmpty()) {
+        return 0.0;
+    }
+    QVector<double> orderedFps;
+    orderedFps.reserve(interactionFrameTimesMilliseconds_.size());
+    for (double milliseconds : interactionFrameTimesMilliseconds_) {
+        orderedFps.append(1000.0 / milliseconds);
+    }
+    std::sort(orderedFps.begin(), orderedFps.end());
+    const int count = std::max(1, static_cast<int>(std::ceil(orderedFps.size() * 0.01)));
+    return std::accumulate(orderedFps.cbegin(), orderedFps.cbegin() + count, 0.0) / count;
+}
+
+double FrameStatistics::interactionFrameTimeAverageMilliseconds() const
+{
+    if (interactionFrameTimesMilliseconds_.isEmpty()) {
+        return 0.0;
+    }
+    return std::accumulate(interactionFrameTimesMilliseconds_.cbegin(),
+                           interactionFrameTimesMilliseconds_.cend(), 0.0) /
+           interactionFrameTimesMilliseconds_.size();
+}
+
 double FrameStatistics::interactionFrameTimePercentile(double percentile) const
 {
     if (interactionFrameTimesMilliseconds_.isEmpty() || !std::isfinite(percentile)) {

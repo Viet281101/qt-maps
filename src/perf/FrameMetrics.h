@@ -20,6 +20,11 @@ class FrameMetrics final : public QObject
     Q_PROPERTY(double onePercentLowFps READ onePercentLowFps NOTIFY metricsChanged)
     Q_PROPERTY(bool interactionActive READ interactionActive NOTIFY metricsChanged)
     Q_PROPERTY(double interactionAverageFps READ interactionAverageFps NOTIFY metricsChanged)
+    Q_PROPERTY(double interactionFpsP5 READ interactionFpsP5 NOTIFY metricsChanged)
+    Q_PROPERTY(
+        double interactionOnePercentLowFps READ interactionOnePercentLowFps NOTIFY metricsChanged)
+    Q_PROPERTY(
+        double frameTimeAverageMilliseconds READ frameTimeAverageMilliseconds NOTIFY metricsChanged)
     Q_PROPERTY(double frameTimeP50Milliseconds READ frameTimeP50Milliseconds NOTIFY metricsChanged)
     Q_PROPERTY(double frameTimeP95Milliseconds READ frameTimeP95Milliseconds NOTIFY metricsChanged)
     Q_PROPERTY(double frameTimeP99Milliseconds READ frameTimeP99Milliseconds NOTIFY metricsChanged)
@@ -42,6 +47,9 @@ public:
     double onePercentLowFps() const;
     bool interactionActive() const;
     double interactionAverageFps() const;
+    double interactionFpsP5() const;
+    double interactionOnePercentLowFps() const;
+    double frameTimeAverageMilliseconds() const;
     double frameTimeP50Milliseconds() const;
     double frameTimeP95Milliseconds() const;
     double frameTimeP99Milliseconds() const;

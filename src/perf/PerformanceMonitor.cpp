@@ -1,6 +1,7 @@
 #include "PerformanceMonitor.h"
 
 #include "BenchmarkCsvWriter.h"
+#include "ProcessCsvWriter.h"
 #include "ProcessTreeSampler.h"
 
 #include <QCoreApplication>
@@ -25,8 +26,8 @@ class ProcessSamplerWorker final : public QObject
     Q_OBJECT
 
 public slots:
-    void start(qint64 rootPid, const QString &path, int intervalMilliseconds, int warmupSeconds,
-               const QVariantMap &metadata)
+    void start(qint64 rootPid, const QString &path, int intervalMilliseconds,
+               int pssIntervalMilliseconds, int warmupSeconds, const QVariantMap &metadata)
     {
         stop();
         const QFileInfo outputInfo(path);
@@ -40,20 +41,29 @@ public slots:
             emit error(QStringLiteral("Cannot open benchmark CSV: %1").arg(writerError));
             return;
         }
+        processOutputPath_ = ProcessCsvWriter::sidecarPath(path);
+        if (!processWriter_.open(processOutputPath_, &writerError)) {
+            writer_.close();
+            emit error(QStringLiteral("Cannot open process CSV: %1").arg(writerError));
+            return;
+        }
         rootPid_ = rootPid;
         intervalMilliseconds_ = std::max(100, intervalMilliseconds);
+        pssIntervalMilliseconds_ = std::max(intervalMilliseconds_, pssIntervalMilliseconds);
         warmupMilliseconds_ = std::max(0, warmupSeconds) * 1000;
         metadata_ = metadata;
         QString procError;
-        previous_ = ProcessTreeSampler::readProc(&procError);
+        previous_ = ProcessTreeSampler::readProcForTree(rootPid_, &procError);
         if (!previous_.contains(rootPid_)) {
             writer_.close();
+            processWriter_.close();
             emit error(procError.isEmpty() ? QStringLiteral("QtMaps PID is not readable in /proc")
                                            : procError);
             return;
         }
         elapsed_.start();
         previousSampleMilliseconds_ = 0;
+        lastPssSampleMilliseconds_ = -pssIntervalMilliseconds_;
         warmupSignaled_ = warmupMilliseconds_ == 0;
         timer_ = new QTimer(this);
         timer_->setTimerType(Qt::PreciseTimer);
@@ -75,7 +85,9 @@ public slots:
         }
         const bool wasOpen = writer_.isOpen();
         writer_.close();
+        processWriter_.close();
         previous_.clear();
+        pssCache_.clear();
         if (wasOpen) {
             emit stopped();
         }
@@ -107,19 +119,74 @@ public slots:
 signals:
     void started(const QString &path);
     void stopped();
-    void sampled(quint64 rssBytes, double cpuPercent, int childCount);
+    void sampled(quint64 rssBytes, quint64 pssBytes, double cpuPercent, double cpuMachinePercent,
+                 int childCount);
     void warmupComplete();
     void error(const QString &message);
 
-private slots:
-    void sample()
+public slots:
+    void sample() { takeSample(false); }
+
+    void sampleForced() { takeSample(true); }
+
+private:
+    void takeSample(bool forcePss)
     {
+        QElapsedTimer samplerTimer;
+        samplerTimer.start();
         QString procError;
-        const QHash<qint64, ProcessSnapshot> current = ProcessTreeSampler::readProc(&procError);
+        QHash<qint64, ProcessSnapshot> current =
+            ProcessTreeSampler::readProcForTree(rootPid_, &procError);
         const qint64 nowMilliseconds = elapsed_.elapsed();
         const double intervalSeconds = (nowMilliseconds - previousSampleMilliseconds_) / 1000.0;
+        const QList<qint64> treePids = ProcessTreeSampler::descendantPids(rootPid_, current);
+        QString pssError;
+        if (forcePss || nowMilliseconds - lastPssSampleMilliseconds_ >= pssIntervalMilliseconds_) {
+            int pssFailureCount = 0;
+            QString firstPssFailure;
+            for (qint64 pid : treePids) {
+                quint64 pssBytes = 0;
+                QString readError;
+                if (ProcessTreeSampler::readPssRollup(pid, &pssBytes, &readError)) {
+                    ProcessSnapshot snapshot = current.value(pid);
+                    snapshot.pssBytes = pssBytes;
+                    snapshot.pssAvailable = true;
+                    current.insert(pid, snapshot);
+                    pssCache_.insert(pid, snapshot);
+                } else {
+                    ++pssFailureCount;
+                    if (firstPssFailure.isEmpty()) {
+                        firstPssFailure = QStringLiteral("pid %1: %2").arg(pid).arg(readError);
+                    }
+                    pssCache_.remove(pid);
+                }
+            }
+            lastPssSampleMilliseconds_ = nowMilliseconds;
+            if (pssFailureCount > 0) {
+                pssError = QStringLiteral("%1/%2 smaps_rollup reads failed; first=%3")
+                               .arg(pssFailureCount)
+                               .arg(treePids.size())
+                               .arg(firstPssFailure);
+            }
+        } else {
+            for (qint64 pid : treePids) {
+                if (!pssCache_.contains(pid)) {
+                    continue;
+                }
+                const ProcessSnapshot cached = pssCache_.value(pid);
+                ProcessSnapshot snapshot = current.value(pid);
+                if (snapshot.startTimeTicks == cached.startTimeTicks) {
+                    snapshot.pssBytes = cached.pssBytes;
+                    snapshot.pssAvailable = cached.pssAvailable;
+                    current.insert(pid, snapshot);
+                } else {
+                    pssCache_.remove(pid);
+                }
+            }
+        }
+        const int logicalCpuCount = std::max(1, QThread::idealThreadCount());
         const ProcessTreeSample processSample = ProcessTreeSampler::aggregate(
-            rootPid_, current, previous_, ::sysconf(_SC_CLK_TCK), intervalSeconds);
+            rootPid_, current, previous_, ::sysconf(_SC_CLK_TCK), intervalSeconds, logicalCpuCount);
         previous_ = current;
         previousSampleMilliseconds_ = nowMilliseconds;
 
@@ -128,7 +195,8 @@ private slots:
             stop();
             return;
         }
-        emit sampled(processSample.rssBytes, processSample.cpuPercent, processSample.childCount);
+        emit sampled(processSample.rssBytes, processSample.pssBytes, processSample.cpuPercent,
+                     processSample.cpuPercentAllCores, processSample.childCount);
         if (nowMilliseconds < warmupMilliseconds_) {
             return;
         }
@@ -181,20 +249,35 @@ private slots:
         if (!writer_.writeRow(row, &writerError)) {
             emit error(QStringLiteral("Benchmark CSV write failed: %1").arg(writerError));
             stop();
+            return;
+        }
+        const qint64 pssSampleAgeMilliseconds =
+            std::max<qint64>(0, nowMilliseconds - lastPssSampleMilliseconds_);
+        const double samplerDurationMilliseconds = samplerTimer.nsecsElapsed() / 1000000.0;
+        if (!processWriter_.writeSample(metadata_, processSample, nowMilliseconds,
+                                        pssSampleAgeMilliseconds, samplerDurationMilliseconds,
+                                        pssError, &writerError)) {
+            emit error(QStringLiteral("Process CSV write failed: %1").arg(writerError));
+            stop();
         }
     }
 
 private:
     BenchmarkCsvWriter writer_;
+    ProcessCsvWriter processWriter_;
     QTimer *timer_ = nullptr;
     QElapsedTimer elapsed_;
     QHash<qint64, ProcessSnapshot> previous_;
+    QHash<qint64, ProcessSnapshot> pssCache_;
     QVariantMap metadata_;
     qint64 rootPid_ = 0;
     qint64 previousSampleMilliseconds_ = 0;
-    int intervalMilliseconds_ = 1000;
+    qint64 lastPssSampleMilliseconds_ = 0;
+    int intervalMilliseconds_ = 500;
+    int pssIntervalMilliseconds_ = 2000;
     int warmupMilliseconds_ = 0;
     bool warmupSignaled_ = false;
+    QString processOutputPath_;
     double currentFps_ = 0.0;
     double averageFps_ = 0.0;
     double onePercentLowFps_ = 0.0;
@@ -229,7 +312,9 @@ PerformanceMonitor::~PerformanceMonitor()
 QObject *PerformanceMonitor::frameMetrics() { return &frameMetrics_; }
 bool PerformanceMonitor::recording() const { return recording_; }
 double PerformanceMonitor::totalRssMiB() const { return totalRssMiB_; }
+double PerformanceMonitor::totalPssMiB() const { return totalPssMiB_; }
 double PerformanceMonitor::totalCpuPercent() const { return totalCpuPercent_; }
+double PerformanceMonitor::totalCpuMachinePercent() const { return totalCpuMachinePercent_; }
 int PerformanceMonitor::childCount() const { return childCount_; }
 QString PerformanceMonitor::outputPath() const { return outputPath_; }
 QString PerformanceMonitor::errorMessage() const { return errorMessage_; }
@@ -248,6 +333,10 @@ void PerformanceMonitor::setSamplingInterval(int milliseconds)
 {
     samplingIntervalMilliseconds_ = std::max(100, milliseconds);
 }
+void PerformanceMonitor::setPssSamplingInterval(int milliseconds)
+{
+    pssSamplingIntervalMilliseconds_ = std::max(samplingIntervalMilliseconds_, milliseconds);
+}
 void PerformanceMonitor::setWarmupSeconds(int seconds) { warmupSeconds_ = std::max(0, seconds); }
 
 bool PerformanceMonitor::startBenchmark(const QString &requestedPath)
@@ -260,6 +349,9 @@ bool PerformanceMonitor::startBenchmark(const QString &requestedPath)
     outputPath_ = requestedPath.isEmpty() ? defaultOutputPath() : requestedPath;
     emit outputPathChanged();
     metadata_.insert(QStringLiteral("sampling_interval_ms"), samplingIntervalMilliseconds_);
+    metadata_.insert(QStringLiteral("fast_sampling_interval_ms"), samplingIntervalMilliseconds_);
+    metadata_.insert(QStringLiteral("pss_sampling_interval_ms"), pssSamplingIntervalMilliseconds_);
+    metadata_.insert(QStringLiteral("logical_cpu_count"), std::max(1, QThread::idealThreadCount()));
     metadata_.insert(QStringLiteral("warmup_seconds"), warmupSeconds_);
     frameMetrics_.reset();
     if (!worker_) {
@@ -268,6 +360,9 @@ bool PerformanceMonitor::startBenchmark(const QString &requestedPath)
         connect(&workerThread_, &QThread::finished, worker_, &QObject::deleteLater);
         connect(this, &PerformanceMonitor::requestStart, worker_, &ProcessSamplerWorker::start);
         connect(this, &PerformanceMonitor::requestStop, worker_, &ProcessSamplerWorker::stop);
+        connect(this, &PerformanceMonitor::requestSample, worker_, &ProcessSamplerWorker::sample);
+        connect(this, &PerformanceMonitor::requestForcedSample, worker_,
+                &ProcessSamplerWorker::sampleForced);
         connect(this, &PerformanceMonitor::frameSampleChanged, worker_,
                 &ProcessSamplerWorker::updateFrameMetrics);
         connect(worker_, &ProcessSamplerWorker::started, this, &PerformanceMonitor::handleStarted);
@@ -283,11 +378,20 @@ bool PerformanceMonitor::startBenchmark(const QString &requestedPath)
     recording_ = true;
     emit recordingChanged();
     emit requestStart(QCoreApplication::applicationPid(), outputPath_,
-                      samplingIntervalMilliseconds_, warmupSeconds_, metadata_);
+                      samplingIntervalMilliseconds_, pssSamplingIntervalMilliseconds_,
+                      warmupSeconds_, metadata_);
     return true;
 }
 
 void PerformanceMonitor::stopBenchmark() { emit requestStop(); }
+void PerformanceMonitor::sampleNow(bool forcePss)
+{
+    if (forcePss) {
+        emit requestForcedSample();
+    } else {
+        emit requestSample();
+    }
+}
 void PerformanceMonitor::resetFrameSummary() { frameMetrics_.reset(); }
 void PerformanceMonitor::beginInteractionWindow(int durationMilliseconds)
 {
@@ -309,10 +413,13 @@ void PerformanceMonitor::handleStopped()
     emit recordingChanged();
 }
 
-void PerformanceMonitor::handleSample(quint64 rssBytes, double cpuPercent, int childCount)
+void PerformanceMonitor::handleSample(quint64 rssBytes, quint64 pssBytes, double cpuPercent,
+                                      double cpuMachinePercent, int childCount)
 {
     totalRssMiB_ = rssBytes / 1024.0 / 1024.0;
+    totalPssMiB_ = pssBytes / 1024.0 / 1024.0;
     totalCpuPercent_ = cpuPercent;
+    totalCpuMachinePercent_ = cpuMachinePercent;
     childCount_ = childCount;
     emit processMetricsChanged();
 }

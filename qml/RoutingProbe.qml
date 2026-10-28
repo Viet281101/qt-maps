@@ -133,6 +133,7 @@ Window {
             if (mapReady && supportedMapTypes.length > 0) {
                 activeMapType = supportedMapTypes[0]
                 routeRefreshTimer.restart()
+                benchmarkScenarioController.notifyMapReady()
             }
         }
 
@@ -644,6 +645,15 @@ Window {
         monitor: performanceMonitor
         visible: instrumentationEnabled && performanceOverlayVisible
         z: 20
+    }
+
+    Connections {
+        target: benchmarkScenarioController
+        function onCameraCommand(coordinate, zoomLevel, bearing) {
+            map.center = coordinate
+            map.zoomLevel = zoomLevel
+            map.bearing = bearing
+        }
     }
 
     Connections {
