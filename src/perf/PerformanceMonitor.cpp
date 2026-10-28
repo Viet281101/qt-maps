@@ -262,7 +262,6 @@ private:
         }
     }
 
-public:
 private:
     BenchmarkCsvWriter writer_;
     ProcessCsvWriter processWriter_;
