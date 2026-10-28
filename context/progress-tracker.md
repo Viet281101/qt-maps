@@ -5,7 +5,7 @@ Update this file after every meaningful implementation change. Keep it below the
 ## Current Phase
 
 - Unit 03 was squash-merged through PR #20 as `1358c3c`.
-- Unit 04 was squash-merged through PR #21 as `d4a07bb`. Unit 05 is under review in PR #22 from `feat/05-navigation`. Feature freeze is 2026-11-01, with 2026-11-02 through 2026-11-03 reserved for bug fixes, rehearsal, and reporting.
+- Unit 04 was squash-merged through PR #21 as `d4a07bb`. Unit 05D was squash-merged through PR #22 as `23c1f9e`; Unit 05E/F remain unstarted. Feature freeze is 2026-11-01, with 2026-11-02 through 2026-11-03 reserved for bug fixes, rehearsal, and reporting.
 - The owner approved Qt 5.15.13 plus dynamically linked MapLibre Native Qt v3.0.0 as the application baseline, retaining Qt 5.13.2 for comparison and localhost raster as fallback.
 - Performance schema v3 is complete: interaction-only FPS and frame-time p50/p95/p99 exclude the final settling swap, which is reported separately; legacy CSV fields remain for historical comparison.
 
@@ -20,6 +20,8 @@ Deliver a stable management demo by 2026-11-03: polished map-first Release UI, v
 - The project has a demo-first product definition, architecture, UI conventions, code standards, workflow rules, and dependency-ordered unit specs.
 - GitHub Project #6 is named `QtMaps` and must not be renamed or replaced. The `qt-maps` repository must not be renamed without explicit owner approval and an impact review.
 - PRs must link the canonical issue, milestone, and Project #6 item; their live metadata and fields must be verified after mutation.
+- Repository PR, bug, feature, and engineering-task templates now capture scope,
+  honest capability claims, tracking metadata, and verification evidence.
 - Context files now compact automatically when they exceed 250 lines or 24 KiB, become dominated by history, or duplicate authoritative facts. The pre-compaction completed log is retained in Git commit `0671f99`.
 
 ### Unit 01 — environment and rendering foundation
@@ -174,13 +176,38 @@ Deliver a stable management demo by 2026-11-03: polished map-first Release UI, v
 
 ## In Progress
 
-- Unit 05 D4 is implemented in PR #22 and stopped at the owner review gate. E
-  and F have not started.
+- PR #22 is merged. Repository-structure maintenance is specified but has not
+  started; no maintenance branch, commit, or push exists yet.
+- Unit 06 process-tree benchmark is approved on branch
+  `feat/06-process-tree-benchmark` from `23c1f9e`. Its RAM/CPU/FPS thresholds
+  were locked before measurement in
+  `context/feature-specs/06_process-tree-benchmark.md`.
+- The first Unit 06 increment preserves aggregate `qtmaps-perf-v3` and adds a
+  `qtmaps-process-v1` sidecar with per-process/tree PSS, RSS, threads, roles,
+  PID-start-time identity, dual CPU normalization, 500 ms fast sampling, and
+  2,000 ms PSS sampling. A two-second offscreen smoke produced complete app and
+  tree rows with readable PSS; sampler duration was 25.861-28.291 ms. Release
+  `make test` passes 7/7 CTest executables.
+- The Unit 06 scenario increment adds deterministic startup, idle, pan/zoom,
+  three-pair route, and navigation/re-routing automation. Startup arms on map
+  readiness and ends on the first completed window swap after it. A standard-
+  library runner now produces median [min, max] Markdown/JSON reports, performs
+  a matched external instrumentation-off/on overhead comparison, and returns
+  code 2 after preserving evidence when a locked threshold is not met.
+- Release verification now passes 10/10 CTest executables, including calculation
+  tests, a fixture-route controller test, and an end-to-end CLI startup smoke.
+  The full repeated online/offline matrix completed on 2026-10-28: all ten
+  scenario/mode groups passed their locked thresholds. The matched sampler
+  overhead median is 0.738 machine-CPU percentage points and -1.694 MiB PSS.
+  The independently captured `ps` tree RSS and `/proc/*/smaps_rollup` PSS agree
+  with the nearest sidecar row within 0.004% and 0.019%, respectively.
 
 ## Next Up
 
-1. Owner review of D4 and its verification evidence.
-2. Do not start E or F before the D4 review gate is released.
+1. Review the Unit 06 benchmark result and decide whether to retain its locked
+   baseline thresholds for the management demo.
+2. Use the reproducible `make benchmark` report before material map/graph or
+   rendering changes; report any failure without changing the approved thresholds.
 
 ## Open Questions and Risks
 
@@ -211,6 +238,7 @@ Authoritative benchmark evidence:
 
 - `docs/benchmarks/unit-01b-vector-feasibility.md`
 - `docs/benchmarks/unit-02-performance-results.md`
+- `generated/benchmarks/20261027-233639-complete/report.md` (Unit 06 local run)
 
 Licensing and packaging evidence:
 
@@ -228,3 +256,13 @@ Licensing and packaging evidence:
   diff checks.
 - The full Unit 05 D4/PR #22 behavior evidence and remaining E/F limitation are
   authoritative in `docs/routing/unit-05-navigation.md`.
+- Unit 06 on 2026-10-28: `make test` passed 10/10 CTest executables. The
+  complete Release matrix is in `generated/benchmarks/20261027-233639-complete/`;
+  the independent external scope/memory sample is in
+  `generated/benchmarks/external-crosscheck-20261028/`.
+- Unit 06 follow-up: offline first-frame latency was traced to Qt X11 session
+  manager retrying an abstract ICE socket unavailable in the loopback-only
+  network namespace, not map or Valhalla network access. Benchmark children now
+  omit `SESSION_MANAGER`; offline-first startup median was 721 ms versus 778 ms
+  online-second. Forced completion PSS reads reduced route peak comparison to
+  501.98 MiB offline versus 500.74 MiB online (median, three runs each).

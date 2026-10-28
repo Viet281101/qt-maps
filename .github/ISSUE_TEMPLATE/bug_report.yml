@@ -1,0 +1,96 @@
+name: Bug report
+description: Report reproducible incorrect behavior or a regression
+title: "bug: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Provide enough evidence to reproduce the problem on the QtMaps reference workflow. Do not include credentials, private datasets, or machine secrets.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What is broken, and what user or developer workflow does it affect?
+      placeholder: A concise description of the failure and its impact.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Include the exact command, configuration, data mode, and actions.
+      placeholder: |
+        1. Run `make ...`
+        2. Select ...
+        3. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior and evidence
+      description: Add relevant logs, screenshots, crash output, or measurements.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: build_type
+    attributes:
+      label: Build type
+      options:
+        - Release
+        - Debug
+        - Both
+        - Not known
+    validations:
+      required: true
+
+  - type: dropdown
+    id: data_mode
+    attributes:
+      label: Data or service mode
+      options:
+        - Local real data / service
+        - Recorded fixture or simulation
+        - Diagnostic probe
+        - Not applicable
+        - Not known
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Branch/commit, Qt version, OS, GPU/driver, dataset/package, and network mode when relevant.
+      placeholder: "Commit: ...; Qt: 5.15.13; build: Release; network: offline"
+    validations:
+      required: true
+
+  - type: textarea
+    id: regression
+    attributes:
+      label: Regression information
+      description: Did this work before? If known, provide the last good commit or build.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Submission checks
+      options:
+        - label: I searched existing issues for duplicates.
+          required: true
+        - label: I have clearly distinguished real, simulated, fixture-backed, and unavailable behavior.
+          required: true
