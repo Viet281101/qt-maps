@@ -152,15 +152,17 @@ void BenchmarkScenarioController::handleFrameSwapped()
 
 void BenchmarkScenarioController::handleProcessMetrics()
 {
-    if (!startupSamplePending_ || finished_) {
-        return;
+    if (startupSamplePending_ && !finished_) {
+        startupSamplePending_ = false;
+        emitEvent(QStringLiteral("startup_memory"),
+                  {{QStringLiteral("startup_ms"), firstMapFrameMilliseconds_},
+                   {QStringLiteral("pss_mib"), performanceMonitor_->totalPssMiB()},
+                   {QStringLiteral("rss_mib"), performanceMonitor_->totalRssMiB()}});
+        finish(true, QStringLiteral("first rendered map frame sampled"), false);
     }
-    startupSamplePending_ = false;
-    emitEvent(QStringLiteral("startup_memory"),
-              {{QStringLiteral("startup_ms"), firstMapFrameMilliseconds_},
-               {QStringLiteral("pss_mib"), performanceMonitor_->totalPssMiB()},
-               {QStringLiteral("rss_mib"), performanceMonitor_->totalRssMiB()}});
-    finish(true, QStringLiteral("first rendered map frame sampled"));
+    if (finishSamplePending_ && !finished_) {
+        finalizeFinish();
+    }
 }
 
 void BenchmarkScenarioController::handleBackendReady()
@@ -351,12 +353,28 @@ void BenchmarkScenarioController::startNavigationMeasurement()
     completionTimer_.start(durationSeconds_ * 1000);
 }
 
-void BenchmarkScenarioController::finish(bool success, const QString &reason)
+void BenchmarkScenarioController::finish(bool success, const QString &reason, bool forcePss)
+{
+    if (finished_ || finishSamplePending_) {
+        return;
+    }
+    finishSuccess_ = success;
+    finishReason_ = reason;
+    if (forcePss && performanceMonitor_->recording()) {
+        finishSamplePending_ = true;
+        performanceMonitor_->sampleNow(true);
+        return;
+    }
+    finalizeFinish();
+}
+
+void BenchmarkScenarioController::finalizeFinish()
 {
     if (finished_) {
         return;
     }
     finished_ = true;
+    finishSamplePending_ = false;
     warmupTimer_.stop();
     completionTimer_.stop();
     cameraTimer_.stop();
@@ -364,14 +382,14 @@ void BenchmarkScenarioController::finish(bool success, const QString &reason)
     if (scenario_ == QLatin1String("navigation_replay")) {
         navigationController_->stop();
         if (!rerouteSucceeded_) {
-            success = false;
+            finishSuccess_ = false;
             routeFailureSeen_ = true;
         }
     }
     auto *frames = qobject_cast<perf::FrameMetrics *>(performanceMonitor_->frameMetrics());
     QVariantMap fields;
-    fields.insert(QStringLiteral("success"), success);
-    fields.insert(QStringLiteral("reason"), reason);
+    fields.insert(QStringLiteral("success"), finishSuccess_);
+    fields.insert(QStringLiteral("reason"), finishReason_);
     fields.insert(QStringLiteral("startup_ms"), firstMapFrameMilliseconds_);
     fields.insert(QStringLiteral("pss_mib"), performanceMonitor_->totalPssMiB());
     fields.insert(QStringLiteral("rss_mib"), performanceMonitor_->totalRssMiB());
@@ -386,7 +404,7 @@ void BenchmarkScenarioController::finish(bool success, const QString &reason)
         fields.insert(QStringLiteral("frame_time_p99_ms"), frames->frameTimeP99Milliseconds());
     }
     emitEvent(QStringLiteral("result"), fields);
-    emit completed(success);
+    emit completed(finishSuccess_);
 }
 
 void BenchmarkScenarioController::emitEvent(const QString &eventName,

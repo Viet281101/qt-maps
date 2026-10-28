@@ -125,7 +125,12 @@ signals:
     void error(const QString &message);
 
 public slots:
-    void sample()
+    void sample() { takeSample(false); }
+
+    void sampleForced() { takeSample(true); }
+
+private:
+    void takeSample(bool forcePss)
     {
         QElapsedTimer samplerTimer;
         samplerTimer.start();
@@ -136,7 +141,7 @@ public slots:
         const double intervalSeconds = (nowMilliseconds - previousSampleMilliseconds_) / 1000.0;
         const QList<qint64> treePids = ProcessTreeSampler::descendantPids(rootPid_, current);
         QString pssError;
-        if (nowMilliseconds - lastPssSampleMilliseconds_ >= pssIntervalMilliseconds_) {
+        if (forcePss || nowMilliseconds - lastPssSampleMilliseconds_ >= pssIntervalMilliseconds_) {
             int pssFailureCount = 0;
             QString firstPssFailure;
             for (qint64 pid : treePids) {
@@ -257,6 +262,7 @@ public slots:
         }
     }
 
+public:
 private:
     BenchmarkCsvWriter writer_;
     ProcessCsvWriter processWriter_;
@@ -356,6 +362,8 @@ bool PerformanceMonitor::startBenchmark(const QString &requestedPath)
         connect(this, &PerformanceMonitor::requestStart, worker_, &ProcessSamplerWorker::start);
         connect(this, &PerformanceMonitor::requestStop, worker_, &ProcessSamplerWorker::stop);
         connect(this, &PerformanceMonitor::requestSample, worker_, &ProcessSamplerWorker::sample);
+        connect(this, &PerformanceMonitor::requestForcedSample, worker_,
+                &ProcessSamplerWorker::sampleForced);
         connect(this, &PerformanceMonitor::frameSampleChanged, worker_,
                 &ProcessSamplerWorker::updateFrameMetrics);
         connect(worker_, &ProcessSamplerWorker::started, this, &PerformanceMonitor::handleStarted);
@@ -377,7 +385,14 @@ bool PerformanceMonitor::startBenchmark(const QString &requestedPath)
 }
 
 void PerformanceMonitor::stopBenchmark() { emit requestStop(); }
-void PerformanceMonitor::sampleNow() { emit requestSample(); }
+void PerformanceMonitor::sampleNow(bool forcePss)
+{
+    if (forcePss) {
+        emit requestForcedSample();
+    } else {
+        emit requestSample();
+    }
+}
 void PerformanceMonitor::resetFrameSummary() { frameMetrics_.reset(); }
 void PerformanceMonitor::beginInteractionWindow(int durationMilliseconds)
 {

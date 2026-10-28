@@ -101,6 +101,8 @@ RAM result unavailable rather than silently substituting RSS. If matched
 overhead exceeds a locked threshold, the result remains `FAIL / không đạt`.
 Any later slower PSS interval must be explicit in session metadata and its
 reason recorded; it cannot rewrite the failed evidence or locked threshold.
+The first rendered-frame and scenario-completion checkpoints force one fresh
+PSS read, so their reported RAM is never a cached route-phase value.
 
 ## Repetitions and thresholds
 
@@ -124,6 +126,12 @@ still use only the approved local package and loopback Valhalla service.
 same command and local services inside it. If `unshare -Urn` or `ip` is not
 available, the runner stops with an explicit error and never labels the run
 offline.
+
+The runner disables optional accessibility bridging and removes `SESSION_MANAGER`
+for benchmark child processes only. A loopback-only namespace isolates abstract
+Unix sockets; otherwise Qt's X11 session-manager handshake retries for about one
+second before falling back to a filesystem socket. This is a benchmark harness
+artifact, not a map, routing, or normal offline-launch request.
 
 ## External cross-check
 

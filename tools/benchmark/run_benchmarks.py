@@ -146,6 +146,13 @@ def runtime_environment(root, platform_name=None):
             values.append(existing)
         environment[name] = os.pathsep.join(values)
     environment.setdefault("QSG_RENDER_LOOP", "threaded")
+    # A loopback-only network namespace also isolates abstract AF_UNIX sockets.
+    # Do not let optional desktop accessibility/session-manager handshakes add a
+    # one-second retry to benchmark first-frame timing. These are benchmark-child
+    # settings only and do not affect normal application launches.
+    environment["QT_ACCESSIBILITY"] = "0"
+    environment["NO_AT_BRIDGE"] = "1"
+    environment.pop("SESSION_MANAGER", None)
     if platform_name:
         environment["QT_QPA_PLATFORM"] = platform_name
     return environment

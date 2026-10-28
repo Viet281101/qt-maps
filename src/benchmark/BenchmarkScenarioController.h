@@ -60,7 +60,8 @@ private:
     void requestNextRoute();
     void evaluateRouteRequest();
     void startNavigationMeasurement();
-    void finish(bool success, const QString &reason = QString());
+    void finish(bool success, const QString &reason = QString(), bool forcePss = true);
+    void finalizeFinish();
     void emitEvent(const QString &eventName, const QVariantMap &fields = QVariantMap()) const;
     qint64 elapsedFromLaunchMilliseconds() const;
 
@@ -79,6 +80,8 @@ private:
     bool warmupScheduled_ = false;
     bool measurementStarted_ = false;
     bool finished_ = false;
+    bool finishSamplePending_ = false;
+    bool finishSuccess_ = false;
     bool routeRequestActive_ = false;
     bool routeFailureSeen_ = false;
     bool navigationStarted_ = false;
@@ -86,6 +89,7 @@ private:
     bool rerouteSucceeded_ = false;
     qint64 launchReferenceMilliseconds_ = 0;
     qint64 firstMapFrameMilliseconds_ = -1;
+    QString finishReason_;
     int routeIndex_ = 0;
     int cameraStep_ = 0;
     QVector<QPair<QString, QString>> routePairs_;
