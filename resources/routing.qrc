@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/fixtures/routing">
+        <file alias="hanoi_hoan_kiem_to_ba_dinh.json">routing/hanoi_hoan_kiem_to_ba_dinh.json</file>
+        <file alias="hanoi_hoan_kiem_to_thai_ha.json">routing/hanoi_hoan_kiem_to_thai_ha.json</file>
+    </qresource>
+</RCC>

@@ -129,7 +129,12 @@ target_link_libraries(qtmaps_benchmark PUBLIC
     Qt5::Quick
 )
 
-qt5_add_resources(QTMAPS_RESOURCES resources.qrc)
+qt5_add_resources(QTMAPS_QML_RESOURCES qml/resources.qrc)
+qt5_add_resources(QTMAPS_ROUTING_RESOURCES resources/routing.qrc)
+set(QTMAPS_RESOURCES
+    ${QTMAPS_QML_RESOURCES}
+    ${QTMAPS_ROUTING_RESOURCES}
+)
 
 add_executable(qtmaps
     app/main.cpp

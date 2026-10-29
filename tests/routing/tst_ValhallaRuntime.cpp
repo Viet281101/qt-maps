@@ -372,8 +372,8 @@ private slots:
 
     void clientRequestsVietnameseKilometerRouteAsynchronously()
     {
-        QFile fixture(QStringLiteral(QTMAPS_SOURCE_DIR
-                                     "/tests/fixtures/routing/hanoi_hoan_kiem_to_ba_dinh.json"));
+        QFile fixture(
+            QStringLiteral(QTMAPS_SOURCE_DIR "/resources/routing/hanoi_hoan_kiem_to_ba_dinh.json"));
         QVERIFY(fixture.open(QIODevice::ReadOnly));
         HttpFixtureServer server(fixture.readAll());
         QVERIFY(server.start());
