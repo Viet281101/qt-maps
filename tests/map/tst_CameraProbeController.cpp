@@ -1,9 +1,9 @@
-#include "map/CameraProbeController.h"
+#include "diagnostics/CameraProbeController.h"
 
 #include <QSignalSpy>
 #include <QTest>
 
-using qtmaps::map::CameraProbeController;
+using qtmaps::diagnostics::CameraProbeController;
 
 class CameraProbeControllerTest final : public QObject
 {

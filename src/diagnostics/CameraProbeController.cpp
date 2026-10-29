@@ -1,10 +1,10 @@
-#include "map/CameraProbeController.h"
+#include "diagnostics/CameraProbeController.h"
 
 #include <algorithm>
 #include <cmath>
 
 namespace qtmaps {
-namespace map {
+namespace diagnostics {
 namespace {
 
 struct CameraStep
@@ -67,5 +67,5 @@ void CameraProbeController::selectStep(int index, qreal minimumTilt, qreal maxim
     emit cameraChanged();
 }
 
-} // namespace map
+} // namespace diagnostics
 } // namespace qtmaps

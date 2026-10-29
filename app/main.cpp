@@ -16,11 +16,11 @@
 
 #include "benchmark/BenchmarkScenarioController.h"
 #include "core/ApplicationShutdownCoordinator.h"
-#include "map/CameraProbeController.h"
+#include "diagnostics/CameraProbeController.h"
+#include "diagnostics/SimulatedNavigationController.h"
 #include "map/DirectoryTileSource.h"
 #include "map/MapSourceController.h"
 #include "map/MbTilesTileSource.h"
-#include "map/SimulatedNavigationController.h"
 #include "perf/PerformanceMonitor.h"
 #include "routing/RouteNavigationController.h"
 #include "routing/RoutingController.h"
@@ -164,12 +164,12 @@ int main(int argc, char *argv[])
         probeProvider(QStringLiteral("mapboxgl"));
     }
 
-    qtmaps::map::CameraProbeController cameraProbeController;
+    qtmaps::diagnostics::CameraProbeController cameraProbeController;
     qtmaps::map::MbTilesTileSource vectorTileSource;
     qtmaps::map::DirectoryTileSource diagnosticRasterSource;
     qtmaps::map::MapSourceController mapSourceController(&vectorTileSource,
                                                          &diagnosticRasterSource);
-    qtmaps::map::SimulatedNavigationController navigationController;
+    qtmaps::diagnostics::SimulatedNavigationController navigationController;
     qtmaps::routing::RoutingController routingController;
     qtmaps::routing::RouteNavigationController routeNavigationController;
     qtmaps::core::ApplicationShutdownCoordinator shutdownCoordinator(&routingController);

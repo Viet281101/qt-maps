@@ -30,6 +30,7 @@ No engine or library marked Proposed or Spike required becomes committed merely 
 
 - `app/` — application entry point, startup/shutdown coordination, and top-level dependency wiring.
 - `qml/` — QML screens, overlays, controls, and the theme singleton; no blocking I/O or routing work.
+- `src/diagnostics/` — retained camera and fixed-route probe controllers; never part of the production map library.
 - `src/core/` — shared domain types, configuration, error types, and lifecycle abstractions.
 - `src/map/` — map-engine adapters, layer selection, tile access, and map-facing models.
 - `src/routing/` — routing process client, request/response translation, route models, and polyline decoding.

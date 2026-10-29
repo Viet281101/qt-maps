@@ -1,9 +1,9 @@
 #include <QtTest>
 
+#include "diagnostics/SimulatedNavigationController.h"
 #include "map/MapPackageManifest.h"
 #include "map/MapSourceController.h"
 #include "map/MbTilesTileSource.h"
-#include "map/SimulatedNavigationController.h"
 #include "map/TileSource.h"
 
 #include <QCryptographicHash>
@@ -376,7 +376,7 @@ private slots:
 
     void simulatedNavigationUsesStableHanoiRoute()
     {
-        qtmaps::map::SimulatedNavigationController navigation;
+        qtmaps::diagnostics::SimulatedNavigationController navigation;
         QVERIFY(navigation.routeLengthMeters() >= 4500.0);
         QVERIFY(navigation.routeLengthMeters() <= 6500.0);
         double firstBearing = 0.0;
