@@ -1,197 +1,112 @@
 import QtQuick 2.13
 import QtQuick.Window 2.13
-import QtLocation 5.13
-import QtPositioning 5.13
 import "components"
+import "theme"
 
 Window {
     id: root
-    width: 960
-    height: 640
+    width: 1120
+    height: 700
+    minimumWidth: 900
+    minimumHeight: 580
     visible: true
-    title: qsTr("QtMaps diagnostic raster with performance instrumentation")
+    title: qsTr("QtMaps — Lập tuyến Hà Nội")
     property bool performanceOverlayVisible: instrumentationEnabled
-    property int automationStep: 0
+    property bool panelCollapsed: false
+    readonly property bool endpointSelectionEnabled:
+        !routeNavigationController.active
+        && !(routingController.loading && routeNavigationController.routeAvailable)
+    readonly property string compactSource: routingController.sourceLabel === "Valhalla local"
+                                            ? qsTr("Valhalla") : qsTr("Fixture")
+    readonly property color routeSummaryColor: routingController.loading ? Theme.warning
+                                               : !routingController.routeAvailable ? Theme.error
+                                               : routingController.sourceLabel === "Valhalla local"
+                                                 && routingController.connectionLabel.indexOf("loopback") >= 0
+                                                 ? Theme.success : Theme.warning
 
-    Plugin {
-        id: osmPlugin
-        name: "osm"
-        allowExperimental: true
+    function applyEndpoints() { routePanel.applyEndpoints() }
+    function calculateRequestedRoute() { routePanel.calculateRequestedRoute() }
+    function recenterNavigation() { mapCanvas.recenterNavigation() }
+    function fitRouteWithPanelPadding() { mapCanvas.fitRouteWithPanelPadding() }
 
-        PluginParameter {
-            name: "osm.mapping.custom.host"
-            value: rasterTileBaseUrl
-        }
-        PluginParameter {
-            name: "osm.mapping.providersrepository.disabled"
-            value: true
-        }
-        PluginParameter {
-            name: "osm.mapping.prefetching_style"
-            value: "NoPrefetching"
-        }
-        PluginParameter {
-            name: "osm.useragent"
-            value: "QtMaps-unit01-diagnostic/0.1 (localhost-only)"
-        }
-        PluginParameter {
-            name: "osm.mapping.custom.mapcopyright"
-            value: "Diagnostic fixture generated locally"
-        }
-        PluginParameter {
-            name: "osm.mapping.custom.datacopyright"
-            value: "NOT REAL GEOGRAPHIC MAP DATA"
-        }
+    onClosing: {
+        close.accepted = false
+        root.visible = false
+        shutdownCoordinator.requestQuit()
     }
 
-    Map {
-        id: map
+    MapCanvas {
+        id: mapCanvas
         anchors.fill: parent
-        plugin: osmPlugin
-        center: QtPositioning.coordinate(21.0278, 105.8342)
-        minimumZoomLevel: 10
-        maximumZoomLevel: 14
-        zoomLevel: 12
-        gesture.enabled: true
-        focus: true
-
-        Keys.onPressed: {
-            if (event.key === Qt.Key_F3 && instrumentationEnabled) {
-                performanceOverlayVisible = !performanceOverlayVisible
-                event.accepted = true
-            } else if (event.key === Qt.Key_Left) {
-                performanceMonitor.beginInteractionWindow(450)
-                pan(128, 0)
-                event.accepted = true
-            } else if (event.key === Qt.Key_Right) {
-                performanceMonitor.beginInteractionWindow(450)
-                pan(-128, 0)
-                event.accepted = true
-            } else if (event.key === Qt.Key_Up) {
-                performanceMonitor.beginInteractionWindow(450)
-                pan(0, 128)
-                event.accepted = true
-            } else if (event.key === Qt.Key_Down) {
-                performanceMonitor.beginInteractionWindow(450)
-                pan(0, -128)
-                event.accepted = true
-            } else if (event.key === Qt.Key_Plus || event.key === Qt.Key_Equal) {
-                performanceMonitor.beginInteractionWindow(450)
-                zoomLevel = Math.min(maximumZoomLevel, zoomLevel + 1)
-                event.accepted = true
-            } else if (event.key === Qt.Key_Minus) {
-                performanceMonitor.beginInteractionWindow(450)
-                zoomLevel = Math.max(minimumZoomLevel, zoomLevel - 1)
-                event.accepted = true
-            }
-        }
-
-        function selectCustomMapType() {
-            for (var index = 0; index < supportedMapTypes.length; ++index) {
-                if (supportedMapTypes[index].name === "Custom URL Map") {
-                    activeMapType = supportedMapTypes[index]
-                    center = QtPositioning.coordinate(21.0278, 105.8342)
-                    zoomLevel = 12
-                    console.log("activeMapType=Custom URL Map")
-                    return
-                }
-            }
-            console.warn("Custom URL Map type is unavailable")
-        }
-
-        onMapReadyChanged: {
-            console.log("mapReady=" + mapReady + " error=" + error + " errorString=" + errorString)
-            if (mapReady)
-                selectCustomMapType()
-        }
-        onZoomLevelChanged: console.log("zoomLevel=" + zoomLevel)
+        endpointSelectionEnabled: root.endpointSelectionEnabled
+        panelCollapsed: root.panelCollapsed
+        panelWidth: routePanel.width
+        onTogglePerformanceOverlayRequested:
+            root.performanceOverlayVisible = !root.performanceOverlayVisible
     }
 
-    Timer {
-        interval: 500
-        running: benchmarkAutomation
-        repeat: true
-        onTriggered: {
-            var phase = automationStep % 8
-            if (phase === 0 || phase === 1) {
-                performanceMonitor.beginInteractionWindow(450)
-                map.pan(-64, 0)
-            } else if (phase === 2 || phase === 3) {
-                performanceMonitor.beginInteractionWindow(450)
-                map.pan(64, 0)
-            } else if (phase === 4) {
-                performanceMonitor.beginInteractionWindow(450)
-                map.zoomLevel = Math.min(map.maximumZoomLevel, map.zoomLevel + 1)
-            } else if (phase === 6) {
-                performanceMonitor.beginInteractionWindow(450)
-                map.zoomLevel = Math.max(map.minimumZoomLevel, map.zoomLevel - 1)
-            }
-            automationStep += 1
-        }
-    }
-
-    Rectangle {
-        anchors.left: parent.left
-        anchors.right: parent.right
+    RoutePanel {
+        id: routePanel
+        objectName: "routePanel"
         anchors.top: parent.top
-        height: 40
-        color: "#e6b800"
-
-        Text {
-            anchors.centerIn: parent
-            color: "#111111"
-            font.bold: true
-            text: fallbackReason.length > 0
-                  ? qsTr("DIAGNOSTIC RASTER FALLBACK — %1").arg(fallbackReason)
-                  : qsTr("DIAGNOSTIC XYZ TILES — NOT A REAL GEOGRAPHIC MAP")
-        }
-    }
-
-    Rectangle {
-        anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
-        anchors.bottomMargin: 28
-        width: controlsLabel.implicitWidth + 24
-        height: 32
-        color: "#dd111111"
+        anchors.left: parent.left
+        anchors.margins: Theme.spaceMd
+        visible: !root.panelCollapsed
+        routeSummaryColor: root.routeSummaryColor
+        compactSource: root.compactSource
+        z: 20
+        onRecenterRequested: root.recenterNavigation()
+    }
 
-        Text {
-            id: controlsLabel
-            anchors.centerIn: parent
-            color: "white"
-            text: qsTr("Arrow keys: pan    + / −: zoom")
+    NavigationOverlay {
+        id: navigationOverlay
+        anchors.fill: parent
+        panelCollapsed: root.panelCollapsed
+        panelX: routePanel.x
+        panelWidth: routePanel.width
+        z: 30
+    }
+
+    KeyboardActionButton {
+        id: panelToggle
+        objectName: "panelToggle"
+        x: root.panelCollapsed ? Theme.spaceMd
+                               : routePanel.x + routePanel.width + Theme.spaceSm
+        y: Theme.spaceMd
+        width: 38
+        z: 34
+        text: root.panelCollapsed ? "›" : "‹"
+        normalColor: "#dd1b2530"
+        pressedColor: "#334352"
+        textColor: Theme.textPrimary
+        onTriggered: {
+            root.panelCollapsed = !root.panelCollapsed
+            Qt.callLater(root.fitRouteWithPanelPadding)
         }
     }
 
-    Rectangle {
-        anchors.right: parent.right
-        anchors.top: parent.top
-        anchors.topMargin: 48
-        anchors.rightMargin: 8
-        width: 82
-        height: 28
-        color: "#dd111111"
-        visible: instrumentationEnabled
+    ConnectionStatus {
+        anchors.fill: parent
+        statusColor: root.routeSummaryColor
+        navigationActive: routeNavigationController.active
+        navigationBannerHeight: navigationOverlay.bannerHeight
         z: 20
-
-        Text {
-            anchors.centerIn: parent
-            color: "white"
-            text: qsTr("Perf [F3]")
-        }
-        MouseArea {
-            anchors.fill: parent
-            onClicked: performanceOverlayVisible = !performanceOverlayVisible
-        }
     }
 
     PerformanceOverlay {
         anchors.right: parent.right
         anchors.top: parent.top
-        anchors.topMargin: 84
-        anchors.rightMargin: 8
+        anchors.topMargin: 54
+        anchors.rightMargin: Theme.spaceMd
         monitor: performanceMonitor
-        visible: instrumentationEnabled && performanceOverlayVisible
+        visible: instrumentationEnabled && root.performanceOverlayVisible
         z: 20
+    }
+
+    Component.onCompleted: {
+        if (routingFixtureOnly && !routingController.routeAvailable
+                && !routingController.loading)
+            routingController.calculateFixtureRoute()
     }
 }

@@ -301,11 +301,12 @@ int main(int argc, char *argv[])
         performanceMonitor.startBenchmark(benchmarkOutput);
     }
     const QUrl qmlUrl(
-        unit03Vector && useRoutingDemo           ? QStringLiteral("qrc:/qml/RoutingProbe.qml")
-        : unit03Vector && useNavigationBenchmark ? QStringLiteral("qrc:/qml/NavigationProbe.qml")
-        : useVectorProbe || unit03Vector         ? QStringLiteral("qrc:/qml/MapboxGlProbe.qml")
-        : useBlankProbe                          ? QStringLiteral("qrc:/qml/BlankProbe.qml")
-                                                 : QStringLiteral("qrc:/qml/Main.qml"));
+        unit03Vector && useRoutingDemo ? QStringLiteral("qrc:/qml/Main.qml")
+        : unit03Vector && useNavigationBenchmark
+            ? QStringLiteral("qrc:/qml/probes/NavigationProbe.qml")
+        : useVectorProbe || unit03Vector ? QStringLiteral("qrc:/qml/probes/MapboxGlProbe.qml")
+        : useBlankProbe                  ? QStringLiteral("qrc:/qml/probes/BlankProbe.qml")
+                        : QStringLiteral("qrc:/qml/probes/DiagnosticRasterProbe.qml"));
     engine.load(qmlUrl);
     if (engine.rootObjects().isEmpty()) {
         qCritical() << "Failed to load" << qmlUrl;
