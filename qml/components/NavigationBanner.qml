@@ -94,7 +94,9 @@ Rectangle {
         }
         Text {
             width: parent.width
-            text: root.streetName.length > 0 ? root.streetName : root.primaryText
+            text: root.arrived || root.rerouting
+                  ? root.primaryText
+                  : root.streetName.length > 0 ? root.streetName : root.primaryText
             color: Theme.textPrimary
             font.pixelSize: 18
             font.bold: true
@@ -102,9 +104,11 @@ Rectangle {
         }
         Text {
             width: parent.width
-            text: root.arrived || root.rerouting
-                  ? root.primaryText
-                  : root.nextInstruction.length > 0
+            text: root.arrived
+                  ? qsTr("Bạn đã hoàn thành tuyến")
+                  : root.rerouting
+                    ? qsTr("Giữ nguyên tuyến gần nhất trong lúc tính lại")
+                    : root.nextInstruction.length > 0
                     ? qsTr("Tiếp theo: %1").arg(root.nextInstruction)
                     : root.primaryText
             color: root.rerouting ? Theme.warning : Theme.textSecondary

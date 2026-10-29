@@ -306,6 +306,9 @@ private slots:
         QCOMPARE(banner->property("sourceText").toString(),
                  QStringLiteral("Nguồn: fixture/mô phỏng"));
 
+        banner->setProperty("rerouting", true);
+        QCOMPARE(banner->property("primaryText").toString(), QStringLiteral("Đang tìm đường mới…"));
+        banner->setProperty("rerouting", false);
         banner->setProperty("arrived", true);
         QCOMPARE(banner->property("primaryText").toString(), QStringLiteral("Đã đến nơi"));
         QCOMPARE(banner->property("maneuverDistanceText").toString(), QStringLiteral("0 m"));
