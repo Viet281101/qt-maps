@@ -11,7 +11,7 @@ Window {
     minimumHeight: 580
     visible: true
     title: qsTr("QtMaps — Lập tuyến Hà Nội")
-    property bool performanceOverlayVisible: instrumentationEnabled
+    property bool performanceOverlayVisible: false
     property bool panelCollapsed: false
     readonly property bool endpointSelectionEnabled:
         !routeNavigationController.active
@@ -68,6 +68,14 @@ Window {
         z: 30
     }
 
+    DemoToolsOverlay {
+        anchors.fill: parent
+        navigationActive: navigationOverlay.guidanceVisible
+        panelCollapsed: root.panelCollapsed
+        panelWidth: routePanel.x + routePanel.width
+        z: 22
+    }
+
     KeyboardActionButton {
         id: panelToggle
         objectName: "panelToggle"
@@ -94,13 +102,22 @@ Window {
         z: 20
     }
 
+    Connections {
+        target: routeNavigationController
+        function onStateChanged() {
+            if (routeNavigationController.active)
+                root.panelCollapsed = true
+        }
+    }
+
     PerformanceOverlay {
         anchors.right: parent.right
-        anchors.top: parent.top
-        anchors.topMargin: 54
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 50
         anchors.rightMargin: Theme.spaceMd
         monitor: performanceMonitor
-        visible: instrumentationEnabled && root.performanceOverlayVisible
+        detailed: root.performanceOverlayVisible
+        visible: instrumentationEnabled
         z: 20
     }
 

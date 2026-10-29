@@ -4,12 +4,32 @@ import "../theme"
 Rectangle {
     id: root
     property var monitor
-    width: 224
-    height: content.height + Theme.spaceMd * 2
-    radius: Theme.radiusPanel
+    property bool detailed: false
+    width: detailed ? 282 : compactRow.implicitWidth + Theme.spaceLg * 2
+    height: detailed ? content.height + Theme.spaceMd * 2 : 36
+    radius: detailed ? Theme.radiusPanel : Theme.radiusPill
     color: Theme.surfaceElevated
     border.color: Theme.border
     border.width: 1
+
+    Row {
+        id: compactRow
+        anchors.centerIn: parent
+        visible: !root.detailed
+        spacing: Theme.spaceSm
+        Text {
+            color: Theme.textPrimary
+            font.bold: true
+            text: qsTr("FPS %1").arg(root.monitor
+                                      ? root.monitor.frameMetrics.currentFps.toFixed(0) : "0")
+        }
+        Rectangle { width: 1; height: 16; color: Theme.border }
+        Text {
+            color: Theme.textSecondary
+            text: qsTr("RSS %1 MiB").arg(root.monitor ? root.monitor.totalRssMiB.toFixed(0) : "0")
+        }
+        Text { color: Theme.textSecondary; text: qsTr("F3 chi tiết") }
+    }
 
     Column {
         id: content
@@ -18,6 +38,7 @@ Rectangle {
         anchors.top: parent.top
         anchors.margins: Theme.spaceMd
         spacing: Theme.spaceXs
+        visible: root.detailed
 
         Text {
             color: Theme.textPrimary
@@ -35,7 +56,9 @@ Rectangle {
             text: qsTr("Active avg %1 FPS").arg(monitor ? monitor.frameMetrics.interactionAverageFps.toFixed(1) : "0.0")
         }
         Text {
+            width: parent.width
             color: Theme.textSecondary
+            wrapMode: Text.Wrap
             text: qsTr("Frame ms p50/p95/p99 %1/%2/%3")
                 .arg(monitor ? monitor.frameMetrics.frameTimeP50Milliseconds.toFixed(1) : "0.0")
                 .arg(monitor ? monitor.frameMetrics.frameTimeP95Milliseconds.toFixed(1) : "0.0")
@@ -58,8 +81,8 @@ Rectangle {
         }
         Rectangle {
             width: parent.width
-            height: 30
-            radius: 4
+            height: 36
+            radius: Theme.radiusControl
             color: monitor && monitor.recording ? Theme.error : Theme.accent
 
             Text {

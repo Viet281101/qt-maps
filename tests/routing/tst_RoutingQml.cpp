@@ -302,13 +302,12 @@ private slots:
 
         QCOMPARE(banner->property("primaryText").toString(), QStringLiteral("Rẽ trái"));
         QCOMPARE(banner->property("maneuverDistanceText").toString(), QStringLiteral("850 m"));
-        QCOMPARE(banner->property("remainingText").toString(),
-                 QStringLiteral("Còn 1.5 km • 3 phút"));
+        QCOMPARE(banner->property("remainingText").toString(), QStringLiteral("1,5 km · 3 phút"));
         QCOMPARE(banner->property("sourceText").toString(),
                  QStringLiteral("Nguồn: fixture/mô phỏng"));
 
         banner->setProperty("arrived", true);
-        QCOMPARE(banner->property("primaryText").toString(), QStringLiteral("Đã đến đích"));
+        QCOMPARE(banner->property("primaryText").toString(), QStringLiteral("Đã đến nơi"));
         QCOMPARE(banner->property("maneuverDistanceText").toString(), QStringLiteral("0 m"));
     }
 
@@ -318,10 +317,11 @@ private slots:
         QVERIFY(file.open(QIODevice::ReadOnly));
         const QByteArray qml = file.readAll();
         QVERIFY(qml.contains("KeyNavigation.tab: destinationField"));
-        QVERIFY(qml.contains("KeyNavigation.tab: applyButton"));
+        QVERIFY(qml.contains("KeyNavigation.tab: swapButton"));
+        QVERIFY(qml.contains("KeyNavigation.tab: clearButton"));
         QVERIFY(qml.contains("KeyNavigation.tab: routeButton"));
         QVERIFY(qml.contains("KeyNavigation.tab: startNavigationButton"));
-        QVERIFY(qml.contains("KeyNavigation.backtab: routeButton"));
+        QVERIFY(qml.contains("KeyNavigation.backtab: clearButton"));
     }
 
     void productShellKeepsRouteClearOfPanelAndExposesUiState()
@@ -329,18 +329,21 @@ private slots:
         QFile mainFile(QStringLiteral(":/qml/Main.qml"));
         QFile mapFile(QStringLiteral(":/qml/components/MapCanvas.qml"));
         QFile navigationFile(QStringLiteral(":/qml/components/NavigationOverlay.qml"));
+        QFile bannerFile(QStringLiteral(":/qml/components/NavigationBanner.qml"));
         QFile panelFile(QStringLiteral(":/qml/components/RoutePanel.qml"));
         QVERIFY(mainFile.open(QIODevice::ReadOnly));
         QVERIFY(mapFile.open(QIODevice::ReadOnly));
         QVERIFY(navigationFile.open(QIODevice::ReadOnly));
+        QVERIFY(bannerFile.open(QIODevice::ReadOnly));
         QVERIFY(panelFile.open(QIODevice::ReadOnly));
         const QByteArray mainQml = mainFile.readAll();
         const QByteArray mapQml = mapFile.readAll();
         const QByteArray navigationQml = navigationFile.readAll();
+        const QByteArray bannerQml = bannerFile.readAll();
         const QByteArray panelQml = panelFile.readAll();
         QVERIFY(mapQml.contains("panelWidth + Theme.spaceLg * 2"));
         QVERIFY(mainQml.contains("property bool panelCollapsed"));
-        const QByteArray qml = mainQml + mapQml + navigationQml + panelQml;
+        const QByteArray qml = mainQml + mapQml + navigationQml + bannerQml + panelQml;
         QVERIFY(qml.contains("routingController.streetLabels"));
         QVERIFY(qml.contains("map.zoomLevel >= 15"));
         QVERIFY(qml.contains("routingController.currentManeuverIndex"));
@@ -349,6 +352,11 @@ private slots:
         QVERIFY(qml.contains("text: qsTr(\"Theo vị trí hiện tại\")"));
         QVERIFY(qml.contains("root.recenterNavigation()"));
         QVERIFY(qml.contains("routeNavigationController.simulateDeviation()"));
+        QVERIFY(qml.contains("travelledRoutePath"));
+        QVERIFY(qml.contains("Theme.routeTravelled"));
+        QVERIFY(qml.contains("visible: canvas.travelledRoutePath.length > 1"));
+        QVERIFY(qml.contains("Đang tìm đường mới…"));
+        QVERIFY(qml.contains("text: qsTr(\"Kết thúc\")"));
         QVERIFY(
             qml.contains("routingController.loading && routeNavigationController.routeAvailable"));
         QVERIFY(qml.contains("routeSummaryColor"));
