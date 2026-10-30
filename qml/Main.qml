@@ -97,8 +97,9 @@ Window {
     ConnectionStatus {
         anchors.fill: parent
         statusColor: root.routeSummaryColor
-        navigationActive: routeNavigationController.active
+        navigationActive: navigationOverlay.guidanceVisible
         navigationBannerHeight: navigationOverlay.bannerHeight
+        connectionLabel: routingController.connectionLabel
         z: 20
     }
 
@@ -106,6 +107,14 @@ Window {
         target: routeNavigationController
         function onStateChanged() {
             if (routeNavigationController.active)
+                root.panelCollapsed = true
+        }
+    }
+
+    Connections {
+        target: routingController
+        function onStateChanged() {
+            if (routingController.loading && routingController.routeAvailable)
                 root.panelCollapsed = true
         }
     }

@@ -5,6 +5,11 @@ Rectangle {
     id: root
     property var monitor
     property bool detailed: false
+    readonly property bool processSampleAvailable: monitor && monitor.totalRssMiB > 0
+    readonly property string compactRssText: processSampleAvailable
+                                                   ? qsTr("RSS %1 MiB").arg(
+                                                         monitor.totalRssMiB.toFixed(0))
+                                                   : qsTr("RSS —")
     width: detailed ? 282 : compactRow.implicitWidth + Theme.spaceLg * 2
     height: detailed ? content.height + Theme.spaceMd * 2 : 36
     radius: detailed ? Theme.radiusPanel : Theme.radiusPill
@@ -26,7 +31,7 @@ Rectangle {
         Rectangle { width: 1; height: 16; color: Theme.border }
         Text {
             color: Theme.textSecondary
-            text: qsTr("RSS %1 MiB").arg(root.monitor ? root.monitor.totalRssMiB.toFixed(0) : "0")
+            text: root.compactRssText
         }
         Text { color: Theme.textSecondary; text: qsTr("F3 chi tiết") }
     }
@@ -71,9 +76,11 @@ Rectangle {
         }
         Text {
             color: Theme.textSecondary
-            text: qsTr("CPU %1%   RSS %2 MiB")
-                .arg(monitor ? monitor.totalCpuPercent.toFixed(1) : "0.0")
-                .arg(monitor ? monitor.totalRssMiB.toFixed(1) : "0.0")
+            text: root.processSampleAvailable
+                  ? qsTr("CPU %1%   RSS %2 MiB")
+                        .arg(monitor.totalCpuPercent.toFixed(1))
+                        .arg(monitor.totalRssMiB.toFixed(1))
+                  : qsTr("CPU —   RSS —")
         }
         Text {
             color: Theme.textSecondary

@@ -58,8 +58,11 @@ overlays must not intersect. Demo review also covers 1366x768 and 1920x1080.
 - Origin, destination, current simulated position, and selected search result use distinct semantic marker roles.
 - Camera following and map rotation must have an obvious exit/recenter action.
 - Re-routing must preserve the last valid route until a replacement succeeds or clearly report that no route is available.
+- During re-routing, keep the navigation camera, travelled segment, current-position puck, and last valid route. The destination marker remains part of the route even when camera-follow framing places it outside the viewport.
 - Attribution required by map and imagery licenses remains visible and readable.
 - The performance overlay must be switchable and must avoid obscuring primary navigation information.
+- A performance value that has not been sampled is shown with an em dash; the UI must never present a synthetic zero RSS measurement.
+- The connection pill uses an everyday Vietnamese label while retaining the source identity, for example `Valhalla (cục bộ)`, and stays below the navigation banner at every review viewport.
 
 ## Pending UI Decisions
 

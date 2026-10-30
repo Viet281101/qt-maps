@@ -103,6 +103,7 @@ Rectangle {
             elide: Text.ElideRight
         }
         Text {
+            objectName: "nextInstructionText"
             width: parent.width
             text: root.arrived
                   ? qsTr("Bạn đã hoàn thành tuyến")
@@ -112,7 +113,7 @@ Rectangle {
                     ? qsTr("Tiếp theo: %1").arg(root.nextInstruction)
                     : root.primaryText
             color: root.rerouting ? Theme.warning : Theme.textSecondary
-            font.pixelSize: Theme.fontSizeCaption
+            font.pixelSize: Theme.fontSizeBody
             elide: Text.ElideRight
         }
     }

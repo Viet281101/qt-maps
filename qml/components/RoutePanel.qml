@@ -258,9 +258,12 @@ Rectangle {
 
             KeyboardActionButton {
                 id: startNavigationButton
+                objectName: "startNavigationButton"
                 width: parent.width
                 visible: routingController.routeAvailable
                          && !routeNavigationController.active
+                         && !routingController.loading
+                enabled: visible
                 text: qsTr("Bắt đầu chỉ đường")
                 KeyNavigation.tab: originField
                 KeyNavigation.backtab: routeButton

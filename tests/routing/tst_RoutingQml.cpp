@@ -2,12 +2,15 @@
 
 #include <QColor>
 #include <QFile>
+#include <QFont>
 #include <QQmlComponent>
 #include <QQmlContext>
 #include <QQmlEngine>
 #include <QQuickItem>
 #include <QQuickWindow>
 #include <QSignalSpy>
+
+#include <cmath>
 
 #include "core/ApplicationShutdownCoordinator.h"
 #include "perf/PerformanceMonitor.h"
@@ -18,6 +21,26 @@ using qtmaps::core::ApplicationShutdownCoordinator;
 using qtmaps::perf::PerformanceMonitor;
 using qtmaps::routing::RouteNavigationController;
 using qtmaps::routing::RoutingController;
+
+namespace {
+
+double relativeLuminance(const QColor &color)
+{
+    const auto channel = [](double value) {
+        return value <= 0.04045 ? value / 12.92 : std::pow((value + 0.055) / 1.055, 2.4);
+    };
+    return 0.2126 * channel(color.redF()) + 0.7152 * channel(color.greenF()) +
+           0.0722 * channel(color.blueF());
+}
+
+double contrastRatio(const QColor &first, const QColor &second)
+{
+    const double lighter = std::max(relativeLuminance(first), relativeLuminance(second));
+    const double darker = std::min(relativeLuminance(first), relativeLuminance(second));
+    return (lighter + 0.05) / (darker + 0.05);
+}
+
+} // namespace
 
 class RoutingQmlTest final : public QObject
 {
@@ -261,6 +284,103 @@ private slots:
         QCOMPARE(row->property("selected").toBool(), true);
     }
 
+    void maneuverDirectionSymbolMeetsGraphicsContrast()
+    {
+        QQmlEngine engine;
+        QQmlComponent component(&engine,
+                                QUrl(QStringLiteral("qrc:/qml/components/ManeuverRow.qml")));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> row(component.create());
+        QVERIFY2(row, qPrintable(component.errorString()));
+        row->setProperty("maneuver",
+                         QVariantMap{{QStringLiteral("instruction"), QStringLiteral("Rẽ phải")},
+                                     {QStringLiteral("distanceMeters"), 250.0}});
+        QObject *icon = row->findChild<QObject *>(QStringLiteral("maneuverDirectionIcon"));
+        QObject *symbol = row->findChild<QObject *>(QStringLiteral("maneuverDirectionSymbol"));
+        QVERIFY(icon);
+        QVERIFY(symbol);
+
+        row->setProperty("selected", false);
+        const QColor normalBackground = icon->property("color").value<QColor>();
+        const QColor normalSymbol = symbol->property("color").value<QColor>();
+        QVERIFY(contrastRatio(normalBackground, normalSymbol) >= 3.0);
+
+        row->setProperty("selected", true);
+        const QColor selectedBackground = icon->property("color").value<QColor>();
+        const QColor selectedSymbol = symbol->property("color").value<QColor>();
+        QVERIFY(contrastRatio(selectedBackground, selectedSymbol) >= 3.0);
+    }
+
+    void performanceBadgeDoesNotReportFakeZeroRss()
+    {
+        PerformanceMonitor performance;
+        QQmlEngine engine;
+        QQmlComponent component(&engine,
+                                QUrl(QStringLiteral("qrc:/qml/components/PerformanceOverlay.qml")));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> overlay(component.create());
+        QVERIFY2(overlay, qPrintable(component.errorString()));
+        overlay->setProperty("monitor", QVariant::fromValue<QObject *>(&performance));
+
+        QCOMPARE(overlay->property("processSampleAvailable").toBool(), false);
+        QCOMPARE(overlay->property("compactRssText").toString(), QStringLiteral("RSS —"));
+    }
+
+    void connectionStatusUsesEverydayVietnameseLabels()
+    {
+        QQmlEngine engine;
+        QQmlComponent component(&engine,
+                                QUrl(QStringLiteral("qrc:/qml/components/ConnectionStatus.qml")));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> status(component.create());
+        QVERIFY2(status, qPrintable(component.errorString()));
+
+        status->setProperty("connectionLabel", QStringLiteral("Valhalla local — loopback"));
+        QCOMPARE(status->property("statusText").toString(), QStringLiteral("Valhalla (cục bộ)"));
+        status->setProperty("connectionLabel", QStringLiteral("offline — fixture"));
+        QCOMPARE(status->property("statusText").toString(),
+                 QStringLiteral("Ngoại tuyến · tuyến mô phỏng"));
+    }
+
+    void navigationStartCollapsesPanelAndHidesStartAction()
+    {
+        RoutingController routing;
+        RouteNavigationController navigation;
+        connect(&routing, &RoutingController::routeChanged, &navigation, [&]() {
+            if (routing.routeAvailable())
+                navigation.setRoute(routing.route(), routing.sourceLabel());
+            else
+                navigation.clearRoute();
+        });
+        routing.calculateFixtureRoute();
+
+        ApplicationShutdownCoordinator shutdown(&routing);
+        PerformanceMonitor performance;
+        QQmlEngine engine;
+        engine.rootContext()->setContextProperty(QStringLiteral("routingController"), &routing);
+        engine.rootContext()->setContextProperty(QStringLiteral("routeNavigationController"),
+                                                 &navigation);
+        engine.rootContext()->setContextProperty(QStringLiteral("shutdownCoordinator"), &shutdown);
+        engine.rootContext()->setContextProperty(QStringLiteral("performanceMonitor"),
+                                                 &performance);
+        engine.rootContext()->setContextProperty(QStringLiteral("routingFixtureOnly"), false);
+        engine.rootContext()->setContextProperty(QStringLiteral("instrumentationEnabled"), false);
+        engine.rootContext()->setContextProperty(QStringLiteral("vectorStyleUrl"), QString());
+
+        QQmlComponent component(&engine, QUrl(QStringLiteral("qrc:/qml/Main.qml")));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> root(component.create());
+        QVERIFY2(root, qPrintable(component.errorString()));
+        QObject *startAction = root->findChild<QObject *>(QStringLiteral("startNavigationButton"));
+        QVERIFY(startAction);
+        QCOMPARE(root->property("panelCollapsed").toBool(), false);
+        QTRY_VERIFY(startAction->property("visible").toBool());
+
+        navigation.start();
+        QTRY_VERIFY(root->property("panelCollapsed").toBool());
+        QTRY_VERIFY(!startAction->property("visible").toBool());
+    }
+
     void keyboardActionButtonSupportsTabReturnAndSpace()
     {
         QQmlEngine engine;
@@ -299,6 +419,10 @@ private slots:
         banner->setProperty("distanceToManeuverMeters", 850.0);
         banner->setProperty("remainingDistanceMeters", 1540.0);
         banner->setProperty("remainingDurationSeconds", 121.0);
+        QObject *nextInstruction =
+            banner->findChild<QObject *>(QStringLiteral("nextInstructionText"));
+        QVERIFY(nextInstruction);
+        QVERIFY(nextInstruction->property("font").value<QFont>().pixelSize() >= 13);
 
         QCOMPARE(banner->property("primaryText").toString(), QStringLiteral("Rẽ trái"));
         QCOMPARE(banner->property("maneuverDistanceText").toString(), QStringLiteral("850 m"));
@@ -358,11 +482,15 @@ private slots:
         QVERIFY(qml.contains("travelledRoutePath"));
         QVERIFY(qml.contains("Theme.routeTravelled"));
         QVERIFY(qml.contains("visible: canvas.travelledRoutePath.length > 1"));
+        QVERIFY(qml.contains("Qt.callLater(canvas.settleNavigationState)"));
+        QVERIFY(qml.contains("visible: canvas.guidanceActive"));
         QVERIFY(qml.contains("Đang tìm đường mới…"));
         QVERIFY(qml.contains("text: qsTr(\"Kết thúc\")"));
         QVERIFY(
             qml.contains("routingController.loading && routeNavigationController.routeAvailable"));
         QVERIFY(qml.contains("routeSummaryColor"));
+        QVERIFY(qml.contains("&& !routingController.loading"));
+        QVERIFY(qml.contains("navigationActive: navigationOverlay.guidanceVisible"));
         QVERIFY(qml.contains("shutdownCoordinator.requestQuit()"));
     }
 };

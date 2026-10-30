@@ -29,14 +29,16 @@ Rectangle {
 
     Rectangle {
         id: directionIcon
+        objectName: "maneuverDirectionIcon"
         anchors.left: parent.left
         anchors.verticalCenter: parent.verticalCenter
         anchors.leftMargin: Theme.spaceSm
         width: 36; height: 36; radius: 18
-        color: root.selected ? "#e8f3ff" : Theme.surfaceInput
+        color: root.selected ? "#e8f3ff" : Theme.surfacePressed
         Text {
+            objectName: "maneuverDirectionSymbol"
             anchors.centerIn: parent
-            color: "#12334a"
+            color: root.selected ? "#12334a" : Theme.accent
             font.pixelSize: 22
             font.bold: true
             text: root.directionSymbol(root.maneuver ? root.maneuver.type : 0)

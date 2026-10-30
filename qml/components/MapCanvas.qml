@@ -9,6 +9,9 @@ Item {
     property bool panelCollapsed: false
     property real panelWidth: 330
     property var travelledRoutePath: []
+    readonly property bool guidanceActive: routeNavigationController.active
+                                           || (routingController.loading
+                                               && routingController.routeAvailable)
     signal togglePerformanceOverlayRequested()
 
     function recenterNavigation() {
@@ -44,6 +47,15 @@ Item {
             completedPath.push(routePath[completedIndex])
         completedPath.push(position)
         travelledRoutePath = completedPath
+    }
+
+    function settleNavigationState() {
+        if (guidanceActive)
+            return
+        travelledRoutePath = []
+        map.bearing = 0
+        map.tilt = 0
+        routeRefreshTimer.restart()
     }
 
     function fitRouteWithPanelPadding() {
@@ -177,7 +189,7 @@ Item {
         }
 
         MapQuickItem {
-            visible: routeNavigationController.active
+            visible: canvas.guidanceActive
             coordinate: routeNavigationController.coordinate
             anchorPoint.x: navigationMarker.width / 2
             anchorPoint.y: navigationMarker.height / 2
@@ -256,7 +268,7 @@ Item {
             routeRefreshTimer.restart()
         }
         function onStateChanged() {
-            if (routingController.routeAvailable)
+            if (routingController.routeAvailable && !routingController.loading)
                 routeRefreshTimer.restart()
         }
         function onFocusCoordinateRequested(coordinate, zoomLevel) {
@@ -272,12 +284,9 @@ Item {
             canvas.recenterNavigation()
         }
         function onStateChanged() {
-            if (!routeNavigationController.active) {
-                canvas.travelledRoutePath = []
-                map.bearing = 0
-                map.tilt = 0
-                routeRefreshTimer.restart()
-            }
+            // Deviation emits navigation state before RoutingController enters loading.
+            // Defer the stop decision so re-routing keeps the last route, puck and camera.
+            Qt.callLater(canvas.settleNavigationState)
         }
     }
 
