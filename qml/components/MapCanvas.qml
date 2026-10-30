@@ -8,6 +8,7 @@ Item {
     property bool endpointSelectionEnabled: true
     property bool panelCollapsed: false
     property real panelWidth: 330
+    property string styleUrl: ""
     property var travelledRoutePath: []
     readonly property bool guidanceActive: routeNavigationController.active
                                            || (routingController.loading
@@ -108,8 +109,7 @@ Item {
         id: mapPlugin
         name: "maplibre"
         allowExperimental: true
-        PluginParameter { name: "maplibre.map.styles"; value: vectorStyleUrl }
-        PluginParameter { name: "mapboxgl.mapping.cache.memory"; value: true }
+        PluginParameter { name: "maplibre.map.styles"; value: canvas.styleUrl }
     }
 
     Map {

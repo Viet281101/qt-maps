@@ -17,25 +17,13 @@ constexpr int kRasterMinimumZoom = 12;
 constexpr int kRasterMaximumZoom = 16;
 constexpr int kRasterTileCount = 847;
 
-inline QString mapPackageSchemaVersion()
-{
-    return QStringLiteral("qtmaps-map-package-v1");
-}
+inline QString mapPackageSchemaVersion() { return QStringLiteral("qtmaps-map-package-v1"); }
 
-inline QString styleContractVersion()
-{
-    return QStringLiteral("qtmaps-style-v1");
-}
+inline QString styleContractVersion() { return QStringLiteral("qtmaps-style-v1"); }
 
-inline QString styleRevision()
-{
-    return QStringLiteral("qtmaps-hanoi-v1");
-}
+inline QString styleRevision() { return QStringLiteral("qtmaps-hanoi-v1"); }
 
-inline QString attribution()
-{
-    return QStringLiteral("© OpenStreetMap contributors, ODbL 1.0");
-}
+inline QString attribution() { return QStringLiteral("© OpenStreetMap contributors, ODbL 1.0"); }
 
 } // namespace contract
 } // namespace map

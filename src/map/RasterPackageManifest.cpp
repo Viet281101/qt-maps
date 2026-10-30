@@ -52,8 +52,7 @@ bool reject(QString *errorMessage, const QString &message)
 } // namespace
 
 bool RasterPackageManifest::loadAndValidate(const QString &packagePath,
-                                            RasterPackageManifest *manifest,
-                                            QString *errorMessage)
+                                            RasterPackageManifest *manifest, QString *errorMessage)
 {
     if (!manifest) {
         return reject(errorMessage, QStringLiteral("Raster manifest output pointer is null"));
@@ -73,9 +72,8 @@ bool RasterPackageManifest::loadAndValidate(const QString &packagePath,
     QJsonParseError parseError;
     const QJsonDocument document = QJsonDocument::fromJson(file.readAll(), &parseError);
     if (!document.isObject()) {
-        return reject(errorMessage,
-                      QStringLiteral("Invalid raster package manifest JSON: %1")
-                          .arg(parseError.errorString()));
+        return reject(errorMessage, QStringLiteral("Invalid raster package manifest JSON: %1")
+                                        .arg(parseError.errorString()));
     }
 
     const QJsonObject object = document.object();
@@ -89,8 +87,7 @@ bool RasterPackageManifest::loadAndValidate(const QString &packagePath,
     RasterPackageManifest parsed;
     parsed.packageId = object.value(QStringLiteral("package_id")).toString();
     parsed.vectorDataVersion = vector.value(QStringLiteral("data_version")).toString();
-    parsed.styleContractVersion =
-        vector.value(QStringLiteral("style_contract_version")).toString();
+    parsed.styleContractVersion = vector.value(QStringLiteral("style_contract_version")).toString();
     parsed.styleRevision = vector.value(QStringLiteral("style_revision")).toString();
     parsed.layerSchemaVersion = vector.value(QStringLiteral("layer_schema_version")).toInt(-1);
     parsed.sourcePbfSha256 = pbf.value(QStringLiteral("sha256")).toString();
@@ -119,19 +116,19 @@ bool RasterPackageManifest::loadAndValidate(const QString &packagePath,
         return reject(errorMessage, QStringLiteral("Raster source identity is incomplete"));
     }
     if (bounds.size() != 4 || bounds.at(0).toDouble() != contract::kWest ||
-        bounds.at(1).toDouble() != contract::kSouth ||
-        bounds.at(2).toDouble() != contract::kEast ||
+        bounds.at(1).toDouble() != contract::kSouth || bounds.at(2).toDouble() != contract::kEast ||
         bounds.at(3).toDouble() != contract::kNorth ||
         parsed.minimumZoom != contract::kRasterMinimumZoom ||
         parsed.maximumZoom != contract::kRasterMaximumZoom ||
         parsed.tileCount != contract::kRasterTileCount) {
-        return reject(errorMessage, QStringLiteral("Raster coverage, zoom, or tile count mismatch"));
+        return reject(errorMessage,
+                      QStringLiteral("Raster coverage, zoom, or tile count mismatch"));
     }
     if (object.value(QStringLiteral("attribution")).toString() != contract::attribution()) {
-        return reject(errorMessage, QStringLiteral("Raster attribution is missing or incompatible"));
+        return reject(errorMessage,
+                      QStringLiteral("Raster attribution is missing or incompatible"));
     }
-    if (renderer.value(QStringLiteral("name")).toString() !=
-            QStringLiteral("MapLibre Native Qt") ||
+    if (renderer.value(QStringLiteral("name")).toString() != QStringLiteral("MapLibre Native Qt") ||
         renderer.value(QStringLiteral("version")).toString() != QStringLiteral("3.0.0") ||
         tiles.value(QStringLiteral("format")).toString() != QStringLiteral("png") ||
         tiles.value(QStringLiteral("tile_size")).toInt(-1) != 256 ||

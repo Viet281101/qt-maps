@@ -41,7 +41,11 @@ Item {
         anchors.rightMargin: Theme.spaceMd
         anchors.topMargin: 58
         width: 176
-        text: toolsOverlay.layersOpen ? qsTr("Đóng lớp bản đồ") : qsTr("Lớp: Bản đồ vector")
+        text: toolsOverlay.layersOpen
+              ? qsTr("Đóng lớp bản đồ")
+              : mapSourceController.layerMode === "raster"
+                ? qsTr("Lớp: Raster ngoại tuyến")
+                : qsTr("Lớp: Bản đồ vector")
         normalColor: Theme.surfaceElevated
         pressedColor: Theme.surfacePressed
         textColor: Theme.textPrimary
@@ -67,8 +71,40 @@ Item {
             anchors.margins: Theme.spaceLg
             spacing: Theme.spaceSm
 
-            Text { color: Theme.textPrimary; font.bold: true; text: qsTr("Bản đồ vector · đang dùng") }
-            Text { color: Theme.warning; text: qsTr("Raster offline · chờ duyệt nguồn") }
+            KeyboardActionButton {
+                objectName: "vectorLayerButton"
+                width: parent.width
+                text: mapSourceController.layerMode === "vector"
+                      ? qsTr("✓ Bản đồ vector") : qsTr("Bản đồ vector")
+                enabled: !mapSourceController.loading
+                         && mapSourceController.layerMode !== "vector"
+                onTriggered: mapSourceController.activateVector()
+            }
+            KeyboardActionButton {
+                objectName: "rasterLayerButton"
+                width: parent.width
+                text: mapSourceController.layerMode === "raster"
+                      ? qsTr("✓ Raster ngoại tuyến") : qsTr("Raster ngoại tuyến")
+                enabled: mapSourceController.rasterConfigured
+                         && !mapSourceController.loading
+                         && mapSourceController.layerMode !== "raster"
+                onTriggered: mapSourceController.activateRaster()
+            }
+            Text {
+                width: parent.width
+                color: mapSourceController.layerMode === "error" ? Theme.error
+                                                                  : Theme.textSecondary
+                wrapMode: Text.WordWrap
+                text: mapSourceController.mapStatusText
+            }
+            Text {
+                visible: mapSourceController.layerMode === "raster"
+                width: parent.width
+                color: Theme.warning
+                font.pixelSize: Theme.fontSizeCaption
+                wrapMode: Text.WordWrap
+                text: qsTr("Tối đa z16; khi phóng lớn hơn, độ phân giải thấp hơn.")
+            }
             Text { color: Theme.warning; text: qsTr("Lớp ảnh · chưa có dữ liệu") }
             Text {
                 width: parent.width

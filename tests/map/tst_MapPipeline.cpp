@@ -1,10 +1,12 @@
 #include <QtTest>
 
 #include "diagnostics/SimulatedNavigationController.h"
+#include "map/EncodedTileCache.h"
 #include "map/MapPackageManifest.h"
 #include "map/MapSourceController.h"
 #include "map/MbTilesTileSource.h"
 #include "map/RasterPackageManifest.h"
+#include "map/RasterTileSource.h"
 #include "map/TileSource.h"
 
 #include <QCryptographicHash>
@@ -152,7 +154,32 @@ QString createRasterPackage(QTemporaryDir &temporary)
         return QString();
     }
     const QString databasePath = root + QStringLiteral("/raster.mbtiles");
-    writeFile(databasePath, QByteArrayLiteral("raster-mbtiles-fixture"));
+    const QString connection =
+        QStringLiteral("raster-package-fixture-%1").arg(QUuid::createUuid().toString());
+    {
+        QSqlDatabase database = QSqlDatabase::addDatabase(QStringLiteral("QSQLITE"), connection);
+        database.setDatabaseName(databasePath);
+        if (!database.open()) {
+            return QString();
+        }
+        QSqlQuery query(database);
+        if (!query.exec(QStringLiteral("CREATE TABLE tiles (zoom_level INTEGER, tile_column "
+                                       "INTEGER, tile_row INTEGER, tile_data BLOB)"))) {
+            return QString();
+        }
+        query.prepare(QStringLiteral("INSERT INTO tiles VALUES (?, ?, ?, ?)"));
+        for (int index = 0; index < 847; ++index) {
+            query.addBindValue(index == 0 ? 12 : 16);
+            query.addBindValue(index == 0 ? 3251 : index);
+            query.addBindValue(index == 0 ? 2292 : 0);
+            query.addBindValue(QByteArrayLiteral("png-fixture"));
+            if (!query.exec()) {
+                return QString();
+            }
+        }
+        database.close();
+    }
+    QSqlDatabase::removeDatabase(connection);
 
     QJsonObject vector;
     vector.insert(QStringLiteral("package_schema_version"),
@@ -391,6 +418,93 @@ private slots:
         QVERIFY(
             !qtmaps::map::RasterPackageManifest::loadAndValidate(coverageRoot, &manifest, &error));
         QVERIFY(error.contains(QStringLiteral("coverage")));
+    }
+
+    void encodedRasterCacheNeverExceedsConfiguredLimit()
+    {
+        qtmaps::map::EncodedTileCache cache(10);
+        cache.insert(QStringLiteral("first"), QByteArray(6, 'a'));
+        cache.insert(QStringLiteral("second"), QByteArray(6, 'b'));
+        QVERIFY(cache.currentBytes() <= cache.maximumBytes());
+        QCOMPARE(cache.maximumBytes(), 10);
+        QByteArray value;
+        QVERIFY(!cache.find(QStringLiteral("first"), &value));
+        QVERIFY(cache.find(QStringLiteral("second"), &value));
+        QCOMPARE(value, QByteArray(6, 'b'));
+    }
+
+    void rasterTileSourceStartsAsynchronouslyServesAndStops()
+    {
+        QTemporaryDir temporary;
+        const QString root = createRasterPackage(temporary);
+        QVERIFY(!root.isEmpty());
+        qtmaps::map::RasterTileSource source;
+        QSignalSpy started(&source, &qtmaps::map::RasterTileSource::started);
+        QElapsedTimer elapsed;
+        elapsed.start();
+        source.startAsync(root);
+        QVERIFY(elapsed.elapsed() < 50);
+        QVERIFY(started.wait(5000));
+        QVERIFY(source.running());
+        QCOMPARE(qtmaps::map::RasterTileSource::kCacheMaximumBytes, 64 * 1024 * 1024);
+        const QByteArray style = httpGet(source.baseUrl(), QByteArrayLiteral("/style/style.json"));
+        QVERIFY(style.startsWith(QByteArrayLiteral("HTTP/1.1 200")));
+        QVERIFY(style.contains(QByteArrayLiteral("qtmaps-raster")));
+        QVERIFY(style.contains(QByteArrayLiteral("/tiles/{z}/{x}/{y}.png")));
+        const QByteArray tile =
+            httpGet(source.baseUrl(), QByteArrayLiteral("/tiles/12/3251/1803.png"));
+        QVERIFY(tile.startsWith(QByteArrayLiteral("HTTP/1.1 200")));
+        QVERIFY(tile.endsWith(QByteArrayLiteral("png-fixture")));
+        QSignalSpy stopped(&source, &qtmaps::map::RasterTileSource::stopped);
+        source.stopAsync();
+        QVERIFY(stopped.wait(5000));
+        QVERIFY(!source.running());
+    }
+
+    void controllerSupportsManualAndAutomaticRasterActivation()
+    {
+        QTemporaryDir temporary;
+        const QString root = createRasterPackage(temporary);
+        QVERIFY(!root.isEmpty());
+        FakeTileSource vector;
+        FakeTileSource diagnostic;
+        qtmaps::map::MapSourceController controller(&vector, &diagnostic);
+        controller.setRasterPackagePath(root);
+        QVERIFY(controller.start(QStringLiteral("vector"), QString()));
+        QCOMPARE(controller.layerMode(), QStringLiteral("vector"));
+        QVERIFY(!controller.usingRasterFallback());
+        QVERIFY(!controller.rasterResourcesAllocated());
+
+        controller.activateRaster();
+        QCOMPARE(controller.layerMode(), QStringLiteral("raster-loading"));
+        QVERIFY(controller.rasterResourcesAllocated());
+        QTRY_COMPARE_WITH_TIMEOUT(controller.layerMode(), QStringLiteral("raster"), 5000);
+        QVERIFY(controller.usingRasterFallback());
+        QVERIFY(!controller.automaticFallback());
+        controller.activateVector();
+        QCOMPARE(controller.layerMode(), QStringLiteral("vector"));
+        QVERIFY(!controller.usingRasterFallback());
+        QTRY_VERIFY_WITH_TIMEOUT(!controller.rasterResourcesAllocated(), 5000);
+
+        controller.stop();
+        vector.succeeds = false;
+        controller.setRasterPackagePath(root);
+        QVERIFY(controller.start(QStringLiteral("vector"), QString(), true));
+        QTRY_COMPARE_WITH_TIMEOUT(controller.layerMode(), QStringLiteral("raster"), 5000);
+        QVERIFY(controller.automaticFallback());
+        QVERIFY(controller.mapStatusText().contains(QStringLiteral("tự động")));
+    }
+
+    void invalidRasterFailsWithoutBlockingCaller()
+    {
+        qtmaps::map::RasterTileSource source;
+        QSignalSpy failed(&source, &qtmaps::map::RasterTileSource::failed);
+        QElapsedTimer elapsed;
+        elapsed.start();
+        source.startAsync(QStringLiteral("/definitely/missing/raster-package"));
+        QVERIFY(elapsed.elapsed() < 50);
+        QVERIFY(failed.wait(5000));
+        QVERIFY(source.errorMessage().contains(QStringLiteral("missing")));
     }
 
     void mbtilesLifecycleStartStopRestartAndServe()

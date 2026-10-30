@@ -71,6 +71,8 @@ target_link_libraries(qtmaps_perf PUBLIC Qt5::Core Qt5::Quick)
 add_library(qtmaps_map STATIC
     src/map/DirectoryTileSource.cpp
     src/map/DirectoryTileSource.h
+    src/map/EncodedTileCache.cpp
+    src/map/EncodedTileCache.h
     src/map/MapPackageManifest.cpp
     src/map/MapPackageManifest.h
     src/map/MapPackageContract.h
@@ -80,6 +82,8 @@ add_library(qtmaps_map STATIC
     src/map/MbTilesTileSource.h
     src/map/RasterPackageManifest.cpp
     src/map/RasterPackageManifest.h
+    src/map/RasterTileSource.cpp
+    src/map/RasterTileSource.h
     src/map/TileSource.h
 )
 target_include_directories(qtmaps_map PUBLIC "${CMAKE_SOURCE_DIR}/src")
@@ -248,6 +252,7 @@ if(BUILD_TESTING)
     )
     target_link_libraries(qtmaps_routing_qml_tests PRIVATE
         qtmaps_app_core
+        qtmaps_map
         qtmaps_perf
         qtmaps_routing
         Qt5::Gui

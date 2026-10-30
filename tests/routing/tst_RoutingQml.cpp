@@ -13,6 +13,8 @@
 #include <cmath>
 
 #include "core/ApplicationShutdownCoordinator.h"
+#include "map/MapSourceController.h"
+#include "map/TileSource.h"
 #include "perf/PerformanceMonitor.h"
 #include "routing/RouteNavigationController.h"
 #include "routing/RoutingController.h"
@@ -40,6 +42,23 @@ double contrastRatio(const QColor &first, const QColor &second)
     return (lighter + 0.05) / (darker + 0.05);
 }
 
+class StaticTileSource final : public qtmaps::map::TileSource
+{
+public:
+    bool start(const QString &, quint16 = 0) override
+    {
+        running_ = true;
+        return true;
+    }
+    void stop() override { running_ = false; }
+    bool isRunning() const override { return running_; }
+    QString baseUrl() const override { return QStringLiteral("http://127.0.0.1:9"); }
+    QString errorMessage() const override { return QString(); }
+
+private:
+    bool running_ = false;
+};
+
 } // namespace
 
 class RoutingQmlTest final : public QObject
@@ -53,6 +72,9 @@ private slots:
         RouteNavigationController navigation;
         ApplicationShutdownCoordinator shutdown(&routing);
         PerformanceMonitor performance;
+        StaticTileSource mapTiles;
+        qtmaps::map::MapSourceController mapSource(&mapTiles, nullptr);
+        QVERIFY(mapSource.start(QString(), QString()));
         QQmlEngine engine;
         engine.rootContext()->setContextProperty(QStringLiteral("routingController"), &routing);
         engine.rootContext()->setContextProperty(QStringLiteral("routeNavigationController"),
@@ -60,6 +82,7 @@ private slots:
         engine.rootContext()->setContextProperty(QStringLiteral("shutdownCoordinator"), &shutdown);
         engine.rootContext()->setContextProperty(QStringLiteral("performanceMonitor"),
                                                  &performance);
+        engine.rootContext()->setContextProperty(QStringLiteral("mapSourceController"), &mapSource);
         engine.rootContext()->setContextProperty(QStringLiteral("routingFixtureOnly"), false);
         engine.rootContext()->setContextProperty(QStringLiteral("instrumentationEnabled"), false);
         engine.rootContext()->setContextProperty(QStringLiteral("vectorStyleUrl"), QString());
@@ -104,6 +127,9 @@ private slots:
 
         ApplicationShutdownCoordinator shutdown(&routing);
         PerformanceMonitor performance;
+        StaticTileSource mapTiles;
+        qtmaps::map::MapSourceController mapSource(&mapTiles, nullptr);
+        QVERIFY(mapSource.start(QString(), QString()));
         QQmlEngine engine;
         engine.rootContext()->setContextProperty(QStringLiteral("routingController"), &routing);
         engine.rootContext()->setContextProperty(QStringLiteral("routeNavigationController"),
@@ -111,6 +137,7 @@ private slots:
         engine.rootContext()->setContextProperty(QStringLiteral("shutdownCoordinator"), &shutdown);
         engine.rootContext()->setContextProperty(QStringLiteral("performanceMonitor"),
                                                  &performance);
+        engine.rootContext()->setContextProperty(QStringLiteral("mapSourceController"), &mapSource);
         engine.rootContext()->setContextProperty(QStringLiteral("routingFixtureOnly"), false);
         engine.rootContext()->setContextProperty(QStringLiteral("instrumentationEnabled"), false);
         engine.rootContext()->setContextProperty(QStringLiteral("vectorStyleUrl"), QString());
@@ -169,6 +196,9 @@ private slots:
 
         ApplicationShutdownCoordinator shutdown(&routing);
         PerformanceMonitor performance;
+        StaticTileSource mapTiles;
+        qtmaps::map::MapSourceController mapSource(&mapTiles, nullptr);
+        QVERIFY(mapSource.start(QString(), QString()));
         QQmlEngine engine;
         engine.rootContext()->setContextProperty(QStringLiteral("routingController"), &routing);
         engine.rootContext()->setContextProperty(QStringLiteral("routeNavigationController"),
@@ -176,6 +206,7 @@ private slots:
         engine.rootContext()->setContextProperty(QStringLiteral("shutdownCoordinator"), &shutdown);
         engine.rootContext()->setContextProperty(QStringLiteral("performanceMonitor"),
                                                  &performance);
+        engine.rootContext()->setContextProperty(QStringLiteral("mapSourceController"), &mapSource);
         engine.rootContext()->setContextProperty(QStringLiteral("routingFixtureOnly"), false);
         engine.rootContext()->setContextProperty(QStringLiteral("instrumentationEnabled"), false);
         engine.rootContext()->setContextProperty(QStringLiteral("vectorStyleUrl"), QString());
@@ -234,6 +265,9 @@ private slots:
 
         ApplicationShutdownCoordinator shutdown(&routing);
         PerformanceMonitor performance;
+        StaticTileSource mapTiles;
+        qtmaps::map::MapSourceController mapSource(&mapTiles, nullptr);
+        QVERIFY(mapSource.start(QString(), QString()));
         QQmlEngine engine;
         engine.rootContext()->setContextProperty(QStringLiteral("routingController"), &routing);
         engine.rootContext()->setContextProperty(QStringLiteral("routeNavigationController"),
@@ -241,6 +275,7 @@ private slots:
         engine.rootContext()->setContextProperty(QStringLiteral("shutdownCoordinator"), &shutdown);
         engine.rootContext()->setContextProperty(QStringLiteral("performanceMonitor"),
                                                  &performance);
+        engine.rootContext()->setContextProperty(QStringLiteral("mapSourceController"), &mapSource);
         engine.rootContext()->setContextProperty(QStringLiteral("routingFixtureOnly"), false);
         engine.rootContext()->setContextProperty(QStringLiteral("instrumentationEnabled"), false);
         engine.rootContext()->setContextProperty(QStringLiteral("vectorStyleUrl"), QString());
@@ -356,6 +391,9 @@ private slots:
 
         ApplicationShutdownCoordinator shutdown(&routing);
         PerformanceMonitor performance;
+        StaticTileSource mapTiles;
+        qtmaps::map::MapSourceController mapSource(&mapTiles, nullptr);
+        QVERIFY(mapSource.start(QString(), QString()));
         QQmlEngine engine;
         engine.rootContext()->setContextProperty(QStringLiteral("routingController"), &routing);
         engine.rootContext()->setContextProperty(QStringLiteral("routeNavigationController"),
@@ -363,6 +401,7 @@ private slots:
         engine.rootContext()->setContextProperty(QStringLiteral("shutdownCoordinator"), &shutdown);
         engine.rootContext()->setContextProperty(QStringLiteral("performanceMonitor"),
                                                  &performance);
+        engine.rootContext()->setContextProperty(QStringLiteral("mapSourceController"), &mapSource);
         engine.rootContext()->setContextProperty(QStringLiteral("routingFixtureOnly"), false);
         engine.rootContext()->setContextProperty(QStringLiteral("instrumentationEnabled"), false);
         engine.rootContext()->setContextProperty(QStringLiteral("vectorStyleUrl"), QString());

@@ -79,6 +79,10 @@ int main(int argc, char *argv[])
     parser.addOption({QStringLiteral("map-package"),
                       QStringLiteral("Unit 03 map package directory or current pointer"),
                       QStringLiteral("path"), QStringLiteral("data/packages/current")});
+    parser.addOption(
+        {QStringLiteral("raster-package"),
+         QStringLiteral("Unit 07C offline raster package directory or current pointer"),
+         QStringLiteral("path"), QStringLiteral("data/raster-packages/current")});
     parser.addOption({QStringLiteral("diagnostic-raster-root"),
                       QStringLiteral("Local diagnostic raster fallback directory"),
                       QStringLiteral("path"), QStringLiteral("generated/diagnostic-tiles")});
@@ -169,6 +173,7 @@ int main(int argc, char *argv[])
     qtmaps::map::DirectoryTileSource diagnosticRasterSource;
     qtmaps::map::MapSourceController mapSourceController(&vectorTileSource,
                                                          &diagnosticRasterSource);
+    mapSourceController.setRasterPackagePath(parser.value(QStringLiteral("raster-package")));
     qtmaps::diagnostics::SimulatedNavigationController navigationController;
     qtmaps::routing::RoutingController routingController;
     qtmaps::routing::RouteNavigationController routeNavigationController;
@@ -217,6 +222,8 @@ int main(int argc, char *argv[])
                                              &navigationController);
     engine.rootContext()->setContextProperty(QStringLiteral("routingController"),
                                              &routingController);
+    engine.rootContext()->setContextProperty(QStringLiteral("mapSourceController"),
+                                             &mapSourceController);
     engine.rootContext()->setContextProperty(QStringLiteral("routeNavigationController"),
                                              &routeNavigationController);
     engine.rootContext()->setContextProperty(QStringLiteral("shutdownCoordinator"),
@@ -245,8 +252,8 @@ int main(int argc, char *argv[])
                                              instrumentationEnabled);
     engine.rootContext()->setContextProperty(QStringLiteral("benchmarkAutomation"),
                                              parser.isSet(QStringLiteral("automated-pan-zoom")));
-    const QString vectorStyleUrl = useUnit03LocalMap && !mapSourceController.usingRasterFallback()
-                                       ? mapSourceController.vectorStyleUrl()
+    const QString vectorStyleUrl = useUnit03LocalMap
+                                       ? mapSourceController.activeStyleUrl()
                                        : parser.value(QStringLiteral("vector-style-url"));
     engine.rootContext()->setContextProperty(QStringLiteral("vectorStyleUrl"), vectorStyleUrl);
     engine.rootContext()->setContextProperty(QStringLiteral("rasterTileBaseUrl"),
