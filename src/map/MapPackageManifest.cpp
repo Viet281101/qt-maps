@@ -1,5 +1,7 @@
 #include "MapPackageManifest.h"
 
+#include "MapPackageContract.h"
+
 #include <QCryptographicHash>
 #include <QDir>
 #include <QFile>
@@ -100,6 +102,8 @@ bool MapPackageManifest::loadAndValidate(const QString &packagePath, MapPackageM
     const QJsonObject pipelineConfig = object.value(QStringLiteral("pipeline_config")).toObject();
     const QJsonObject resources = object.value(QStringLiteral("resources")).toObject();
     const QJsonObject layerSchema = object.value(QStringLiteral("layer_schema")).toObject();
+    parsed.styleRevision = resources.value(QStringLiteral("style_revision")).toString();
+    parsed.layerSchemaVersion = layerSchema.value(QStringLiteral("version")).toInt(-1);
     for (const QJsonValue &value : layerSchema.value(QStringLiteral("source_layers")).toArray()) {
         parsed.sourceLayers.append(value.toString());
     }
@@ -115,23 +119,25 @@ bool MapPackageManifest::loadAndValidate(const QString &packagePath, MapPackageM
     const QRegularExpression digestPattern(QStringLiteral("^[0-9a-f]{64}$"));
     const QStringList expectedLayers = {QStringLiteral("building"), QStringLiteral("place"),
                                         QStringLiteral("transportation")};
-    if (parsed.schemaVersion != QStringLiteral("qtmaps-map-package-v1") ||
-        parsed.styleContractVersion != QStringLiteral("qtmaps-style-v1") ||
-        parsed.dataVersion.isEmpty() || parsed.planetilerVersion != QStringLiteral("0.10.2") ||
+    if (parsed.schemaVersion != contract::mapPackageSchemaVersion() ||
+        parsed.styleContractVersion != contract::styleContractVersion() ||
+        parsed.styleRevision != contract::styleRevision() || parsed.dataVersion.isEmpty() ||
+        parsed.planetilerVersion != QStringLiteral("0.10.2") ||
         parsed.planetilerSha256 !=
             QStringLiteral("f310bd0413e2e4512b27f4046d418664e8e1d3bf31603c2a70e23de06c167e4d") ||
         !digestPattern.match(parsed.sourcePbfSha256).hasMatch() ||
-        parsed.attribution != QStringLiteral("© OpenStreetMap contributors, ODbL 1.0") ||
+        parsed.attribution != contract::attribution() ||
         pipelineConfig.value(QStringLiteral("revision")).toString().isEmpty() ||
         !digestPattern.match(pipelineConfig.value(QStringLiteral("sha256")).toString())
              .hasMatch() ||
-        resources.value(QStringLiteral("style_revision")).toString().isEmpty() ||
         resources.value(QStringLiteral("glyph_revision")).toString().isEmpty() ||
         resources.value(QStringLiteral("sprite_revision")).toString().isEmpty() ||
-        layerSchema.value(QStringLiteral("version")).toInt(-1) != 1 ||
-        parsed.sourceLayers != expectedLayers || bounds.size() != 4 || parsed.west != 105.78 ||
-        parsed.south != 20.97 || parsed.east != 105.90 || parsed.north != 21.10 ||
-        parsed.minimumZoom != 12 || parsed.maximumZoom != 15) {
+        parsed.layerSchemaVersion != contract::kLayerSchemaVersion ||
+        parsed.sourceLayers != expectedLayers || bounds.size() != 4 ||
+        parsed.south != contract::kSouth || parsed.east != contract::kEast ||
+        parsed.north != contract::kNorth || parsed.west != contract::kWest ||
+        parsed.minimumZoom != contract::kVectorMinimumZoom ||
+        parsed.maximumZoom != contract::kVectorMaximumZoom) {
         if (errorMessage) {
             *errorMessage =
                 QStringLiteral("Map package manifest metadata is incompatible or incomplete");

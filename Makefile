@@ -24,7 +24,7 @@ QMAKE := $(QT_PREFIX)/bin/qmake
 QTMAPS := $(BUILD_DIR)/qtmaps
 
 .PHONY: help requirements configure build test run run-app benchmark debug-build debug-run debug-gdb check \
-	review format format-check diagnostic-tiles vector-fixture vector-real-style hanoi-package \
+	review format format-check diagnostic-tiles vector-fixture vector-real-style hanoi-package hanoi-raster-package \
 	serve-diagnostic-tiles serve-vector-fixture run-mapboxgl-probe clean clean-old-builds
 
 help:
@@ -48,6 +48,7 @@ help:
 	@echo "  make vector-fixture        Generate the synthetic local MVT/style/glyph/sprite fixture"
 	@echo "  make vector-real-style     Generate local style/glyph/sprite resources for real Planetiler tiles"
 	@echo "  make hanoi-package         Build ignored versioned Hanoi MBTiles package from approved local inputs"
+	@echo "  make hanoi-raster-package  Package locally rendered z12-z16 PNG tiles; requires RASTER_TILES"
 	@echo "  make serve-vector-fixture  Serve the vector fixture on 127.0.0.1:8766"
 	@echo "  make run-mapboxgl-probe    Run probe (vector fixture server must be separate)"
 	@echo "  make clean                 Clean compiled outputs through CMake"
@@ -166,6 +167,11 @@ vector-real-style:
 hanoi-package:
 	"$(PYTHON)" tools/data-pipeline/build_hanoi_package.py \
 		--pbf "$(HANOI_PBF)" --planetiler-jar "$(PLANETILER_JAR)"
+
+hanoi-raster-package:
+	@test -n "$(RASTER_TILES)" || { echo "error: set RASTER_TILES to z/x/y.png root" >&2; exit 1; }
+	"$(PYTHON)" tools/data-pipeline/build_hanoi_raster_package.py \
+		--tiles "$(RASTER_TILES)" --vector-package "$(MAP_PACKAGE)"
 
 serve-vector-fixture: vector-fixture
 	"$(PYTHON)" -m http.server 8766 --bind 127.0.0.1 --directory generated/vector-fixture

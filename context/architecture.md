@@ -14,7 +14,7 @@
 | UI/runtime | Qt 5.15.13, QML, Qt Quick | Committed baseline; Qt 5.13.2 retained for comparison only | Application lifecycle and user interface |
 | Language | C++ with C++14 as the proposed project level | Qt/C++ committed; language level proposed | Native application and service integration |
 | Build system | CMake with Ninja | Committed; Release path validated in accepted unit 01 environment scope | Primary configure/generate/build path; exact commands are recorded in `progress-tracker.md` and `code-standards.md` |
-| Raster map | QtLocation `osm` plugin over localhost | Committed fallback; production data path pending unit 03 | Recovery path when vector startup/package/rendering fails |
+| Raster map | Locally rendered PNG MBTiles over the existing MapLibre/loopback boundary | Committed for Unit 07C | Bounded recovery layer generated from the approved Geofabrik-derived vector package; no public tile service |
 | Vector map | Dynamically linked MapLibre Native Qt v3.0.0 on Qt 5.15.13 | Committed baseline after Unit 01b evidence and owner approval | Local vector rendering, camera behavior, and navigation presentation |
 | Map source data | Approved local Geofabrik Vietnam OSM PBF | Committed for bounded Hanoi Unit 03 package | Input for the local map pipeline |
 | Vector pipeline | Planetiler v0.10.2 to versioned MBTiles package | Committed for Unit 03 | Generate bounded Hanoi vector tiles and manifest |
@@ -47,6 +47,7 @@ These directories describe intended ownership. Application-code directories are 
 ## Storage Model
 
 - **MBTiles**: committed Unit 03 vector-tile container inside ignored `data/packages/hanoi-<yyyymmdd>-v1/`; the package includes a checksummed manifest and style/glyph/sprite resources plus an ignored `current` pointer.
+- **Raster MBTiles**: ignored immutable `data/raster-packages/hanoi-raster-<yyyymmdd>-v1/` packages contain locally rendered PNG tiles plus a checksummed manifest. The manifest binds the raster to the exact map-package schema, style contract/revision, source PBF checksum, bounds, and zoom range; incompatible packages are rejected and regenerated after Unit 07D/#32.
 - **Routing graph**: generated Valhalla graph tiles, versioned by source extract and build configuration outside Git.
 - **Geocoding database**: proposed SQLite database with FTS5 tables generated from selected source data.
 - **Orthography files or tiles**: bounded by the agreed region, zoom range, license, and attribution requirements.
@@ -58,6 +59,7 @@ Large generated datasets, caches, routing graphs, and third-party artifacts must
 ## Services and Process Model
 
 - Unit 03 vector tiles are served by an in-process `TileSource` implementation. Its loopback HTTP server and SQLite connection live on a dedicated worker thread; the interface preserves a future QProcess-backed implementation boundary.
+- Unit 07C keeps vector mode as the default and creates the raster worker, SQLite connection, and bounded 64 MiB encoded-tile LRU only on the first manual raster request or automatic vector-start failure. Returning to vector destroys the raster source and cache. Raster validation and startup run on the raster worker; layer changes recreate the MapLibre map so vector and raster renderer caches do not accumulate. Both modes remain loopback-only and use the same route/navigation overlays.
 - QtMaps owns the lifecycle of any later routing or external tile-server child process through `QProcess`.
 - Unit 04 runs the native `valhalla_service` executable shipped inside the
   ignored, checksum-pinned `pyvalhalla` virtualenv as a direct `QProcess`
@@ -115,6 +117,7 @@ Large generated datasets, caches, routing graphs, and third-party artifacts must
 8. Architecture entries retain their decision status until evidence is recorded and the project owner approves a change.
 9. The application remains on the Qt 5 CMake integration (`find_package(Qt5 ...)`, `CMAKE_AUTOMOC`/`CMAKE_AUTORCC`, `qt5_add_resources`, and `add_executable`). The default minimum is Qt 5.15.13. Qt 6-only APIs still require a separate reviewed migration decision.
 10. QtMaps must not download raster or vector tiles from `tile.openstreetmap.org` or any other public tile server, including small test downloads. Real map tiles must come from the project data pipeline based on an owner-approved Geofabrik PBF, Planetiler configuration, and localhost tile service. Unit 01 may use only clearly labeled, locally generated diagnostic tiles that contain no geographic map data; unit 01b may generate a bounded real-data spike only after its explicit download/tool approval gate.
+11. Raster fallback packages must match the runtime map-package schema and style contract/revision, retain `© OpenStreetMap contributors, ODbL` attribution, and remain outside Git. A mismatch is a visible error, never a silent downgrade.
 
 ## Environment Provisioning Decisions
 

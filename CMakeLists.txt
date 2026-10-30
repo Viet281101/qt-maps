@@ -73,10 +73,13 @@ add_library(qtmaps_map STATIC
     src/map/DirectoryTileSource.h
     src/map/MapPackageManifest.cpp
     src/map/MapPackageManifest.h
+    src/map/MapPackageContract.h
     src/map/MapSourceController.cpp
     src/map/MapSourceController.h
     src/map/MbTilesTileSource.cpp
     src/map/MbTilesTileSource.h
+    src/map/RasterPackageManifest.cpp
+    src/map/RasterPackageManifest.h
     src/map/TileSource.h
 )
 target_include_directories(qtmaps_map PUBLIC "${CMAKE_SOURCE_DIR}/src")
@@ -205,6 +208,9 @@ if(BUILD_TESTING)
         Qt5::Test
     )
     add_test(NAME qtmaps_map_pipeline_tests COMMAND qtmaps_map_pipeline_tests)
+    add_test(NAME qtmaps_raster_package_tool_tests
+        COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_SOURCE_DIR}/tests/map/test_build_hanoi_raster_package.py")
 
     add_executable(qtmaps_routing_tests tests/routing/tst_Routing.cpp)
     target_compile_definitions(qtmaps_routing_tests PRIVATE

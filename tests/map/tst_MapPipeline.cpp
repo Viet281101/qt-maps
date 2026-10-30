@@ -4,6 +4,7 @@
 #include "map/MapPackageManifest.h"
 #include "map/MapSourceController.h"
 #include "map/MbTilesTileSource.h"
+#include "map/RasterPackageManifest.h"
 #include "map/TileSource.h"
 
 #include <QCryptographicHash>
@@ -132,13 +133,60 @@ QString createPackage(QTemporaryDir &temporary)
     pipelineConfig.insert(QStringLiteral("sha256"), QString(64, QLatin1Char('b')));
     manifest.insert(QStringLiteral("pipeline_config"), pipelineConfig);
     QJsonObject resources;
-    resources.insert(QStringLiteral("style_revision"), QStringLiteral("style-test-v1"));
+    resources.insert(QStringLiteral("style_revision"), QStringLiteral("qtmaps-hanoi-v1"));
     resources.insert(QStringLiteral("glyph_revision"), QStringLiteral("glyph-test-v1"));
     resources.insert(QStringLiteral("sprite_revision"), QStringLiteral("sprite-test-v1"));
     manifest.insert(QStringLiteral("resources"), resources);
     manifest.insert(QStringLiteral("attribution"),
                     QStringLiteral("© OpenStreetMap contributors, ODbL 1.0"));
     manifest.insert(QStringLiteral("files"), files);
+    writeFile(root + QStringLiteral("/manifest.json"),
+              QJsonDocument(manifest).toJson(QJsonDocument::Indented));
+    return root;
+}
+
+QString createRasterPackage(QTemporaryDir &temporary)
+{
+    const QString root = temporary.path() + QStringLiteral("/hanoi-raster-20261030-v1");
+    if (!QDir().mkpath(root)) {
+        return QString();
+    }
+    const QString databasePath = root + QStringLiteral("/raster.mbtiles");
+    writeFile(databasePath, QByteArrayLiteral("raster-mbtiles-fixture"));
+
+    QJsonObject vector;
+    vector.insert(QStringLiteral("package_schema_version"),
+                  QStringLiteral("qtmaps-map-package-v1"));
+    vector.insert(QStringLiteral("data_version"), QStringLiteral("hanoi-20261024-v1"));
+    vector.insert(QStringLiteral("manifest_sha256"), QString(64, QLatin1Char('b')));
+    vector.insert(QStringLiteral("style_contract_version"), QStringLiteral("qtmaps-style-v1"));
+    vector.insert(QStringLiteral("style_revision"), QStringLiteral("qtmaps-hanoi-v1"));
+    vector.insert(QStringLiteral("layer_schema_version"), 1);
+    QJsonObject sourcePbf;
+    sourcePbf.insert(QStringLiteral("name"), QStringLiteral("vietnam-latest.osm.pbf"));
+    sourcePbf.insert(QStringLiteral("sha256"), QString(64, QLatin1Char('a')));
+    QJsonObject renderer;
+    renderer.insert(QStringLiteral("name"), QStringLiteral("MapLibre Native Qt"));
+    renderer.insert(QStringLiteral("version"), QStringLiteral("3.0.0"));
+    QJsonObject tiles;
+    tiles.insert(QStringLiteral("path"), QStringLiteral("raster.mbtiles"));
+    tiles.insert(QStringLiteral("format"), QStringLiteral("png"));
+    tiles.insert(QStringLiteral("tile_size"), 256);
+    tiles.insert(QStringLiteral("count"), 847);
+    tiles.insert(QStringLiteral("size_bytes"), QFileInfo(databasePath).size());
+    tiles.insert(QStringLiteral("sha256"), digest(databasePath));
+    QJsonObject manifest;
+    manifest.insert(QStringLiteral("schema_version"), QStringLiteral("qtmaps-raster-package-v1"));
+    manifest.insert(QStringLiteral("package_id"), QStringLiteral("hanoi-raster-20261030-v1"));
+    manifest.insert(QStringLiteral("source_vector_package"), vector);
+    manifest.insert(QStringLiteral("source_pbf"), sourcePbf);
+    manifest.insert(QStringLiteral("bounds"), QJsonArray{105.78, 20.97, 105.90, 21.10});
+    manifest.insert(QStringLiteral("min_zoom"), 12);
+    manifest.insert(QStringLiteral("max_zoom"), 16);
+    manifest.insert(QStringLiteral("renderer"), renderer);
+    manifest.insert(QStringLiteral("tiles"), tiles);
+    manifest.insert(QStringLiteral("attribution"),
+                    QStringLiteral("© OpenStreetMap contributors, ODbL 1.0"));
     writeFile(root + QStringLiteral("/manifest.json"),
               QJsonDocument(manifest).toJson(QJsonDocument::Indented));
     return root;
@@ -295,6 +343,54 @@ private slots:
         QVERIFY(
             !qtmaps::map::MapPackageManifest::loadAndValidate(remoteStyleRoot, &manifest, &error));
         QVERIFY(error.contains(QStringLiteral("Style resource URLs")));
+    }
+
+    void rasterManifestAcceptsBoundPackageAndRejectsContractMismatch()
+    {
+        QTemporaryDir temporary;
+        const QString root = createRasterPackage(temporary);
+        QVERIFY(!root.isEmpty());
+        qtmaps::map::RasterPackageManifest manifest;
+        QString error;
+        QVERIFY2(qtmaps::map::RasterPackageManifest::loadAndValidate(root, &manifest, &error),
+                 qPrintable(error));
+        QCOMPARE(manifest.tileCount, 847);
+        QCOMPARE(manifest.maximumZoom, 16);
+        QCOMPARE(manifest.styleRevision, QStringLiteral("qtmaps-hanoi-v1"));
+
+        QTemporaryDir mismatchTemporary;
+        const QString mismatchRoot = createRasterPackage(mismatchTemporary);
+        mutateManifest(mismatchRoot, [](QJsonObject &object) {
+            QJsonObject vector = object.value(QStringLiteral("source_vector_package")).toObject();
+            vector.insert(QStringLiteral("style_revision"), QStringLiteral("qtmaps-hanoi-v2"));
+            object.insert(QStringLiteral("source_vector_package"), vector);
+        });
+        QVERIFY(
+            !qtmaps::map::RasterPackageManifest::loadAndValidate(mismatchRoot, &manifest, &error));
+        QVERIFY(error.contains(QStringLiteral("style/package")));
+    }
+
+    void rasterManifestRejectsChecksumAndCoverageMismatch()
+    {
+        qtmaps::map::RasterPackageManifest manifest;
+        QString error;
+        QTemporaryDir corruptTemporary;
+        const QString corruptRoot = createRasterPackage(corruptTemporary);
+        QFile corrupt(corruptRoot + QStringLiteral("/raster.mbtiles"));
+        QVERIFY(corrupt.open(QIODevice::Append));
+        corrupt.write("corrupt");
+        corrupt.close();
+        QVERIFY(
+            !qtmaps::map::RasterPackageManifest::loadAndValidate(corruptRoot, &manifest, &error));
+        QVERIFY(error.contains(QStringLiteral("size mismatch")));
+
+        QTemporaryDir coverageTemporary;
+        const QString coverageRoot = createRasterPackage(coverageTemporary);
+        mutateManifest(coverageRoot,
+                       [](QJsonObject &object) { object.insert(QStringLiteral("max_zoom"), 15); });
+        QVERIFY(
+            !qtmaps::map::RasterPackageManifest::loadAndValidate(coverageRoot, &manifest, &error));
+        QVERIFY(error.contains(QStringLiteral("coverage")));
     }
 
     void mbtilesLifecycleStartStopRestartAndServe()
