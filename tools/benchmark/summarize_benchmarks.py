@@ -76,6 +76,13 @@ def read_process_metrics(path):
         for row in totals
         if row.get("pss_available") == "1" and number(row.get("pss_bytes")) is not None
     ]
+    fresh_pss = [
+        row
+        for row in totals
+        if row.get("pss_available") == "1"
+        and number(row.get("pss_bytes")) is not None
+        and number(row.get("pss_sample_age_ms")) == 0
+    ]
     cpu_one = [number(row.get("cpu_percent_one_core_100")) for row in totals]
     cpu_all = [number(row.get("cpu_percent_all_cores_100")) for row in totals]
     sampler = [number(row.get("sampler_duration_ms")) for row in totals]
@@ -102,6 +109,7 @@ def read_process_metrics(path):
         "pss_average_mib": statistics.fmean(complete_pss) if complete_pss else None,
         "pss_peak_mib": max(complete_pss) if complete_pss else None,
         "pss_complete_samples": len(complete_pss),
+        "pss_fresh_samples": len(fresh_pss),
         "process_samples": len(totals),
         "cpu_one_average": statistics.fmean(cpu_one),
         "cpu_one_peak": max(cpu_one),
@@ -161,6 +169,8 @@ def summarize_run(run_file):
         "run_id": run["run_id"],
         "exit_code": run["exit_code"],
         "success": run["exit_code"] == 0 and bool(result.get("success")),
+        "duration_seconds": run.get("duration_seconds"),
+        "warmup_seconds": run.get("warmup_seconds"),
         "metrics": metrics,
         "directory": str(run_file.parent),
     }
@@ -171,9 +181,7 @@ def aggregate_runs(runs):
     for run in runs:
         grouped[(run["scenario"], run["network_mode"])].append(run)
     output = []
-    metric_names = sorted(
-        {name for run in runs for name in run.get("metrics", {}) if name != "pss_complete_samples"}
-    )
+    metric_names = sorted({name for run in runs for name in run.get("metrics", {})})
     for (scenario, network_mode), group_runs in sorted(grouped.items()):
         metrics = {
             name: stats([run["metrics"].get(name) for run in group_runs]) for name in metric_names
@@ -185,6 +193,8 @@ def aggregate_runs(runs):
                 "network_mode": network_mode,
                 "run_count": len(group_runs),
                 "successful_runs": sum(1 for run in group_runs if run["success"]),
+                "duration_seconds": stats([run.get("duration_seconds") for run in group_runs]),
+                "warmup_seconds": stats([run.get("warmup_seconds") for run in group_runs]),
                 "metrics": metrics,
             }
         )
@@ -193,12 +203,19 @@ def aggregate_runs(runs):
 
 def threshold_result(name, metric, operator, threshold):
     if metric is None:
-        return {"name": name, "status": "UNAVAILABLE", "threshold": threshold, "value": None}
+        return {
+            "name": name,
+            "status": "UNAVAILABLE",
+            "operator": operator,
+            "threshold": threshold,
+            "value": None,
+        }
     value = metric["median"]
     passed = value >= threshold if operator == "min" else value <= threshold
     return {
         "name": name,
         "status": "PASS" if passed else "FAIL / không đạt",
+        "operator": operator,
         "threshold": threshold,
         "value": value,
         "observed_min": metric["min"],
@@ -350,6 +367,7 @@ def markdown_report(summary):
         f"{metadata.get('maplibre_version', 'Unknown')} / "
         f"{metadata.get('valhalla_version', 'Unknown')}",
         f"- Git: {metadata.get('git_commit', 'Unknown')}",
+        f"- Code state: {metadata.get('code_label', 'current')}",
         f"- Sampling: {metadata.get('fast_sampling_interval_ms', 'Unknown')} ms fast; "
         f"{metadata.get('pss_sampling_interval_ms', 'Unknown')} ms PSS",
         f"- Data on disk: tiles {metadata.get('tiles_bytes', 0) / MIB:.2f} MiB; "
@@ -360,10 +378,10 @@ def markdown_report(summary):
         "",
         "## Results",
         "",
-        "| Scenario / mode | Runs | FPS avg | FPS p5 | 1% low | Frame avg / p95 ms | "
-        "PSS avg / peak MiB | RSS avg / peak MiB | CPU one-core avg / peak % | "
+        "| Scenario / mode | Duration + warm-up | PSS samples | Sampler fast / PSS | "
+        "FPS avg / p5 / 1% low | Frame p95 ms | Sampler p95 ms | PSS avg / peak MiB | "
         "CPU all-core avg / peak % | Status |",
-        "| --- | ---: | ---: | ---: | ---: | --- | --- | --- | --- | --- | --- |",
+        "| --- | ---: | ---: | ---: | --- | ---: | ---: | --- | --- | --- |",
     ]
     for group in summary["groups"]:
         metrics = group["metrics"]
@@ -373,20 +391,22 @@ def markdown_report(summary):
         status = "FAIL / không đạt" if failed else ("UNAVAILABLE" if unavailable else "PASS")
         lines.append(
             f"| {group['scenario']} / {group['network_mode']} | "
-            f"{group['successful_runs']}/{group['run_count']} | "
-            f"{format_range(metrics.get('fps_average'))} | "
-            f"{format_range(metrics.get('fps_p5'))} | "
+            f"{format_range(group.get('duration_seconds'), 0)} s + "
+            f"{format_range(group.get('warmup_seconds'), 0)} s | "
+            f"{format_range(metrics.get('pss_fresh_samples'), 0)} fresh "
+            f"({format_range(metrics.get('pss_complete_samples'), 0)} rows) | "
+            f"{metadata.get('fast_sampling_interval_ms', 'Unknown')} / "
+            f"{metadata.get('pss_sampling_interval_ms', 'Unknown')} ms | "
+            f"{format_range(metrics.get('fps_average'))} / "
+            f"{format_range(metrics.get('fps_p5'))} / "
             f"{format_range(metrics.get('fps_one_percent_low'))} | "
-            f"{format_range(metrics.get('frame_time_average_ms'))} / "
             f"{format_range(metrics.get('frame_time_p95_ms'))} | "
+            f"{format_range(metrics.get('sampler_duration_p95_ms'))} | "
             f"{format_range(metrics.get('pss_average_mib'))} / "
             f"{format_range(metrics.get('pss_peak_mib'))} | "
-            f"{format_range(metrics.get('rss_average_mib'))} / "
-            f"{format_range(metrics.get('rss_peak_mib'))} | "
-            f"{format_range(metrics.get('cpu_one_average'))} / "
-            f"{format_range(metrics.get('cpu_one_peak'))} | "
             f"{format_range(metrics.get('cpu_all_average'))} / "
-            f"{format_range(metrics.get('cpu_all_peak'))} | {status} |"
+            f"{format_range(metrics.get('cpu_all_peak'))} | "
+            f"{status} ({group['successful_runs']}/{group['run_count']}) |"
         )
 
     lines.extend(["", "## Locked-threshold evaluation", ""])
@@ -395,18 +415,20 @@ def markdown_report(summary):
         lines.append("")
         for check in group["thresholds"]:
             value = "Not measured" if check["value"] is None else f"{check['value']:.3f}"
+            relation = ">=" if check["operator"] == "min" else "<="
             lines.append(
                 f"- **{check['status']}** — {check['name']}: {value}; "
-                f"locked threshold {check['threshold']}."
+                f"locked threshold {relation} {check['threshold']}."
             )
         lines.append("")
 
     lines.extend(["### Sampler overhead", ""])
     for check in summary["sampler_overhead"]["checks"]:
         value = "Not measured" if check["value"] is None else f"{check['value']:.3f}"
+        relation = ">=" if check["operator"] == "min" else "<="
         lines.append(
             f"- **{check['status']}** — {check['name']}: {value}; "
-            f"locked threshold {check['threshold']}."
+            f"locked threshold {relation} {check['threshold']}."
         )
     lines.append("")
 

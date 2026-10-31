@@ -59,7 +59,16 @@ Large generated datasets, caches, routing graphs, and third-party artifacts must
 ## Services and Process Model
 
 - Unit 03 vector tiles are served by an in-process `TileSource` implementation. Its loopback HTTP server and SQLite connection live on a dedicated worker thread; the interface preserves a future QProcess-backed implementation boundary.
-- Unit 07C keeps vector mode as the default and creates the raster worker, SQLite connection, and bounded 64 MiB encoded-tile LRU only on the first manual raster request or automatic vector-start failure. Returning to vector destroys the raster source and cache. Raster validation and startup run on the raster worker; layer changes recreate the MapLibre map so vector and raster renderer caches do not accumulate. Both modes remain loopback-only and use the same route/navigation overlays.
+- Unit 07C keeps vector mode as the default and creates the raster worker, SQLite
+  connection, and raster renderer only on the first manual raster request or
+  automatic vector-start failure. Raster uses Qt Location's OSM custom-host path
+  against loopback, with no prefetch or disk cache: 8 MiB server encoded LRU,
+  8 MiB compressed-memory cache, 16 MiB decoded-texture cache, and 32 MiB
+  reserved for the mandatory visible-tile working set at the supported maximum
+  1920x1080 viewport. Returning to vector destroys the worker and recreates the
+  renderer so vector/raster caches do not accumulate. Driver/GPU allocations are
+  not governed by the Qt cache API and are checked by process PSS/RSS pan/zoom
+  and ten-cycle layer-switch evidence instead of being claimed as byte-capped.
 - QtMaps owns the lifecycle of any later routing or external tile-server child process through `QProcess`.
 - Unit 04 runs the native `valhalla_service` executable shipped inside the
   ignored, checksum-pinned `pyvalhalla` virtualenv as a direct `QProcess`

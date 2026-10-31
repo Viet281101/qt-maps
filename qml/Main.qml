@@ -9,6 +9,8 @@ Window {
     height: 700
     minimumWidth: 900
     minimumHeight: 580
+    maximumWidth: 1920
+    maximumHeight: 1080
     visible: true
     title: qsTr("QtMaps — Lập tuyến Hà Nội")
     property bool performanceOverlayVisible: false

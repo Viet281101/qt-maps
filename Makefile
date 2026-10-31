@@ -28,7 +28,7 @@ QTMAPS := $(BUILD_DIR)/qtmaps
 
 .PHONY: help requirements configure build test run run-app benchmark debug-build debug-run debug-gdb check \
 	review format format-check diagnostic-tiles vector-fixture vector-real-style hanoi-package hanoi-raster-render hanoi-raster-package \
-	serve-diagnostic-tiles serve-vector-fixture run-mapboxgl-probe clean clean-old-builds
+	raster serve-diagnostic-tiles serve-vector-fixture run-mapboxgl-probe clean clean-old-builds
 
 help:
 	@echo "QtMaps development targets"
@@ -53,6 +53,7 @@ help:
 	@echo "  make hanoi-package         Build ignored versioned Hanoi MBTiles package from approved local inputs"
 	@echo "  make hanoi-raster-package  Package locally rendered z12-z16 PNG tiles; requires RASTER_TILES"
 	@echo "  make hanoi-raster-render   Render local z12-z16 PNG tiles from MAP_PACKAGE"
+	@echo "  make raster                Re-render and package raster after style/schema migration"
 	@echo "  make serve-vector-fixture  Serve the vector fixture on 127.0.0.1:8766"
 	@echo "  make run-mapboxgl-probe    Run probe (vector fixture server must be separate)"
 	@echo "  make clean                 Clean compiled outputs through CMake"
@@ -184,6 +185,9 @@ hanoi-raster-render: build
 		"$(BUILD_DIR)/qtmaps_raster_renderer" \
 		--vector-package "$(MAP_PACKAGE)" \
 		--output "$(if $(RASTER_TILES),$(RASTER_TILES),generated/unit-07c/rendered-tiles)"
+
+raster: RASTER_TILES := $(if $(RASTER_TILES),$(RASTER_TILES),generated/unit-07c/rendered-tiles)
+raster: hanoi-raster-render hanoi-raster-package
 
 serve-vector-fixture: vector-fixture
 	"$(PYTHON)" -m http.server 8766 --bind 127.0.0.1 --directory generated/vector-fixture

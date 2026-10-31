@@ -103,7 +103,7 @@ Item {
                 color: Theme.warning
                 font.pixelSize: Theme.fontSizeCaption
                 wrapMode: Text.WordWrap
-                text: qsTr("Tối đa z16; khi phóng lớn hơn, độ phân giải thấp hơn.")
+                text: qsTr("Nguồn chi tiết đến z15; từ z16, độ phân giải thấp hơn.")
             }
             Text { color: Theme.warning; text: qsTr("Lớp ảnh · chưa có dữ liệu") }
             Text {

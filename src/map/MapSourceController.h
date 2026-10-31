@@ -17,6 +17,7 @@ class MapSourceController final : public QObject
     Q_PROPERTY(QString fallbackReason READ fallbackReason NOTIFY stateChanged)
     Q_PROPERTY(bool usingRasterFallback READ usingRasterFallback NOTIFY stateChanged)
     Q_PROPERTY(QString activeStyleUrl READ activeStyleUrl NOTIFY stateChanged)
+    Q_PROPERTY(QString rasterBaseUrl READ rasterBaseUrl NOTIFY stateChanged)
     Q_PROPERTY(QString layerMode READ layerMode NOTIFY stateChanged)
     Q_PROPERTY(QString mapStatusText READ mapStatusText NOTIFY stateChanged)
     Q_PROPERTY(bool loading READ loading NOTIFY stateChanged)

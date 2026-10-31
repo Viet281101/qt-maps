@@ -64,7 +64,7 @@ public slots:
             emit startFinished(result);
             return;
         }
-        cache_.reset(new EncodedTileCache(RasterTileSource::kCacheMaximumBytes));
+        cache_.reset(new EncodedTileCache(RasterTileSource::kEncodedCacheMaximumBytes));
         server_ = new QTcpServer(this);
         connect(server_, &QTcpServer::newConnection, this,
                 &RasterTileSourceWorker::acceptConnections);

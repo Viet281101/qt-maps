@@ -446,7 +446,7 @@ private slots:
         QVERIFY(elapsed.elapsed() < 50);
         QVERIFY(started.wait(5000));
         QVERIFY(source.running());
-        QCOMPARE(qtmaps::map::RasterTileSource::kCacheMaximumBytes, 64 * 1024 * 1024);
+        QCOMPARE(qtmaps::map::RasterTileSource::kEncodedCacheMaximumBytes, 8 * 1024 * 1024);
         const QByteArray style = httpGet(source.baseUrl(), QByteArrayLiteral("/style/style.json"));
         QVERIFY(style.startsWith(QByteArrayLiteral("HTTP/1.1 200")));
         QVERIFY(style.contains(QByteArrayLiteral("qtmaps-raster")));
@@ -475,16 +475,18 @@ private slots:
         QVERIFY(!controller.usingRasterFallback());
         QVERIFY(!controller.rasterResourcesAllocated());
 
-        controller.activateRaster();
-        QCOMPARE(controller.layerMode(), QStringLiteral("raster-loading"));
-        QVERIFY(controller.rasterResourcesAllocated());
-        QTRY_COMPARE_WITH_TIMEOUT(controller.layerMode(), QStringLiteral("raster"), 5000);
-        QVERIFY(controller.usingRasterFallback());
-        QVERIFY(!controller.automaticFallback());
-        controller.activateVector();
-        QCOMPARE(controller.layerMode(), QStringLiteral("vector"));
-        QVERIFY(!controller.usingRasterFallback());
-        QTRY_VERIFY_WITH_TIMEOUT(!controller.rasterResourcesAllocated(), 5000);
+        for (int cycle = 0; cycle < 10; ++cycle) {
+            controller.activateRaster();
+            QCOMPARE(controller.layerMode(), QStringLiteral("raster-loading"));
+            QVERIFY(controller.rasterResourcesAllocated());
+            QTRY_COMPARE_WITH_TIMEOUT(controller.layerMode(), QStringLiteral("raster"), 5000);
+            QVERIFY(controller.usingRasterFallback());
+            QVERIFY(!controller.automaticFallback());
+            controller.activateVector();
+            QCOMPARE(controller.layerMode(), QStringLiteral("vector"));
+            QVERIFY(!controller.usingRasterFallback());
+            QTRY_VERIFY_WITH_TIMEOUT(!controller.rasterResourcesAllocated(), 5000);
+        }
 
         controller.stop();
         vector.succeeds = false;

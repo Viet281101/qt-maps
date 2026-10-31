@@ -37,15 +37,19 @@ does not add memory to the default vector path.
 - Raster startup, manifest hashing, SQLite access, and tile reads run off the UI
   thread. Missing/corrupt data produces a visible recoverable state without
   freezing routing controls or the window.
-- The raster source, worker thread, database, and encoded-tile LRU are created
-  lazily. The LRU maximum is 64 MiB and is destroyed when returning to vector.
-  MapLibre is recreated on layer changes so old vector and raster render caches
-  do not accumulate.
+- The raster source, worker thread, database, and Qt OSM custom-host renderer
+  are created lazily. The 64 MiB CPU-side raster budget includes the server's
+  8 MiB encoded LRU, Qt's 8 MiB compressed cache, 16 MiB decoded-texture cache,
+  and a 32 MiB reserve for mandatory visible tiles at up to 1920x1080. Disk
+  cache and prefetch are disabled. Returning to vector destroys the worker and
+  renderer caches. GPU/driver memory is verified through measured process
+  PSS/RSS rather than misrepresented as controlled by the Qt cache API.
 - UI states distinguish `Bản đồ vector`, `Raster ngoại tuyến`, loading, automatic
   fallback, and failure. Attribution `© OpenStreetMap contributors, ODbL` is
   always visible.
-- Raster stops at z16. At higher camera zoom the renderer overzooms the z16
-  tiles and the UI labels the layer `độ phân giải thấp hơn`.
+- The source vector detail stops at z15. The provisional raster contains z16
+  images rendered from overzoomed z15 content, so the UI shows `độ phân giải
+  thấp hơn` beginning at camera zoom 16 and at every higher zoom.
 
 ## Verification and evidence
 
@@ -67,6 +71,7 @@ does not add memory to the default vector path.
 ## Increment plan
 
 1. Contract and deterministic package tooling.
-2. Lazy asynchronous runtime source with a 64 MiB tested cache.
+2. Lazy asynchronous runtime source with a tested 64 MiB budget spanning
+   compressed and decoded raster caches plus the supported visible working set.
 3. Manual/automatic switching, visible UI states, Release smoke, size/network
    evidence, and separate fallback benchmark.

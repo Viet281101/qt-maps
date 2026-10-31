@@ -529,6 +529,9 @@ private slots:
         QVERIFY(qml.contains("mapSourceController.activateRaster()"));
         QVERIFY(qml.contains("mapSourceController.activateVector()"));
         QVERIFY(qml.contains("độ phân giải thấp hơn"));
+        QVERIFY(qml.contains("objectName: \"rasterOverzoomWarning\""));
+        QVERIFY(qml.contains("map.zoomLevel >= 16"));
+        QVERIFY(qml.contains("osm.mapping.cache.texture.size"));
         QVERIFY(qml.contains("Qt.callLater(canvas.settleNavigationState)"));
         QVERIFY(qml.contains("canvas.guidanceActive"));
         QVERIFY(qml.contains("Đang tìm đường mới…"));

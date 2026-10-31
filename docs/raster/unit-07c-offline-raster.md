@@ -68,9 +68,14 @@ package. The `data/raster-packages/current` symlink selects the local result.
 
 - Vector remains the default. Manual selection and automatic vector-start
   failure are the only raster activation conditions; each is tested.
-- The raster worker, read-only SQLite connection, loopback server, and encoded
-  PNG LRU are created on first activation. The LRU is hard-limited to 64 MiB.
-  Returning to vector stops the worker and releases its database and cache.
+- The raster worker, read-only SQLite connection, loopback server, and Qt OSM
+  custom-host renderer are created on first activation. The 64 MiB CPU-side
+  budget comprises 8 MiB server-encoded PNG LRU, 8 MiB Qt compressed cache,
+  16 MiB decoded-texture cache, and 32 MiB reserved for mandatory visible tiles
+  at the supported maximum 1920×1080 viewport. Disk caching and prefetch are
+  disabled. Returning to vector releases both renderer and server caches.
+  GPU/driver allocations are not directly capped by Qt's cache API and are
+  covered by process PSS/RSS measurements.
 - Manifest hashing, database startup, and tile reads run on the worker thread.
   Missing or incompatible data changes the visible state without blocking the
   UI or silently using another source.
@@ -79,6 +84,10 @@ package. The `data/raster-packages/current` symlink selects the local result.
   markers, travelled segment, or navigation puck during cold-start fallback.
 - Review-only screenshots are under `generated/unit-07c/`; raster data,
   screenshots, and benchmark artifacts are not committed.
+
+The provisional z16 images contain only z15 source detail. At camera zoom 16
+and above, the persistent map badge reads `Nguồn chi tiết đến z15 · z16+ có độ
+phân giải thấp hơn`.
 
 ## Release verification
 

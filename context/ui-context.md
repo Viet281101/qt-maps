@@ -42,6 +42,8 @@ Theme implementation must use Qt 5.15.13-compatible QML and must not depend on Q
 The minimum supported window is 900x580. At that size the route panel scrolls
 independently, navigation automatically collapses it, and the banner/status
 overlays must not intersect. Demo review also covers 1366x768 and 1920x1080.
+The supported maximum is 1920x1080 so the bounded raster visible-texture
+working-set calculation remains valid on the reference configuration.
 
 ## Component Conventions
 

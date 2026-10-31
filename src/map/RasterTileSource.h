@@ -15,7 +15,7 @@ class RasterTileSource final : public QObject
     Q_OBJECT
 
 public:
-    static constexpr int kCacheMaximumBytes = 64 * 1024 * 1024;
+    static constexpr int kEncodedCacheMaximumBytes = 8 * 1024 * 1024;
 
     explicit RasterTileSource(QObject *parent = nullptr);
     ~RasterTileSource() override;

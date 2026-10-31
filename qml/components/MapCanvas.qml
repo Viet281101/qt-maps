@@ -107,18 +107,46 @@ Item {
     }
 
     Plugin {
-        id: mapPlugin
+        id: vectorPlugin
         name: "maplibre"
         allowExperimental: true
         PluginParameter { name: "maplibre.map.styles"; value: canvas.styleUrl }
+    }
+
+    Plugin {
+        id: rasterPlugin
+        name: "osm"
+        allowExperimental: true
+        PluginParameter {
+            name: "osm.mapping.custom.host"
+            value: mapSourceController.rasterBaseUrl + "tiles/"
+        }
+        PluginParameter { name: "osm.mapping.providersrepository.disabled"; value: true }
+        PluginParameter { name: "osm.mapping.prefetching_style"; value: "NoPrefetching" }
+        PluginParameter { name: "osm.mapping.cache.disk.size"; value: 0 }
+        PluginParameter { name: "osm.mapping.cache.memory.cost_strategy"; value: "bytesize" }
+        PluginParameter { name: "osm.mapping.cache.memory.size"; value: 8 * 1024 * 1024 }
+        PluginParameter { name: "osm.mapping.cache.texture.cost_strategy"; value: "bytesize" }
+        PluginParameter { name: "osm.mapping.cache.texture.size"; value: 16 * 1024 * 1024 }
+        PluginParameter { name: "osm.useragent"; value: "QtMaps-local-raster/0.2" }
+        PluginParameter {
+            name: "osm.mapping.custom.mapcopyright"
+            value: "© OpenStreetMap contributors, ODbL"
+        }
+        PluginParameter {
+            name: "osm.mapping.custom.datacopyright"
+            value: "© OpenStreetMap contributors, ODbL"
+        }
     }
 
     Map {
         id: map
         objectName: "routingMap"
         anchors.fill: parent
-        plugin: mapPlugin
+        plugin: canvas.rasterMode ? rasterPlugin : vectorPlugin
         center: QtPositioning.coordinate(21.0278, 105.8342)
+        minimumZoomLevel: canvas.rasterMode ? 12 : 0
+        maximumZoomLevel: canvas.rasterMode ? 18 : 20
         zoomLevel: 14
         gesture.enabled: !routeNavigationController.running
         focus: true
@@ -131,7 +159,16 @@ Item {
             console.log("routing mapReady=" + mapReady + " error=" + error
                         + " errorString=" + errorString)
             if (mapReady && supportedMapTypes.length > 0) {
-                activeMapType = supportedMapTypes[0]
+                if (canvas.rasterMode) {
+                    for (var index = 0; index < supportedMapTypes.length; ++index) {
+                        if (supportedMapTypes[index].name === "Custom URL Map") {
+                            activeMapType = supportedMapTypes[index]
+                            break
+                        }
+                    }
+                } else {
+                    activeMapType = supportedMapTypes[0]
+                }
                 routeRefreshTimer.restart()
                 benchmarkScenarioController.notifyMapReady()
             }
@@ -258,6 +295,30 @@ Item {
                     }
                 }
             }
+        }
+    }
+
+    Rectangle {
+        id: overzoomWarning
+        objectName: "rasterOverzoomWarning"
+        visible: canvas.rasterMode && map.zoomLevel >= 16
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 54
+        width: overzoomText.implicitWidth + Theme.spaceLg * 2
+        height: 34
+        radius: Theme.radiusPill
+        color: Theme.surfaceElevated
+        border.color: Theme.warning
+        z: 18
+
+        Text {
+            id: overzoomText
+            anchors.centerIn: parent
+            color: Theme.warning
+            font.pixelSize: Theme.fontSizeCaption
+            font.bold: true
+            text: qsTr("Nguồn chi tiết đến z15 · z16+ có độ phân giải thấp hơn")
         }
     }
 

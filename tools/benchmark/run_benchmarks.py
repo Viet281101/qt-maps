@@ -99,8 +99,10 @@ def collect_metadata(args, root, output_dir):
     model, physical_cores, logical_cpus = cpu_metadata()
     package = args.map_package.resolve()
     graph = graph_path(args.valhalla_config.resolve())
-    git_commit = command_output(["git", "rev-parse", "HEAD"], root)
-    dirty = subprocess.run(["git", "diff", "--quiet", "HEAD"], cwd=root).returncode != 0
+    git_commit = args.code_revision or command_output(["git", "rev-parse", "HEAD"], root)
+    dirty = False if args.code_revision else (
+        subprocess.run(["git", "diff", "--quiet", "HEAD"], cwd=root).returncode != 0
+    )
     qmake = args.qt_prefix / "bin/qmake"
     qt_version = command_output([str(qmake), "-query", "QT_VERSION"], root)
     valhalla_version = command_output([str(args.valhalla_service), "--version"], root)
@@ -118,6 +120,7 @@ def collect_metadata(args, root, output_dir):
         "maplibre_version": parse_maplibre_version(root),
         "valhalla_version": valhalla_version,
         "git_commit": git_commit + ("+working-tree" if dirty else ""),
+        "code_label": args.code_label,
         "fast_sampling_interval_ms": args.interval,
         "pss_sampling_interval_ms": args.pss_interval,
         "warmup_seconds": args.warmup,
@@ -318,8 +321,6 @@ def overhead_command(args, root, enabled, output_path, total_seconds):
         str(args.app),
         "--map-package",
         str(args.map_package),
-        "--raster-package",
-        str(args.raster_package),
         "--valhalla-service",
         str(args.valhalla_service),
         "--valhalla-config",
@@ -365,7 +366,7 @@ def overhead_command(args, root, enabled, output_path, total_seconds):
     if args.fixture_only:
         command.append("--routing-fixture-only")
     if args.force_raster_fallback:
-        command.append("--force-vector-failure")
+        command.extend(["--raster-package", str(args.raster_package), "--force-vector-failure"])
     return command
 
 
@@ -475,8 +476,6 @@ def run_once(args, root, session_dir, scenario, network_mode, repetition, enviro
         args.dataset_coverage,
         "--map-package",
         str(args.map_package),
-        "--raster-package",
-        str(args.raster_package),
         "--valhalla-service",
         str(args.valhalla_service),
         "--valhalla-config",
@@ -487,7 +486,7 @@ def run_once(args, root, session_dir, scenario, network_mode, repetition, enviro
     if args.fixture_only:
         command.append("--routing-fixture-only")
     if args.force_raster_fallback:
-        command.append("--force-vector-failure")
+        command.extend(["--raster-package", str(args.raster_package), "--force-vector-failure"])
     executed = offline_prefix() + command if network_mode == "offline" else command
     timeout_seconds = args.timeout or max(45, warmup + duration + 30)
     try:
@@ -557,6 +556,8 @@ def parse_args(root):
         "--raster-package", type=Path, default=root / "data/raster-packages/current"
     )
     parser.add_argument("--force-raster-fallback", action="store_true")
+    parser.add_argument("--code-label", default="current")
+    parser.add_argument("--code-revision")
     parser.add_argument(
         "--valhalla-service",
         type=Path,
