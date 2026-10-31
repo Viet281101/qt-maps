@@ -11,13 +11,14 @@ Item {
     property string styleUrl: ""
     property var travelledRoutePath: []
     readonly property bool rasterMode: mapSourceController.layerMode === "raster"
+    readonly property var map: mapLoader.item
     readonly property bool guidanceActive: routeNavigationController.active
                                            || (routingController.loading
                                                && routingController.routeAvailable)
     signal togglePerformanceOverlayRequested()
 
     function recenterNavigation() {
-        if (!routeNavigationController.active
+        if (!map || !routeNavigationController.active
                 || !routeNavigationController.coordinate.isValid)
             return
         map.center = routeNavigationController.coordinate
@@ -52,6 +53,8 @@ Item {
     }
 
     function settleNavigationState() {
+        if (!map)
+            return
         if (guidanceActive)
             return
         travelledRoutePath = []
@@ -61,7 +64,7 @@ Item {
     }
 
     function fitRouteWithPanelPadding() {
-        if (!routingController.routeAvailable || routingController.routePath.length < 2)
+        if (!map || !routingController.routeAvailable || routingController.routePath.length < 2)
             return
         var path = routingController.routePath
         var minLatitude = path[0].latitude
@@ -106,44 +109,52 @@ Item {
         map.center = QtPositioning.coordinate(routeCenterLatitude, mapCenterLongitude)
     }
 
-    Plugin {
-        id: vectorPlugin
-        name: "maplibre"
-        allowExperimental: true
-        PluginParameter { name: "maplibre.map.styles"; value: canvas.styleUrl }
+    Loader {
+        id: mapLoader
+        anchors.fill: parent
+        sourceComponent: routingMapComponent
     }
 
-    Plugin {
-        id: rasterPlugin
-        name: "osm"
-        allowExperimental: true
-        PluginParameter {
-            name: "osm.mapping.custom.host"
-            value: mapSourceController.rasterBaseUrl + "tiles/"
-        }
-        PluginParameter { name: "osm.mapping.providersrepository.disabled"; value: true }
-        PluginParameter { name: "osm.mapping.prefetching_style"; value: "NoPrefetching" }
-        PluginParameter { name: "osm.mapping.cache.disk.size"; value: 0 }
-        PluginParameter { name: "osm.mapping.cache.memory.cost_strategy"; value: "bytesize" }
-        PluginParameter { name: "osm.mapping.cache.memory.size"; value: 8 * 1024 * 1024 }
-        PluginParameter { name: "osm.mapping.cache.texture.cost_strategy"; value: "bytesize" }
-        PluginParameter { name: "osm.mapping.cache.texture.size"; value: 16 * 1024 * 1024 }
-        PluginParameter { name: "osm.useragent"; value: "QtMaps-local-raster/0.2" }
-        PluginParameter {
-            name: "osm.mapping.custom.mapcopyright"
-            value: "© OpenStreetMap contributors, ODbL"
-        }
-        PluginParameter {
-            name: "osm.mapping.custom.datacopyright"
-            value: "© OpenStreetMap contributors, ODbL"
-        }
-    }
+    Component {
+      id: routingMapComponent
 
-    Map {
-        id: map
+      Map {
+        id: mapSurface
+        function refreshRoute() {
+            var currentPath = routingController.routePath
+            routeOutline.path = []
+            routeLine.path = []
+            routeOutline.path = currentPath
+            routeLine.path = currentPath
+            canvas.fitRouteWithPanelPadding()
+        }
         objectName: "routingMap"
         anchors.fill: parent
-        plugin: canvas.rasterMode ? rasterPlugin : vectorPlugin
+        plugin: Plugin {
+            name: canvas.rasterMode ? "osm" : "maplibre"
+            allowExperimental: true
+            PluginParameter { name: "maplibre.map.styles"; value: canvas.styleUrl }
+            PluginParameter {
+                name: "osm.mapping.custom.host"
+                value: mapSourceController.rasterBaseUrl + "tiles/"
+            }
+            PluginParameter { name: "osm.mapping.providersrepository.disabled"; value: true }
+            PluginParameter { name: "osm.mapping.prefetching_style"; value: "NoPrefetching" }
+            PluginParameter { name: "osm.mapping.cache.disk.size"; value: 0 }
+            PluginParameter { name: "osm.mapping.cache.memory.cost_strategy"; value: "bytesize" }
+            PluginParameter { name: "osm.mapping.cache.memory.size"; value: 8 * 1024 * 1024 }
+            PluginParameter { name: "osm.mapping.cache.texture.cost_strategy"; value: "bytesize" }
+            PluginParameter { name: "osm.mapping.cache.texture.size"; value: 16 * 1024 * 1024 }
+            PluginParameter { name: "osm.useragent"; value: "QtMaps-local-raster/0.2" }
+            PluginParameter {
+                name: "osm.mapping.custom.mapcopyright"
+                value: "© OpenStreetMap contributors, ODbL"
+            }
+            PluginParameter {
+                name: "osm.mapping.custom.datacopyright"
+                value: "© OpenStreetMap contributors, ODbL"
+            }
+        }
         center: QtPositioning.coordinate(21.0278, 105.8342)
         minimumZoomLevel: canvas.rasterMode ? 12 : 0
         maximumZoomLevel: canvas.rasterMode ? 18 : 20
@@ -296,12 +307,13 @@ Item {
                 }
             }
         }
+      }
     }
 
     Rectangle {
         id: overzoomWarning
         objectName: "rasterOverzoomWarning"
-        visible: canvas.rasterMode && map.zoomLevel >= 16
+        visible: canvas.rasterMode && canvas.map && canvas.map.zoomLevel >= 16
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 54
@@ -375,6 +387,8 @@ Item {
         onPaint: {
             var context = getContext("2d")
             context.clearRect(0, 0, width, height)
+            if (!canvas.map)
+                return
             drawPolyline(context, routingController.routePath, 12, Theme.routeOutline)
             drawPolyline(context, routingController.routePath, 7, Theme.route)
             drawPolyline(context, canvas.travelledRoutePath, 7, Theme.routeTravelled)
@@ -394,6 +408,8 @@ Item {
     Connections {
         target: benchmarkScenarioController
         function onCameraCommand(coordinate, zoomLevel, bearing) {
+            if (!canvas.map)
+                return
             map.center = coordinate
             map.zoomLevel = zoomLevel
             map.bearing = bearing
@@ -412,6 +428,8 @@ Item {
                 routeRefreshTimer.restart()
         }
         function onFocusCoordinateRequested(coordinate, zoomLevel) {
+            if (!canvas.map)
+                return
             map.center = coordinate
             map.zoomLevel = zoomLevel
         }
@@ -436,15 +454,22 @@ Item {
         interval: 100
         repeat: false
         onTriggered: {
-            var currentPath = routingController.routePath
-            routeOutline.path = []
-            routeLine.path = []
-            routeOutline.path = currentPath
-            routeLine.path = currentPath
-            canvas.fitRouteWithPanelPadding()
+            if (canvas.map)
+                canvas.map.refreshRoute()
             rasterRouteOverlay.requestPaint()
         }
     }
 
+    Timer {
+        id: mapReloadTimer
+        interval: 250
+        repeat: false
+        onTriggered: mapLoader.active = true
+    }
+
     onTravelledRoutePathChanged: rasterRouteOverlay.requestPaint()
+    onRasterModeChanged: {
+        mapLoader.active = false
+        mapReloadTimer.restart()
+    }
 }

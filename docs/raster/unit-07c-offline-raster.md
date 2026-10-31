@@ -91,29 +91,38 @@ phân giải thấp hơn`.
 
 ## Release verification
 
-The 2026-10-31 quick matrix used the locked Unit 06 thresholds, 15 seconds of
-measurement after a 3-second warm-up, and three runs per network mode. Values
-below are medians; the parenthesized value is the worst run for that metric.
-CPU is normalized across all four logical CPUs.
+The final 2026-10-31 matrix uses the locked Unit 06 thresholds, 15 seconds of
+measurement after a 3-second warm-up, N=3, online and loopback-only offline,
+and both `pan_zoom` and `navigation_replay`. Every table records duration,
+fresh PSS sample count, sampler intervals, FPS average/p5/1% low, frame-time
+p95, sampler p95, PSS average/peak, CPU average/peak, min/max, worst-run bound,
+and per-threshold PASS/FAIL. The complete same-day A/B and explanation of the
+older Unit 06 difference are in
+`docs/benchmarks/unit-07bc-ab-comparison.md`.
 
-| Source / mode | PSS average MiB | PSS peak MiB | CPU average % | CPU peak % |
-| --- | ---: | ---: | ---: | ---: |
-| Vector / offline | 451.15 (453.01) | 544.42 (545.68) | 18.05 (18.16) | 40.84 (40.84) |
-| Vector / online | 446.02 (460.79) | 536.75 (544.68) | 17.25 (17.73) | 29.88 (38.38) |
-| Raster / offline | 426.97 (427.83) | 512.62 (514.01) | 16.92 (17.22) | 34.62 (35.65) |
-| Raster / online | 413.50 (415.43) | 512.67 (514.79) | 17.04 (17.88) | 40.18 (50.00) |
+Fallback navigation passes every median lock. Offline PSS average/peak is
+386.23/488.12 MiB and online is 389.94/487.62 MiB. Machine CPU average/peak is
+13.31/24.80% offline and 13.71/26.05% online. FPS average/p5/1% low is
+59.86/51.16/37.97 offline and 59.74/50.61/38.32 online; frame-time p95 remains
+19.55/19.76 ms. The worst-run bounds are retained in the comparison report.
 
-All groups pass. In particular, fallback navigation remains 123.03 MiB below
-the 550 MiB median-average PSS lock in its worse median mode. The default vector
-run does not create the raster worker/cache, while the fallback run does not
-retain the vector tile engine, so the 64 MiB cache is not cumulative.
+Continuous raster pan/zoom uses 333.59/342.67 MiB PSS average/peak offline and
+333.74/342.74 MiB online, versus 417.43/437.39 and 418.09/435.01 MiB for the
+same-revision vector path. Ten raster/vector cycles return to a vector range of
+203,032–217,272 KiB PSS and 277,200–291,440 KiB RSS from a 218,199/292,244 KiB
+baseline, ending below baseline. Raster resources are false after every return,
+so the worker and renderer are released and the 64 MiB raster budget is not
+cumulative with MapLibre.
 
 `generated/unit-07c/raster-connect.trace` records only Unix sockets and IPv4
 `127.0.0.1`; the missing-package smoke exits cleanly without freezing. A real
 Valhalla smoke returned the 7,294 m / 523.659 s / 14-maneuver route while the
-raster layer was active. Exact 900×580, 1366×768, and 1920×1080 navigation
-captures under `generated/unit-07c/review/` show the route, A marker, position
-puck, banner, source state, and always-visible attribution. These review,
-benchmark, trace, and raster artifacts remain ignored and are not committed.
+raster layer was active. The final exact 1366×768 captures are
+`generated/unit-07c/fallback-navigation-1366x768.png` and
+`generated/unit-07c/fallback-rerouting-1366x768.png`. Both show the old route,
+A marker, position puck, source state, attribution, and the persistent
+`z16+ có độ phân giải thấp hơn` label; re-routing keeps the route visible while
+Valhalla is deliberately paused by the review harness. These review, benchmark,
+trace, and raster artifacts remain ignored and are not committed.
 
 Repeat the complete render/package/visual/benchmark evidence after Unit 07D/#32.

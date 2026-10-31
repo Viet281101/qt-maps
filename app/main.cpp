@@ -3,6 +3,7 @@
 #include <QDebug>
 #include <QDir>
 #include <QElapsedTimer>
+#include <QFile>
 #include <QGeoServiceProvider>
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
@@ -13,6 +14,12 @@
 #include <QVariantMap>
 
 #include <algorithm>
+#include <functional>
+#include <memory>
+
+#if defined(__GLIBC__)
+#include <malloc.h>
+#endif
 
 #include "benchmark/BenchmarkScenarioController.h"
 #include "core/ApplicationShutdownCoordinator.h"
@@ -48,6 +55,28 @@ void probeProvider(const QString &providerName)
                                   provider.mappingErrorString().isEmpty()
                                       ? QStringLiteral("<empty>")
                                       : provider.mappingErrorString());
+}
+
+QPair<qint64, qint64> processMemoryKiB()
+{
+    QFile rollup(QStringLiteral("/proc/%1/smaps_rollup").arg(QCoreApplication::applicationPid()));
+    if (!rollup.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        return {-1, -1};
+    }
+    qint64 pssKiB = -1;
+    qint64 rssKiB = -1;
+    while (true) {
+        const QByteArray line = rollup.readLine();
+        if (line.isEmpty()) {
+            break;
+        }
+        if (line.startsWith("Pss:")) {
+            pssKiB = line.simplified().split(' ').value(1).toLongLong();
+        } else if (line.startsWith("Rss:")) {
+            rssKiB = line.simplified().split(' ').value(1).toLongLong();
+        }
+    }
+    return {pssKiB, rssKiB};
 }
 
 } // namespace
@@ -88,6 +117,12 @@ int main(int argc, char *argv[])
                       QStringLiteral("path"), QStringLiteral("generated/diagnostic-tiles")});
     parser.addOption({QStringLiteral("force-vector-failure"),
                       QStringLiteral("Force Unit 03 diagnostic raster fallback")});
+    parser.addOption({QStringLiteral("review-raster-toggle-cycles"),
+                      QStringLiteral("Review-only raster/vector lifecycle probe"),
+                      QStringLiteral("cycles")});
+    parser.addOption({QStringLiteral("review-window-size"),
+                      QStringLiteral("Review-only window size WIDTHxHEIGHT"),
+                      QStringLiteral("size")});
     parser.addOption({QStringLiteral("navigation-benchmark"),
                       QStringLiteral("Run continuous simulated camera-follow navigation")});
     parser.addOption({QStringLiteral("routing-demo"),
@@ -284,9 +319,15 @@ int main(int argc, char *argv[])
                                              interactionMilliseconds);
 
     const bool unit03Vector = useUnit03LocalMap && !mapSourceController.usingRasterFallback();
+    const QString initialLayerMode = mapSourceController.layerMode();
+    const bool productionRaster =
+        useUnit03LocalMap && (initialLayerMode == QLatin1String("raster-loading") ||
+                              initialLayerMode == QLatin1String("raster"));
+    const bool unit03ProductMap = unit03Vector || productionRaster;
     bool valhallaPortOk = false;
     const int valhallaPort = parser.value(QStringLiteral("valhalla-port")).toInt(&valhallaPortOk);
-    if (unit03Vector && useRoutingDemo && !parser.isSet(QStringLiteral("routing-fixture-only")) &&
+    if (unit03ProductMap && useRoutingDemo &&
+        !parser.isSet(QStringLiteral("routing-fixture-only")) &&
         (!valhallaPortOk || valhallaPort < 1 || valhallaPort > 65535)) {
         qCritical() << "--valhalla-port must be between 1 and 65535";
         return 4;
@@ -308,7 +349,7 @@ int main(int argc, char *argv[])
         performanceMonitor.startBenchmark(benchmarkOutput);
     }
     const QUrl qmlUrl(
-        unit03Vector && useRoutingDemo ? QStringLiteral("qrc:/qml/Main.qml")
+        unit03ProductMap && useRoutingDemo ? QStringLiteral("qrc:/qml/Main.qml")
         : unit03Vector && useNavigationBenchmark
             ? QStringLiteral("qrc:/qml/probes/NavigationProbe.qml")
         : useVectorProbe || unit03Vector ? QStringLiteral("qrc:/qml/probes/MapboxGlProbe.qml")
@@ -319,7 +360,8 @@ int main(int argc, char *argv[])
         qCritical() << "Failed to load" << qmlUrl;
         return 1;
     }
-    if (unit03Vector && useRoutingDemo && !parser.isSet(QStringLiteral("routing-fixture-only"))) {
+    if (unit03ProductMap && useRoutingDemo &&
+        !parser.isSet(QStringLiteral("routing-fixture-only"))) {
         const QDir workingDirectory = QDir::current();
         routingController.startBackend(
             workingDirectory.absoluteFilePath(parser.value(QStringLiteral("valhalla-service"))),
@@ -332,10 +374,12 @@ int main(int argc, char *argv[])
                      &qtmaps::core::ApplicationShutdownCoordinator::shutdownReady, &application,
                      &QCoreApplication::quit);
     qInfo().noquote() << "probeMode="
-                      << (unit03Vector && useRoutingDemo
+                      << (unit03ProductMap && useRoutingDemo
                               ? (parser.isSet(QStringLiteral("routing-fixture-only"))
-                                     ? "unit04-routing-fixture"
-                                     : "unit04-routing-valhalla")
+                                     ? (productionRaster ? "unit07c-raster-routing-fixture"
+                                                         : "unit04-routing-fixture")
+                                     : (productionRaster ? "unit07c-raster-routing-valhalla"
+                                                         : "unit04-routing-valhalla"))
                           : unit03Vector && useNavigationBenchmark ? "unit03-navigation"
                           : unit03Vector                           ? "unit03-vector-package"
                           : useUnit03LocalMap ? "unit03-diagnostic-raster-fallback"
@@ -344,10 +388,37 @@ int main(int argc, char *argv[])
                           : useBlankProbe     ? "blank-performance"
                                               : "osm-diagnostic-raster");
     QQuickWindow *window = qobject_cast<QQuickWindow *>(engine.rootObjects().constFirst());
+    if (window && parser.isSet(QStringLiteral("review-window-size"))) {
+        const QStringList dimensions =
+            parser.value(QStringLiteral("review-window-size")).split(QLatin1Char('x'));
+        bool widthOk = false;
+        bool heightOk = false;
+        const int width = dimensions.value(0).toInt(&widthOk);
+        const int height = dimensions.value(1).toInt(&heightOk);
+        if (dimensions.size() != 2 || !widthOk || !heightOk || width < 1 || height < 1) {
+            qCritical() << "--review-window-size must use WIDTHxHEIGHT";
+            return 6;
+        }
+        window->resize(width, height);
+    }
     if (instrumentationEnabled) {
         performanceMonitor.attachWindow(window);
     }
     benchmarkScenarioController.attachWindow(window);
+    QObject::connect(&mapSourceController, &qtmaps::map::MapSourceController::stateChanged, &engine,
+                     [&engine, &mapSourceController]() {
+                         if (mapSourceController.loading() ||
+                             (mapSourceController.layerMode() != QLatin1String("vector") &&
+                              mapSourceController.layerMode() != QLatin1String("raster"))) {
+                             return;
+                         }
+                         QTimer::singleShot(750, &engine, [&engine]() {
+                             engine.collectGarbage();
+#if defined(__GLIBC__)
+                             malloc_trim(0);
+#endif
+                         });
+                     });
 
     bool benchmarkCompletionPending = false;
     QObject::connect(
@@ -387,6 +458,68 @@ int main(int argc, char *argv[])
         const int exitSeconds = std::max(1, parser.value(QStringLiteral("exit-after")).toInt());
         QTimer::singleShot(exitSeconds * 1000, &shutdownCoordinator,
                            &qtmaps::core::ApplicationShutdownCoordinator::requestQuit);
+    }
+
+    if (parser.isSet(QStringLiteral("review-raster-toggle-cycles"))) {
+        const int requestedCycles =
+            std::max(1, parser.value(QStringLiteral("review-raster-toggle-cycles")).toInt());
+        auto cycle = std::make_shared<int>(0);
+        auto rasterPhase = std::make_shared<bool>(true);
+        auto step = std::make_shared<std::function<void()>>();
+        *step = [&application, &mapSourceController, &shutdownCoordinator, requestedCycles, cycle,
+                 rasterPhase, step]() {
+            if (*cycle >= requestedCycles) {
+                shutdownCoordinator.requestQuit();
+                return;
+            }
+            if (*rasterPhase) {
+                mapSourceController.activateRaster();
+                QTimer::singleShot(
+                    2500, &application, [&mapSourceController, cycle, rasterPhase, step]() {
+                        const auto memory = processMemoryKiB();
+                        qInfo().noquote()
+                            << QStringLiteral("QTMAPS_RASTER_TOGGLE cycle=%1 "
+                                              "phase=raster layer=%2 pss_kib=%3 "
+                                              "rss_kib=%4 resources=%5")
+                                   .arg(*cycle + 1)
+                                   .arg(mapSourceController.layerMode())
+                                   .arg(memory.first)
+                                   .arg(memory.second)
+                                   .arg(mapSourceController.rasterResourcesAllocated());
+                        *rasterPhase = false;
+                        (*step)();
+                    });
+                return;
+            }
+            mapSourceController.activateVector();
+            QTimer::singleShot(
+                3000, &application, [&mapSourceController, cycle, rasterPhase, step]() {
+                    const auto memory = processMemoryKiB();
+                    qInfo().noquote()
+                        << QStringLiteral("QTMAPS_RASTER_TOGGLE cycle=%1 phase=vector "
+                                          "layer=%2 pss_kib=%3 rss_kib=%4 "
+                                          "resources=%5")
+                               .arg(*cycle + 1)
+                               .arg(mapSourceController.layerMode())
+                               .arg(memory.first)
+                               .arg(memory.second)
+                               .arg(mapSourceController.rasterResourcesAllocated());
+                    ++(*cycle);
+                    *rasterPhase = true;
+                    (*step)();
+                });
+        };
+        QTimer::singleShot(1000, &application, [&mapSourceController, step]() {
+            const auto memory = processMemoryKiB();
+            qInfo().noquote() << QStringLiteral(
+                                     "QTMAPS_RASTER_TOGGLE cycle=0 phase=baseline-vector layer=%1 "
+                                     "pss_kib=%2 rss_kib=%3 resources=%4")
+                                     .arg(mapSourceController.layerMode())
+                                     .arg(memory.first)
+                                     .arg(memory.second)
+                                     .arg(mapSourceController.rasterResourcesAllocated());
+            (*step)();
+        });
     }
 
     return application.exec();

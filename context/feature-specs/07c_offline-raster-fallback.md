@@ -41,8 +41,10 @@ does not add memory to the default vector path.
   are created lazily. The 64 MiB CPU-side raster budget includes the server's
   8 MiB encoded LRU, Qt's 8 MiB compressed cache, 16 MiB decoded-texture cache,
   and a 32 MiB reserve for mandatory visible tiles at up to 1920x1080. Disk
-  cache and prefetch are disabled. Returning to vector destroys the worker and
-  renderer caches. GPU/driver memory is verified through measured process
+  cache and prefetch are disabled. Qt Location's `Map.plugin` is write-once, so
+  a layer switch destroys and recreates the map surface with a mode-owned
+  plugin; keeping both provider objects alive is forbidden. Returning to vector
+  destroys the worker and renderer caches. GPU/driver memory is verified through measured process
   PSS/RSS rather than misrepresented as controlled by the Qt cache API.
 - UI states distinguish `Bản đồ vector`, `Raster ngoại tuyến`, loading, automatic
   fallback, and failure. Attribution `© OpenStreetMap contributors, ODbL` is

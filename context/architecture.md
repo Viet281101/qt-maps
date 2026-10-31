@@ -65,8 +65,10 @@ Large generated datasets, caches, routing graphs, and third-party artifacts must
   against loopback, with no prefetch or disk cache: 8 MiB server encoded LRU,
   8 MiB compressed-memory cache, 16 MiB decoded-texture cache, and 32 MiB
   reserved for the mandatory visible-tile working set at the supported maximum
-  1920x1080 viewport. Returning to vector destroys the worker and recreates the
-  renderer so vector/raster caches do not accumulate. Driver/GPU allocations are
+  1920x1080 viewport. Because Qt Location treats `Map.plugin` as write-once,
+  each layer switch destroys the map surface and its mode-owned provider before
+  constructing the other renderer; returning to vector also stops the raster
+  worker so vector/raster caches do not accumulate. Driver/GPU allocations are
   not governed by the Qt cache API and are checked by process PSS/RSS pan/zoom
   and ten-cycle layer-switch evidence instead of being claimed as byte-capped.
 - QtMaps owns the lifecycle of any later routing or external tile-server child process through `QProcess`.
