@@ -167,7 +167,7 @@ vector-fixture:
 	"$(PYTHON)" tools/generate_vector_fixture.py
 
 vector-real-style:
-	"$(PYTHON)" tools/generate_vector_fixture.py --real-style-only --output generated/unit-01b/site
+	"$(PYTHON)" tools/data-pipeline/build_hanoi_style.py --output generated/unit-01b/site
 
 hanoi-package:
 	"$(PYTHON)" tools/data-pipeline/build_hanoi_package.py \

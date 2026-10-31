@@ -237,20 +237,10 @@ def write_glyphs(output):
         path.write_bytes(glyphs)
 
 
-def write_style(output, real_data=False):
-    source_layers = {
-        "building": "building" if real_data else "qtmaps",
-        "roads": "transportation" if real_data else "qtmaps",
-        "labels": "place" if real_data else "qtmaps",
-    }
-    attribution = (
-        "© OpenStreetMap contributors, ODbL 1.0"
-        if real_data
-        else "Synthetic QtMaps mechanics fixture; not geographic data"
-    )
+def write_style(output):
     style = {
         "version": 8,
-        "name": "QtMaps bounded Hanoi real-data vector probe" if real_data else "QtMaps synthetic local vector mechanics fixture",
+        "name": "QtMaps synthetic local vector mechanics fixture",
         "sprite": "http://127.0.0.1:8766/sprite",
         "glyphs": "http://127.0.0.1:8766/fonts/{fontstack}/{range}.pbf",
         "sources": {
@@ -259,7 +249,7 @@ def write_style(output, real_data=False):
                 "tiles": ["http://127.0.0.1:8766/tiles/{z}/{x}/{y}.pbf"],
                 "minzoom": 12,
                 "maxzoom": 15,
-                "attribution": attribution,
+                "attribution": "Synthetic QtMaps mechanics fixture; not geographic data",
             }
         },
         "layers": [
@@ -268,30 +258,28 @@ def write_style(output, real_data=False):
                 "id": "buildings",
                 "type": "fill",
                 "source": "qtmaps",
-                "source-layer": source_layers["building"],
-                **({} if real_data else {"filter": ["==", "kind", "building"]}),
+                "source-layer": "qtmaps",
+                "filter": ["==", "kind", "building"],
                 "paint": {"fill-color": "#94a3b8", "fill-outline-color": "#475569"},
             },
             {
                 "id": "roads",
                 "type": "line",
                 "source": "qtmaps",
-                "source-layer": source_layers["roads"],
-                **({} if real_data else {"filter": ["==", "kind", "road"]}),
+                "source-layer": "qtmaps",
+                "filter": ["==", "kind", "road"],
                 "paint": {"line-color": "#f8fafc", "line-width": 5},
             },
             {
                 "id": "labels",
                 "type": "symbol",
                 "source": "qtmaps",
-                "source-layer": source_layers["labels"],
-                "filter": ["all", ["==", "class", "city"], ["==", "name", "Hà Nội"]]
-                if real_data
-                else ["==", "kind", "label"],
+                "source-layer": "qtmaps",
+                "filter": ["==", "kind", "label"],
                 "layout": {
                     "icon-image": "marker",
                     "icon-size": 0.75,
-                    "text-field": "HÀ NỘI" if real_data else "{name}",
+                    "text-field": "{name}",
                     "text-font": ["QtMapsSans"],
                     "text-size": 16,
                     "text-offset": [0, 1.2],
@@ -310,9 +298,9 @@ def parse_args():
     parser.add_argument("--max-zoom", type=int, default=15)
     parser.add_argument("--radius", type=int, default=2)
     parser.add_argument(
-        "--real-style-only",
+        "--resources-only",
         action="store_true",
-        help="write local resources for Planetiler OpenMapTiles layers without synthetic tiles",
+        help="write only the minimal diagnostic glyph and sprite resources",
     )
     return parser.parse_args()
 
@@ -322,7 +310,7 @@ def main():
     args.output.mkdir(parents=True, exist_ok=True)
     total = 0
     coverage = []
-    for zoom in range(args.min_zoom, args.max_zoom + 1) if not args.real_style_only else []:
+    for zoom in range(args.min_zoom, args.max_zoom + 1) if not args.resources_only else []:
         center_x, center_y = web_mercator_tile(HANOI_LATITUDE, HANOI_LONGITUDE, zoom)
         count = 1 << zoom
         for y in range(max(0, center_y - args.radius), min(count, center_y + args.radius + 1)):
@@ -333,25 +321,26 @@ def main():
                 path.write_bytes(vector_tile(x, y))
                 total += 1
         coverage.append({"zoom": zoom, "center_x": center_x, "center_y": center_y, "radius": args.radius})
-    write_style(args.output, real_data=args.real_style_only)
+    if not args.resources_only:
+        write_style(args.output)
     write_sprite(args.output)
     write_glyphs(args.output)
     manifest = {
-        "id": "unit01b-hanoi-real-v1" if args.real_style_only else "synthetic-vector-mechanics-v1",
-        "geographic_data": args.real_style_only,
+        "id": "diagnostic-resources-v1" if args.resources_only else "synthetic-vector-mechanics-v1",
+        "geographic_data": False,
         "network_access_during_generation": False,
         "tile_count": total,
         "coverage": coverage,
         "notes": (
-            "Style resources for bounded real OpenStreetMap-derived Planetiler output; tiles are generated separately."
-            if args.real_style_only
+            "Minimal diagnostic glyph and sprite resources; no product style or geographic data."
+            if args.resources_only
             else "Synthetic MVT geometry at Hanoi XYZ addresses; not real map data or an official benchmark dataset."
         ),
     }
     (args.output / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     print(
         f"output={args.output} total_tiles={total} "
-        f"mode={'real-style-only' if args.real_style_only else 'synthetic'}"
+        f"mode={'resources-only' if args.resources_only else 'synthetic'}"
     )
 
 
