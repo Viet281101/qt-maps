@@ -5,9 +5,7 @@
 namespace qtmaps {
 namespace map {
 
-EncodedTileCache::EncodedTileCache(int maximumBytes) :
-    entries_(std::max(0, maximumBytes))
-{}
+EncodedTileCache::EncodedTileCache(int maximumBytes) : entries_(std::max(0, maximumBytes)) {}
 
 bool EncodedTileCache::find(const QString &key, QByteArray *value) const
 {

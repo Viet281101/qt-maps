@@ -143,6 +143,7 @@ target_link_libraries(qtmaps_benchmark PUBLIC
 
 qt5_add_resources(QTMAPS_QML_RESOURCES qml/resources.qrc)
 qt5_add_resources(QTMAPS_ROUTING_RESOURCES resources/routing.qrc)
+qt5_add_resources(QTMAPS_RASTER_RENDERER_RESOURCES tools/raster-renderer/raster_renderer.qrc)
 set(QTMAPS_RESOURCES
     ${QTMAPS_QML_RESOURCES}
     ${QTMAPS_ROUTING_RESOURCES}
@@ -170,6 +171,20 @@ target_link_libraries(qtmaps PRIVATE
     Qt5::Sql
 )
 target_compile_definitions(qtmaps PRIVATE QTMAPS_BUILD_ID="${QTMAPS_BUILD_ID}")
+
+add_executable(qtmaps_raster_renderer
+    tools/raster-renderer/main.cpp
+    ${QTMAPS_RASTER_RENDERER_RESOURCES}
+)
+target_link_libraries(qtmaps_raster_renderer PRIVATE
+    qtmaps_map
+    Qt5::Core
+    Qt5::Gui
+    Qt5::Location
+    Qt5::Positioning
+    Qt5::Qml
+    Qt5::Quick
+)
 
 include(CTest)
 if(BUILD_TESTING)

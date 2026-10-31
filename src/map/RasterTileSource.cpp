@@ -42,8 +42,7 @@ public slots:
             return;
         }
         root_ = QDir(packagePath);
-        connectionName_ =
-            QStringLiteral("qtmaps-raster-%1").arg(reinterpret_cast<quintptr>(this));
+        connectionName_ = QStringLiteral("qtmaps-raster-%1").arg(reinterpret_cast<quintptr>(this));
         database_ = QSqlDatabase::addDatabase(QStringLiteral("QSQLITE"), connectionName_);
         database_.setDatabaseName(root_.filePath(manifest.mbtilesRelativePath));
         database_.setConnectOptions(QStringLiteral("QSQLITE_OPEN_READONLY"));
@@ -58,8 +57,9 @@ public slots:
         QSqlQuery probe(database_);
         if (!probe.exec(QStringLiteral("SELECT COUNT(*) FROM tiles")) || !probe.next() ||
             probe.value(0).toInt() != contract::kRasterTileCount) {
-            result.insert(QStringLiteral("error"),
-                          QStringLiteral("Raster MBTiles does not contain the contracted 847 tiles"));
+            result.insert(
+                QStringLiteral("error"),
+                QStringLiteral("Raster MBTiles does not contain the contracted 847 tiles"));
             stopResources();
             emit startFinished(result);
             return;

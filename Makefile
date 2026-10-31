@@ -18,13 +18,16 @@ DEMO_ARGS ?=
 BENCHMARK_ARGS ?=
 HANOI_PBF ?= generated/unit-01b/source/vietnam-latest.osm.pbf
 PLANETILER_JAR ?= generated/unit-01b/tools/planetiler.jar
+MAP_PACKAGE ?= data/packages/current
+MAPLIBRE_INSTALL ?= generated/unit-01b/maplibre-install
+QML_RUNTIME ?= generated/unit-01b/qml-runtime/usr/lib/x86_64-linux-gnu/qt5
 QT_RUNTIME_PLUGIN_PATH ?= generated/unit-01b/qml-runtime/usr/lib/x86_64-linux-gnu/qt5/plugins
 
 QMAKE := $(QT_PREFIX)/bin/qmake
 QTMAPS := $(BUILD_DIR)/qtmaps
 
 .PHONY: help requirements configure build test run run-app benchmark debug-build debug-run debug-gdb check \
-	review format format-check diagnostic-tiles vector-fixture vector-real-style hanoi-package hanoi-raster-package \
+	review format format-check diagnostic-tiles vector-fixture vector-real-style hanoi-package hanoi-raster-render hanoi-raster-package \
 	serve-diagnostic-tiles serve-vector-fixture run-mapboxgl-probe clean clean-old-builds
 
 help:
@@ -49,6 +52,7 @@ help:
 	@echo "  make vector-real-style     Generate local style/glyph/sprite resources for real Planetiler tiles"
 	@echo "  make hanoi-package         Build ignored versioned Hanoi MBTiles package from approved local inputs"
 	@echo "  make hanoi-raster-package  Package locally rendered z12-z16 PNG tiles; requires RASTER_TILES"
+	@echo "  make hanoi-raster-render   Render local z12-z16 PNG tiles from MAP_PACKAGE"
 	@echo "  make serve-vector-fixture  Serve the vector fixture on 127.0.0.1:8766"
 	@echo "  make run-mapboxgl-probe    Run probe (vector fixture server must be separate)"
 	@echo "  make clean                 Clean compiled outputs through CMake"
@@ -172,6 +176,14 @@ hanoi-raster-package:
 	@test -n "$(RASTER_TILES)" || { echo "error: set RASTER_TILES to z/x/y.png root" >&2; exit 1; }
 	"$(PYTHON)" tools/data-pipeline/build_hanoi_raster_package.py \
 		--tiles "$(RASTER_TILES)" --vector-package "$(MAP_PACKAGE)"
+
+hanoi-raster-render: build
+	env LD_LIBRARY_PATH="$(abspath $(MAPLIBRE_INSTALL))/lib$${LD_LIBRARY_PATH:+:$$LD_LIBRARY_PATH}" \
+		QT_PLUGIN_PATH="$(abspath $(MAPLIBRE_INSTALL))/plugins:$(abspath $(QML_RUNTIME))/plugins$${QT_PLUGIN_PATH:+:$$QT_PLUGIN_PATH}" \
+		QML2_IMPORT_PATH="$(abspath $(MAPLIBRE_INSTALL))/qml:$(abspath $(QML_RUNTIME))/qml$${QML2_IMPORT_PATH:+:$$QML2_IMPORT_PATH}" \
+		"$(BUILD_DIR)/qtmaps_raster_renderer" \
+		--vector-package "$(MAP_PACKAGE)" \
+		--output "$(if $(RASTER_TILES),$(RASTER_TILES),generated/unit-07c/rendered-tiles)"
 
 serve-vector-fixture: vector-fixture
 	"$(PYTHON)" -m http.server 8766 --bind 127.0.0.1 --directory generated/vector-fixture

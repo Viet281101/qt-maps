@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="/raster-renderer">
+    <file>RasterRenderer.qml</file>
+  </qresource>
+</RCC>

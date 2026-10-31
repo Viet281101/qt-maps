@@ -126,6 +126,9 @@ def collect_metadata(args, root, output_dir):
         "scenarios": args.scenarios,
         "map_package": str(package),
         "tiles_bytes": directory_size(package),
+        "raster_package": str(args.raster_package.resolve()),
+        "raster_bytes": directory_size(args.raster_package.resolve()),
+        "forced_raster_fallback": args.force_raster_fallback,
         "valhalla_graph": str(graph) if graph else "Unknown",
         "graph_bytes": directory_size(graph) if graph else 0,
     }
@@ -315,6 +318,8 @@ def overhead_command(args, root, enabled, output_path, total_seconds):
         str(args.app),
         "--map-package",
         str(args.map_package),
+        "--raster-package",
+        str(args.raster_package),
         "--valhalla-service",
         str(args.valhalla_service),
         "--valhalla-config",
@@ -359,6 +364,8 @@ def overhead_command(args, root, enabled, output_path, total_seconds):
         )
     if args.fixture_only:
         command.append("--routing-fixture-only")
+    if args.force_raster_fallback:
+        command.append("--force-vector-failure")
     return command
 
 
@@ -468,6 +475,8 @@ def run_once(args, root, session_dir, scenario, network_mode, repetition, enviro
         args.dataset_coverage,
         "--map-package",
         str(args.map_package),
+        "--raster-package",
+        str(args.raster_package),
         "--valhalla-service",
         str(args.valhalla_service),
         "--valhalla-config",
@@ -477,6 +486,8 @@ def run_once(args, root, session_dir, scenario, network_mode, repetition, enviro
     ]
     if args.fixture_only:
         command.append("--routing-fixture-only")
+    if args.force_raster_fallback:
+        command.append("--force-vector-failure")
     executed = offline_prefix() + command if network_mode == "offline" else command
     timeout_seconds = args.timeout or max(45, warmup + duration + 30)
     try:
@@ -543,6 +554,10 @@ def parse_args(root):
     parser.add_argument("--qt-prefix", type=Path, default=Path("/usr"))
     parser.add_argument("--map-package", type=Path, default=root / "data/packages/current")
     parser.add_argument(
+        "--raster-package", type=Path, default=root / "data/raster-packages/current"
+    )
+    parser.add_argument("--force-raster-fallback", action="store_true")
+    parser.add_argument(
         "--valhalla-service",
         type=Path,
         default=root
@@ -580,11 +595,15 @@ def main():
     args = parse_args(root)
     args.app = args.app.resolve()
     args.map_package = args.map_package.resolve()
+    args.raster_package = args.raster_package.resolve()
     args.valhalla_service = args.valhalla_service.resolve()
     args.valhalla_config = args.valhalla_config.resolve()
     if not args.skip_build:
         subprocess.run(["make", "build"], cwd=root, check=True)
-    for required in (args.app, args.map_package, args.valhalla_service, args.valhalla_config):
+    required_paths = [args.app, args.map_package, args.valhalla_service, args.valhalla_config]
+    if args.force_raster_fallback:
+        required_paths.append(args.raster_package)
+    for required in required_paths:
         if not required.exists():
             raise SystemExit(f"required benchmark path does not exist: {required}")
 
