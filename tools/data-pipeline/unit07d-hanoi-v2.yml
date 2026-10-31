@@ -1,0 +1,78 @@
+schema_name: QtMaps Unit 07D Hanoi v2 draft
+schema_description: Bounded navigation basemap with class-aware roads, water, and selected green landuse
+attribution: '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a>, ODbL 1.0'
+version: 2
+is_overlay: false
+
+sources:
+  osm:
+    type: osm
+    local_path: generated/unit-01b/source/vietnam-latest.osm.pbf
+
+layers:
+  - id: building
+    features:
+      - source: osm
+        geometry: polygon
+        min_zoom: 12
+        include_when:
+          building: __any__
+        attributes:
+          - key: kind
+            value: building
+
+  - id: landuse
+    features:
+      - source: osm
+        geometry: polygon
+        min_zoom: 13
+        min_size: 6
+        include_when:
+          leisure: [park, garden, nature_reserve]
+          landuse: [grass, recreation_ground, forest]
+          natural: wood
+        attributes:
+          - key: class
+            type: match_value
+
+  - id: place
+    features:
+      - source: osm
+        geometry: point
+        min_zoom: 12
+        include_when:
+          place: [city, town]
+        attributes:
+          - key: class
+            tag_value: place
+          - key: name
+            tag_value: name
+          - key: name_vi
+            tag_value: name:vi
+
+  - id: transportation
+    features:
+      - source: osm
+        geometry: line
+        min_zoom: 12
+        include_when:
+          highway: __any__
+        attributes:
+          - key: class
+            tag_value: highway
+          - key: name
+            tag_value: name
+
+  - id: water
+    features:
+      - source: osm
+        geometry: polygon
+        min_zoom: 12
+        min_size: 4
+        include_when:
+          natural: water
+          waterway: riverbank
+          landuse: [reservoir, basin]
+        attributes:
+          - key: class
+            type: match_value

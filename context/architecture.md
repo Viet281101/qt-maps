@@ -51,6 +51,10 @@ These directories describe intended ownership. Application-code directories are 
   source-controlled template. The package pipeline validates and canonicalizes
   its local URL token deterministically; the synthetic vector fixture neither
   defines nor emits the product style.
+- **Draft layer schema v2**: `tools/data-pipeline/unit07d-hanoi-v2.yml` adds
+  bounded water and selected green-landuse polygons without changing the active
+  v1 package contract. Issue #32 switches the builder, manifest validator, and
+  package atomically; v1 remains the rollback path until then.
 - **Raster MBTiles**: ignored immutable `data/raster-packages/hanoi-raster-<yyyymmdd>-v1/` packages contain locally rendered PNG tiles plus a checksummed manifest. The manifest binds the raster to the exact map-package schema, style contract/revision, source PBF checksum, bounds, and zoom range; incompatible packages are rejected and regenerated after Unit 07D/#32.
 - **Routing graph**: generated Valhalla graph tiles, versioned by source extract and build configuration outside Git.
 - **Geocoding database**: proposed SQLite database with FTS5 tables generated from selected source data.

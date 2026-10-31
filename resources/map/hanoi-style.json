@@ -38,6 +38,30 @@
       }
     },
     {
+      "id": "green-areas",
+      "type": "fill",
+      "source": "qtmaps",
+      "source-layer": "landuse",
+      "minzoom": 13,
+      "paint": {
+        "fill-color": "#dcefd8",
+        "fill-outline-color": "#bddbb8",
+        "fill-opacity": 0.9
+      }
+    },
+    {
+      "id": "water",
+      "type": "fill",
+      "source": "qtmaps",
+      "source-layer": "water",
+      "minzoom": 12,
+      "paint": {
+        "fill-color": "#c8e3f5",
+        "fill-outline-color": "#acd2ec",
+        "fill-opacity": 1.0
+      }
+    },
+    {
       "id": "buildings",
       "type": "fill",
       "source": "qtmaps",
