@@ -16,7 +16,8 @@ Item {
            ? Math.max(Theme.spaceXl, (toolsOverlay.width - 360) / 2)
            : toolsOverlay.panelWidth + Theme.spaceXl * 2
         y: Theme.spaceMd
-        width: Math.max(240, Math.min(360, toolsOverlay.width - x - 210))
+        width: Math.max(240, Math.min(360, toolsOverlay.width - x
+                                     - (toolsOverlay.width < 1100 ? 280 : 210)))
         height: 44
         radius: Theme.radiusControl
         color: Theme.surfaceElevated

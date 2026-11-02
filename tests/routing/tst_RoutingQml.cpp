@@ -249,6 +249,68 @@ private slots:
                                 .arg(endActionRect.height())));
     }
 
+    void searchDoesNotOverlapOfflineStatus_data()
+    {
+        QTest::addColumn<QSize>("windowSize");
+        QTest::newRow("review-960x640") << QSize(960, 640);
+        QTest::newRow("review-1366x768") << QSize(1366, 768);
+    }
+
+    void searchDoesNotOverlapOfflineStatus()
+    {
+        QFETCH(QSize, windowSize);
+
+        RoutingController routing;
+        RouteNavigationController navigation;
+        routing.calculateFixtureRoute();
+
+        ApplicationShutdownCoordinator shutdown(&routing);
+        PerformanceMonitor performance;
+        StaticTileSource mapTiles;
+        qtmaps::map::MapSourceController mapSource(&mapTiles, nullptr);
+        QVERIFY(mapSource.start(QString(), QString()));
+        QQmlEngine engine;
+        engine.rootContext()->setContextProperty(QStringLiteral("routingController"), &routing);
+        engine.rootContext()->setContextProperty(QStringLiteral("routeNavigationController"),
+                                                 &navigation);
+        engine.rootContext()->setContextProperty(QStringLiteral("shutdownCoordinator"), &shutdown);
+        engine.rootContext()->setContextProperty(QStringLiteral("performanceMonitor"),
+                                                 &performance);
+        engine.rootContext()->setContextProperty(QStringLiteral("mapSourceController"), &mapSource);
+        engine.rootContext()->setContextProperty(QStringLiteral("routingFixtureOnly"), false);
+        engine.rootContext()->setContextProperty(QStringLiteral("instrumentationEnabled"), false);
+        engine.rootContext()->setContextProperty(QStringLiteral("vectorStyleUrl"), QString());
+
+        QQmlComponent component(&engine, QUrl(QStringLiteral("qrc:/qml/Main.qml")));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> root(component.create());
+        QVERIFY2(root, qPrintable(component.errorString()));
+        QQuickWindow *window = qobject_cast<QQuickWindow *>(root.data());
+        QVERIFY(window);
+        window->resize(windowSize);
+        window->show();
+        QVERIFY(QTest::qWaitForWindowExposed(window));
+
+        QQuickItem *search = root->findChild<QQuickItem *>(QStringLiteral("searchPlaceholder"));
+        QQuickItem *status =
+            root->findChild<QQuickItem *>(QStringLiteral("connectionStatusPill"));
+        QVERIFY(search);
+        QVERIFY(status);
+        QTRY_VERIFY(search->width() >= 240.0);
+        const QRectF searchRect(search->mapToScene(QPointF(0, 0)), search->size());
+        const QRectF statusRect(status->mapToScene(QPointF(0, 0)), status->size());
+        QVERIFY2(!searchRect.intersects(statusRect),
+                 qPrintable(QStringLiteral("search %1,%2 %3x%4 intersects status %5,%6 %7x%8")
+                                .arg(searchRect.x())
+                                .arg(searchRect.y())
+                                .arg(searchRect.width())
+                                .arg(searchRect.height())
+                                .arg(statusRect.x())
+                                .arg(statusRect.y())
+                                .arg(statusRect.width())
+                                .arg(statusRect.height())));
+    }
+
     void mapClickDoesNotChangeRouteDuringReplay()
     {
         RoutingController routing;
