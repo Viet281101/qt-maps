@@ -20,10 +20,10 @@ HANOI_PBF ?= generated/unit-01b/source/vietnam-latest.osm.pbf
 PLANETILER_JAR ?= generated/unit-01b/tools/planetiler.jar
 MAP_PACKAGE ?= data/packages/current
 MAPLIBRE_INSTALL ?= generated/unit-01b/maplibre-install
-QML_RUNTIME ?= generated/unit-01b/qml-runtime/usr/lib/x86_64-linux-gnu/qt5
-QT_RUNTIME_PLUGIN_PATH ?= generated/unit-01b/qml-runtime/usr/lib/x86_64-linux-gnu/qt5/plugins
 
 QMAKE := $(QT_PREFIX)/bin/qmake
+QML_RUNTIME ?= $(shell "$(QMAKE)" -query QT_INSTALL_ARCHDATA 2>/dev/null)
+QT_RUNTIME_PLUGIN_PATH ?= $(shell "$(QMAKE)" -query QT_INSTALL_PLUGINS 2>/dev/null)
 QTMAPS := $(BUILD_DIR)/qtmaps
 
 .PHONY: help requirements configure build test run run-app benchmark debug-build debug-run debug-gdb check \
@@ -90,7 +90,9 @@ test: build
 		echo "error: Qt SQLite runtime plugin not found under $(QT_RUNTIME_PLUGIN_PATH); set QT_RUNTIME_PLUGIN_PATH to a Qt 5.15 plugin root" >&2; \
 		exit 1; \
 	}
-	env QT_PLUGIN_PATH="$(abspath $(QT_RUNTIME_PLUGIN_PATH))$${QT_PLUGIN_PATH:+:$$QT_PLUGIN_PATH}" \
+	env QTMAPS_QML_RUNTIME="$(abspath $(QML_RUNTIME))" \
+		QTMAPS_MAPLIBRE_INSTALL="$(abspath $(MAPLIBRE_INSTALL))" \
+		QT_PLUGIN_PATH="$(abspath $(QT_RUNTIME_PLUGIN_PATH))$${QT_PLUGIN_PATH:+:$$QT_PLUGIN_PATH}" \
 		ctest --test-dir "$(BUILD_DIR)" --output-on-failure
 
 run: build
