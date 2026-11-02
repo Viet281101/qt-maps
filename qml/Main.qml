@@ -38,6 +38,13 @@ Window {
             mapCanvasLoader.item.fitRouteWithPanelPadding()
     }
 
+    Shortcut {
+        sequence: "F3"
+        context: Qt.ApplicationShortcut
+        enabled: instrumentationEnabled
+        onActivated: root.performanceOverlayVisible = !root.performanceOverlayVisible
+    }
+
     onClosing: {
         close.accepted = false
         root.visible = false
@@ -64,8 +71,6 @@ Window {
                 endpointSelectionEnabled: root.endpointSelectionEnabled
                 panelCollapsed: root.panelCollapsed
                 panelWidth: routePanel.width
-                onTogglePerformanceOverlayRequested:
-                    root.performanceOverlayVisible = !root.performanceOverlayVisible
             }
         }
     }

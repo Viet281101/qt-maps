@@ -20,7 +20,6 @@ Item {
     readonly property real dataEast: 105.90
     readonly property real dataNorth: 21.10
     property bool adjustingDataBounds: false
-    signal togglePerformanceOverlayRequested()
 
     function recenterNavigation() {
         if (!map || !routeNavigationController.active
@@ -274,13 +273,6 @@ Item {
                 routeRefreshTimer.restart()
                 dataBoundsTimer.restart()
                 benchmarkScenarioController.notifyMapReady()
-            }
-        }
-
-        Keys.onPressed: {
-            if (event.key === Qt.Key_F3 && instrumentationEnabled) {
-                canvas.togglePerformanceOverlayRequested()
-                event.accepted = true
             }
         }
 

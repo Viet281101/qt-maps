@@ -513,6 +513,65 @@ private slots:
         QCOMPARE(triggered.size(), 2);
     }
 
+    void applicationF3ShortcutWorksAcrossFocusedControls_data()
+    {
+        QTest::addColumn<QString>("focusObjectName");
+        QTest::newRow("origin-field") << QStringLiteral("originField");
+        QTest::newRow("destination-field") << QStringLiteral("destinationField");
+        QTest::newRow("start-navigation") << QStringLiteral("startNavigationButton");
+    }
+
+    void applicationF3ShortcutWorksAcrossFocusedControls()
+    {
+        QFETCH(QString, focusObjectName);
+
+        RoutingController routing;
+        RouteNavigationController navigation;
+        connect(&routing, &RoutingController::routeChanged, &navigation, [&]() {
+            if (routing.routeAvailable())
+                navigation.setRoute(routing.route(), routing.sourceLabel());
+            else
+                navigation.clearRoute();
+        });
+        routing.calculateFixtureRoute();
+
+        ApplicationShutdownCoordinator shutdown(&routing);
+        PerformanceMonitor performance;
+        StaticTileSource mapTiles;
+        qtmaps::map::MapSourceController mapSource(&mapTiles, nullptr);
+        QVERIFY(mapSource.start(QString(), QString()));
+        QQmlEngine engine;
+        engine.rootContext()->setContextProperty(QStringLiteral("routingController"), &routing);
+        engine.rootContext()->setContextProperty(QStringLiteral("routeNavigationController"),
+                                                 &navigation);
+        engine.rootContext()->setContextProperty(QStringLiteral("shutdownCoordinator"), &shutdown);
+        engine.rootContext()->setContextProperty(QStringLiteral("performanceMonitor"),
+                                                 &performance);
+        engine.rootContext()->setContextProperty(QStringLiteral("mapSourceController"), &mapSource);
+        engine.rootContext()->setContextProperty(QStringLiteral("routingFixtureOnly"), false);
+        engine.rootContext()->setContextProperty(QStringLiteral("instrumentationEnabled"), true);
+        engine.rootContext()->setContextProperty(QStringLiteral("vectorStyleUrl"), QString());
+
+        QQmlComponent component(&engine, QUrl(QStringLiteral("qrc:/qml/Main.qml")));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> root(component.create());
+        QVERIFY2(root, qPrintable(component.errorString()));
+        QQuickWindow *window = qobject_cast<QQuickWindow *>(root.data());
+        QVERIFY(window);
+        window->show();
+        QVERIFY(QTest::qWaitForWindowExposed(window));
+
+        QQuickItem *focusItem = root->findChild<QQuickItem *>(focusObjectName);
+        QVERIFY2(focusItem, qPrintable(focusObjectName));
+        focusItem->forceActiveFocus();
+        QVERIFY(focusItem->hasActiveFocus());
+        QCOMPARE(root->property("performanceOverlayVisible").toBool(), false);
+        QTest::keyClick(window, Qt::Key_F3);
+        QTRY_COMPARE(root->property("performanceOverlayVisible").toBool(), true);
+        QTest::keyClick(window, Qt::Key_F3);
+        QTRY_COMPARE(root->property("performanceOverlayVisible").toBool(), false);
+    }
+
     void navigationBannerFormatsGuidanceAndArrival()
     {
         QQmlEngine engine;
