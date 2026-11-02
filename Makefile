@@ -94,12 +94,17 @@ test: build
 		ctest --test-dir "$(BUILD_DIR)" --output-on-failure
 
 run: build
-	QTMAPS_APP="$(abspath $(QTMAPS))" ./tools/run-demo.sh $(DEMO_ARGS)
+	QTMAPS_APP="$(abspath $(QTMAPS))" \
+	QTMAPS_MAPLIBRE_INSTALL="$(abspath $(MAPLIBRE_INSTALL))" \
+	QTMAPS_QML_RUNTIME="$(abspath $(QML_RUNTIME))" \
+	./tools/run-demo.sh $(DEMO_ARGS)
 
 run-app: build
 	"$(QTMAPS)" $(APP_ARGS)
 
 benchmark: build
+	QTMAPS_MAPLIBRE_INSTALL="$(abspath $(MAPLIBRE_INSTALL))" \
+	QTMAPS_QML_RUNTIME="$(abspath $(QML_RUNTIME))" \
 	"$(PYTHON)" tools/benchmark/run_benchmarks.py \
 		--app "$(abspath $(QTMAPS))" --skip-build $(BENCHMARK_ARGS)
 

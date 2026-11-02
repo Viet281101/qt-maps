@@ -4,8 +4,8 @@ set -euo pipefail
 repository_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repository_root"
 
-qml_runtime="$repository_root/generated/unit-01b/qml-runtime/usr/lib/x86_64-linux-gnu/qt5"
-maplibre_install="$repository_root/generated/unit-01b/maplibre-install"
+qml_runtime="${QTMAPS_QML_RUNTIME:-$repository_root/generated/unit-01b/qml-runtime/usr/lib/x86_64-linux-gnu/qt5}"
+maplibre_install="${QTMAPS_MAPLIBRE_INSTALL:-$repository_root/generated/unit-01b/maplibre-install}"
 app="${QTMAPS_APP:-$repository_root/build-qt515/qtmaps}"
 service="$repository_root/generated/unit-04/valhalla-venv/lib/python3.12/site-packages/valhalla/bin/valhalla_service"
 config="$repository_root/generated/unit-04/valhalla/valhalla.json"

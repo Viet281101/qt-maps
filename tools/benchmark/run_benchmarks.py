@@ -78,8 +78,17 @@ def memory_bytes():
     return 0
 
 
+def configured_path(root, variable, default):
+    value = os.environ.get(variable)
+    return Path(value).expanduser().resolve() if value else root / default
+
+
 def parse_maplibre_version(root):
-    version_file = root / "generated/unit-01b/maplibre-install/lib/cmake/QMapLibre/QMapLibreConfigVersion.cmake"
+    version_file = configured_path(
+        root,
+        "QTMAPS_MAPLIBRE_INSTALL",
+        "generated/unit-01b/maplibre-install",
+    ) / "lib/cmake/QMapLibre/QMapLibreConfigVersion.cmake"
     if not version_file.exists():
         return "Unknown"
     match = re.search(r'set\(PACKAGE_VERSION "([^"]+)"\)', version_file.read_text(encoding="utf-8"))
@@ -139,8 +148,14 @@ def collect_metadata(args, root, output_dir):
 
 def runtime_environment(root, platform_name=None):
     environment = os.environ.copy()
-    qml_runtime = root / "generated/unit-01b/qml-runtime/usr/lib/x86_64-linux-gnu/qt5"
-    maplibre = root / "generated/unit-01b/maplibre-install"
+    qml_runtime = configured_path(
+        root,
+        "QTMAPS_QML_RUNTIME",
+        "generated/unit-01b/qml-runtime/usr/lib/x86_64-linux-gnu/qt5",
+    )
+    maplibre = configured_path(
+        root, "QTMAPS_MAPLIBRE_INSTALL", "generated/unit-01b/maplibre-install"
+    )
     for name, paths in {
         "LD_LIBRARY_PATH": [maplibre / "lib"],
         "QT_PLUGIN_PATH": [maplibre / "plugins", qml_runtime / "plugins"],
