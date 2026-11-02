@@ -64,7 +64,8 @@ QString createPackage(QTemporaryDir &temporary)
                                 "\"sources\":{\"qtmaps\":{\"type\":\"vector\",\"tiles\":["
                                 "\"__QTMAPS_BASE_URL__/tiles/{z}/{x}/{y}.pbf\"]}},\"layers\":["
                                 "{\"id\":\"building\",\"source-layer\":\"building\"},"
-                                "{\"id\":\"place\",\"source-layer\":\"place\"},"
+                                "{\"id\":\"labels\",\"type\":\"symbol\",\"source-layer\":"
+                                "\"place\",\"layout\":{\"text-field\":\"HÀ NỘI\"}},"
                                 "{\"id\":\"road\",\"source-layer\":\"transportation\"}]}\n"));
     writeFile(root + QStringLiteral("/glyphs/Noto Sans Regular/0-255.pbf"),
               QByteArrayLiteral("glyph-fixture"));
@@ -524,6 +525,23 @@ private slots:
         const QByteArray style = httpGet(source.baseUrl(), QByteArrayLiteral("/style/style.json"));
         QVERIFY(style.contains(source.baseUrl().toUtf8()));
         QVERIFY(!style.contains(QByteArrayLiteral("__QTMAPS_BASE_URL__")));
+        const QByteArray styleBody = style.mid(style.indexOf("\r\n\r\n") + 4);
+        const QJsonArray layers =
+            QJsonDocument::fromJson(styleBody).object().value(QStringLiteral("layers")).toArray();
+        QJsonObject legacyLabel;
+        for (const QJsonValue &value : layers) {
+            if (value.toObject().value(QStringLiteral("id")).toString() ==
+                QStringLiteral("labels")) {
+                legacyLabel = value.toObject();
+                break;
+            }
+        }
+        QVERIFY(!legacyLabel.isEmpty());
+        const QJsonObject legacyLayout = legacyLabel.value(QStringLiteral("layout")).toObject();
+        QCOMPARE(legacyLayout.value(QStringLiteral("text-field")).toString(),
+                 QStringLiteral("HÀ NỘI"));
+        QCOMPARE(legacyLayout.value(QStringLiteral("visibility")).toString(),
+                 QStringLiteral("none"));
         source.stop();
         QVERIFY(!source.isRunning());
         QVERIFY2(source.start(root), qPrintable(source.errorMessage()));

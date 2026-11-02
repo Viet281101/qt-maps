@@ -6,6 +6,9 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QHostAddress>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QMetaObject>
 #include <QRegularExpression>
 #include <QSqlDatabase>
@@ -18,6 +21,44 @@
 
 namespace qtmaps {
 namespace map {
+
+namespace {
+
+QByteArray hideLegacyHanoiLabel(const QByteArray &styleBytes)
+{
+    QJsonParseError error;
+    QJsonDocument document = QJsonDocument::fromJson(styleBytes, &error);
+    if (error.error != QJsonParseError::NoError || !document.isObject()) {
+        return styleBytes;
+    }
+
+    QJsonObject style = document.object();
+    QJsonArray layers = style.value(QStringLiteral("layers")).toArray();
+    bool changed = false;
+    for (int index = 0; index < layers.size(); ++index) {
+        QJsonObject layer = layers.at(index).toObject();
+        if (layer.value(QStringLiteral("id")).toString() != QStringLiteral("labels") ||
+            layer.value(QStringLiteral("type")).toString() != QStringLiteral("symbol") ||
+            layer.value(QStringLiteral("source-layer")).toString() != QStringLiteral("place")) {
+            continue;
+        }
+        QJsonObject layout = layer.value(QStringLiteral("layout")).toObject();
+        if (layout.value(QStringLiteral("text-field")).toString() != QStringLiteral("HÀ NỘI")) {
+            continue;
+        }
+        layout.insert(QStringLiteral("visibility"), QStringLiteral("none"));
+        layer.insert(QStringLiteral("layout"), layout);
+        layers.replace(index, layer);
+        changed = true;
+    }
+    if (!changed) {
+        return styleBytes;
+    }
+    style.insert(QStringLiteral("layers"), layers);
+    return QJsonDocument(style).toJson(QJsonDocument::Compact);
+}
+
+} // namespace
 
 class MbTilesTileSourceWorker final : public QObject
 {
@@ -164,6 +205,7 @@ private:
         if (path == QStringLiteral("/style/style.json")) {
             QByteArray style = readStatic(QStringLiteral("style/style.json"));
             if (!style.isEmpty()) {
+                style = hideLegacyHanoiLabel(style);
                 style.replace("__QTMAPS_BASE_URL__", baseUrl_.toUtf8());
                 writeResponse(socket, 200, QByteArrayLiteral("application/json"), style);
                 return;
