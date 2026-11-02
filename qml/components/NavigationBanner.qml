@@ -127,16 +127,28 @@ Rectangle {
         radius: Theme.radiusControl
 
         Row {
+            id: navigationSummaryRow
             anchors.left: parent.left
+            anchors.right: endNavigationButton.left
             anchors.verticalCenter: parent.verticalCenter
             anchors.leftMargin: Theme.spaceLg
+            anchors.rightMargin: Theme.spaceMd
             spacing: Theme.spaceLg
             Text { color: Theme.textPrimary; font.bold: true; text: root.remainingText }
             Text { color: Theme.textSecondary; text: root.etaText }
-            Text { color: Theme.warning; text: root.sourceText }
+            Text {
+                id: navigationSourceText
+                objectName: "navigationSourceText"
+                width: Math.max(0, navigationSummaryRow.width - x)
+                color: Theme.warning
+                text: root.sourceText
+                elide: Text.ElideRight
+            }
         }
 
         KeyboardActionButton {
+            id: endNavigationButton
+            objectName: "endNavigationButton"
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
             anchors.rightMargin: Theme.spaceXs

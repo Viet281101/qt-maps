@@ -179,6 +179,76 @@ private slots:
                                 .arg(statusRect.height())));
     }
 
+    void navigationSourceDoesNotOverlapEndAction_data()
+    {
+        QTest::addColumn<QSize>("windowSize");
+        QTest::newRow("review-960x640") << QSize(960, 640);
+        QTest::newRow("review-1366x768") << QSize(1366, 768);
+    }
+
+    void navigationSourceDoesNotOverlapEndAction()
+    {
+        QFETCH(QSize, windowSize);
+
+        RoutingController routing;
+        RouteNavigationController navigation;
+        connect(&routing, &RoutingController::routeChanged, &navigation, [&]() {
+            if (routing.routeAvailable())
+                navigation.setRoute(routing.route(), routing.sourceLabel());
+            else
+                navigation.clearRoute();
+        });
+        routing.calculateFixtureRoute();
+        navigation.setRoute(routing.route(), QStringLiteral("Valhalla local"));
+        navigation.start();
+
+        ApplicationShutdownCoordinator shutdown(&routing);
+        PerformanceMonitor performance;
+        StaticTileSource mapTiles;
+        qtmaps::map::MapSourceController mapSource(&mapTiles, nullptr);
+        QVERIFY(mapSource.start(QString(), QString()));
+        QQmlEngine engine;
+        engine.rootContext()->setContextProperty(QStringLiteral("routingController"), &routing);
+        engine.rootContext()->setContextProperty(QStringLiteral("routeNavigationController"),
+                                                 &navigation);
+        engine.rootContext()->setContextProperty(QStringLiteral("shutdownCoordinator"), &shutdown);
+        engine.rootContext()->setContextProperty(QStringLiteral("performanceMonitor"),
+                                                 &performance);
+        engine.rootContext()->setContextProperty(QStringLiteral("mapSourceController"), &mapSource);
+        engine.rootContext()->setContextProperty(QStringLiteral("routingFixtureOnly"), false);
+        engine.rootContext()->setContextProperty(QStringLiteral("instrumentationEnabled"), false);
+        engine.rootContext()->setContextProperty(QStringLiteral("vectorStyleUrl"), QString());
+
+        QQmlComponent component(&engine, QUrl(QStringLiteral("qrc:/qml/Main.qml")));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> root(component.create());
+        QVERIFY2(root, qPrintable(component.errorString()));
+        QQuickWindow *window = qobject_cast<QQuickWindow *>(root.data());
+        QVERIFY(window);
+        window->resize(windowSize);
+        window->show();
+        QVERIFY(QTest::qWaitForWindowExposed(window));
+
+        QQuickItem *source = root->findChild<QQuickItem *>(QStringLiteral("navigationSourceText"));
+        QQuickItem *endAction = root->findChild<QQuickItem *>(QStringLiteral("endNavigationButton"));
+        QVERIFY(source);
+        QVERIFY(endAction);
+        QTRY_VERIFY(source->width() > 0.0);
+
+        const QRectF sourceRect(source->mapToScene(QPointF(0, 0)), source->size());
+        const QRectF endActionRect(endAction->mapToScene(QPointF(0, 0)), endAction->size());
+        QVERIFY2(!sourceRect.intersects(endActionRect),
+                 qPrintable(QStringLiteral("source %1,%2 %3x%4 intersects end action %5,%6 %7x%8")
+                                .arg(sourceRect.x())
+                                .arg(sourceRect.y())
+                                .arg(sourceRect.width())
+                                .arg(sourceRect.height())
+                                .arg(endActionRect.x())
+                                .arg(endActionRect.y())
+                                .arg(endActionRect.width())
+                                .arg(endActionRect.height())));
+    }
+
     void mapClickDoesNotChangeRouteDuringReplay()
     {
         RoutingController routing;
