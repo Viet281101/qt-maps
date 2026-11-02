@@ -40,6 +40,8 @@ class HanoiStyleTest(unittest.TestCase):
         self.assertIn("road-secondary-fill", layers)
         self.assertIn("road-local-fill", layers)
         self.assertEqual(layers["road-labels-prepared"]["layout"]["visibility"], "none")
+        self.assertEqual(layers["hanoi-label"]["layout"]["visibility"], "none")
+        self.assertNotIn("fill-outline-color", layers["water"]["paint"])
         self.assertLess(
             layers["road-local-fill"]["paint"]["line-width"]["stops"][-1][1],
             layers["road-major-fill"]["paint"]["line-width"]["stops"][-1][1],

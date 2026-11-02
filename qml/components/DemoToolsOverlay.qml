@@ -27,7 +27,7 @@ Item {
             anchors.leftMargin: Theme.spaceLg
             anchors.verticalCenter: parent.verticalCenter
             color: Theme.textSecondary
-            text: qsTr("⌕  Tìm địa điểm — sắp có trong 07F")
+            text: qsTr("⌕  Tìm địa điểm (sắp có)")
             elide: Text.ElideRight
         }
     }

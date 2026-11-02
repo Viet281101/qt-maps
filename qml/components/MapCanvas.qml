@@ -15,6 +15,11 @@ Item {
     readonly property bool guidanceActive: routeNavigationController.active
                                            || (routingController.loading
                                                && routingController.routeAvailable)
+    readonly property real dataWest: 105.78
+    readonly property real dataSouth: 20.97
+    readonly property real dataEast: 105.90
+    readonly property real dataNorth: 21.10
+    property bool adjustingDataBounds: false
     signal togglePerformanceOverlayRequested()
 
     function recenterNavigation() {
@@ -61,6 +66,80 @@ Item {
         map.bearing = 0
         map.tilt = 0
         routeRefreshTimer.restart()
+    }
+
+    function clampMapToDataBounds() {
+        if (!map || !map.mapReady || adjustingDataBounds
+                || map.width < 1 || map.height < 1)
+            return
+        var corners = [
+            map.toCoordinate(Qt.point(0, 0), false),
+            map.toCoordinate(Qt.point(map.width, 0), false),
+            map.toCoordinate(Qt.point(0, map.height), false),
+            map.toCoordinate(Qt.point(map.width, map.height), false)
+        ]
+        var west = 180
+        var east = -180
+        var south = 90
+        var north = -90
+        for (var index = 0; index < corners.length; ++index) {
+            if (!corners[index].isValid)
+                return
+            west = Math.min(west, corners[index].longitude)
+            east = Math.max(east, corners[index].longitude)
+            south = Math.min(south, corners[index].latitude)
+            north = Math.max(north, corners[index].latitude)
+        }
+        if ((east - west > dataEast - dataWest
+             || north - south > dataNorth - dataSouth)
+                && map.zoomLevel < map.maximumZoomLevel) {
+            adjustingDataBounds = true
+            map.zoomLevel = Math.min(map.maximumZoomLevel, map.zoomLevel + 0.25)
+            adjustingDataBounds = false
+            dataBoundsTimer.restart()
+            return
+        }
+        var longitudeShift = west < dataWest ? dataWest - west
+                           : east > dataEast ? dataEast - east : 0
+        var latitudeShift = south < dataSouth ? dataSouth - south
+                          : north > dataNorth ? dataNorth - north : 0
+        if (Math.abs(longitudeShift) < 0.000001
+                && Math.abs(latitudeShift) < 0.000001)
+            return
+        adjustingDataBounds = true
+        map.center = QtPositioning.coordinate(map.center.latitude + latitudeShift,
+                                              map.center.longitude + longitudeShift)
+        adjustingDataBounds = false
+    }
+
+    function visibleStreetLabels() {
+        if (!map || map.zoomLevel < 15)
+            return []
+        var source = routingController.streetLabels
+        var selected = []
+        var minimumSpacing = map.zoomLevel < 16 ? 420
+                           : map.zoomLevel < 17 ? 220 : 100
+        var maximumLabels = map.zoomLevel < 16 ? 4 : 6
+        for (var index = 0; index < source.length
+             && selected.length < maximumLabels; ++index) {
+            var coordinate = source[index].coordinate
+            if (!coordinate || !coordinate.isValid)
+                continue
+            if (coordinate.distanceTo(routingController.origin) < 100
+                    || coordinate.distanceTo(routingController.destination) < 100)
+                continue
+            var separated = true
+            for (var selectedIndex = 0; selectedIndex < selected.length; ++selectedIndex) {
+                if (coordinate.distanceTo(selected[selectedIndex].coordinate)
+                        < minimumSpacing) {
+                    separated = false
+                    break
+                }
+            }
+            if (separated)
+                selected.push(source[index])
+        }
+        return selected
     }
 
     function fitRouteWithPanelPadding() {
@@ -161,10 +240,22 @@ Item {
         zoomLevel: 14
         gesture.enabled: !routeNavigationController.running
         focus: true
-        onCenterChanged: rasterRouteOverlay.requestPaint()
-        onZoomLevelChanged: rasterRouteOverlay.requestPaint()
-        onBearingChanged: rasterRouteOverlay.requestPaint()
-        onTiltChanged: rasterRouteOverlay.requestPaint()
+        onCenterChanged: {
+            rasterRouteOverlay.requestPaint()
+            dataBoundsTimer.restart()
+        }
+        onZoomLevelChanged: {
+            rasterRouteOverlay.requestPaint()
+            dataBoundsTimer.restart()
+        }
+        onBearingChanged: {
+            rasterRouteOverlay.requestPaint()
+            dataBoundsTimer.restart()
+        }
+        onTiltChanged: {
+            rasterRouteOverlay.requestPaint()
+            dataBoundsTimer.restart()
+        }
 
         onMapReadyChanged: {
             console.log("routing mapReady=" + mapReady + " error=" + error
@@ -181,6 +272,7 @@ Item {
                     activeMapType = supportedMapTypes[0]
                 }
                 routeRefreshTimer.restart()
+                dataBoundsTimer.restart()
                 benchmarkScenarioController.notifyMapReady()
             }
         }
@@ -201,7 +293,7 @@ Item {
 
         MapPolyline {
             id: routeOutline
-            visible: !canvas.rasterMode
+            visible: false
             path: routingController.routePath
             line.width: 12
             line.color: Theme.routeOutline
@@ -211,7 +303,7 @@ Item {
 
         MapPolyline {
             id: routeLine
-            visible: !canvas.rasterMode
+            visible: false
             path: routingController.routePath
             line.width: 7
             line.color: Theme.route
@@ -221,7 +313,7 @@ Item {
         MapPolyline {
             id: travelledRouteLine
             // MapLibre hides sibling polylines when an empty MapPolyline remains visible.
-            visible: !canvas.rasterMode && canvas.travelledRoutePath.length > 1
+            visible: false
             path: canvas.travelledRoutePath
             line.width: 7
             line.color: Theme.routeTravelled
@@ -229,7 +321,7 @@ Item {
         }
 
         MapQuickItem {
-            visible: !canvas.rasterMode
+            visible: false
             coordinate: routingController.origin
             anchorPoint.x: originMarker.width / 2
             anchorPoint.y: originMarker.height / 2
@@ -245,7 +337,7 @@ Item {
         }
 
         MapQuickItem {
-            visible: !canvas.rasterMode && canvas.guidanceActive
+            visible: false
             coordinate: routeNavigationController.coordinate
             anchorPoint.x: navigationMarker.width / 2
             anchorPoint.y: navigationMarker.height / 2
@@ -267,7 +359,7 @@ Item {
         }
 
         MapQuickItem {
-            visible: !canvas.rasterMode
+            visible: false
             coordinate: routingController.destination
             anchorPoint.x: destinationMarker.width / 2
             anchorPoint.y: destinationMarker.height / 2
@@ -283,7 +375,7 @@ Item {
         }
 
         MapItemView {
-            model: map.zoomLevel >= 15 ? routingController.streetLabels : []
+            model: canvas.visibleStreetLabels()
             delegate: MapQuickItem {
                 coordinate: modelData.coordinate
                 anchorPoint.x: streetLabel.width / 2
@@ -338,7 +430,7 @@ Item {
         id: rasterRouteOverlay
         objectName: "rasterRouteOverlay"
         anchors.fill: parent
-        visible: canvas.rasterMode
+        visible: true
         z: 2
 
         function drawPolyline(context, path, width, color) {
@@ -458,6 +550,13 @@ Item {
                 canvas.map.refreshRoute()
             rasterRouteOverlay.requestPaint()
         }
+    }
+
+    Timer {
+        id: dataBoundsTimer
+        interval: 0
+        repeat: false
+        onTriggered: canvas.clampMapToDataBounds()
     }
 
     Timer {

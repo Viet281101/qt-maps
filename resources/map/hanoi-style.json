@@ -57,7 +57,6 @@
       "minzoom": 12,
       "paint": {
         "fill-color": "#c8e3f5",
-        "fill-outline-color": "#acd2ec",
         "fill-opacity": 1.0
       }
     },
@@ -303,6 +302,7 @@
         ]
       ],
       "layout": {
+        "visibility": "none",
         "icon-image": "marker",
         "icon-size": 0.75,
         "text-field": "HÀ NỘI",

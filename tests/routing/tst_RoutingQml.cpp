@@ -514,7 +514,9 @@ private slots:
         QVERIFY(mainQml.contains("property bool panelCollapsed"));
         const QByteArray qml = mainQml + mapQml + navigationQml + bannerQml + panelQml + toolsQml;
         QVERIFY(qml.contains("routingController.streetLabels"));
-        QVERIFY(qml.contains("map.zoomLevel >= 15"));
+        QVERIFY(qml.contains("canvas.visibleStreetLabels()"));
+        QVERIFY(qml.contains("canvas.clampMapToDataBounds()"));
+        QVERIFY(qml.contains("map.zoomLevel < 15"));
         QVERIFY(qml.contains("routingController.currentManeuverIndex"));
         QVERIFY(qml.contains("routeNavigationController.currentManeuverIndex"));
         QVERIFY(qml.contains("NavigationBanner"));
@@ -523,8 +525,9 @@ private slots:
         QVERIFY(qml.contains("routeNavigationController.simulateDeviation()"));
         QVERIFY(qml.contains("travelledRoutePath"));
         QVERIFY(qml.contains("Theme.routeTravelled"));
-        QVERIFY(qml.contains("canvas.travelledRoutePath.length > 1"));
+        QVERIFY(qml.contains("drawPolyline(context, canvas.travelledRoutePath"));
         QVERIFY(qml.contains("objectName: \"rasterRouteOverlay\""));
+        QVERIFY(qml.contains("visible: true"));
         QVERIFY(qml.contains("map.fromCoordinate"));
         QVERIFY(qml.contains("mapSourceController.activateRaster()"));
         QVERIFY(qml.contains("mapSourceController.activateVector()"));
