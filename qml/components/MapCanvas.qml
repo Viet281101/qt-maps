@@ -20,6 +20,17 @@ Item {
     readonly property real dataEast: 105.90
     readonly property real dataNorth: 21.10
     property bool adjustingDataBounds: false
+    property bool routeOverlayDirty: false
+
+    function scheduleRouteOverlayPaint() {
+        if (!rasterRouteOverlay.visible) {
+            routeOverlayDirty = false
+            return
+        }
+        routeOverlayDirty = true
+        if (!routeOverlayPaintTimer.running)
+            routeOverlayPaintTimer.start()
+    }
 
     function recenterNavigation() {
         if (!map || !routeNavigationController.active
@@ -240,19 +251,19 @@ Item {
         gesture.enabled: !routeNavigationController.running
         focus: true
         onCenterChanged: {
-            rasterRouteOverlay.requestPaint()
+            canvas.scheduleRouteOverlayPaint()
             dataBoundsTimer.restart()
         }
         onZoomLevelChanged: {
-            rasterRouteOverlay.requestPaint()
+            canvas.scheduleRouteOverlayPaint()
             dataBoundsTimer.restart()
         }
         onBearingChanged: {
-            rasterRouteOverlay.requestPaint()
+            canvas.scheduleRouteOverlayPaint()
             dataBoundsTimer.restart()
         }
         onTiltChanged: {
-            rasterRouteOverlay.requestPaint()
+            canvas.scheduleRouteOverlayPaint()
             dataBoundsTimer.restart()
         }
 
@@ -422,7 +433,7 @@ Item {
         id: rasterRouteOverlay
         objectName: "rasterRouteOverlay"
         anchors.fill: parent
-        visible: true
+        visible: routingController.routeAvailable
         z: 2
 
         function drawPolyline(context, path, width, color) {
@@ -471,7 +482,7 @@ Item {
         onPaint: {
             var context = getContext("2d")
             context.clearRect(0, 0, width, height)
-            if (!canvas.map)
+            if (!canvas.map || !routingController.routeAvailable)
                 return
             drawPolyline(context, routingController.routePath, 12, Theme.routeOutline)
             drawPolyline(context, routingController.routePath, 7, Theme.route)
@@ -484,9 +495,14 @@ Item {
                            Theme.accent, "▲", "#10243a")
         }
 
-        onVisibleChanged: requestPaint()
-        onWidthChanged: requestPaint()
-        onHeightChanged: requestPaint()
+        onVisibleChanged: {
+            if (visible)
+                canvas.scheduleRouteOverlayPaint()
+            else
+                canvas.routeOverlayDirty = false
+        }
+        onWidthChanged: canvas.scheduleRouteOverlayPaint()
+        onHeightChanged: canvas.scheduleRouteOverlayPaint()
     }
 
     Connections {
@@ -505,7 +521,7 @@ Item {
         function onRouteChanged() {
             canvas.travelledRoutePath = []
             routeRefreshTimer.restart()
-            rasterRouteOverlay.requestPaint()
+            canvas.scheduleRouteOverlayPaint()
         }
         function onStateChanged() {
             if (routingController.routeAvailable && !routingController.loading)
@@ -524,7 +540,7 @@ Item {
         function onPositionChanged() {
             canvas.updateTravelledRoute()
             canvas.recenterNavigation()
-            rasterRouteOverlay.requestPaint()
+            canvas.scheduleRouteOverlayPaint()
         }
         function onStateChanged() {
             // Deviation emits navigation state before RoutingController enters loading.
@@ -540,6 +556,21 @@ Item {
         onTriggered: {
             if (canvas.map)
                 canvas.map.refreshRoute()
+            canvas.scheduleRouteOverlayPaint()
+        }
+    }
+
+    Timer {
+        id: routeOverlayPaintTimer
+        objectName: "routeOverlayPaintTimer"
+        interval: 16
+        repeat: false
+        onTriggered: {
+            if (!canvas.routeOverlayDirty || !rasterRouteOverlay.visible) {
+                canvas.routeOverlayDirty = false
+                return
+            }
+            canvas.routeOverlayDirty = false
             rasterRouteOverlay.requestPaint()
         }
     }
@@ -558,7 +589,7 @@ Item {
         onTriggered: mapLoader.active = true
     }
 
-    onTravelledRoutePathChanged: rasterRouteOverlay.requestPaint()
+    onTravelledRoutePathChanged: canvas.scheduleRouteOverlayPaint()
     onRasterModeChanged: {
         mapLoader.active = false
         mapReloadTimer.restart()

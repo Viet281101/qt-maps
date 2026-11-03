@@ -156,10 +156,14 @@ private slots:
         QQuickItem *controls = root->findChild<QQuickItem *>(QStringLiteral("routeControlsScroll"));
         QQuickItem *banner = root->findChild<QQuickItem *>(QStringLiteral("navigationBanner"));
         QQuickItem *status = root->findChild<QQuickItem *>(QStringLiteral("connectionStatusPill"));
+        QQuickItem *routeOverlay =
+            root->findChild<QQuickItem *>(QStringLiteral("rasterRouteOverlay"));
         QVERIFY(maneuvers);
         QVERIFY(controls);
         QVERIFY(banner);
         QVERIFY(status);
+        QVERIFY(routeOverlay);
+        QVERIFY(routeOverlay->isVisible());
         QTRY_VERIFY(maneuvers->height() >= 120.0);
         QVERIFY(maneuvers->property("contentHeight").toReal() > maneuvers->height());
         if (windowSize.height() == 580)
@@ -718,7 +722,9 @@ private slots:
         QVERIFY(qml.contains("Theme.routeTravelled"));
         QVERIFY(qml.contains("drawPolyline(context, canvas.travelledRoutePath"));
         QVERIFY(qml.contains("objectName: \"rasterRouteOverlay\""));
-        QVERIFY(qml.contains("visible: true"));
+        QVERIFY(qml.contains("visible: routingController.routeAvailable"));
+        QVERIFY(qml.contains("objectName: \"routeOverlayPaintTimer\""));
+        QCOMPARE(mapQml.count("rasterRouteOverlay.requestPaint()"), 1);
         QVERIFY(qml.contains("map.fromCoordinate"));
         QVERIFY(qml.contains("mapSourceController.activateRaster()"));
         QVERIFY(qml.contains("mapSourceController.activateVector()"));
