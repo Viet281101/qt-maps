@@ -724,6 +724,8 @@ private slots:
         QVERIFY(qml.contains("objectName: \"rasterRouteOverlay\""));
         QVERIFY(qml.contains("visible: routingController.routeAvailable"));
         QVERIFY(qml.contains("objectName: \"routeOverlayPaintTimer\""));
+        QVERIFY(qml.contains("renderTarget: Canvas.FramebufferObject"));
+        QVERIFY(qml.contains("renderStrategy: Canvas.Threaded"));
         QCOMPARE(mapQml.count("rasterRouteOverlay.requestPaint()"), 1);
         QVERIFY(qml.contains("map.fromCoordinate"));
         QVERIFY(qml.contains("mapSourceController.activateRaster()"));

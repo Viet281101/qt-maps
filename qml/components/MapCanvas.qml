@@ -433,7 +433,11 @@ Item {
         id: rasterRouteOverlay
         objectName: "rasterRouteOverlay"
         anchors.fill: parent
+        clip: true
         visible: routingController.routeAvailable
+        canvasSize: Qt.size(width, height)
+        renderTarget: Canvas.FramebufferObject
+        renderStrategy: Canvas.Threaded
         z: 2
 
         function drawPolyline(context, path, width, color) {
