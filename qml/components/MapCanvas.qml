@@ -488,7 +488,12 @@ Item {
         onPaint: {
             var context = getContext("2d")
             context.clearRect(0, 0, width, height)
-            if (!canvas.routeOverlayEnabled || !canvas.map || !routingController.routeAvailable)
+            if (!canvas.routeOverlayEnabled) {
+                context.fillStyle = "rgba(0, 0, 0, 0)"
+                context.fillRect(0, 0, 1, 1)
+                return
+            }
+            if (!canvas.map || !routingController.routeAvailable)
                 return
             drawPolyline(context, routingController.routePath, 12, Theme.routeOutline)
             drawPolyline(context, routingController.routePath, 7, Theme.route)

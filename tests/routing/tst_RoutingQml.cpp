@@ -723,7 +723,8 @@ private slots:
         QVERIFY(qml.contains("drawPolyline(context, canvas.travelledRoutePath"));
         QVERIFY(qml.contains("objectName: \"rasterRouteOverlay\""));
         QVERIFY(qml.contains("visible: routingController.routeAvailable"));
-        QVERIFY(qml.contains("!canvas.routeOverlayEnabled || !canvas.map"));
+        QVERIFY(qml.contains("if (!canvas.routeOverlayEnabled)"));
+        QVERIFY(qml.contains("context.fillRect(0, 0, 1, 1)"));
         QVERIFY(qml.contains("benchmarkScenarioController.noteOverlayPaintRequest"));
         QVERIFY(qml.contains("objectName: \"routeOverlayPaintTimer\""));
         QVERIFY(qml.contains("renderTarget: Canvas.FramebufferObject"));
