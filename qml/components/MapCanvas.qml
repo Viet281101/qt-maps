@@ -436,7 +436,7 @@ Item {
         objectName: "rasterRouteOverlay"
         anchors.fill: parent
         clip: true
-        visible: routingController.routeAvailable
+        visible: canvas.routeOverlayEnabled && routingController.routeAvailable
         canvasSize: Qt.size(width, height)
         renderTarget: Canvas.FramebufferObject
         renderStrategy: Canvas.Threaded
@@ -488,11 +488,6 @@ Item {
         onPaint: {
             var context = getContext("2d")
             context.clearRect(0, 0, width, height)
-            if (!canvas.routeOverlayEnabled) {
-                context.fillStyle = "rgba(0, 0, 0, 0)"
-                context.fillRect(0, 0, 1, 1)
-                return
-            }
             if (!canvas.map || !routingController.routeAvailable)
                 return
             drawPolyline(context, routingController.routePath, 12, Theme.routeOutline)
@@ -514,6 +509,27 @@ Item {
         }
         onWidthChanged: canvas.scheduleRouteOverlayPaint()
         onHeightChanged: canvas.scheduleRouteOverlayPaint()
+    }
+
+    Rectangle {
+        id: benchmarkRenderDriver
+        width: 1
+        height: 1
+        x: phase
+        y: 0
+        color: "#ffffff"
+        opacity: 0.001
+        visible: typeof benchmarkRenderTrace !== "undefined" && benchmarkRenderTrace
+                 && !canvas.routeOverlayEnabled
+        property real phase: 0
+
+        NumberAnimation on phase {
+            from: 0
+            to: 1
+            duration: 16
+            loops: Animation.Infinite
+            running: benchmarkRenderDriver.visible
+        }
     }
 
     Connections {
