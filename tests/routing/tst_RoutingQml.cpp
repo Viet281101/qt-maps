@@ -720,7 +720,9 @@ private slots:
         QVERIFY(qml.contains("routeNavigationController.simulateDeviation()"));
         QVERIFY(qml.contains("travelledRoutePath"));
         QVERIFY(qml.contains("Theme.routeTravelled"));
-        QVERIFY(qml.contains("drawPolyline(context, canvas.travelledRoutePath"));
+        QVERIFY(qml.contains("visibleGeoSegments(canvas.travelledRoutePath"));
+        QVERIFY(qml.contains("displayRouteForZoom(routingController.routePath"));
+        QVERIFY(qml.contains("displayRouteCache[cacheKey] = simplified"));
         QVERIFY(qml.contains("objectName: \"rasterRouteOverlay\""));
         QVERIFY(qml.contains("visible: canvas.routeOverlayEnabled && routingController.routeAvailable"));
         QVERIFY(qml.contains("id: benchmarkRenderDriver"));

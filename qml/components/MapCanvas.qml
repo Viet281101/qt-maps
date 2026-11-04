@@ -23,6 +23,7 @@ Item {
     property bool adjustingDataBounds: false
     property bool routeOverlayDirty: false
     property int routeOverlayPaintRequests: 0
+    property var displayRouteCache: ({})
 
     function scheduleRouteOverlayPaint() {
         if (!rasterRouteOverlay.visible) {
@@ -53,6 +54,67 @@ Item {
             bounds.north = Math.max(bounds.north, corners[index].latitude)
         }
         return bounds
+    }
+
+    function displayRouteForZoom(path, zoomLevel) {
+        if (!path || path.length < 3)
+            return path
+        var zoomBucket = Math.floor(zoomLevel * 2) / 2
+        var cacheKey = zoomBucket.toFixed(1)
+        if (displayRouteCache[cacheKey])
+            return displayRouteCache[cacheKey]
+        var projected = []
+        for (var index = 0; index < path.length; ++index) {
+            var latitudeRadians = path[index].latitude * Math.PI / 180
+            projected.push({
+                x: (path[index].longitude + 180) / 360,
+                y: (1 - Math.log(Math.tan(latitudeRadians)
+                                 + 1 / Math.cos(latitudeRadians)) / Math.PI) / 2
+            })
+        }
+        var keep = []
+        keep[0] = true
+        keep[path.length - 1] = true
+        var tolerance = 0.75 / (256 * Math.pow(2, zoomBucket))
+        var toleranceSquared = tolerance * tolerance
+
+        function simplifyRange(first, last) {
+            var start = projected[first]
+            var end = projected[last]
+            var deltaX = end.x - start.x
+            var deltaY = end.y - start.y
+            var lengthSquared = deltaX * deltaX + deltaY * deltaY
+            var maximumDistanceSquared = -1
+            var maximumIndex = -1
+            for (var candidateIndex = first + 1; candidateIndex < last; ++candidateIndex) {
+                var candidate = projected[candidateIndex]
+                var fraction = lengthSquared > 0
+                        ? ((candidate.x - start.x) * deltaX
+                           + (candidate.y - start.y) * deltaY) / lengthSquared : 0
+                fraction = Math.max(0, Math.min(1, fraction))
+                var offsetX = candidate.x - (start.x + fraction * deltaX)
+                var offsetY = candidate.y - (start.y + fraction * deltaY)
+                var distanceSquared = offsetX * offsetX + offsetY * offsetY
+                if (distanceSquared > maximumDistanceSquared) {
+                    maximumDistanceSquared = distanceSquared
+                    maximumIndex = candidateIndex
+                }
+            }
+            if (maximumDistanceSquared > toleranceSquared) {
+                keep[maximumIndex] = true
+                simplifyRange(first, maximumIndex)
+                simplifyRange(maximumIndex, last)
+            }
+        }
+
+        simplifyRange(0, path.length - 1)
+        var simplified = []
+        for (index = 0; index < path.length; ++index) {
+            if (keep[index])
+                simplified.push(path[index])
+        }
+        displayRouteCache[cacheKey] = simplified
+        return simplified
     }
 
     function recenterNavigation() {
@@ -489,7 +551,7 @@ Item {
             return segments
         }
 
-        function drawPolyline(context, path, width, color, traceEnabled, geoBounds) {
+        function drawPolyline(context, geoSegments, width, color, traceEnabled) {
             var metrics = {
                 projectionMs: 0,
                 pathMs: 0,
@@ -498,11 +560,10 @@ Item {
                 viewportVertices: 0,
                 strokes: 0
             }
-            if (!path || path.length < 2)
+            if (!geoSegments || geoSegments.length === 0)
                 return metrics
             var phaseStarted = traceEnabled
                     ? benchmarkScenarioController.traceMilliseconds() : 0
-            var geoSegments = visibleGeoSegments(path, geoBounds)
             var pointSegments = []
             for (var segmentIndex = 0; segmentIndex < geoSegments.length; ++segmentIndex) {
                 var points = []
@@ -585,12 +646,16 @@ Item {
                     && benchmarkRenderTrace
                     && typeof benchmarkScenarioController !== "undefined"
             var geoBounds = canvas.routeOverlayGeoBounds(64)
-            var outlineMetrics = drawPolyline(context, routingController.routePath,
-                                               12, Theme.routeOutline, traceEnabled, geoBounds)
-            var routeMetrics = drawPolyline(context, routingController.routePath,
-                                             7, Theme.route, traceEnabled, geoBounds)
-            var travelledMetrics = drawPolyline(context, canvas.travelledRoutePath,
-                                                 7, Theme.routeTravelled, traceEnabled, geoBounds)
+            var displayRoute = canvas.displayRouteForZoom(routingController.routePath,
+                                                          map.zoomLevel)
+            var routeSegments = visibleGeoSegments(displayRoute, geoBounds)
+            var travelledSegments = visibleGeoSegments(canvas.travelledRoutePath, geoBounds)
+            var outlineMetrics = drawPolyline(context, routeSegments, 12,
+                                               Theme.routeOutline, traceEnabled)
+            var routeMetrics = drawPolyline(context, routeSegments, 7,
+                                             Theme.route, traceEnabled)
+            var travelledMetrics = drawPolyline(context, travelledSegments, 7,
+                                                 Theme.routeTravelled, traceEnabled)
             drawMarker(context, routingController.origin, 17, Theme.markerOrigin, "A", "#102018")
             drawMarker(context, routingController.destination, 17,
                        Theme.markerDestination, "B", "#301010")
@@ -605,6 +670,7 @@ Item {
                 benchmarkScenarioController.noteOverlayPaintTiming({
                     "paint_request": canvas.routeOverlayPaintRequests,
                     "route_vertices_total": routingController.routePath.length,
+                    "route_vertices_display": displayRoute.length,
                     "route_vertices_viewport": routeMetrics.viewportVertices,
                     "travelled_vertices_total": canvas.travelledRoutePath.length,
                     "projection_vertex_operations": projectedVertices,
@@ -667,6 +733,7 @@ Item {
         target: routingController
         function onRouteChanged() {
             canvas.travelledRoutePath = []
+            canvas.displayRouteCache = ({})
             routeRefreshTimer.restart()
             canvas.scheduleRouteOverlayPaint()
         }
