@@ -15,7 +15,8 @@ Window {
     title: qsTr("QtMaps — Lập tuyến Hà Nội")
     property bool performanceOverlayVisible: false
     property bool panelCollapsed: false
-    property bool routeOverlayForBenchmark: routeOverlayEnabled
+    property bool routeOverlayForBenchmark:
+        typeof routeOverlayEnabled === "undefined" ? true : routeOverlayEnabled
     property string loadedMapStyleUrl: mapSourceController.activeStyleUrl
     readonly property bool endpointSelectionEnabled:
         !routeNavigationController.active

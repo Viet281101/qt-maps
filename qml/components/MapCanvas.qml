@@ -577,12 +577,25 @@ Item {
                 return
             }
             canvas.routeOverlayDirty = false
-            if (benchmarkRenderTrace) {
+            if (typeof benchmarkRenderTrace !== "undefined" && benchmarkRenderTrace
+                    && typeof benchmarkScenarioController !== "undefined") {
                 ++canvas.routeOverlayPaintRequests
                 benchmarkScenarioController.noteOverlayPaintRequest(
                             canvas.routeOverlayPaintRequests)
             }
             rasterRouteOverlay.requestPaint()
+        }
+    }
+
+    Timer {
+        id: benchmarkMapKeepaliveTimer
+        interval: 16
+        repeat: true
+        running: typeof benchmarkRenderTrace !== "undefined" && benchmarkRenderTrace
+                 && !canvas.routeOverlayEnabled
+        onTriggered: {
+            if (canvas.map)
+                canvas.map.update()
         }
     }
 
