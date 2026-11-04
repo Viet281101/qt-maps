@@ -551,7 +551,7 @@ Item {
             return segments
         }
 
-        function drawPolyline(context, geoSegments, width, color, traceEnabled) {
+        function drawPolyline(context, geoSegments, styles, traceEnabled) {
             var metrics = {
                 projectionMs: 0,
                 pathMs: 0,
@@ -606,12 +606,14 @@ Item {
                 metrics.pathMs = phaseFinished - phaseStarted
                 phaseStarted = phaseFinished
             }
-            context.lineWidth = width
-            context.strokeStyle = color
             context.lineCap = "round"
             context.lineJoin = "round"
-            context.stroke()
-            metrics.strokes = 1
+            for (segmentIndex = 0; segmentIndex < styles.length; ++segmentIndex) {
+                context.lineWidth = styles[segmentIndex].width
+                context.strokeStyle = styles[segmentIndex].color
+                context.stroke()
+                ++metrics.strokes
+            }
             if (traceEnabled) {
                 phaseFinished = benchmarkScenarioController.traceMilliseconds()
                 metrics.strokeMs = phaseFinished - phaseStarted
@@ -650,12 +652,13 @@ Item {
                                                           map.zoomLevel)
             var routeSegments = visibleGeoSegments(displayRoute, geoBounds)
             var travelledSegments = visibleGeoSegments(canvas.travelledRoutePath, geoBounds)
-            var outlineMetrics = drawPolyline(context, routeSegments, 12,
-                                               Theme.routeOutline, traceEnabled)
-            var routeMetrics = drawPolyline(context, routeSegments, 7,
-                                             Theme.route, traceEnabled)
-            var travelledMetrics = drawPolyline(context, travelledSegments, 7,
-                                                 Theme.routeTravelled, traceEnabled)
+            var routeMetrics = drawPolyline(context, routeSegments, [
+                { width: 12, color: Theme.routeOutline },
+                { width: 7, color: Theme.route }
+            ], traceEnabled)
+            var travelledMetrics = drawPolyline(context, travelledSegments, [
+                { width: 7, color: Theme.routeTravelled }
+            ], traceEnabled)
             drawMarker(context, routingController.origin, 17, Theme.markerOrigin, "A", "#102018")
             drawMarker(context, routingController.destination, 17,
                        Theme.markerDestination, "B", "#301010")
@@ -663,10 +666,9 @@ Item {
                 drawMarker(context, routeNavigationController.coordinate, 14,
                            Theme.accent, "▲", "#10243a")
             if (traceEnabled) {
-                var projectionMs = outlineMetrics.projectionMs
-                        + routeMetrics.projectionMs + travelledMetrics.projectionMs
-                var projectedVertices = outlineMetrics.projectedVertices
-                        + routeMetrics.projectedVertices + travelledMetrics.projectedVertices
+                var projectionMs = routeMetrics.projectionMs + travelledMetrics.projectionMs
+                var projectedVertices = routeMetrics.projectedVertices
+                        + travelledMetrics.projectedVertices
                 benchmarkScenarioController.noteOverlayPaintTiming({
                     "paint_request": canvas.routeOverlayPaintRequests,
                     "route_vertices_total": routingController.routePath.length,
@@ -677,12 +679,9 @@ Item {
                     "projection_ms": projectionMs,
                     "projection_ms_per_vertex": projectedVertices > 0
                             ? projectionMs / projectedVertices : 0,
-                    "path_ms": outlineMetrics.pathMs + routeMetrics.pathMs
-                               + travelledMetrics.pathMs,
-                    "stroke_ms": outlineMetrics.strokeMs + routeMetrics.strokeMs
-                                 + travelledMetrics.strokeMs,
-                    "stroke_count": outlineMetrics.strokes + routeMetrics.strokes
-                                    + travelledMetrics.strokes
+                    "path_ms": routeMetrics.pathMs + travelledMetrics.pathMs,
+                    "stroke_ms": routeMetrics.strokeMs + travelledMetrics.strokeMs,
+                    "stroke_count": routeMetrics.strokes + travelledMetrics.strokes
                 })
             }
         }
