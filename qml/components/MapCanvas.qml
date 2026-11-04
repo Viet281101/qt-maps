@@ -436,7 +436,7 @@ Item {
         objectName: "rasterRouteOverlay"
         anchors.fill: parent
         clip: true
-        visible: canvas.routeOverlayEnabled && routingController.routeAvailable
+        visible: routingController.routeAvailable
         canvasSize: Qt.size(width, height)
         renderTarget: Canvas.FramebufferObject
         renderStrategy: Canvas.Threaded
@@ -488,7 +488,7 @@ Item {
         onPaint: {
             var context = getContext("2d")
             context.clearRect(0, 0, width, height)
-            if (!canvas.map || !routingController.routeAvailable)
+            if (!canvas.routeOverlayEnabled || !canvas.map || !routingController.routeAvailable)
                 return
             drawPolyline(context, routingController.routePath, 12, Theme.routeOutline)
             drawPolyline(context, routingController.routePath, 7, Theme.route)
@@ -584,18 +584,6 @@ Item {
                             canvas.routeOverlayPaintRequests)
             }
             rasterRouteOverlay.requestPaint()
-        }
-    }
-
-    Timer {
-        id: benchmarkMapKeepaliveTimer
-        interval: 16
-        repeat: true
-        running: typeof benchmarkRenderTrace !== "undefined" && benchmarkRenderTrace
-                 && !canvas.routeOverlayEnabled
-        onTriggered: {
-            if (canvas.map)
-                canvas.map.update()
         }
     }
 
