@@ -51,6 +51,7 @@ private slots:
     void handleRoutingChanged();
     void handleRerouteSucceeded();
     void advanceCamera();
+    void handleFrameProgress();
 
 private:
     bool requiresBackend() const;
@@ -60,6 +61,7 @@ private:
     void requestNextRoute();
     void evaluateRouteRequest();
     void startNavigationMeasurement();
+    void startInteractiveTimers();
     void finish(bool success, const QString &reason = QString(), bool forcePss = true);
     void finalizeFinish();
     void emitEvent(const QString &eventName, const QVariantMap &fields = QVariantMap()) const;
@@ -87,17 +89,24 @@ private:
     bool navigationStarted_ = false;
     bool reroutePending_ = false;
     bool rerouteSucceeded_ = false;
+    bool frameProgressStalled_ = false;
+    bool windowExposedSeen_ = false;
     qint64 launchReferenceMilliseconds_ = 0;
     qint64 firstMapFrameMilliseconds_ = -1;
     QString finishReason_;
     int routeIndex_ = 0;
     int cameraStep_ = 0;
+    int cameraCommandCount_ = 0;
+    qint64 frameSwapCount_ = 0;
+    qint64 lastProgressFrameCount_ = 0;
     QVector<QPair<QString, QString>> routePairs_;
     QElapsedTimer routeRequestTimer_;
     QElapsedTimer rerouteTimer_;
     QTimer warmupTimer_;
     QTimer completionTimer_;
     QTimer cameraTimer_;
+    QTimer renderUpdateTimer_;
+    QTimer frameProgressTimer_;
     QTimer deviationTimer_;
 };
 

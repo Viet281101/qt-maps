@@ -79,6 +79,27 @@ private slots:
         QVERIFY(routing.routeAvailable());
         QCOMPARE(routing.sourceLabel(), QStringLiteral("fixture/mô phỏng"));
     }
+
+    void panZoomMarksMissingFrameProgressWithoutDroppingTheRun()
+    {
+        PerformanceMonitor performance;
+        RoutingController routing;
+        RouteNavigationController navigation;
+        QElapsedTimer launch;
+        launch.start();
+        BenchmarkScenarioController controller(&performance, &routing, &navigation,
+                                               launch.msecsSinceReference());
+        QString error;
+        QVERIFY(controller.configure(QStringLiteral("pan_zoom"), 1, 0, true, &error));
+        QSignalSpy cameraCommands(&controller, &BenchmarkScenarioController::cameraCommand);
+        QSignalSpy completed(&controller, &BenchmarkScenarioController::completed);
+
+        controller.notifyMapReady();
+        QVERIFY(QMetaObject::invokeMethod(&controller, "handleFrameSwapped"));
+        QTRY_VERIFY_WITH_TIMEOUT(cameraCommands.count() > 0, 500);
+        QTRY_COMPARE_WITH_TIMEOUT(completed.count(), 1, 2000);
+        QCOMPARE(completed.at(0).at(0).toBool(), false);
+    }
 };
 
 QTEST_GUILESS_MAIN(BenchmarkScenarioTest)

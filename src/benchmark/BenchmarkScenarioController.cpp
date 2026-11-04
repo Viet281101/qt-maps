@@ -42,11 +42,22 @@ BenchmarkScenarioController::BenchmarkScenarioController(
     deviationTimer_.setSingleShot(true);
     cameraTimer_.setInterval(250);
     cameraTimer_.setTimerType(Qt::PreciseTimer);
+    renderUpdateTimer_.setInterval(16);
+    renderUpdateTimer_.setTimerType(Qt::PreciseTimer);
+    frameProgressTimer_.setInterval(1000);
+    frameProgressTimer_.setTimerType(Qt::PreciseTimer);
 
     connect(&warmupTimer_, &QTimer::timeout, this, &BenchmarkScenarioController::startMeasurement);
     connect(&completionTimer_, &QTimer::timeout, this,
             [this]() { finish(!routeFailureSeen_, QStringLiteral("duration complete")); });
     connect(&cameraTimer_, &QTimer::timeout, this, &BenchmarkScenarioController::advanceCamera);
+    connect(&renderUpdateTimer_, &QTimer::timeout, this, [this]() {
+        if (window_ && measurementStarted_ && !finished_) {
+            window_->update();
+        }
+    });
+    connect(&frameProgressTimer_, &QTimer::timeout, this,
+            &BenchmarkScenarioController::handleFrameProgress);
     connect(&deviationTimer_, &QTimer::timeout, this, [this]() {
         if (!navigationController_->active()) {
             routeFailureSeen_ = true;
@@ -138,6 +149,10 @@ void BenchmarkScenarioController::handleFrameSwapped()
     if (!enabled() || !mapReady_) {
         return;
     }
+    ++frameSwapCount_;
+    if (window_ && window_->isExposed()) {
+        windowExposedSeen_ = true;
+    }
 
     if (!firstMapFrameSeen_) {
         firstMapFrameSeen_ = true;
@@ -152,17 +167,6 @@ void BenchmarkScenarioController::handleFrameSwapped()
         maybeScheduleWarmup();
     }
 
-    // Qt Location's raster renderer is event-driven and otherwise stops swapping
-    // frames between discrete replay points. Keep the benchmark interaction window
-    // continuously driven so frame intervals measure rendering cadence rather than
-    // the intentional pause between two camera or navigation commands. This is a
-    // benchmark-only update request; normal product rendering remains event-driven.
-    if (measurementStarted_ && !finished_ &&
-        (scenario_ == QLatin1String("pan_zoom") ||
-         scenario_ == QLatin1String("navigation_replay")) &&
-        window_) {
-        window_->update();
-    }
 }
 
 void BenchmarkScenarioController::handleProcessMetrics()
@@ -242,6 +246,28 @@ void BenchmarkScenarioController::advanceCamera()
     const double bearing = (cameraStep_ * 23) % 360;
     emit cameraCommand(path[index], zoom, bearing);
     ++cameraStep_;
+    ++cameraCommandCount_;
+}
+
+void BenchmarkScenarioController::handleFrameProgress()
+{
+    if (!measurementStarted_ || finished_) {
+        return;
+    }
+    const qint64 newFrames = frameSwapCount_ - lastProgressFrameCount_;
+    const bool windowExposed = window_ && window_->isExposed();
+    windowExposedSeen_ = windowExposedSeen_ || windowExposed;
+    QVariantMap fields = {{QStringLiteral("new_frames"), newFrames},
+                          {QStringLiteral("total_frames"), frameSwapCount_},
+                          {QStringLiteral("window_exposed"), windowExposed},
+                          {QStringLiteral("camera_commands"), cameraCommandCount_}};
+    if (newFrames <= 0) {
+        frameProgressStalled_ = true;
+        emitEvent(QStringLiteral("frame_progress_stalled"), fields);
+    } else {
+        emitEvent(QStringLiteral("frame_progress"), fields);
+    }
+    lastProgressFrameCount_ = frameSwapCount_;
 }
 
 bool BenchmarkScenarioController::requiresBackend() const
@@ -275,6 +301,7 @@ void BenchmarkScenarioController::startMeasurement()
     } else if (scenario_ == QLatin1String("pan_zoom")) {
         performanceMonitor_->beginInteractionWindow(durationSeconds_ * 1000);
         cameraStep_ = 0;
+        startInteractiveTimers();
         advanceCamera();
         cameraTimer_.start();
         completionTimer_.start(durationSeconds_ * 1000);
@@ -289,6 +316,17 @@ void BenchmarkScenarioController::startMeasurement()
             routingController_->calculateRoute();
         }
     }
+}
+
+void BenchmarkScenarioController::startInteractiveTimers()
+{
+    frameSwapCount_ = 0;
+    lastProgressFrameCount_ = 0;
+    cameraCommandCount_ = 0;
+    frameProgressStalled_ = false;
+    windowExposedSeen_ = window_ && window_->isExposed();
+    renderUpdateTimer_.start();
+    frameProgressTimer_.start();
 }
 
 void BenchmarkScenarioController::startRouteMeasurement()
@@ -359,6 +397,7 @@ void BenchmarkScenarioController::startNavigationMeasurement()
     navigationStarted_ = true;
     navigationController_->setSpeedMultiplier(4);
     performanceMonitor_->beginInteractionWindow(durationSeconds_ * 1000);
+    startInteractiveTimers();
     navigationController_->start();
     emitEvent(QStringLiteral("navigation_started"),
               {{QStringLiteral("source"), navigationController_->sourceLabel()},
@@ -393,6 +432,8 @@ void BenchmarkScenarioController::finalizeFinish()
     warmupTimer_.stop();
     completionTimer_.stop();
     cameraTimer_.stop();
+    renderUpdateTimer_.stop();
+    frameProgressTimer_.stop();
     deviationTimer_.stop();
     if (scenario_ == QLatin1String("navigation_replay")) {
         navigationController_->stop();
@@ -408,6 +449,22 @@ void BenchmarkScenarioController::finalizeFinish()
     fields.insert(QStringLiteral("startup_ms"), firstMapFrameMilliseconds_);
     fields.insert(QStringLiteral("pss_mib"), performanceMonitor_->totalPssMiB());
     fields.insert(QStringLiteral("rss_mib"), performanceMonitor_->totalRssMiB());
+    const bool interactiveScenario = scenario_ == QLatin1String("pan_zoom") ||
+                                     scenario_ == QLatin1String("navigation_replay");
+    const bool frameProgressOk = !interactiveScenario ||
+                                 (!frameProgressStalled_ && frameSwapCount_ > 0 &&
+                                  windowExposedSeen_ &&
+                                  (scenario_ != QLatin1String("pan_zoom") ||
+                                   cameraCommandCount_ > 0));
+    if (!frameProgressOk) {
+        finishSuccess_ = false;
+    }
+    fields.insert(QStringLiteral("frame_progress_ok"), frameProgressOk);
+    fields.insert(QStringLiteral("frame_progress_stalled"), frameProgressStalled_);
+    fields.insert(QStringLiteral("frame_swap_count"), frameSwapCount_);
+    fields.insert(QStringLiteral("window_exposed_seen"), windowExposedSeen_);
+    fields.insert(QStringLiteral("camera_command_count"), cameraCommandCount_);
+    fields.insert(QStringLiteral("success"), finishSuccess_);
     if (frames) {
         fields.insert(QStringLiteral("interaction_frame_count"), frames->interactionFrameCount());
         fields.insert(QStringLiteral("fps_average"), frames->interactionAverageFps());
