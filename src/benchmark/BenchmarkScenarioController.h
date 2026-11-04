@@ -39,6 +39,7 @@ public:
     QString scenario() const;
 
     Q_INVOKABLE void notifyMapReady();
+    Q_INVOKABLE void noteOverlayPaintRequest(int requestCount);
 
 signals:
     void cameraCommand(const QGeoCoordinate &coordinate, double zoomLevel, double bearing);
@@ -97,11 +98,14 @@ private:
     int routeIndex_ = 0;
     int cameraStep_ = 0;
     int cameraCommandCount_ = 0;
+    int overlayPaintRequestCount_ = 0;
     qint64 frameSwapCount_ = 0;
     qint64 lastProgressFrameCount_ = 0;
     QVector<QPair<QString, QString>> routePairs_;
     QElapsedTimer routeRequestTimer_;
     QElapsedTimer rerouteTimer_;
+    QElapsedTimer frameSwapTimer_;
+    bool frameSwapTimerStarted_ = false;
     QTimer warmupTimer_;
     QTimer completionTimer_;
     QTimer cameraTimer_;

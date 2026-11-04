@@ -9,6 +9,7 @@ Item {
     property bool panelCollapsed: false
     property real panelWidth: 330
     property string styleUrl: ""
+    property bool routeOverlayEnabled: true
     property var travelledRoutePath: []
     readonly property bool rasterMode: mapSourceController.layerMode === "raster"
     readonly property var map: mapLoader.item
@@ -21,6 +22,7 @@ Item {
     readonly property real dataNorth: 21.10
     property bool adjustingDataBounds: false
     property bool routeOverlayDirty: false
+    property int routeOverlayPaintRequests: 0
 
     function scheduleRouteOverlayPaint() {
         if (!rasterRouteOverlay.visible) {
@@ -434,7 +436,7 @@ Item {
         objectName: "rasterRouteOverlay"
         anchors.fill: parent
         clip: true
-        visible: routingController.routeAvailable
+        visible: canvas.routeOverlayEnabled && routingController.routeAvailable
         canvasSize: Qt.size(width, height)
         renderTarget: Canvas.FramebufferObject
         renderStrategy: Canvas.Threaded
@@ -575,6 +577,11 @@ Item {
                 return
             }
             canvas.routeOverlayDirty = false
+            if (benchmarkRenderTrace) {
+                ++canvas.routeOverlayPaintRequests
+                benchmarkScenarioController.noteOverlayPaintRequest(
+                            canvas.routeOverlayPaintRequests)
+            }
             rasterRouteOverlay.requestPaint()
         }
     }

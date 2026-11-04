@@ -144,6 +144,16 @@ void BenchmarkScenarioController::notifyMapReady()
     }
 }
 
+void BenchmarkScenarioController::noteOverlayPaintRequest(int requestCount)
+{
+    overlayPaintRequestCount_ = requestCount;
+    if (measurementStarted_ && !finished_) {
+        emitEvent(QStringLiteral("overlay_paint_requested"),
+                  {{QStringLiteral("request_count"), overlayPaintRequestCount_},
+                   {QStringLiteral("camera_commands"), cameraCommandCount_}});
+    }
+}
+
 void BenchmarkScenarioController::handleFrameSwapped()
 {
     if (!enabled() || !mapReady_) {
@@ -152,6 +162,21 @@ void BenchmarkScenarioController::handleFrameSwapped()
     ++frameSwapCount_;
     if (window_ && window_->isExposed()) {
         windowExposedSeen_ = true;
+    }
+    if (measurementStarted_ && !finished_) {
+        if (frameSwapTimerStarted_) {
+            const qint64 elapsedMilliseconds = frameSwapTimer_.restart();
+            if (elapsedMilliseconds > 50) {
+                emitEvent(QStringLiteral("frame_long"),
+                          {{QStringLiteral("frame_ms"), elapsedMilliseconds},
+                           {QStringLiteral("camera_commands"), cameraCommandCount_},
+                           {QStringLiteral("overlay_paint_requests"),
+                            overlayPaintRequestCount_}});
+            }
+        } else {
+            frameSwapTimer_.start();
+            frameSwapTimerStarted_ = true;
+        }
     }
 
     if (!firstMapFrameSeen_) {
@@ -323,6 +348,8 @@ void BenchmarkScenarioController::startInteractiveTimers()
     frameSwapCount_ = 0;
     lastProgressFrameCount_ = 0;
     cameraCommandCount_ = 0;
+    overlayPaintRequestCount_ = 0;
+    frameSwapTimerStarted_ = false;
     frameProgressStalled_ = false;
     windowExposedSeen_ = window_ && window_->isExposed();
     renderUpdateTimer_.start();

@@ -287,6 +287,14 @@ int main(int argc, char *argv[])
                                              instrumentationEnabled);
     engine.rootContext()->setContextProperty(QStringLiteral("benchmarkAutomation"),
                                              parser.isSet(QStringLiteral("automated-pan-zoom")));
+    const bool benchmarkRouteOverlayEnabled =
+        qEnvironmentVariableIntValue("QTMAPS_BENCHMARK_DISABLE_ROUTE_OVERLAY") == 0;
+    const bool benchmarkRenderTrace =
+        qEnvironmentVariableIntValue("QTMAPS_BENCHMARK_TRACE_RENDER") != 0;
+    engine.rootContext()->setContextProperty(QStringLiteral("routeOverlayEnabled"),
+                                             benchmarkRouteOverlayEnabled);
+    engine.rootContext()->setContextProperty(QStringLiteral("benchmarkRenderTrace"),
+                                             benchmarkRenderTrace);
     const QString vectorStyleUrl = useUnit03LocalMap
                                        ? mapSourceController.activeStyleUrl()
                                        : parser.value(QStringLiteral("vector-style-url"));

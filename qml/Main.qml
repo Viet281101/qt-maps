@@ -15,6 +15,7 @@ Window {
     title: qsTr("QtMaps — Lập tuyến Hà Nội")
     property bool performanceOverlayVisible: false
     property bool panelCollapsed: false
+    property bool routeOverlayForBenchmark: routeOverlayEnabled
     property string loadedMapStyleUrl: mapSourceController.activeStyleUrl
     readonly property bool endpointSelectionEnabled:
         !routeNavigationController.active
@@ -68,6 +69,7 @@ Window {
         sourceComponent: Component {
             MapCanvas {
                 styleUrl: root.loadedMapStyleUrl
+                routeOverlayEnabled: root.routeOverlayForBenchmark
                 endpointSelectionEnabled: root.endpointSelectionEnabled
                 panelCollapsed: root.panelCollapsed
                 panelWidth: routePanel.width
