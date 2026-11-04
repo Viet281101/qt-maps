@@ -34,6 +34,27 @@ Item {
             routeOverlayPaintTimer.start()
     }
 
+    function routeOverlayGeoBounds(padding) {
+        if (!map || map.width < 1 || map.height < 1)
+            return null
+        var corners = [
+            map.toCoordinate(Qt.point(-padding, -padding), false),
+            map.toCoordinate(Qt.point(map.width + padding, -padding), false),
+            map.toCoordinate(Qt.point(-padding, map.height + padding), false),
+            map.toCoordinate(Qt.point(map.width + padding, map.height + padding), false)
+        ]
+        var bounds = { west: 180, east: -180, south: 90, north: -90 }
+        for (var index = 0; index < corners.length; ++index) {
+            if (!corners[index].isValid)
+                return null
+            bounds.west = Math.min(bounds.west, corners[index].longitude)
+            bounds.east = Math.max(bounds.east, corners[index].longitude)
+            bounds.south = Math.min(bounds.south, corners[index].latitude)
+            bounds.north = Math.max(bounds.north, corners[index].latitude)
+        }
+        return bounds
+    }
+
     function recenterNavigation() {
         if (!map || !routeNavigationController.active
                 || !routeNavigationController.coordinate.isValid)
@@ -442,7 +463,33 @@ Item {
         renderStrategy: Canvas.Threaded
         z: 2
 
-        function drawPolyline(context, path, width, color, traceEnabled) {
+        function visibleGeoSegments(path, bounds) {
+            if (!bounds)
+                return [path]
+            var segments = []
+            var current = []
+            for (var index = 1; index < path.length; ++index) {
+                var previous = path[index - 1]
+                var coordinate = path[index]
+                var intersects = Math.max(previous.longitude, coordinate.longitude) >= bounds.west
+                        && Math.min(previous.longitude, coordinate.longitude) <= bounds.east
+                        && Math.max(previous.latitude, coordinate.latitude) >= bounds.south
+                        && Math.min(previous.latitude, coordinate.latitude) <= bounds.north
+                if (intersects) {
+                    if (current.length === 0)
+                        current.push(previous)
+                    current.push(coordinate)
+                } else if (current.length > 0) {
+                    segments.push(current)
+                    current = []
+                }
+            }
+            if (current.length > 0)
+                segments.push(current)
+            return segments
+        }
+
+        function drawPolyline(context, path, width, color, traceEnabled, geoBounds) {
             var metrics = {
                 projectionMs: 0,
                 pathMs: 0,
@@ -455,32 +502,43 @@ Item {
                 return metrics
             var phaseStarted = traceEnabled
                     ? benchmarkScenarioController.traceMilliseconds() : 0
-            var points = []
-            for (var index = 0; index < path.length; ++index) {
-                var point = map.fromCoordinate(path[index], false)
-                if (!isFinite(point.x) || !isFinite(point.y))
-                    continue
-                points.push(point)
-                if (point.x >= 0 && point.x <= width
-                        && point.y >= 0 && point.y <= height)
-                    ++metrics.viewportVertices
+            var geoSegments = visibleGeoSegments(path, geoBounds)
+            var pointSegments = []
+            for (var segmentIndex = 0; segmentIndex < geoSegments.length; ++segmentIndex) {
+                var points = []
+                var segment = geoSegments[segmentIndex]
+                for (var index = 0; index < segment.length; ++index) {
+                    var point = map.fromCoordinate(segment[index], false)
+                    if (!isFinite(point.x) || !isFinite(point.y))
+                        continue
+                    points.push(point)
+                    if (point.x >= 0 && point.x <= width
+                            && point.y >= 0 && point.y <= height)
+                        ++metrics.viewportVertices
+                }
+                if (points.length >= 2) {
+                    pointSegments.push(points)
+                    metrics.projectedVertices += points.length
+                }
             }
-            metrics.projectedVertices = points.length
             if (traceEnabled) {
                 var phaseFinished = benchmarkScenarioController.traceMilliseconds()
                 metrics.projectionMs = phaseFinished - phaseStarted
                 phaseStarted = phaseFinished
             }
             context.beginPath()
-            for (var pointIndex = 0; pointIndex < points.length; ++pointIndex) {
-                point = points[pointIndex]
-                if (pointIndex === 0) {
-                    context.moveTo(point.x, point.y)
-                } else {
-                    context.lineTo(point.x, point.y)
+            for (segmentIndex = 0; segmentIndex < pointSegments.length; ++segmentIndex) {
+                points = pointSegments[segmentIndex]
+                for (var pointIndex = 0; pointIndex < points.length; ++pointIndex) {
+                    point = points[pointIndex]
+                    if (pointIndex === 0) {
+                        context.moveTo(point.x, point.y)
+                    } else {
+                        context.lineTo(point.x, point.y)
+                    }
                 }
             }
-            if (points.length < 2)
+            if (metrics.projectedVertices < 2)
                 return metrics
             if (traceEnabled) {
                 phaseFinished = benchmarkScenarioController.traceMilliseconds()
@@ -526,12 +584,13 @@ Item {
             var traceEnabled = typeof benchmarkRenderTrace !== "undefined"
                     && benchmarkRenderTrace
                     && typeof benchmarkScenarioController !== "undefined"
+            var geoBounds = canvas.routeOverlayGeoBounds(64)
             var outlineMetrics = drawPolyline(context, routingController.routePath,
-                                               12, Theme.routeOutline, traceEnabled)
+                                               12, Theme.routeOutline, traceEnabled, geoBounds)
             var routeMetrics = drawPolyline(context, routingController.routePath,
-                                             7, Theme.route, traceEnabled)
+                                             7, Theme.route, traceEnabled, geoBounds)
             var travelledMetrics = drawPolyline(context, canvas.travelledRoutePath,
-                                                 7, Theme.routeTravelled, traceEnabled)
+                                                 7, Theme.routeTravelled, traceEnabled, geoBounds)
             drawMarker(context, routingController.origin, 17, Theme.markerOrigin, "A", "#102018")
             drawMarker(context, routingController.destination, 17,
                        Theme.markerDestination, "B", "#301010")
