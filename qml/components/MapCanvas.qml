@@ -442,29 +442,62 @@ Item {
         renderStrategy: Canvas.Threaded
         z: 2
 
-        function drawPolyline(context, path, width, color) {
+        function drawPolyline(context, path, width, color, traceEnabled) {
+            var metrics = {
+                projectionMs: 0,
+                pathMs: 0,
+                strokeMs: 0,
+                projectedVertices: 0,
+                viewportVertices: 0,
+                strokes: 0
+            }
             if (!path || path.length < 2)
-                return
-            context.beginPath()
-            var started = false
+                return metrics
+            var phaseStarted = traceEnabled
+                    ? benchmarkScenarioController.traceMilliseconds() : 0
+            var points = []
             for (var index = 0; index < path.length; ++index) {
                 var point = map.fromCoordinate(path[index], false)
                 if (!isFinite(point.x) || !isFinite(point.y))
                     continue
-                if (!started) {
+                points.push(point)
+                if (point.x >= 0 && point.x <= width
+                        && point.y >= 0 && point.y <= height)
+                    ++metrics.viewportVertices
+            }
+            metrics.projectedVertices = points.length
+            if (traceEnabled) {
+                var phaseFinished = benchmarkScenarioController.traceMilliseconds()
+                metrics.projectionMs = phaseFinished - phaseStarted
+                phaseStarted = phaseFinished
+            }
+            context.beginPath()
+            for (var pointIndex = 0; pointIndex < points.length; ++pointIndex) {
+                point = points[pointIndex]
+                if (pointIndex === 0) {
                     context.moveTo(point.x, point.y)
-                    started = true
                 } else {
                     context.lineTo(point.x, point.y)
                 }
             }
-            if (!started)
-                return
+            if (points.length < 2)
+                return metrics
+            if (traceEnabled) {
+                phaseFinished = benchmarkScenarioController.traceMilliseconds()
+                metrics.pathMs = phaseFinished - phaseStarted
+                phaseStarted = phaseFinished
+            }
             context.lineWidth = width
             context.strokeStyle = color
             context.lineCap = "round"
             context.lineJoin = "round"
             context.stroke()
+            metrics.strokes = 1
+            if (traceEnabled) {
+                phaseFinished = benchmarkScenarioController.traceMilliseconds()
+                metrics.strokeMs = phaseFinished - phaseStarted
+            }
+            return metrics
         }
 
         function drawMarker(context, coordinate, radius, fill, label, textColor) {
@@ -490,15 +523,43 @@ Item {
             context.clearRect(0, 0, width, height)
             if (!canvas.map || !routingController.routeAvailable)
                 return
-            drawPolyline(context, routingController.routePath, 12, Theme.routeOutline)
-            drawPolyline(context, routingController.routePath, 7, Theme.route)
-            drawPolyline(context, canvas.travelledRoutePath, 7, Theme.routeTravelled)
+            var traceEnabled = typeof benchmarkRenderTrace !== "undefined"
+                    && benchmarkRenderTrace
+                    && typeof benchmarkScenarioController !== "undefined"
+            var outlineMetrics = drawPolyline(context, routingController.routePath,
+                                               12, Theme.routeOutline, traceEnabled)
+            var routeMetrics = drawPolyline(context, routingController.routePath,
+                                             7, Theme.route, traceEnabled)
+            var travelledMetrics = drawPolyline(context, canvas.travelledRoutePath,
+                                                 7, Theme.routeTravelled, traceEnabled)
             drawMarker(context, routingController.origin, 17, Theme.markerOrigin, "A", "#102018")
             drawMarker(context, routingController.destination, 17,
                        Theme.markerDestination, "B", "#301010")
             if (canvas.guidanceActive)
                 drawMarker(context, routeNavigationController.coordinate, 14,
                            Theme.accent, "▲", "#10243a")
+            if (traceEnabled) {
+                var projectionMs = outlineMetrics.projectionMs
+                        + routeMetrics.projectionMs + travelledMetrics.projectionMs
+                var projectedVertices = outlineMetrics.projectedVertices
+                        + routeMetrics.projectedVertices + travelledMetrics.projectedVertices
+                benchmarkScenarioController.noteOverlayPaintTiming({
+                    "paint_request": canvas.routeOverlayPaintRequests,
+                    "route_vertices_total": routingController.routePath.length,
+                    "route_vertices_viewport": routeMetrics.viewportVertices,
+                    "travelled_vertices_total": canvas.travelledRoutePath.length,
+                    "projection_vertex_operations": projectedVertices,
+                    "projection_ms": projectionMs,
+                    "projection_ms_per_vertex": projectedVertices > 0
+                            ? projectionMs / projectedVertices : 0,
+                    "path_ms": outlineMetrics.pathMs + routeMetrics.pathMs
+                               + travelledMetrics.pathMs,
+                    "stroke_ms": outlineMetrics.strokeMs + routeMetrics.strokeMs
+                                 + travelledMetrics.strokeMs,
+                    "stroke_count": outlineMetrics.strokes + routeMetrics.strokes
+                                    + travelledMetrics.strokes
+                })
+            }
         }
 
         onVisibleChanged: {

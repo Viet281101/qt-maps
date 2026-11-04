@@ -40,6 +40,8 @@ public:
 
     Q_INVOKABLE void notifyMapReady();
     Q_INVOKABLE void noteOverlayPaintRequest(int requestCount);
+    Q_INVOKABLE double traceMilliseconds() const;
+    Q_INVOKABLE void noteOverlayPaintTiming(const QVariantMap &fields);
 
 signals:
     void cameraCommand(const QGeoCoordinate &coordinate, double zoomLevel, double bearing);
@@ -105,6 +107,7 @@ private:
     QElapsedTimer routeRequestTimer_;
     QElapsedTimer rerouteTimer_;
     QElapsedTimer frameSwapTimer_;
+    QElapsedTimer traceTimer_;
     bool frameSwapTimerStarted_ = false;
     QTimer warmupTimer_;
     QTimer completionTimer_;

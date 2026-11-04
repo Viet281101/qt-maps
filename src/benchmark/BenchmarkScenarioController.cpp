@@ -37,6 +37,7 @@ BenchmarkScenarioController::BenchmarkScenarioController(
     navigationController_(navigationController),
     launchReferenceMilliseconds_(launchReferenceMilliseconds)
 {
+    traceTimer_.start();
     warmupTimer_.setSingleShot(true);
     completionTimer_.setSingleShot(true);
     deviationTimer_.setSingleShot(true);
@@ -80,6 +81,18 @@ BenchmarkScenarioController::BenchmarkScenarioController(
             &BenchmarkScenarioController::handleRoutingChanged);
     connect(routingController_, &routing::RoutingController::rerouteSucceeded, this,
             &BenchmarkScenarioController::handleRerouteSucceeded);
+}
+
+double BenchmarkScenarioController::traceMilliseconds() const
+{
+    return static_cast<double>(traceTimer_.nsecsElapsed()) / 1000000.0;
+}
+
+void BenchmarkScenarioController::noteOverlayPaintTiming(const QVariantMap &fields)
+{
+    if (measurementStarted_ && !finished_) {
+        emitEvent(QStringLiteral("overlay_paint_timing"), fields);
+    }
 }
 
 bool BenchmarkScenarioController::configure(const QString &scenario, int durationSeconds,
@@ -179,6 +192,7 @@ void BenchmarkScenarioController::handleFrameSwapped()
         }
     }
 
+
     if (!firstMapFrameSeen_) {
         firstMapFrameSeen_ = true;
         firstMapFrameMilliseconds_ = elapsedFromLaunchMilliseconds();
@@ -191,7 +205,6 @@ void BenchmarkScenarioController::handleFrameSwapped()
         }
         maybeScheduleWarmup();
     }
-
 }
 
 void BenchmarkScenarioController::handleProcessMetrics()
