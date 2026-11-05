@@ -6,6 +6,7 @@
 #include <QFile>
 #include <QGeoServiceProvider>
 #include <QGuiApplication>
+#include <QImage>
 #include <QQuickItem>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
@@ -127,6 +128,9 @@ int main(int argc, char *argv[])
                       QStringLiteral("size")});
     parser.addOption({QStringLiteral("display-diagnostics"),
                       QStringLiteral("Log screen, window, and Canvas pixel geometry")});
+    parser.addOption({QStringLiteral("display-capture"),
+                      QStringLiteral("Save a review-only window capture after startup"),
+                      QStringLiteral("path")});
     parser.addOption({QStringLiteral("navigation-benchmark"),
                       QStringLiteral("Run continuous simulated camera-follow navigation")});
     parser.addOption({QStringLiteral("routing-demo"),
@@ -417,8 +421,26 @@ int main(int argc, char *argv[])
         performanceMonitor.attachWindow(window);
     }
     benchmarkScenarioController.attachWindow(window);
-    if (window && parser.isSet(QStringLiteral("display-diagnostics"))) {
-        QTimer::singleShot(1000, window, [window]() {
+    const bool displayDiagnostics = parser.isSet(QStringLiteral("display-diagnostics"));
+    const QString displayCapturePath = parser.value(QStringLiteral("display-capture"));
+    if (window && (displayDiagnostics || !displayCapturePath.isEmpty())) {
+        QTimer::singleShot(1000, window, [window, displayDiagnostics, displayCapturePath]() {
+            if (!displayCapturePath.isEmpty()) {
+                const QImage capture = window->grabWindow();
+                if (!capture.save(displayCapturePath)) {
+                    qCritical().noquote()
+                        << QStringLiteral("QTMAPS_DISPLAY capture_failed=%1").arg(displayCapturePath);
+                } else {
+                    qInfo().noquote()
+                        << QStringLiteral("QTMAPS_DISPLAY capture=%1 pixels=%2x%3")
+                               .arg(displayCapturePath)
+                               .arg(capture.width())
+                               .arg(capture.height());
+                }
+            }
+            if (!displayDiagnostics) {
+                return;
+            }
             const QScreen *screen = window->screen();
             const qreal dpr = window->effectiveDevicePixelRatio();
             const QSize windowPixels(qRound(window->width() * dpr),
