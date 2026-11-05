@@ -43,7 +43,11 @@ Item {
                 width: 10; height: 10; radius: 5
                 color: statusOverlay.statusColor
             }
-            Text { color: Theme.textPrimary; text: statusOverlay.statusText }
+            Text {
+                color: Theme.textPrimary
+                font.pixelSize: Theme.fontSizeBody
+                text: statusOverlay.statusText
+            }
         }
     }
 
@@ -59,6 +63,7 @@ Item {
             id: attribution
             anchors.centerIn: parent
             color: Theme.textPrimary
+            font.pixelSize: Theme.fontSizeBody
             text: "© OpenStreetMap contributors, ODbL 1.0"
         }
     }

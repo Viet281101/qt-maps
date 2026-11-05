@@ -313,6 +313,35 @@ private slots:
                                 .arg(statusRect.y())
                                 .arg(statusRect.width())
                                 .arg(statusRect.height())));
+
+        QQuickItem *layer = root->findChild<QQuickItem *>(QStringLiteral("layerButton"));
+        QQuickItem *swap = root->findChild<QQuickItem *>(QStringLiteral("swapButton"));
+        QQuickItem *clear = root->findChild<QQuickItem *>(QStringLiteral("clearButton"));
+        QQuickItem *start = root->findChild<QQuickItem *>(QStringLiteral("startNavigationButton"));
+        QQuickItem *controls = root->findChild<QQuickItem *>(QStringLiteral("routeControlsScroll"));
+        QVERIFY(layer);
+        QVERIFY(swap);
+        QVERIFY(clear);
+        QVERIFY(start);
+        QVERIFY(controls);
+        QVERIFY(layer->property("labelImplicitWidth").toReal() <= layer->width());
+        QVERIFY(swap->property("labelImplicitWidth").toReal() <= swap->width());
+        QVERIFY(clear->property("labelImplicitWidth").toReal() <= clear->width());
+        const QRectF swapRect(swap->mapToScene(QPointF(0, 0)), swap->size());
+        const QRectF clearRect(clear->mapToScene(QPointF(0, 0)), clear->size());
+        const QRectF startRect(start->mapToScene(QPointF(0, 0)), start->size());
+        const QRectF controlsRect(controls->mapToScene(QPointF(0, 0)), controls->size());
+        QVERIFY(!swapRect.intersects(clearRect));
+        QVERIFY2(controlsRect.contains(startRect),
+                 qPrintable(QStringLiteral("start navigation %1,%2 %3x%4 is clipped by controls %5,%6 %7x%8")
+                                .arg(startRect.x())
+                                .arg(startRect.y())
+                                .arg(startRect.width())
+                                .arg(startRect.height())
+                                .arg(controlsRect.x())
+                                .arg(controlsRect.y())
+                                .arg(controlsRect.width())
+                                .arg(controlsRect.height())));
     }
 
     void mapClickDoesNotChangeRouteDuringReplay()

@@ -28,6 +28,7 @@ Item {
             anchors.leftMargin: Theme.spaceLg
             anchors.verticalCenter: parent.verticalCenter
             color: Theme.textSecondary
+            font.pixelSize: Theme.fontSizeBody
             text: qsTr("⌕  Tìm địa điểm (sắp có)")
             elide: Text.ElideRight
         }
@@ -95,6 +96,7 @@ Item {
                 width: parent.width
                 color: mapSourceController.layerMode === "error" ? Theme.error
                                                                   : Theme.textSecondary
+                font.pixelSize: Theme.fontSizeBody
                 wrapMode: Text.WordWrap
                 text: mapSourceController.mapStatusText
             }
@@ -106,7 +108,11 @@ Item {
                 wrapMode: Text.WordWrap
                 text: qsTr("Nguồn chi tiết đến z15; từ z16, độ phân giải thấp hơn.")
             }
-            Text { color: Theme.warning; text: qsTr("Lớp ảnh · chưa có dữ liệu") }
+            Text {
+                color: Theme.warning
+                font.pixelSize: Theme.fontSizeBody
+                text: qsTr("Lớp ảnh · chưa có dữ liệu")
+            }
             Text {
                 width: parent.width
                 color: Theme.textSecondary

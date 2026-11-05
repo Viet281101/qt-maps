@@ -89,6 +89,7 @@ Rectangle {
                 text: qsTr("Bấm bản đồ để chọn %1, hoặc nhập tên mẫu / tọa độ")
                     .arg(routingController.nextMapSelection)
                 color: Theme.textSecondary
+                font.pixelSize: Theme.fontSizeBody
                 wrapMode: Text.WordWrap
             }
 
@@ -107,7 +108,13 @@ Rectangle {
                     color: Theme.markerOrigin
                     border.color: Theme.routeOutline
                     border.width: 2
-                    Text { anchors.centerIn: parent; text: "A"; color: "#102018"; font.bold: true }
+                    Text {
+                        anchors.centerIn: parent
+                        color: "#102018"
+                        font.bold: true
+                        font.pixelSize: Theme.fontSizeBody
+                        text: "A"
+                    }
                 }
                 TextInput {
                     id: originField
@@ -153,7 +160,13 @@ Rectangle {
                     color: Theme.markerDestination
                     border.color: Theme.routeOutline
                     border.width: 2
-                    Text { anchors.centerIn: parent; text: "B"; color: "#301010"; font.bold: true }
+                    Text {
+                        anchors.centerIn: parent
+                        color: "#301010"
+                        font.bold: true
+                        font.pixelSize: Theme.fontSizeBody
+                        text: "B"
+                    }
                 }
                 TextInput {
                     id: destinationField
@@ -189,6 +202,7 @@ Rectangle {
                 spacing: Theme.spaceSm
                 KeyboardActionButton {
                     id: swapButton
+                    objectName: "swapButton"
                     width: (parent.width - parent.spacing) / 2
                     text: qsTr("⇅  Đổi chiều")
                     normalColor: Theme.surfaceInput
@@ -200,6 +214,7 @@ Rectangle {
                 }
                 KeyboardActionButton {
                     id: clearButton
+                    objectName: "clearButton"
                     width: (parent.width - parent.spacing) / 2
                     text: qsTr("×  Xóa")
                     normalColor: Theme.surfaceInput
@@ -354,6 +369,7 @@ Rectangle {
                         + routingController.sourceLabel
                 color: routeNavigationController.arrived || routingController.routeAvailable
                        ? Theme.success : Theme.textSecondary
+                font.pixelSize: Theme.fontSizeBody
                 wrapMode: Text.WordWrap
             }
 

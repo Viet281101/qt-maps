@@ -7,6 +7,7 @@ Rectangle {
     property color normalColor: Theme.accent
     property color pressedColor: "#2266aa"
     property color textColor: "#08243a"
+    readonly property real labelImplicitWidth: label.implicitWidth
     signal triggered()
 
     height: 38
@@ -18,8 +19,10 @@ Rectangle {
     activeFocusOnTab: enabled
 
     Text {
+        id: label
         anchors.centerIn: parent
         color: root.textColor
+        font.pixelSize: Theme.fontSizeBody
         font.bold: true
         text: root.text
     }
