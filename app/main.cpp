@@ -6,9 +6,11 @@
 #include <QFile>
 #include <QGeoServiceProvider>
 #include <QGuiApplication>
+#include <QQuickItem>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QQuickWindow>
+#include <QScreen>
 #include <QStringList>
 #include <QTimer>
 #include <QVariantMap>
@@ -123,6 +125,8 @@ int main(int argc, char *argv[])
     parser.addOption({QStringLiteral("review-window-size"),
                       QStringLiteral("Review-only window size WIDTHxHEIGHT"),
                       QStringLiteral("size")});
+    parser.addOption({QStringLiteral("display-diagnostics"),
+                      QStringLiteral("Log screen, window, and Canvas pixel geometry")});
     parser.addOption({QStringLiteral("navigation-benchmark"),
                       QStringLiteral("Run continuous simulated camera-follow navigation")});
     parser.addOption({QStringLiteral("routing-demo"),
@@ -413,6 +417,63 @@ int main(int argc, char *argv[])
         performanceMonitor.attachWindow(window);
     }
     benchmarkScenarioController.attachWindow(window);
+    if (window && parser.isSet(QStringLiteral("display-diagnostics"))) {
+        QTimer::singleShot(1000, window, [window]() {
+            const QScreen *screen = window->screen();
+            const qreal dpr = window->effectiveDevicePixelRatio();
+            const QSize windowPixels(qRound(window->width() * dpr),
+                                     qRound(window->height() * dpr));
+            qInfo().noquote()
+                << QStringLiteral("QTMAPS_DISPLAY screen name=%1 geometry=%2,%3 %4x%5 "
+                                  "available=%6,%7 %8x%9 dpr=%10 logical_dpi=%11x%12 "
+                                  "physical_dpi=%13x%14 physical_mm=%15x%16")
+                       .arg(screen ? screen->name() : QStringLiteral("<none>"))
+                       .arg(screen ? screen->geometry().x() : 0)
+                       .arg(screen ? screen->geometry().y() : 0)
+                       .arg(screen ? screen->geometry().width() : 0)
+                       .arg(screen ? screen->geometry().height() : 0)
+                       .arg(screen ? screen->availableGeometry().x() : 0)
+                       .arg(screen ? screen->availableGeometry().y() : 0)
+                       .arg(screen ? screen->availableGeometry().width() : 0)
+                       .arg(screen ? screen->availableGeometry().height() : 0)
+                       .arg(screen ? screen->devicePixelRatio() : 0)
+                       .arg(screen ? screen->logicalDotsPerInchX() : 0)
+                       .arg(screen ? screen->logicalDotsPerInchY() : 0)
+                       .arg(screen ? screen->physicalDotsPerInchX() : 0)
+                       .arg(screen ? screen->physicalDotsPerInchY() : 0)
+                       .arg(screen ? screen->physicalSize().width() : 0)
+                       .arg(screen ? screen->physicalSize().height() : 0);
+            qInfo().noquote()
+                << QStringLiteral("QTMAPS_DISPLAY window logical=%1x%2 dpr=%3 framebuffer=%4x%5 "
+                                  "render_target=%6")
+                       .arg(window->width())
+                       .arg(window->height())
+                       .arg(dpr)
+                       .arg(windowPixels.width())
+                       .arg(windowPixels.height())
+                       .arg(window->renderTarget() ? QStringLiteral("custom")
+                                                   : QStringLiteral("default"));
+            QObject *overlay = window->findChild<QObject *>(QStringLiteral("rasterRouteOverlay"));
+            if (!overlay) {
+                qInfo().noquote() << QStringLiteral("QTMAPS_DISPLAY canvas=unavailable");
+                return;
+            }
+            const QSizeF canvasSize = overlay->property("canvasSize").toSizeF();
+            const QSize canvasPixels(qRound(canvasSize.width() * dpr),
+                                    qRound(canvasSize.height() * dpr));
+            qInfo().noquote()
+                << QStringLiteral("QTMAPS_DISPLAY canvas logical=%1x%2 canvas_size=%3x%4 "
+                                  "requested_fbo_pixels=%5x%6 render_target=%7 render_strategy=%8")
+                       .arg(overlay->property("width").toReal())
+                       .arg(overlay->property("height").toReal())
+                       .arg(canvasSize.width())
+                       .arg(canvasSize.height())
+                       .arg(canvasPixels.width())
+                       .arg(canvasPixels.height())
+                       .arg(overlay->property("renderTarget").toInt())
+                       .arg(overlay->property("renderStrategy").toInt());
+        });
+    }
     QObject::connect(&mapSourceController, &qtmaps::map::MapSourceController::stateChanged, &engine,
                      [&engine, &mapSourceController]() {
                          if (mapSourceController.loading() ||
