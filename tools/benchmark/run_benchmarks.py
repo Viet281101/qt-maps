@@ -8,6 +8,7 @@ import os
 import platform
 import re
 import shlex
+import shutil
 import statistics
 import subprocess
 import sys
@@ -104,7 +105,55 @@ def graph_path(config_path):
         return None
 
 
-def collect_metadata(args, root, output_dir):
+def compositor_name(root):
+    wmctrl = shutil.which("wmctrl")
+    if not wmctrl:
+        return "Unavailable (wmctrl not installed)"
+    output = command_output([wmctrl, "-m"], root, "Unavailable")
+    for line in output.splitlines():
+        if line.startswith("Name:"):
+            return line.partition(":")[2].strip() or "Unknown"
+    return output
+
+
+def read_text(path, default="Unavailable"):
+    try:
+        return path.read_text(encoding="utf-8").strip() or default
+    except OSError:
+        return default
+
+
+def runtime_snapshot(root, environment):
+    cpu_root = Path("/sys/devices/system/cpu")
+    governors = {}
+    frequencies_khz = {}
+    for cpu in sorted(cpu_root.glob("cpu[0-9]*")):
+        governor = cpu / "cpufreq/scaling_governor"
+        frequency = cpu / "cpufreq/scaling_cur_freq"
+        if governor.exists():
+            governors[cpu.name] = read_text(governor)
+        if frequency.exists():
+            frequencies_khz[cpu.name] = read_text(frequency)
+    thermal_zones = {}
+    for zone in sorted(Path("/sys/class/thermal").glob("thermal_zone*")):
+        thermal_zones[zone.name] = {
+            "type": read_text(zone / "type"),
+            "temperature_millicelsius": read_text(zone / "temp"),
+        }
+    return {
+        "captured_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
+        "xdg_session_type": environment.get("XDG_SESSION_TYPE", "Unset"),
+        "qt_qpa_platform": environment.get("QT_QPA_PLATFORM", "default"),
+        "desktop": environment.get("XDG_CURRENT_DESKTOP", "Unset"),
+        "desktop_session": environment.get("DESKTOP_SESSION", "Unset"),
+        "compositor": compositor_name(root),
+        "governors": governors,
+        "frequencies_khz": frequencies_khz,
+        "thermal_zones": thermal_zones,
+    }
+
+
+def collect_metadata(args, root, output_dir, environment):
     model, physical_cores, logical_cpus = cpu_metadata()
     package = args.map_package.resolve()
     graph = graph_path(args.valhalla_config.resolve())
@@ -135,6 +184,7 @@ def collect_metadata(args, root, output_dir):
         "warmup_seconds": args.warmup,
         "repetitions": args.repeat,
         "network_modes": args.mode,
+        "qt_qpa_platform": environment.get("QT_QPA_PLATFORM", "default"),
         "scenarios": args.scenarios,
         "map_package": str(package),
         "tiles_bytes": directory_size(package),
@@ -504,6 +554,7 @@ def run_once(args, root, session_dir, scenario, network_mode, repetition, enviro
         command.extend(["--raster-package", str(args.raster_package), "--force-vector-failure"])
     executed = offline_prefix() + command if network_mode == "offline" else command
     timeout_seconds = args.timeout or max(45, warmup + duration + 30)
+    environment_log = {"before": runtime_snapshot(root, environment)}
     try:
         result = subprocess.run(
             executed,
@@ -522,6 +573,10 @@ def run_once(args, root, session_dir, scenario, network_mode, repetition, enviro
         exit_code = 124
         timed_out = True
     (run_dir / "run.log").write_text(output, encoding="utf-8")
+    environment_log["after"] = runtime_snapshot(root, environment)
+    (run_dir / "environment.json").write_text(
+        json.dumps(environment_log, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
     events = parse_events(output)
     run = {
         "schema_version": "qtmaps-benchmark-run-v1",
@@ -630,7 +685,7 @@ def main():
     modes = ("online", "offline") if args.mode == "both" else (args.mode,)
     if "offline" in modes:
         verify_offline_available(root, environment)
-    metadata = collect_metadata(args, root, session_dir)
+    metadata = collect_metadata(args, root, session_dir, environment)
     (session_dir / "session-metadata.json").write_text(
         json.dumps(metadata, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
