@@ -173,8 +173,11 @@ void BenchmarkScenarioController::handleFrameSwapped()
         return;
     }
     ++frameSwapCount_;
-    if (window_ && window_->isExposed()) {
+    if (window_ && window_->isExposed() && !windowExposedSeen_) {
         windowExposedSeen_ = true;
+        emitEvent(QStringLiteral("window_exposed"),
+                  {{QStringLiteral("elapsed_ms"), elapsedFromLaunchMilliseconds()},
+                   {QStringLiteral("frame_swap_count"), frameSwapCount_}});
     }
     if (measurementStarted_ && !finished_) {
         if (frameSwapTimerStarted_) {
@@ -203,8 +206,8 @@ void BenchmarkScenarioController::handleFrameSwapped()
             performanceMonitor_->sampleNow();
             return;
         }
-        maybeScheduleWarmup();
     }
+    maybeScheduleWarmup();
 }
 
 void BenchmarkScenarioController::handleProcessMetrics()
@@ -316,6 +319,7 @@ bool BenchmarkScenarioController::requiresBackend() const
 void BenchmarkScenarioController::maybeScheduleWarmup()
 {
     if (!enabled() || finished_ || warmupScheduled_ || !firstMapFrameSeen_ ||
+        (window_ && !windowExposedSeen_) ||
         (requiresBackend() && !backendReady_)) {
         return;
     }
@@ -523,7 +527,10 @@ void BenchmarkScenarioController::emitEvent(const QString &eventName,
                                             const QVariantMap &fields) const
 {
     QVariantMap event = fields;
+    const bool windowExposed = window_ && window_->isExposed();
     event.insert(QStringLiteral("event"), eventName);
+    event.insert(QStringLiteral("window_exposed"), windowExposed);
+    event.insert(QStringLiteral("pre_exposure"), window_ && !windowExposedSeen_);
     event.insert(QStringLiteral("scenario"), scenario_);
     event.insert(QStringLiteral("timestamp_utc"),
                  QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs));
