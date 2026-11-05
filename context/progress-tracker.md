@@ -4,14 +4,24 @@ Update this file after every meaningful implementation change. Keep it below the
 
 ## Current Phase
 
-- Unit 03 was squash-merged through PR #20 as `1358c3c`.
-- Unit 04 was squash-merged through PR #21 as `d4a07bb`. Unit 05D was squash-merged through PR #22 as `23c1f9e`; Unit 05E/F remain unstarted. Feature freeze is 2026-11-01, with 2026-11-02 through 2026-11-03 reserved for bug fixes, rehearsal, and reporting.
-- The owner approved Qt 5.15.13 plus dynamically linked MapLibre Native Qt v3.0.0 as the application baseline, retaining Qt 5.13.2 for comparison and localhost raster as fallback.
-- Performance schema v3 is complete: interaction-only FPS and frame-time p50/p95/p99 exclude the final settling swap, which is reported separately; legacy CSV fields remain for historical comparison.
+- The 2026-11-03 management-demo date has passed. Units 03--05 are squash-merged
+  through PRs #20--#22; the local Unit 07A--07D stack is ready for integration
+  planning but has no PR or push.
+- Unit 07 performance close-out is complete. Retain `0c20b97` for the Canvas
+  route state; no more performance implementation is authorized in this round.
+  The benchmark protocol and full evidence are authoritative in
+  `docs/benchmarks/unit-07-final.md`.
+- Default launches use Qt's Wayland plugin in the GNOME Wayland session. The
+  xcb/XWayland evidence is material, but choosing xcb as a production default
+  awaits the project owner; no override is implemented.
+- The active package remains v1. Issue #30 and the Issue #32 migration contract
+  must merge atomically; v1 remains the rollback path.
 
 ## Current Goal
 
-Deliver a stable management demo by 2026-11-03: polished map-first Release UI, visible two-point routing and navigation-style flow, and honest FPS/RAM/CPU evidence on the reference laptop.
+Prepare the completed Unit 07 stack for squash-merge integration, then resume
+approved product features. Do not change rendering, locked thresholds, package
+contracts, or the Wayland default without an owner decision.
 
 ## Completed Outcomes
 
@@ -85,80 +95,18 @@ Deliver a stable management demo by 2026-11-03: polished map-first Release UI, v
 - Three 15-second idle/render-on-demand Release diagnostics consistently counted one Valhalla child and two total processes; mean process-tree RSS was 423.4-429.9 MiB and mean CPU 2.20-2.53%. This verifies accounting after UI polish, not the deferred full interactive Unit 04E benchmark.
 - PR #21 references Issues #4 and #5, is assigned to `Viet281101`, and uses the `First Management Demo` milestone plus the `feature`, `demo`, `priority:P0`, `area:routing`, `area:map`, and `area:ui` labels. The PR and both issues are in Project #6 with Status `In Progress`, Priority `P0`, and Demo Phase `Week 1`.
 
-### Unit 05D1 — selected-route replay
+### Unit 05 — navigation and simulated re-routing
 
-- Added a route-owned replay controller without changing the Unit 03 5.47 km
-  benchmark fixture. It accepts the current Valhalla or recorded-fixture route,
-  preserves the source label, interpolates position/heading on a non-blocking
-  timer, and supports 1x/2x/4x, pause/resume, stop/reset, and arrival.
-- The route screen now provides replay controls, a distinct current-position
-  marker, camera follow/recenter, bearing rotation, and 45-degree tilt. Focused lifecycle,
-  interpolation, speed, pause, stop, arrival, and missing-route tests pass.
-
-### Unit 05D2 — maneuver guidance
-
-- Replay progress now selects the next maneuver from cumulative route geometry,
-  reports distance to that maneuver plus remaining route distance/time, and
-  keeps the maneuver list synchronized while navigation is active.
-- A source-labeled navigation banner presents the current instruction, street,
-  remaining values, and an explicit arrival state. Focused controller tests pass;
-  D3 boundary and QML coverage remain the active review-gate work.
-
-### Unit 05D3 — navigation review gate
-
-- Controller tests cover route start, turn boundaries, route end/arrival,
-  duplicate maneuver positions, invalid maneuver indices, zero replay duration,
-  missing routes, invalid speeds, pause/resume, and remaining values.
-- QML tests instantiate the banner and verify maneuver, distance, remaining,
-  source, and arrival presentation. Keyboard order now includes the start action.
-- D1-D3 received preliminary owner approval. E/F remain unstarted.
-
-### Unit 05 pre-D4 follow-up
-
-- D1-D3 received preliminary approval and branch `feat/05-navigation` was
-  pushed without a PR. Replay now derives position from a monotonic elapsed-time
-  anchor, and a new route request invalidates the old route and replay.
-- Tests cover a delayed GUI tick, endpoint changes during replay, and a delayed
-  canceled request. A non-fixture Release smoke applied a real Valhalla route;
-  its limited log evidence is in `docs/routing/unit-05-navigation.md`.
-
-### Unit 05D4 — simulated re-routing
-
-- A button simulates an offset; the nearest distance to the full polyline must
-  exceed 40 m before requesting Valhalla from that position to the destination.
-  Replay stops while the last valid route remains visible, replaced requests
-  are canceled, and only successful replies replace the route and resume
-  navigation. Backend errors are visible without a fixture fallback and retain
-  the last valid route for retry. Live GPS/drag is not claimed.
-- Tests cover the threshold, outgoing endpoints, replacement of a delayed
-  request, successful replay resumption, and backend failure. A real-Valhalla
-  UI click-through also verified pause/resume, banner updates, re-routing,
-  automatic replay resumption, recenter, and stop. D4 awaits owner review; E
-  and F remain unstarted.
-
-### Unit 05 PR #22 merge-gate fixes
-
-- Map endpoint selection is disabled while replay is active and while a
-  re-route request keeps the last valid route visible. A QML interaction test
-  clicks the map during replay and verifies that endpoints, route geometry,
-  route availability, and navigation state do not change; it also verifies
-  that endpoint selection is restored after navigation stops.
-- At the 900x580 minimum and 1366x768 demo sizes, the route-control stack now
-  scrolls independently so the maneuver list retains at least 120 px and can
-  scroll its full model. The connection pill moves below the active navigation
-  banner; QML geometry tests cover both window sizes and their non-overlap.
-- The Arrived primary action is now `Đi lại từ đầu`, not a disabled-looking
-  pause action. Its QML behavior test reaches arrival, invokes the visible
-  action, and verifies the same route restarts from the beginning.
-- The PR #22 merge-gate click-through covered real-Valhalla replay, guarded map
-  clicks, successful re-routing, recenter, independent control/maneuver
-  scrolling, arrival/restart, and both 900x580 and 1366x768 layouts. A separate
-  deterministic fake-loopback run observed HTTP 503 failure/preservation and
-  is labeled as such; navigation FPS/CPU measurement remains deferred to E/F.
-- The same click-through exposed and fixed an endpoint-form binding race: the
-  Apply/Calculate actions now snapshot both edited fields before either setter
-  can re-evaluate QML bindings. A regression test applies two new coordinates
-  together and checks both controller endpoints.
+- PR #22 completed selected-route replay, 1x/2x/4x controls, maneuver guidance,
+  arrival/restart, camera follow/recenter, route-owned progress, and simulated
+  >40 m deviation/re-routing. The last valid route remains visible while a
+  replacement request is pending; successful replies resume replay and errors
+  remain visible without a fixture fallback. Live GPS/drag is not claimed.
+- Controller/QML coverage includes lifecycle and boundaries, delayed ticks and
+  canceled requests, guarded map clicks, endpoint changes, HTTP failure,
+  minimum/demo layouts, keyboard flow, independent scrolling, and the endpoint
+  form binding race. Authoritative behavior and evidence are in
+  `docs/routing/unit-05-navigation.md` and the merged PR history.
 
 ## Active Decisions
 
@@ -176,38 +124,34 @@ Deliver a stable management demo by 2026-11-03: polished map-first Release UI, v
 
 ## In Progress
 
-- PR #22 is merged. Repository-structure maintenance is specified but has not
-  started; no maintenance branch, commit, or push exists yet.
-- Unit 06 process-tree benchmark is approved on branch
-  `feat/06-process-tree-benchmark` from `23c1f9e`. Its RAM/CPU/FPS thresholds
-  were locked before measurement in
-  `context/feature-specs/06_process-tree-benchmark.md`.
-- The first Unit 06 increment preserves aggregate `qtmaps-perf-v3` and adds a
-  `qtmaps-process-v1` sidecar with per-process/tree PSS, RSS, threads, roles,
-  PID-start-time identity, dual CPU normalization, 500 ms fast sampling, and
-  2,000 ms PSS sampling. A two-second offscreen smoke produced complete app and
-  tree rows with readable PSS; sampler duration was 25.861-28.291 ms. Release
-  `make test` passes 7/7 CTest executables.
-- The Unit 06 scenario increment adds deterministic startup, idle, pan/zoom,
-  three-pair route, and navigation/re-routing automation. Startup arms on map
-  readiness and ends on the first completed window swap after it. A standard-
-  library runner now produces median [min, max] Markdown/JSON reports, performs
-  a matched external instrumentation-off/on overhead comparison, and returns
-  code 2 after preserving evidence when a locked threshold is not met.
-- Release verification now passes 10/10 CTest executables, including calculation
-  tests, a fixture-route controller test, and an end-to-end CLI startup smoke.
-  The full repeated online/offline matrix completed on 2026-10-28: all ten
-  scenario/mode groups passed their locked thresholds. The matched sampler
-  overhead median is 0.738 machine-CPU percentage points and -1.694 MiB PSS.
-  The independently captured `ps` tree RSS and `/proc/*/smaps_rollup` PSS agree
-  with the nearest sidecar row within 0.004% and 0.019%, respectively.
-
+- **07A:** `chore/07a-repo-structure-maintenance` at `cccfcb7`; local Release
+  smoke, isolated review, and N=3 quick matrix passed.
+- **07B:** stacked `feat/07b-demo-shell-ui` through `1ce45e4`; UI review fixes
+  and evidence are in `docs/benchmarks/unit-07bc-ab-comparison.md`.
+- **07C:** stacked `feat/07c-offline-raster` through `a4227ba`; the local
+  z12--z16 raster package, lazy bounded caches, rejection contract, lifecycle
+  checks, and final N=3 navigation gates are complete. See
+  `context/feature-specs/07c_offline-raster-fallback.md` and the Unit 07B/07C
+  report. No generated artifact is tracked.
+- **07D:** `feat/07d-hanoi-cartography` through `bd854fa`; #29 style work is
+  separate from #30 draft-v2 water/green data. Keep #30 and #32 atomic; do not
+  migrate v1 or generate glyphs/fonts. Evidence:
+  `docs/benchmarks/unit-07d-pre-glyph-v2.md`.
+- The environment audit, visual fixes, and Qt 5.15.18 verification are complete;
+  detailed evidence is in `docs/benchmarks/unit-07d-environment-abc.md`,
+  `docs/benchmarks/unit-07-final.md`, and the linked generated directories.
+- `905908e` is the demo snapshot; `0c20b97` reverts the mixed combined Canvas
+  path and is the retained performance head. The full close-out records that
+  pan/zoom remains below the unchanged 20-FPS 1%-low lock, while xcb navigation
+  is close to A+hooks. This is a recorded limitation, not a configuration change.
 ## Next Up
 
-1. Review the Unit 06 benchmark result and decide whether to retain its locked
-   baseline thresholds for the management demo.
-2. Use the reproducible `make benchmark` report before material map/graph or
-   rendering changes; report any failure without changing the approved thresholds.
+1. Rebase 07A onto current `main`, open its integration PR, and after each
+   squash merge rebase the next stacked branch before opening its PR.
+2. Integrate 07B, then 07C. Keep #30 and #32 together in a later atomic
+   integration decision; #31 remains deferred.
+3. Resume owner-approved feature work only after the integration sequence.
+   Keep Wayland as the default until the owner decides on xcb/XWayland.
 
 ## Open Questions and Risks
 
@@ -221,9 +165,9 @@ Deliver a stable management demo by 2026-11-03: polished map-first Release UI, v
 
 ## Environment and Working Commands
 
-- Qt 5.15.13 baseline: `/usr/lib/qt5/bin/qmake` or `CMAKE_PREFIX_PATH=/usr`; plain `make test` uses this kit.
+- Qt 5.15.18 current standard: `/usr/lib/qt5/bin/qmake` or `CMAKE_PREFIX_PATH=/usr`; plain `make test` uses this kit.
 - Qt 5.13.2 comparison: `/home/viet/Qt/5.13.2/gcc_64/bin/qmake` or `CMAKE_PREFIX_PATH=/home/viet/Qt/5.13.2/gcc_64`; use the isolated override command in `context/code-standards.md`.
-- Do not modify global `PATH`; `/usr/bin/qmake` currently resolves to package-managed Qt 5.15.13.
+- Do not modify global `PATH`; `/usr/bin/qmake` currently resolves to package-managed Qt 5.15.18.
 
 ```bash
 make requirements
@@ -239,6 +183,7 @@ Authoritative benchmark evidence:
 - `docs/benchmarks/unit-01b-vector-feasibility.md`
 - `docs/benchmarks/unit-02-performance-results.md`
 - `generated/benchmarks/20261027-233639-complete/report.md` (Unit 06 local run)
+- `docs/benchmarks/unit-07bc-ab-comparison.md` (same-day Unit 07 A/B)
 
 Licensing and packaging evidence:
 
@@ -247,22 +192,47 @@ Licensing and packaging evidence:
 
 ## Latest Verification
 
-- Developer workflow follow-up on 2026-10-26: `make check` passed formatting,
-  diff checks, and 7/7 Release tests in 7.22 seconds. `make run` and
-  `make debug-run` both reached `mapReady=true`, started managed Valhalla, and
-  applied the real 7,294 m/14-maneuver route before their timed exits.
-- On the clean committed worktree, `make review` rebuilt the isolated
-  `build-review-qt515` Release application and passed 7/7 tests plus the branch
-  diff checks.
-- The full Unit 05 D4/PR #22 behavior evidence and remaining E/F limitation are
-  authoritative in `docs/routing/unit-05-navigation.md`.
+- Unit 05 D4 evidence is authoritative in
+  `docs/routing/unit-05-navigation.md`; its final `make check`, Release smoke,
+  and isolated review build passed before PR #22 merged.
 - Unit 06 on 2026-10-28: `make test` passed 10/10 CTest executables. The
   complete Release matrix is in `generated/benchmarks/20261027-233639-complete/`;
   the independent external scope/memory sample is in
   `generated/benchmarks/external-crosscheck-20261028/`.
-- Unit 06 follow-up: offline first-frame latency was traced to Qt X11 session
-  manager retrying an abstract ICE socket unavailable in the loopback-only
-  network namespace, not map or Valhalla network access. Benchmark children now
-  omit `SESSION_MANAGER`; offline-first startup median was 721 ms versus 778 ms
-  online-second. Forced completion PSS reads reduced route peak comparison to
-  501.98 MiB offline versus 500.74 MiB online (median, three runs each).
+- Unit 06 offline first-frame delay was traced to an unavailable X11 session-
+  manager ICE socket, not map or Valhalla network access. Clearing that benchmark
+  child variable produced 721 ms offline-first versus 778 ms online-second;
+  forced PSS reads yielded 501.98 versus 500.74 MiB route peaks.
+- Unit 07C final Release A/B uses N=3, 15+3 seconds, 500/2000 ms sampling,
+  online/offline, and both `navigation_replay` and `pan_zoom`. All median locks
+  pass; complete min/max and worst-run evidence is in the Unit 07B/07C report.
+- Unit 07 final close-out (2026-11-05): HEAD `0c20b97` plus harness commits
+  `768f020`/`1341c89` was measured N=5 at 5+60 seconds against a temporary
+  A+hooks copy. HEAD pan/zoom 1%-low remains below the 20-FPS lock
+  (18.83 online / 19.15 offline) and prior no-draw reference (~26); no more
+  Canvas changes are planned. Evidence and limitations are in
+  `docs/benchmarks/unit-07-final.md` and
+  `generated/benchmarks/20261105-final-matrix/`.
+- Navigation follow-up (2026-11-05) stopped at the owner-set 60-minute limit
+  after one cooled 5+60-second Wayland online/offline round for A+hooks,
+  905908e, 2aa4629, 0c20b97, and 905908e plus zoom-cache simplification.
+  No N=3 aggregate, xcb comparison, or pan/zoom selection run was started.
+  Raw evidence is retained in
+  `generated/benchmarks/20261105-navigation-investigation/`; no configuration
+  decision is justified by this incomplete matrix.
+- Measurement-validity follow-up (2026-11-05) rebuilt original `905908e`
+  without benchmark hooks or the 16 ms timer. On the same 5+60/N=3 online
+  protocol it measured 14.14 FPS 1%-low / 45.37 ms p95 on Wayland, but 22.47 /
+  20.56 on xcb. The historical 03/11 platform was not recorded, so xcb is an
+  evidence-backed explanation rather than a confirmed historical match. Raw
+  runs remain in `generated/benchmarks/20261105-validity/`; the timer and
+  HEAD/A+hooks xcb matrices were not started after the total time limit.
+- Platform follow-up (2026-11-05): an ordinary `make run` launch did not set
+  `QT_QPA_PLATFORM` and loaded Qt's Wayland platform plugin in the GNOME
+  Wayland session. A cooled online xcb/XWayland N=3 matrix is retained at
+  `generated/benchmarks/20261105-xcb-matrix/`: navigation 1%-low/frame-p95
+  was 24.94/22.14 ms (A+hooks), 20.52/21.35 ms (original `905908e`), and
+  23.26/22.99 ms (HEAD `0c20b97`); pan/zoom was 21.75/28.03, 15.27/28.97,
+  and 17.60/28.95 respectively. The online-only budget excluded optional
+  offline reruns. The xcb effect is material but does not identify the
+  unlogged 03/11 platform; no production platform override has been made.
