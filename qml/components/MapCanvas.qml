@@ -304,6 +304,7 @@ Item {
         }
         objectName: "routingMap"
         anchors.fill: parent
+        copyrightsVisible: false
         plugin: Plugin {
             name: canvas.rasterMode ? "osm" : "maplibre"
             allowExperimental: true

@@ -720,23 +720,27 @@ private slots:
         QFile mapFile(QStringLiteral(":/qml/components/MapCanvas.qml"));
         QFile navigationFile(QStringLiteral(":/qml/components/NavigationOverlay.qml"));
         QFile bannerFile(QStringLiteral(":/qml/components/NavigationBanner.qml"));
+        QFile statusFile(QStringLiteral(":/qml/components/ConnectionStatus.qml"));
         QFile panelFile(QStringLiteral(":/qml/components/RoutePanel.qml"));
         QFile toolsFile(QStringLiteral(":/qml/components/DemoToolsOverlay.qml"));
         QVERIFY(mainFile.open(QIODevice::ReadOnly));
         QVERIFY(mapFile.open(QIODevice::ReadOnly));
         QVERIFY(navigationFile.open(QIODevice::ReadOnly));
         QVERIFY(bannerFile.open(QIODevice::ReadOnly));
+        QVERIFY(statusFile.open(QIODevice::ReadOnly));
         QVERIFY(panelFile.open(QIODevice::ReadOnly));
         QVERIFY(toolsFile.open(QIODevice::ReadOnly));
         const QByteArray mainQml = mainFile.readAll();
         const QByteArray mapQml = mapFile.readAll();
         const QByteArray navigationQml = navigationFile.readAll();
         const QByteArray bannerQml = bannerFile.readAll();
+        const QByteArray statusQml = statusFile.readAll();
         const QByteArray panelQml = panelFile.readAll();
         const QByteArray toolsQml = toolsFile.readAll();
         QVERIFY(mapQml.contains("panelWidth + Theme.spaceLg * 2"));
         QVERIFY(mainQml.contains("property bool panelCollapsed"));
-        const QByteArray qml = mainQml + mapQml + navigationQml + bannerQml + panelQml + toolsQml;
+        const QByteArray qml = mainQml + mapQml + navigationQml + bannerQml + statusQml + panelQml
+                               + toolsQml;
         QVERIFY(qml.contains("routingController.streetLabels"));
         QVERIFY(qml.contains("canvas.visibleStreetLabels()"));
         QVERIFY(qml.contains("canvas.clampMapToDataBounds()"));
@@ -753,6 +757,8 @@ private slots:
         QVERIFY(qml.contains("displayRouteForZoom(routingController.routePath"));
         QVERIFY(qml.contains("displayRouteCache[cacheKey] = simplified"));
         QVERIFY(qml.contains("objectName: \"rasterRouteOverlay\""));
+        QVERIFY(mapQml.contains("copyrightsVisible: false"));
+        QVERIFY(qml.contains("© OpenStreetMap contributors, ODbL 1.0"));
         QVERIFY(qml.contains("visible: canvas.routeOverlayEnabled && routingController.routeAvailable"));
         QVERIFY(qml.contains("id: benchmarkRenderDriver"));
         QVERIFY(qml.contains("NumberAnimation on phase"));
