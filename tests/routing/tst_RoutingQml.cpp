@@ -95,6 +95,8 @@ private slots:
         QObject *destination = root->findChild<QObject *>(QStringLiteral("destinationField"));
         QVERIFY(origin);
         QVERIFY(destination);
+        QCOMPARE(origin->property("font").value<QFont>().pixelSize(), 14);
+        QCOMPARE(destination->property("font").value<QFont>().pixelSize(), 14);
         origin->setProperty("text", QStringLiteral("21.021352,105.832698"));
         destination->setProperty("text", QStringLiteral("21.021352,105.834744"));
 

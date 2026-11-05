@@ -125,6 +125,7 @@ Rectangle {
                     anchors.bottom: parent.bottom
                     anchors.leftMargin: Theme.spaceSm
                     anchors.rightMargin: Theme.spaceSm
+                    font.pixelSize: Theme.fontSizeBody
                     color: Theme.textPrimary
                     verticalAlignment: TextInput.AlignVCenter
                     selectByMouse: true
@@ -177,6 +178,7 @@ Rectangle {
                     anchors.bottom: parent.bottom
                     anchors.leftMargin: Theme.spaceSm
                     anchors.rightMargin: Theme.spaceSm
+                    font.pixelSize: Theme.fontSizeBody
                     color: Theme.textPrimary
                     verticalAlignment: TextInput.AlignVCenter
                     selectByMouse: true
