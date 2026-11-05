@@ -14,6 +14,12 @@ Update this file after every meaningful implementation change. Keep it below the
 - Default launches use Qt's Wayland plugin in the GNOME Wayland session. The
   xcb/XWayland evidence is material, but choosing xcb as a production default
   awaits the project owner; no override is implemented.
+- Display-scale review (2026-11-05) measured Wayland at DPR 2 and xcb/XWayland
+  at DPR 1 for the same 960x640 logical window (1920x1280 versus 960x640
+  framebuffer/Canvas FBO). XWayland's 192 logical DPI inflated default
+  point-size text, causing real layout overflow. Explicit existing Theme pixel
+  tokens now cover controls, endpoint fields, and maneuver rows; raster retains one
+  application-owned ODbL attribution. Evidence is ignored under `generated/review/20261105-final2/`; this is not a benchmark or platform decision.
 - The active package remains v1. Issue #30 and the Issue #32 migration contract
   must merge atomically; v1 remains the rollback path.
 
@@ -236,3 +242,9 @@ Licensing and packaging evidence:
   and 17.60/28.95 respectively. The online-only budget excluded optional
   offline reruns. The xcb effect is material but does not identify the
   unlogged 03/11 platform; no production platform override has been made.
+- Display/layout follow-up (2026-11-05): `make test` passes 13/13 after each
+  small layout/diagnostic commit. Native captures show the specified 960x640
+  control collisions and raster duplicate attribution resolved on both
+  backends. Wayland's compositor expanded the requested 1366x768 raster window
+  to 1530x799 logical; xcb honored 1366x768, so the raster images are visual
+  evidence rather than same-pixel diff evidence.
