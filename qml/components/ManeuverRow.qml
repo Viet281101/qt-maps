@@ -54,9 +54,11 @@ Rectangle {
         anchors.rightMargin: Theme.spaceSm
         spacing: 2
         Text {
+            objectName: "maneuverStreetName"
             width: parent.width
             color: root.selected ? "#08243a" : Theme.textPrimary
             font.bold: true
+            font.pixelSize: Theme.fontSizeBody
             elide: Text.ElideRight
             text: root.maneuver && root.maneuver.streetName
                   && root.maneuver.streetName.length > 0
@@ -75,12 +77,14 @@ Rectangle {
     }
     Text {
         id: distanceText
+        objectName: "maneuverDistanceText"
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
         anchors.rightMargin: Theme.spaceSm
         width: 58
         horizontalAlignment: Text.AlignRight
         color: root.selected ? "#12334a" : Theme.textSecondary
+        font.pixelSize: Theme.fontSizeBody
         text: !root.maneuver ? ""
               : root.maneuver.distanceMeters >= 1000
                   ? (root.maneuver.distanceMeters / 1000).toFixed(1) + " km"

@@ -499,8 +499,14 @@ private slots:
                                      {QStringLiteral("distanceMeters"), 250.0}});
         QObject *icon = row->findChild<QObject *>(QStringLiteral("maneuverDirectionIcon"));
         QObject *symbol = row->findChild<QObject *>(QStringLiteral("maneuverDirectionSymbol"));
+        QObject *street = row->findChild<QObject *>(QStringLiteral("maneuverStreetName"));
+        QObject *distance = row->findChild<QObject *>(QStringLiteral("maneuverDistanceText"));
         QVERIFY(icon);
         QVERIFY(symbol);
+        QVERIFY(street);
+        QVERIFY(distance);
+        QCOMPARE(street->property("font").value<QFont>().pixelSize(), 14);
+        QCOMPARE(distance->property("font").value<QFont>().pixelSize(), 14);
 
         row->setProperty("selected", false);
         const QColor normalBackground = icon->property("color").value<QColor>();
