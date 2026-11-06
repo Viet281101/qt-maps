@@ -566,6 +566,27 @@ private slots:
                  QStringLiteral("Ngoại tuyến · tuyến mô phỏng"));
     }
 
+    void navigationBannerUsesPixelTokensForSummary()
+    {
+        QQmlEngine engine;
+        QQmlComponent component(&engine,
+                                QUrl(QStringLiteral("qrc:/qml/components/NavigationBanner.qml")));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> banner(component.create());
+        QVERIFY2(banner, qPrintable(component.errorString()));
+
+        QObject *remaining =
+            banner->findChild<QObject *>(QStringLiteral("navigationRemainingText"));
+        QObject *eta = banner->findChild<QObject *>(QStringLiteral("navigationEtaText"));
+        QObject *source = banner->findChild<QObject *>(QStringLiteral("navigationSourceText"));
+        QVERIFY(remaining);
+        QVERIFY(eta);
+        QVERIFY(source);
+        QCOMPARE(remaining->property("font").value<QFont>().pixelSize(), 14);
+        QCOMPARE(eta->property("font").value<QFont>().pixelSize(), 12);
+        QCOMPARE(source->property("font").value<QFont>().pixelSize(), 14);
+    }
+
     void navigationStartCollapsesPanelAndHidesStartAction()
     {
         RoutingController routing;

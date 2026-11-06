@@ -134,13 +134,25 @@ Rectangle {
             anchors.leftMargin: Theme.spaceLg
             anchors.rightMargin: Theme.spaceMd
             spacing: Theme.spaceLg
-            Text { color: Theme.textPrimary; font.bold: true; text: root.remainingText }
-            Text { color: Theme.textSecondary; text: root.etaText }
+            Text {
+                objectName: "navigationRemainingText"
+                color: Theme.textPrimary
+                font.bold: true
+                font.pixelSize: Theme.fontSizeBody
+                text: root.remainingText
+            }
+            Text {
+                objectName: "navigationEtaText"
+                color: Theme.textSecondary
+                font.pixelSize: Theme.fontSizeCaption
+                text: root.etaText
+            }
             Text {
                 id: navigationSourceText
                 objectName: "navigationSourceText"
                 width: Math.max(0, navigationSummaryRow.width - x)
                 color: Theme.warning
+                font.pixelSize: Theme.fontSizeBody
                 text: root.sourceText
                 elide: Text.ElideRight
             }

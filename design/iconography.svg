@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="264" viewBox="0 0 720 264" role="img" aria-labelledby="title desc">
+  <title id="title">QtMaps navigation icon direction</title>
+  <desc id="desc">A compact vector icon sheet for the dark QtMaps map interface.</desc>
+  <rect width="720" height="264" rx="24" fill="#1b2530"/>
+  <g fill="#f7f9fb" font-family="sans-serif" font-size="16" font-weight="600">
+    <text x="32" y="42">QtMaps iconography · 24 px grid · rounded 2 px strokes</text>
+  </g>
+  <g fill="none" stroke="#5eb7f7" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M74 146h44V98m0 0-28 28m28-28 28 28"/>
+    <path d="M218 178v-62h54m0 0-28-28m28 28-28 28"/>
+    <path d="M362 178v-62h-54m0 0 28-28m-28 28 28 28"/>
+    <path d="M478 148a42 42 0 1 0 12-30m-12 30h-22m22 0v-22"/>
+    <path d="M604 98v98m-32-70 32-28 32 28m-64 42 32 28 32-28"/>
+  </g>
+  <g fill="#c4ced8" font-family="sans-serif" font-size="14">
+    <text x="52" y="230">Continue</text>
+    <text x="196" y="230">Turn right</text>
+    <text x="340" y="230">Turn left</text>
+    <text x="456" y="230">Recenter</text>
+    <text x="580" y="230">Layers</text>
+  </g>
+  <circle cx="74" cy="72" r="6" fill="#74d493"/>
+  <circle cx="218" cy="72" r="6" fill="#f5c451"/>
+  <circle cx="362" cy="72" r="6" fill="#ff8585"/>
+  <circle cx="478" cy="72" r="6" fill="#5eb7f7"/>
+  <circle cx="604" cy="72" r="6" fill="#c4ced8"/>
+</svg>

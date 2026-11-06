@@ -243,8 +243,8 @@ Licensing and packaging evidence:
   offline reruns. The xcb effect is material but does not identify the
   unlogged 03/11 platform; no production platform override has been made.
 - Display/layout follow-up (2026-11-06): `make QT_EXPECTED_VERSION=5.15.18
-  test` passes 13/13 after each small layout/diagnostic commit. The FPS/RSS
-  overlay and ODbL attribution now use existing pixel tokens: both are 36 px
-  and 28 px logical high on Wayland and xcb (0 px difference). Captures are in
-  `generated/review/20261106-overlay/`; Wayland expands requested 1366x768 to
-  1530x799 logical, while xcb honors it, so raster pairs remain visual evidence.
+  test` passes 13/13 after each small layout/diagnostic commit. FPS/RSS and
+  ODbL attribution are 36 px/28 px logical high on both backends (0 px gap);
+  navigation summary text now also uses 14/12/14 px Theme tokens. The vector
+  icon direction is in `design/iconography.svg`; captures remain in
+  `generated/review/20261106-overlay/`, whose raster pairs are visual evidence.
