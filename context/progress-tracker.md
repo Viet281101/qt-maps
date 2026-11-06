@@ -242,9 +242,9 @@ Licensing and packaging evidence:
   and 17.60/28.95 respectively. The online-only budget excluded optional
   offline reruns. The xcb effect is material but does not identify the
   unlogged 03/11 platform; no production platform override has been made.
-- Display/layout follow-up (2026-11-06): 13/13 tests pass after each small commit.
-  Overlay/attribution are 36/28 px; navigation uses 14/12/14 px and action labels
-  elide. Evidence: `generated/review/20261106-overlay/`; icons: `design/iconography.svg`.
+- Display/layout follow-up: overlays are 36/28 px; navigation uses 14/12/14 px
+  and action labels elide. CLI tests reject invalid benchmark scenarios/timing.
+  Evidence: `generated/review/20261106-overlay/`; icons: `design/iconography.svg`.
 - GPU stability follow-up: i915 invalidates the partial matrix; GuC needs sudo.
   Backup/preflight/reversible plan: `docs/benchmarks/i915-gpu-hang-report.md`;
   guarded owner-only app bisect: `docs/benchmarks/i915-bisect-plan.md`.

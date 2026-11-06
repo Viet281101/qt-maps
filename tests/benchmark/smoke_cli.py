@@ -25,6 +25,24 @@ def main():
             "QTMAPS_MAPLIBRE_INSTALL", root / "generated/unit-01b/maplibre-install"
         )
     ).expanduser().resolve()
+    benchmark_runner = root / "tools/benchmark/run_benchmarks.py"
+    for arguments, expected_error in (
+        (["--scenarios", "not-a-scenario"], "unknown scenarios: not-a-scenario"),
+        (["--repeat", "0"], "repeat >= 1"),
+        (["--interval", "99"], "interval >= 100"),
+    ):
+        validation = subprocess.run(
+            [sys.executable, str(benchmark_runner), *arguments],
+            cwd=root,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        if validation.returncode == 0 or expected_error not in validation.stderr:
+            raise SystemExit(
+                "benchmark CLI accepted invalid input "
+                f"{arguments}: {validation.stdout}{validation.stderr}"
+            )
     environment = os.environ.copy()
     environment.update(
         {
