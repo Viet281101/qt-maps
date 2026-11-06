@@ -25,9 +25,9 @@ Update this file after every meaningful implementation change. Keep it below the
 
 ## Current Goal
 
-Prepare the completed Unit 07 stack for squash-merge integration, then resume
-approved product features. Do not change rendering, locked thresholds, package
-contracts, or the Wayland default without an owner decision.
+Prepare the completed Unit 07 stack for squash-merge integration (drafts in
+`docs/pr-drafts/07-integration-sequence.md`), then resume approved features.
+Do not change rendering, locks, package contracts, or Wayland default without owner approval.
 
 ## Completed Outcomes
 
