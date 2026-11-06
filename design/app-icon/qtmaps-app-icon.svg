@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="QtMaps">
+  <rect width="512" height="512" rx="112" fill="#1b2530"/>
+  <path d="M132 152h248v208H132z" fill="#243447" stroke="#5eb7f7" stroke-width="24" stroke-linejoin="round"/>
+  <path d="m164 302 72-82 62 54 50-62" fill="none" stroke="#74d493" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="164" cy="302" r="20" fill="#f5c451"/><circle cx="348" cy="212" r="20" fill="#ff8585"/>
+</svg>

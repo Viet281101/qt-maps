@@ -80,3 +80,5 @@ The owner-gated app bisect plan is
   `8ede216`, and `d84ebc1`.
 - `5cae590` adds 15 currentColor 24 px design icons; `design/README.md`
   defines their token and integration rules.
+- `design/app-icon/` holds SVG source only; `design/brand/` references Theme
+  without adding a font or parallel palette.
