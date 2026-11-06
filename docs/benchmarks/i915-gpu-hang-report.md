@@ -6,6 +6,15 @@
 the reversible next experiment; it does not claim that the GPU hang is fixed.
 No package, kernel, GRUB setting, or QtMaps rendering behaviour was changed.
 
+## Preservation backup
+
+Before further investigation, Git history and all local refs were saved in
+`generated/backup/qtmaps-20261106.bundle`, verified by `git bundle verify`,
+and copied to `/home/viet/Documents/qtmaps-backup/qtmaps-20261106.bundle`.
+Both copies have SHA-256
+`099e8b523ae1fddada16f63ca3306b8214d09cb4b2af9e1fed8bbe3146c7f329`.
+The 24 local branch/tag refs are recorded in `generated/backup/refs.txt`.
+
 ## Evidence collected
 
 | Item | Observation | Evidence |
@@ -40,6 +49,23 @@ navigation/offline run; all raw runs are retained and none were deleted.
 The benchmark shell and user systemd environment were checked for inherited
 `LIBGL_ALWAYS_SOFTWARE`, `MESA_*`, `QT_QPA_PLATFORM`, `QSG_RENDER_LOOP`, and
 `QTMAPS_*`; none were present before the hardware probes.
+
+## Preflight GuC
+
+The unprivileged preflight was repeated on kernel `7.0.0-43-generic`; the raw
+output is retained at `generated/system/i915-guc-preflight-20261106.txt`.
+
+| Command | Result |
+| --- | --- |
+| `cat /sys/module/i915/parameters/enable_guc` | `cat: /sys/module/i915/parameters/enable_guc: Permission denied` (exit 1) |
+| `journalctl -k -b --no-pager \| grep -iE 'guc\|huc'` | no matching current-boot line (journal exit 0, grep exit 1) |
+| `journalctl -k -b -1 --no-pager \| grep -iE 'guc\|huc'` | no matching previous-boot line (journal exit 0, grep exit 1) |
+| `cat /proc/cmdline` | `i915.enable_psr=0 i915.enable_dc=0 i915.enable_fbc=0`; no `enable_guc` override |
+
+**Conclusion: GuC state is not determined.** The module parameter cannot be
+read without privilege and lack of matching log lines does not prove that it is
+disabled. **Do not edit GRUB yet.** If the owner runs the privileged preflight
+and it returns `0`, do not change GRUB and move to the app bisect plan instead.
 
 ## Next reversible experiment
 
