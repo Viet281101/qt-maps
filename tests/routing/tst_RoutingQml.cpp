@@ -640,6 +640,12 @@ private slots:
         QVERIFY2(button, qPrintable(component.errorString()));
         QQuickItem *item = qobject_cast<QQuickItem *>(button.data());
         QVERIFY(item);
+        item->setWidth(80);
+        button->setProperty("text", QStringLiteral("A deliberately long action label"));
+        QObject *label = button->findChild<QObject *>(QStringLiteral("buttonLabel"));
+        QVERIFY(label);
+        QCOMPARE(label->property("elide").toInt(), static_cast<int>(Qt::ElideRight));
+        QVERIFY(label->property("width").toReal() <= button->property("labelMaximumWidth").toReal());
         QVERIFY(item->activeFocusOnTab());
 
         QQuickWindow window;

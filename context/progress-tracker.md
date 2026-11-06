@@ -246,5 +246,6 @@ Licensing and packaging evidence:
   test` passes 13/13 after each small layout/diagnostic commit. FPS/RSS and
   ODbL attribution are 36 px/28 px logical high on both backends (0 px gap);
   navigation summary text now also uses 14/12/14 px Theme tokens. The vector
-  icon direction is in `design/iconography.svg`; captures remain in
+  icon direction is in `design/iconography.svg`; shared action labels now elide
+  safely in narrow panels; captures remain in
   `generated/review/20261106-overlay/`, whose raster pairs are visual evidence.

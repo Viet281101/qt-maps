@@ -8,6 +8,7 @@ Rectangle {
     property color pressedColor: "#2266aa"
     property color textColor: "#08243a"
     readonly property real labelImplicitWidth: label.implicitWidth
+    readonly property real labelMaximumWidth: width - 2 * Theme.spaceSm
     signal triggered()
 
     height: 38
@@ -20,11 +21,16 @@ Rectangle {
 
     Text {
         id: label
-        anchors.centerIn: parent
+        objectName: "buttonLabel"
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.verticalCenter: parent.verticalCenter
+        width: Math.max(0, root.labelMaximumWidth)
         color: root.textColor
         font.pixelSize: Theme.fontSizeBody
         font.bold: true
         text: root.text
+        elide: Text.ElideRight
+        horizontalAlignment: Text.AlignHCenter
     }
     MouseArea {
         id: buttonMouse
