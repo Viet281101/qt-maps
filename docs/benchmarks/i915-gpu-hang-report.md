@@ -15,6 +15,11 @@ Both copies have SHA-256
 `099e8b523ae1fddada16f63ca3306b8214d09cb4b2af9e1fed8bbe3146c7f329`.
 The 24 local branch/tag refs are recorded in `generated/backup/refs.txt`.
 
+The later safety-backlog snapshot is
+`generated/backup/qtmaps-20261106-143921.bundle`, copied to
+`/home/viet/Documents/qtmaps-backup/`; both copies have SHA-256
+`c90862a243b9696906b7d932908bb26d3bfc1dd1ec373e8ddf9c0249973daf71`.
+
 ## Evidence collected
 
 | Item | Observation | Evidence |

@@ -62,6 +62,7 @@ The owner-gated app bisect plan is
   and `docs/map/`.
 - Generated datasets, benchmark runs, and backups remain untracked. Save a
   verified Git bundle after each five commits.
+- Latest verified backup: `generated/backup/qtmaps-20261106-143921.bundle`.
 
 ## Next Up
 
