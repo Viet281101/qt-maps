@@ -7,9 +7,9 @@
 #include <QGeoServiceProvider>
 #include <QGuiApplication>
 #include <QImage>
-#include <QQuickItem>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QQuickItem>
 #include <QQuickWindow>
 #include <QScreen>
 #include <QStringList>
@@ -428,14 +428,13 @@ int main(int argc, char *argv[])
             if (!displayCapturePath.isEmpty()) {
                 const QImage capture = window->grabWindow();
                 if (!capture.save(displayCapturePath)) {
-                    qCritical().noquote()
-                        << QStringLiteral("QTMAPS_DISPLAY capture_failed=%1").arg(displayCapturePath);
+                    qCritical().noquote() << QStringLiteral("QTMAPS_DISPLAY capture_failed=%1")
+                                                 .arg(displayCapturePath);
                 } else {
-                    qInfo().noquote()
-                        << QStringLiteral("QTMAPS_DISPLAY capture=%1 pixels=%2x%3")
-                               .arg(displayCapturePath)
-                               .arg(capture.width())
-                               .arg(capture.height());
+                    qInfo().noquote() << QStringLiteral("QTMAPS_DISPLAY capture=%1 pixels=%2x%3")
+                                             .arg(displayCapturePath)
+                                             .arg(capture.width())
+                                             .arg(capture.height());
                 }
             }
             if (!displayDiagnostics) {
@@ -443,38 +442,37 @@ int main(int argc, char *argv[])
             }
             const QScreen *screen = window->screen();
             const qreal dpr = window->effectiveDevicePixelRatio();
-            const QSize windowPixels(qRound(window->width() * dpr),
-                                     qRound(window->height() * dpr));
-            qInfo().noquote()
-                << QStringLiteral("QTMAPS_DISPLAY screen name=%1 geometry=%2,%3 %4x%5 "
-                                  "available=%6,%7 %8x%9 dpr=%10 logical_dpi=%11x%12 "
-                                  "physical_dpi=%13x%14 physical_mm=%15x%16")
-                       .arg(screen ? screen->name() : QStringLiteral("<none>"))
-                       .arg(screen ? screen->geometry().x() : 0)
-                       .arg(screen ? screen->geometry().y() : 0)
-                       .arg(screen ? screen->geometry().width() : 0)
-                       .arg(screen ? screen->geometry().height() : 0)
-                       .arg(screen ? screen->availableGeometry().x() : 0)
-                       .arg(screen ? screen->availableGeometry().y() : 0)
-                       .arg(screen ? screen->availableGeometry().width() : 0)
-                       .arg(screen ? screen->availableGeometry().height() : 0)
-                       .arg(screen ? screen->devicePixelRatio() : 0)
-                       .arg(screen ? screen->logicalDotsPerInchX() : 0)
-                       .arg(screen ? screen->logicalDotsPerInchY() : 0)
-                       .arg(screen ? screen->physicalDotsPerInchX() : 0)
-                       .arg(screen ? screen->physicalDotsPerInchY() : 0)
-                       .arg(screen ? screen->physicalSize().width() : 0)
-                       .arg(screen ? screen->physicalSize().height() : 0);
-            qInfo().noquote()
-                << QStringLiteral("QTMAPS_DISPLAY window logical=%1x%2 dpr=%3 framebuffer=%4x%5 "
-                                  "render_target=%6")
-                       .arg(window->width())
-                       .arg(window->height())
-                       .arg(dpr)
-                       .arg(windowPixels.width())
-                       .arg(windowPixels.height())
-                       .arg(window->renderTarget() ? QStringLiteral("custom")
-                                                   : QStringLiteral("default"));
+            const QSize windowPixels(qRound(window->width() * dpr), qRound(window->height() * dpr));
+            qInfo().noquote() << QStringLiteral(
+                                     "QTMAPS_DISPLAY screen name=%1 geometry=%2,%3 %4x%5 "
+                                     "available=%6,%7 %8x%9 dpr=%10 logical_dpi=%11x%12 "
+                                     "physical_dpi=%13x%14 physical_mm=%15x%16")
+                                     .arg(screen ? screen->name() : QStringLiteral("<none>"))
+                                     .arg(screen ? screen->geometry().x() : 0)
+                                     .arg(screen ? screen->geometry().y() : 0)
+                                     .arg(screen ? screen->geometry().width() : 0)
+                                     .arg(screen ? screen->geometry().height() : 0)
+                                     .arg(screen ? screen->availableGeometry().x() : 0)
+                                     .arg(screen ? screen->availableGeometry().y() : 0)
+                                     .arg(screen ? screen->availableGeometry().width() : 0)
+                                     .arg(screen ? screen->availableGeometry().height() : 0)
+                                     .arg(screen ? screen->devicePixelRatio() : 0)
+                                     .arg(screen ? screen->logicalDotsPerInchX() : 0)
+                                     .arg(screen ? screen->logicalDotsPerInchY() : 0)
+                                     .arg(screen ? screen->physicalDotsPerInchX() : 0)
+                                     .arg(screen ? screen->physicalDotsPerInchY() : 0)
+                                     .arg(screen ? screen->physicalSize().width() : 0)
+                                     .arg(screen ? screen->physicalSize().height() : 0);
+            qInfo().noquote() << QStringLiteral(
+                                     "QTMAPS_DISPLAY window logical=%1x%2 dpr=%3 framebuffer=%4x%5 "
+                                     "render_target=%6")
+                                     .arg(window->width())
+                                     .arg(window->height())
+                                     .arg(dpr)
+                                     .arg(windowPixels.width())
+                                     .arg(windowPixels.height())
+                                     .arg(window->renderTarget() ? QStringLiteral("custom")
+                                                                 : QStringLiteral("default"));
             QObject *overlay = window->findChild<QObject *>(QStringLiteral("rasterRouteOverlay"));
             if (!overlay) {
                 qInfo().noquote() << QStringLiteral("QTMAPS_DISPLAY canvas=unavailable");
@@ -482,7 +480,7 @@ int main(int argc, char *argv[])
             }
             const QSizeF canvasSize = overlay->property("canvasSize").toSizeF();
             const QSize canvasPixels(qRound(canvasSize.width() * dpr),
-                                    qRound(canvasSize.height() * dpr));
+                                     qRound(canvasSize.height() * dpr));
             qInfo().noquote()
                 << QStringLiteral("QTMAPS_DISPLAY canvas logical=%1x%2 canvas_size=%3x%4 "
                                   "requested_fbo_pixels=%5x%6 render_target=%7 render_strategy=%8")
@@ -497,19 +495,19 @@ int main(int argc, char *argv[])
             const auto logOverlayGeometry = [window, dpr](const QString &objectName) {
                 QObject *item = window->findChild<QObject *>(objectName);
                 if (!item) {
-                    qInfo().noquote() << QStringLiteral("QTMAPS_DISPLAY item=%1 unavailable")
-                                             .arg(objectName);
+                    qInfo().noquote()
+                        << QStringLiteral("QTMAPS_DISPLAY item=%1 unavailable").arg(objectName);
                     return;
                 }
                 const qreal width = item->property("width").toReal();
                 const qreal height = item->property("height").toReal();
-                qInfo().noquote()
-                    << QStringLiteral("QTMAPS_DISPLAY item=%1 logical=%2x%3 pixels=%4x%5")
-                           .arg(objectName)
-                           .arg(width)
-                           .arg(height)
-                           .arg(qRound(width * dpr))
-                           .arg(qRound(height * dpr));
+                qInfo().noquote() << QStringLiteral(
+                                         "QTMAPS_DISPLAY item=%1 logical=%2x%3 pixels=%4x%5")
+                                         .arg(objectName)
+                                         .arg(width)
+                                         .arg(height)
+                                         .arg(qRound(width * dpr))
+                                         .arg(qRound(height * dpr));
             };
             logOverlayGeometry(QStringLiteral("performanceOverlay"));
             logOverlayGeometry(QStringLiteral("mapAttributionBadge"));

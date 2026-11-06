@@ -236,7 +236,8 @@ private slots:
         QVERIFY(QTest::qWaitForWindowExposed(window));
 
         QQuickItem *source = root->findChild<QQuickItem *>(QStringLiteral("navigationSourceText"));
-        QQuickItem *endAction = root->findChild<QQuickItem *>(QStringLiteral("endNavigationButton"));
+        QQuickItem *endAction =
+            root->findChild<QQuickItem *>(QStringLiteral("endNavigationButton"));
         QVERIFY(source);
         QVERIFY(endAction);
         QTRY_VERIFY(source->width() > 0.0);
@@ -298,8 +299,7 @@ private slots:
         QVERIFY(QTest::qWaitForWindowExposed(window));
 
         QQuickItem *search = root->findChild<QQuickItem *>(QStringLiteral("searchPlaceholder"));
-        QQuickItem *status =
-            root->findChild<QQuickItem *>(QStringLiteral("connectionStatusPill"));
+        QQuickItem *status = root->findChild<QQuickItem *>(QStringLiteral("connectionStatusPill"));
         QVERIFY(search);
         QVERIFY(status);
         QTRY_VERIFY(search->width() >= 240.0);
@@ -335,7 +335,8 @@ private slots:
         const QRectF controlsRect(controls->mapToScene(QPointF(0, 0)), controls->size());
         QVERIFY(!swapRect.intersects(clearRect));
         QVERIFY2(controlsRect.contains(startRect),
-                 qPrintable(QStringLiteral("start navigation %1,%2 %3x%4 is clipped by controls %5,%6 %7x%8")
+                 qPrintable(QStringLiteral(
+                                "start navigation %1,%2 %3x%4 is clipped by controls %5,%6 %7x%8")
                                 .arg(startRect.x())
                                 .arg(startRect.y())
                                 .arg(startRect.width())
@@ -645,7 +646,8 @@ private slots:
         QObject *label = button->findChild<QObject *>(QStringLiteral("buttonLabel"));
         QVERIFY(label);
         QCOMPARE(label->property("elide").toInt(), static_cast<int>(Qt::ElideRight));
-        QVERIFY(label->property("width").toReal() <= button->property("labelMaximumWidth").toReal());
+        QVERIFY(label->property("width").toReal() <=
+                button->property("labelMaximumWidth").toReal());
         QVERIFY(item->activeFocusOnTab());
 
         QQuickWindow window;
@@ -790,8 +792,8 @@ private slots:
         const QByteArray toolsQml = toolsFile.readAll();
         QVERIFY(mapQml.contains("panelWidth + Theme.spaceLg * 2"));
         QVERIFY(mainQml.contains("property bool panelCollapsed"));
-        const QByteArray qml = mainQml + mapQml + navigationQml + bannerQml + statusQml + panelQml
-                               + toolsQml;
+        const QByteArray qml =
+            mainQml + mapQml + navigationQml + bannerQml + statusQml + panelQml + toolsQml;
         QVERIFY(qml.contains("routingController.streetLabels"));
         QVERIFY(qml.contains("canvas.visibleStreetLabels()"));
         QVERIFY(qml.contains("canvas.clampMapToDataBounds()"));
@@ -810,7 +812,8 @@ private slots:
         QVERIFY(qml.contains("objectName: \"rasterRouteOverlay\""));
         QVERIFY(mapQml.contains("copyrightsVisible: false"));
         QVERIFY(qml.contains("© OpenStreetMap contributors, ODbL 1.0"));
-        QVERIFY(qml.contains("visible: canvas.routeOverlayEnabled && routingController.routeAvailable"));
+        QVERIFY(qml.contains(
+            "visible: canvas.routeOverlayEnabled && routingController.routeAvailable"));
         QVERIFY(qml.contains("id: benchmarkRenderDriver"));
         QVERIFY(qml.contains("NumberAnimation on phase"));
         QVERIFY(qml.contains("benchmarkScenarioController.noteOverlayPaintRequest"));

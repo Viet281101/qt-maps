@@ -186,15 +186,13 @@ void BenchmarkScenarioController::handleFrameSwapped()
                 emitEvent(QStringLiteral("frame_long"),
                           {{QStringLiteral("frame_ms"), elapsedMilliseconds},
                            {QStringLiteral("camera_commands"), cameraCommandCount_},
-                           {QStringLiteral("overlay_paint_requests"),
-                            overlayPaintRequestCount_}});
+                           {QStringLiteral("overlay_paint_requests"), overlayPaintRequestCount_}});
             }
         } else {
             frameSwapTimer_.start();
             frameSwapTimerStarted_ = true;
         }
     }
-
 
     if (!firstMapFrameSeen_) {
         firstMapFrameSeen_ = true;
@@ -319,8 +317,7 @@ bool BenchmarkScenarioController::requiresBackend() const
 void BenchmarkScenarioController::maybeScheduleWarmup()
 {
     if (!enabled() || finished_ || warmupScheduled_ || !firstMapFrameSeen_ ||
-        (window_ && !windowExposedSeen_) ||
-        (requiresBackend() && !backendReady_)) {
+        (window_ && !windowExposedSeen_) || (requiresBackend() && !backendReady_)) {
         return;
     }
     warmupScheduled_ = true;
@@ -493,13 +490,12 @@ void BenchmarkScenarioController::finalizeFinish()
     fields.insert(QStringLiteral("startup_ms"), firstMapFrameMilliseconds_);
     fields.insert(QStringLiteral("pss_mib"), performanceMonitor_->totalPssMiB());
     fields.insert(QStringLiteral("rss_mib"), performanceMonitor_->totalRssMiB());
-    const bool interactiveScenario = scenario_ == QLatin1String("pan_zoom") ||
-                                     scenario_ == QLatin1String("navigation_replay");
-    const bool frameProgressOk = !interactiveScenario ||
-                                 (!frameProgressStalled_ && frameSwapCount_ > 0 &&
-                                  windowExposedSeen_ &&
-                                  (scenario_ != QLatin1String("pan_zoom") ||
-                                   cameraCommandCount_ > 0));
+    const bool interactiveScenario =
+        scenario_ == QLatin1String("pan_zoom") || scenario_ == QLatin1String("navigation_replay");
+    const bool frameProgressOk =
+        !interactiveScenario ||
+        (!frameProgressStalled_ && frameSwapCount_ > 0 && windowExposedSeen_ &&
+         (scenario_ != QLatin1String("pan_zoom") || cameraCommandCount_ > 0));
     if (!frameProgressOk) {
         finishSuccess_ = false;
     }
