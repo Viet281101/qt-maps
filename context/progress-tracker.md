@@ -242,9 +242,9 @@ Licensing and packaging evidence:
   and 17.60/28.95 respectively. The online-only budget excluded optional
   offline reruns. The xcb effect is material but does not identify the
   unlogged 03/11 platform; no production platform override has been made.
-- Display/layout follow-up (2026-11-05): `make test` passes 13/13 after each
-  small layout/diagnostic commit. Native captures show the specified 960x640
-  control collisions and raster duplicate attribution resolved on both
-  backends. Wayland's compositor expanded the requested 1366x768 raster window
-  to 1530x799 logical; xcb honored 1366x768, so the raster images are visual
-  evidence rather than same-pixel diff evidence.
+- Display/layout follow-up (2026-11-06): `make QT_EXPECTED_VERSION=5.15.18
+  test` passes 13/13 after each small layout/diagnostic commit. The FPS/RSS
+  overlay and ODbL attribution now use existing pixel tokens: both are 36 px
+  and 28 px logical high on Wayland and xcb (0 px difference). Captures are in
+  `generated/review/20261106-overlay/`; Wayland expands requested 1366x768 to
+  1530x799 logical, while xcb honors it, so raster pairs remain visual evidence.
