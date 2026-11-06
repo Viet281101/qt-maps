@@ -84,3 +84,5 @@ The owner-gated app bisect plan is
   defines their token and integration rules.
 - `design/app-icon/` holds SVG source only; `design/brand/` references Theme
   without adding a font or parallel palette.
+- Safe benchmark, bisect, and integration playbooks plus durable lessons are
+  in `docs/playbooks/` and `docs/lessons.md`.
