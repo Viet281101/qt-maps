@@ -532,6 +532,15 @@ private slots:
 
         QCOMPARE(overlay->property("processSampleAvailable").toBool(), false);
         QCOMPARE(overlay->property("compactRssText").toString(), QStringLiteral("RSS —"));
+        QCOMPARE(overlay->property("height").toInt(), 36);
+        QVERIFY(overlay->property("width").toInt() <= 288);
+        QObject *compact = overlay->findChild<QObject *>(QStringLiteral("performanceCompactBadge"));
+        QVERIFY(compact);
+        const auto compactTexts = compact->findChildren<QObject *>();
+        for (QObject *text : compactTexts) {
+            if (text->metaObject()->className() == QByteArrayLiteral("QQuickText"))
+                QCOMPARE(text->property("font").value<QFont>().pixelSize(), 14);
+        }
     }
 
     void connectionStatusUsesEverydayVietnameseLabels()
@@ -542,6 +551,13 @@ private slots:
         QVERIFY2(component.isReady(), qPrintable(component.errorString()));
         QScopedPointer<QObject> status(component.create());
         QVERIFY2(status, qPrintable(component.errorString()));
+        QObject *attribution = status->findChild<QObject *>(QStringLiteral("mapAttributionText"));
+        QObject *attributionBadge =
+            status->findChild<QObject *>(QStringLiteral("mapAttributionBadge"));
+        QVERIFY(attribution);
+        QVERIFY(attributionBadge);
+        QCOMPARE(attribution->property("font").value<QFont>().pixelSize(), 14);
+        QCOMPARE(attributionBadge->property("height").toInt(), 28);
 
         status->setProperty("connectionLabel", QStringLiteral("Valhalla local — loopback"));
         QCOMPARE(status->property("statusText").toString(), QStringLiteral("Valhalla (cục bộ)"));

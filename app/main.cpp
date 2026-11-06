@@ -494,6 +494,25 @@ int main(int argc, char *argv[])
                        .arg(canvasPixels.height())
                        .arg(overlay->property("renderTarget").toInt())
                        .arg(overlay->property("renderStrategy").toInt());
+            const auto logOverlayGeometry = [window, dpr](const QString &objectName) {
+                QObject *item = window->findChild<QObject *>(objectName);
+                if (!item) {
+                    qInfo().noquote() << QStringLiteral("QTMAPS_DISPLAY item=%1 unavailable")
+                                             .arg(objectName);
+                    return;
+                }
+                const qreal width = item->property("width").toReal();
+                const qreal height = item->property("height").toReal();
+                qInfo().noquote()
+                    << QStringLiteral("QTMAPS_DISPLAY item=%1 logical=%2x%3 pixels=%4x%5")
+                           .arg(objectName)
+                           .arg(width)
+                           .arg(height)
+                           .arg(qRound(width * dpr))
+                           .arg(qRound(height * dpr));
+            };
+            logOverlayGeometry(QStringLiteral("performanceOverlay"));
+            logOverlayGeometry(QStringLiteral("mapAttributionBadge"));
         });
     }
     QObject::connect(&mapSourceController, &qtmaps::map::MapSourceController::stateChanged, &engine,

@@ -171,6 +171,7 @@ Window {
     }
 
     PerformanceOverlay {
+        objectName: "performanceOverlay"
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 50

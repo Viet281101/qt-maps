@@ -52,6 +52,7 @@ Item {
     }
 
     Rectangle {
+        objectName: "mapAttributionBadge"
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         anchors.margins: Theme.spaceMd
@@ -61,6 +62,7 @@ Item {
         z: 20
         Text {
             id: attribution
+            objectName: "mapAttributionText"
             anchors.centerIn: parent
             color: Theme.textPrimary
             font.pixelSize: Theme.fontSizeBody
