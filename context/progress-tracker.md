@@ -242,10 +242,9 @@ Licensing and packaging evidence:
   and 17.60/28.95 respectively. The online-only budget excluded optional
   offline reruns. The xcb effect is material but does not identify the
   unlogged 03/11 platform; no production platform override has been made.
-- Display/layout follow-up (2026-11-06): `make QT_EXPECTED_VERSION=5.15.18
-  test` passes 13/13 after each small layout/diagnostic commit. FPS/RSS and
-  ODbL attribution are 36 px/28 px logical high on both backends (0 px gap);
-  navigation summary text now also uses 14/12/14 px Theme tokens. The vector
-  icon direction is in `design/iconography.svg`; shared action labels now elide
-  safely in narrow panels; captures remain in
-  `generated/review/20261106-overlay/`, whose raster pairs are visual evidence.
+- Display/layout follow-up (2026-11-06): 13/13 tests pass after each small commit.
+  Overlay/attribution are 36/28 px; navigation uses 14/12/14 px and action labels
+  elide. Evidence: `generated/review/20261106-overlay/`; icons: `design/iconography.svg`.
+- GPU stability follow-up: i915 makes the partial backend matrix invalid; no system
+  change was made pending sudo. Evidence and reversible GuC plan:
+  `docs/benchmarks/i915-gpu-hang-report.md`.
