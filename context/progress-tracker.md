@@ -58,6 +58,8 @@ The owner-gated app bisect plan is
 
 - Per commit run `make QT_EXPECTED_VERSION=5.15.18 test`; Qt 5.15.13 remains
   an explicit comparison/CI configuration only.
+- `AGENTS.md` records the i915-safe test, sudo/sysfs, binary-location, and
+  local-only integration constraints.
 - Preserve user-owned untracked paths `context/feature-specs/hanoi-cartography-style-upgrade.md`
   and `docs/map/`.
 - Generated datasets, benchmark runs, and backups remain untracked. Save a
