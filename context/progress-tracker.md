@@ -78,3 +78,5 @@ The owner-gated app bisect plan is
   safe-backlog commit.
 - Current safe-backlog commits: `998869c`, `4d1cd41`, `252622f`, `00c3294`,
   `8ede216`, and `d84ebc1`.
+- `5cae590` adds 15 currentColor 24 px design icons; `design/README.md`
+  defines their token and integration rules.
