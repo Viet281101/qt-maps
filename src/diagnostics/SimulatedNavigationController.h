@@ -7,7 +7,7 @@
 #include <QVector>
 
 namespace qtmaps {
-namespace map {
+namespace diagnostics {
 
 class SimulatedNavigationController final : public QObject
 {
@@ -56,5 +56,5 @@ private:
     bool running_ = false;
 };
 
-} // namespace map
+} // namespace diagnostics
 } // namespace qtmaps

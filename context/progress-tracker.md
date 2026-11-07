@@ -19,9 +19,11 @@ Review PR #33, then prepare focused Unit 07 pull requests. Do not push to
 ## Publication Status
 
 - PR [#33](https://github.com/Viet281101/qt-maps/pull/33),
-  `docs/qt-5-15-18-alignment` → `main`, is open, assigned to `Viet281101`,
-  linked to Issue #1, Project #6, and the current `First Management Demo`
-  milestone.
+  `docs/qt-5-15-18-alignment` → `main`, was squash-merged as `4193f07`.
+- PR [#34](https://github.com/Viet281101/qt-maps/pull/34),
+  `chore/07a-repo-structure-maintenance` → `main`, is open, assigned to
+  `Viet281101`, linked to parent Issue #24 and child Issues #25--#27, and is
+  `In Progress` on Project #6 with P1 / Week 2 fields.
 - The Unit 07 remote backups are `origin/chore/07a-repo-structure-maintenance`,
   `origin/feat/07b-demo-shell-ui`, `origin/feat/07c-offline-raster`,
   `origin/feat/07d-hanoi-cartography`, and `origin/unit-07e-verify`.
@@ -30,7 +32,7 @@ Review PR #33, then prepare focused Unit 07 pull requests. Do not push to
 
 | Unit | Branch / head | State |
 | --- | --- | --- |
-| 07A | `chore/07a-repo-structure-maintenance` / `cccfcb7` | pushed; first stack branch |
+| 07A | `chore/07a-repo-structure-maintenance` / `3a5cbe7` | PR #34 open; first stack branch |
 | 07B | `feat/07b-demo-shell-ui` / `1ce45e4` | pushed; depends on 07A |
 | 07C | `feat/07c-offline-raster` / `a4227ba` | pushed; depends on 07B |
 | 07D | `feat/07d-hanoi-cartography` / `bd854fa` | pushed; depends on 07C |
@@ -70,8 +72,8 @@ remains allowed.
 
 ## Next Up
 
-1. Review PR #33 without merging directly to `main`.
-2. Create focused Unit 07 stack PRs, update the tracker with their live URLs
+1. Review PR #34 without merging directly to `main`.
+2. Create focused Unit 07 stack PRs after 07A, update the tracker with their live URLs
    and publication state, then verify the linked issue/milestone/Project metadata.
 
 ## Latest Verification

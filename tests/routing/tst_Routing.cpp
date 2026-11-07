@@ -18,7 +18,7 @@ namespace {
 
 QByteArray fixture(const QString &name)
 {
-    QFile file(QStringLiteral(QTMAPS_SOURCE_DIR "/tests/fixtures/routing/") + name);
+    QFile file(QStringLiteral(QTMAPS_SOURCE_DIR "/resources/routing/") + name);
     if (!file.open(QIODevice::ReadOnly)) {
         return QByteArray();
     }

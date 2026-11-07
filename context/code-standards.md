@@ -96,7 +96,8 @@ Do not reuse one configured build directory across Qt kits and do not change glo
 
 - `app/` — executable entry point and lifecycle wiring.
 - `qml/` — screens, controls, overlays, and theme resources.
-- `src/core/`, `src/map/`, `src/routing/`, `src/search/`, `src/perf/` — C++ code for the corresponding architecture boundary.
+- `src/core/`, `src/map/`, `src/routing/`, `src/search/`, `src/perf/` — production C++ code for the corresponding architecture boundary.
+- `src/diagnostics/` — retained probe-only controllers, linked through `qtmaps_diagnostics` rather than the production map target.
 - `tests/` — Qt Test and Qt Quick Test code and compact fixtures.
 - `tools/data-pipeline/` — reproducible data-preparation tooling.
 - `docs/` — benchmark and management-facing reports.

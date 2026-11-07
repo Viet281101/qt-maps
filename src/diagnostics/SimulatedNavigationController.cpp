@@ -1,9 +1,9 @@
-#include "SimulatedNavigationController.h"
+#include "diagnostics/SimulatedNavigationController.h"
 
 #include <algorithm>
 
 namespace qtmaps {
-namespace map {
+namespace diagnostics {
 
 SimulatedNavigationController::SimulatedNavigationController(QObject *parent) :
     QObject(parent),
@@ -112,5 +112,5 @@ void SimulatedNavigationController::updatePosition(double distanceMeters)
     emit positionChanged();
 }
 
-} // namespace map
+} // namespace diagnostics
 } // namespace qtmaps

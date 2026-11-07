@@ -1,6 +1,6 @@
 import QtQuick 2.13
 import QtQuick.Window 2.13
-import "components"
+import "../components"
 
 Window {
     id: root

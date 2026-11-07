@@ -41,7 +41,7 @@ private slots:
         engine.rootContext()->setContextProperty(QStringLiteral("instrumentationEnabled"), false);
         engine.rootContext()->setContextProperty(QStringLiteral("vectorStyleUrl"), QString());
 
-        QQmlComponent component(&engine, QUrl(QStringLiteral("qrc:/qml/RoutingProbe.qml")));
+        QQmlComponent component(&engine, QUrl(QStringLiteral("qrc:/qml/Main.qml")));
         QVERIFY2(component.isReady(), qPrintable(component.errorString()));
         QScopedPointer<QObject> root(component.create());
         QVERIFY2(root, qPrintable(component.errorString()));
@@ -92,7 +92,7 @@ private slots:
         engine.rootContext()->setContextProperty(QStringLiteral("instrumentationEnabled"), false);
         engine.rootContext()->setContextProperty(QStringLiteral("vectorStyleUrl"), QString());
 
-        QQmlComponent component(&engine, QUrl(QStringLiteral("qrc:/qml/RoutingProbe.qml")));
+        QQmlComponent component(&engine, QUrl(QStringLiteral("qrc:/qml/Main.qml")));
         QVERIFY2(component.isReady(), qPrintable(component.errorString()));
         QScopedPointer<QObject> root(component.create());
         QVERIFY2(root, qPrintable(component.errorString()));
@@ -157,7 +157,7 @@ private slots:
         engine.rootContext()->setContextProperty(QStringLiteral("instrumentationEnabled"), false);
         engine.rootContext()->setContextProperty(QStringLiteral("vectorStyleUrl"), QString());
 
-        QQmlComponent component(&engine, QUrl(QStringLiteral("qrc:/qml/RoutingProbe.qml")));
+        QQmlComponent component(&engine, QUrl(QStringLiteral("qrc:/qml/Main.qml")));
         QVERIFY2(component.isReady(), qPrintable(component.errorString()));
         QScopedPointer<QObject> root(component.create());
         QVERIFY2(root, qPrintable(component.errorString()));
@@ -222,7 +222,7 @@ private slots:
         engine.rootContext()->setContextProperty(QStringLiteral("instrumentationEnabled"), false);
         engine.rootContext()->setContextProperty(QStringLiteral("vectorStyleUrl"), QString());
 
-        QQmlComponent component(&engine, QUrl(QStringLiteral("qrc:/qml/RoutingProbe.qml")));
+        QQmlComponent component(&engine, QUrl(QStringLiteral("qrc:/qml/Main.qml")));
         QVERIFY2(component.isReady(), qPrintable(component.errorString()));
         QScopedPointer<QObject> root(component.create());
         QVERIFY2(root, qPrintable(component.errorString()));
@@ -312,9 +312,9 @@ private slots:
         QCOMPARE(banner->property("maneuverDistanceText").toString(), QStringLiteral("0 m"));
     }
 
-    void routingProbeDeclaresExpectedTabOrder()
+    void productRoutePanelDeclaresExpectedTabOrder()
     {
-        QFile file(QStringLiteral(":/qml/RoutingProbe.qml"));
+        QFile file(QStringLiteral(":/qml/components/RoutePanel.qml"));
         QVERIFY(file.open(QIODevice::ReadOnly));
         const QByteArray qml = file.readAll();
         QVERIFY(qml.contains("KeyNavigation.tab: destinationField"));
@@ -324,13 +324,23 @@ private slots:
         QVERIFY(qml.contains("KeyNavigation.backtab: routeButton"));
     }
 
-    void routingProbeKeepsRouteClearOfPanelAndExposesUiState()
+    void productShellKeepsRouteClearOfPanelAndExposesUiState()
     {
-        QFile file(QStringLiteral(":/qml/RoutingProbe.qml"));
-        QVERIFY(file.open(QIODevice::ReadOnly));
-        const QByteArray qml = file.readAll();
-        QVERIFY(qml.contains("routePanel.width + Theme.spaceLg * 2"));
-        QVERIFY(qml.contains("property bool panelCollapsed"));
+        QFile mainFile(QStringLiteral(":/qml/Main.qml"));
+        QFile mapFile(QStringLiteral(":/qml/components/MapCanvas.qml"));
+        QFile navigationFile(QStringLiteral(":/qml/components/NavigationOverlay.qml"));
+        QFile panelFile(QStringLiteral(":/qml/components/RoutePanel.qml"));
+        QVERIFY(mainFile.open(QIODevice::ReadOnly));
+        QVERIFY(mapFile.open(QIODevice::ReadOnly));
+        QVERIFY(navigationFile.open(QIODevice::ReadOnly));
+        QVERIFY(panelFile.open(QIODevice::ReadOnly));
+        const QByteArray mainQml = mainFile.readAll();
+        const QByteArray mapQml = mapFile.readAll();
+        const QByteArray navigationQml = navigationFile.readAll();
+        const QByteArray panelQml = panelFile.readAll();
+        QVERIFY(mapQml.contains("panelWidth + Theme.spaceLg * 2"));
+        QVERIFY(mainQml.contains("property bool panelCollapsed"));
+        const QByteArray qml = mainQml + mapQml + navigationQml + panelQml;
         QVERIFY(qml.contains("routingController.streetLabels"));
         QVERIFY(qml.contains("map.zoomLevel >= 15"));
         QVERIFY(qml.contains("routingController.currentManeuverIndex"));

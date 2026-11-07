@@ -68,9 +68,7 @@ add_library(qtmaps_perf STATIC
 target_include_directories(qtmaps_perf PUBLIC "${CMAKE_SOURCE_DIR}/src")
 target_link_libraries(qtmaps_perf PUBLIC Qt5::Core Qt5::Quick)
 
-add_library(qtmaps_map_probe STATIC
-    src/map/CameraProbeController.cpp
-    src/map/CameraProbeController.h
+add_library(qtmaps_map STATIC
     src/map/DirectoryTileSource.cpp
     src/map/DirectoryTileSource.h
     src/map/MapPackageManifest.cpp
@@ -79,17 +77,24 @@ add_library(qtmaps_map_probe STATIC
     src/map/MapSourceController.h
     src/map/MbTilesTileSource.cpp
     src/map/MbTilesTileSource.h
-    src/map/SimulatedNavigationController.cpp
-    src/map/SimulatedNavigationController.h
     src/map/TileSource.h
 )
-target_include_directories(qtmaps_map_probe PUBLIC "${CMAKE_SOURCE_DIR}/src")
-target_link_libraries(qtmaps_map_probe PUBLIC
+target_include_directories(qtmaps_map PUBLIC "${CMAKE_SOURCE_DIR}/src")
+target_link_libraries(qtmaps_map PUBLIC
     Qt5::Core
     Qt5::Network
     Qt5::Positioning
     Qt5::Sql
 )
+
+add_library(qtmaps_diagnostics STATIC
+    src/diagnostics/CameraProbeController.cpp
+    src/diagnostics/CameraProbeController.h
+    src/diagnostics/SimulatedNavigationController.cpp
+    src/diagnostics/SimulatedNavigationController.h
+)
+target_include_directories(qtmaps_diagnostics PUBLIC "${CMAKE_SOURCE_DIR}/src")
+target_link_libraries(qtmaps_diagnostics PUBLIC Qt5::Core Qt5::Positioning)
 
 add_library(qtmaps_routing STATIC
     src/routing/Polyline6Decoder.cpp
@@ -129,7 +134,12 @@ target_link_libraries(qtmaps_benchmark PUBLIC
     Qt5::Quick
 )
 
-qt5_add_resources(QTMAPS_RESOURCES resources.qrc)
+qt5_add_resources(QTMAPS_QML_RESOURCES qml/resources.qrc)
+qt5_add_resources(QTMAPS_ROUTING_RESOURCES resources/routing.qrc)
+set(QTMAPS_RESOURCES
+    ${QTMAPS_QML_RESOURCES}
+    ${QTMAPS_ROUTING_RESOURCES}
+)
 
 add_executable(qtmaps
     app/main.cpp
@@ -139,7 +149,8 @@ add_executable(qtmaps
 target_link_libraries(qtmaps PRIVATE
     qtmaps_app_core
     qtmaps_benchmark
-    qtmaps_map_probe
+    qtmaps_diagnostics
+    qtmaps_map
     qtmaps_perf
     qtmaps_routing
     Qt5::Core
@@ -181,13 +192,14 @@ if(BUILD_TESTING)
     target_link_libraries(qtmaps_perf_tests PRIVATE qtmaps_perf Qt5::Test)
     add_test(NAME qtmaps_perf_tests COMMAND qtmaps_perf_tests)
 
-    add_executable(qtmaps_map_probe_tests tests/map/tst_CameraProbeController.cpp)
-    target_link_libraries(qtmaps_map_probe_tests PRIVATE qtmaps_map_probe Qt5::Test)
-    add_test(NAME qtmaps_map_probe_tests COMMAND qtmaps_map_probe_tests)
+    add_executable(qtmaps_diagnostics_tests tests/map/tst_CameraProbeController.cpp)
+    target_link_libraries(qtmaps_diagnostics_tests PRIVATE qtmaps_diagnostics Qt5::Test)
+    add_test(NAME qtmaps_diagnostics_tests COMMAND qtmaps_diagnostics_tests)
 
     add_executable(qtmaps_map_pipeline_tests tests/map/tst_MapPipeline.cpp)
     target_link_libraries(qtmaps_map_pipeline_tests PRIVATE
-        qtmaps_map_probe
+        qtmaps_diagnostics
+        qtmaps_map
         Qt5::Network
         Qt5::Sql
         Qt5::Test

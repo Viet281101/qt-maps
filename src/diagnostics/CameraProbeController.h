@@ -4,7 +4,7 @@
 #include <QString>
 
 namespace qtmaps {
-namespace map {
+namespace diagnostics {
 
 class CameraProbeController final : public QObject
 {
@@ -38,5 +38,5 @@ private:
     QString stepName_ = QStringLiteral("north-reset");
 };
 
-} // namespace map
+} // namespace diagnostics
 } // namespace qtmaps

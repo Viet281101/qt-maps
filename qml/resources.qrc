@@ -1,0 +1,19 @@
+<RCC>
+    <qresource prefix="/qml">
+        <file alias="Main.qml">Main.qml</file>
+        <file alias="probes/DiagnosticRasterProbe.qml">probes/DiagnosticRasterProbe.qml</file>
+        <file alias="probes/BlankProbe.qml">probes/BlankProbe.qml</file>
+        <file alias="probes/MapboxGlProbe.qml">probes/MapboxGlProbe.qml</file>
+        <file alias="probes/NavigationProbe.qml">probes/NavigationProbe.qml</file>
+        <file alias="components/ConnectionStatus.qml">components/ConnectionStatus.qml</file>
+        <file alias="components/MapCanvas.qml">components/MapCanvas.qml</file>
+        <file alias="components/NavigationOverlay.qml">components/NavigationOverlay.qml</file>
+        <file alias="components/RoutePanel.qml">components/RoutePanel.qml</file>
+        <file alias="components/PerformanceOverlay.qml">components/PerformanceOverlay.qml</file>
+        <file alias="components/ManeuverRow.qml">components/ManeuverRow.qml</file>
+        <file alias="components/NavigationBanner.qml">components/NavigationBanner.qml</file>
+        <file alias="components/KeyboardActionButton.qml">components/KeyboardActionButton.qml</file>
+        <file alias="theme/qmldir">theme/qmldir</file>
+        <file alias="theme/Theme.qml">theme/Theme.qml</file>
+    </qresource>
+</RCC>
