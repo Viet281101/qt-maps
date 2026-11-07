@@ -8,6 +8,10 @@ Item {
     property bool endpointSelectionEnabled: true
     property bool panelCollapsed: false
     property real panelWidth: 330
+    property var travelledRoutePath: []
+    readonly property bool guidanceActive: routeNavigationController.active
+                                           || (routingController.loading
+                                               && routingController.routeAvailable)
     signal togglePerformanceOverlayRequested()
 
     function recenterNavigation() {
@@ -19,6 +23,39 @@ Item {
         map.tilt = 45
         if (map.zoomLevel < 16)
             map.zoomLevel = 16
+    }
+
+    function updateTravelledRoute() {
+        var routePath = routingController.routePath
+        var position = routeNavigationController.coordinate
+        if (!routeNavigationController.active || !position.isValid
+                || routePath.length < 2) {
+            travelledRoutePath = []
+            return
+        }
+        var nearestIndex = 0
+        var nearestDistance = Number.MAX_VALUE
+        for (var index = 0; index < routePath.length; ++index) {
+            var distance = position.distanceTo(routePath[index])
+            if (distance < nearestDistance) {
+                nearestDistance = distance
+                nearestIndex = index
+            }
+        }
+        var completedPath = []
+        for (var completedIndex = 0; completedIndex <= nearestIndex; ++completedIndex)
+            completedPath.push(routePath[completedIndex])
+        completedPath.push(position)
+        travelledRoutePath = completedPath
+    }
+
+    function settleNavigationState() {
+        if (guidanceActive)
+            return
+        travelledRoutePath = []
+        map.bearing = 0
+        map.tilt = 0
+        routeRefreshTimer.restart()
     }
 
     function fitRouteWithPanelPadding() {
@@ -126,6 +163,16 @@ Item {
             z: 6
         }
 
+        MapPolyline {
+            id: travelledRouteLine
+            // MapLibre hides sibling polylines when an empty MapPolyline remains visible.
+            visible: canvas.travelledRoutePath.length > 1
+            path: canvas.travelledRoutePath
+            line.width: 7
+            line.color: Theme.routeTravelled
+            z: 7
+        }
+
         MapQuickItem {
             coordinate: routingController.origin
             anchorPoint.x: originMarker.width / 2
@@ -133,8 +180,8 @@ Item {
             z: 10
             sourceItem: Rectangle {
                 id: originMarker
-                width: 30; height: 30; radius: 15
-                color: Theme.success
+                width: 34; height: 34; radius: 17
+                color: Theme.markerOrigin
                 border.color: Theme.surfaceElevated
                 border.width: 5
                 Text { anchors.centerIn: parent; text: "A"; font.bold: true; color: "#102018" }
@@ -142,7 +189,7 @@ Item {
         }
 
         MapQuickItem {
-            visible: routeNavigationController.active
+            visible: canvas.guidanceActive
             coordinate: routeNavigationController.coordinate
             anchorPoint.x: navigationMarker.width / 2
             anchorPoint.y: navigationMarker.height / 2
@@ -170,8 +217,8 @@ Item {
             z: 10
             sourceItem: Rectangle {
                 id: destinationMarker
-                width: 30; height: 30; radius: 15
-                color: Theme.error
+                width: 34; height: 34; radius: 17
+                color: Theme.markerDestination
                 border.color: Theme.surfaceElevated
                 border.width: 5
                 Text { anchors.centerIn: parent; text: "B"; font.bold: true; color: "#301010" }
@@ -216,9 +263,12 @@ Item {
 
     Connections {
         target: routingController
-        function onRouteChanged() { routeRefreshTimer.restart() }
+        function onRouteChanged() {
+            canvas.travelledRoutePath = []
+            routeRefreshTimer.restart()
+        }
         function onStateChanged() {
-            if (routingController.routeAvailable)
+            if (routingController.routeAvailable && !routingController.loading)
                 routeRefreshTimer.restart()
         }
         function onFocusCoordinateRequested(coordinate, zoomLevel) {
@@ -229,13 +279,14 @@ Item {
 
     Connections {
         target: routeNavigationController
-        function onPositionChanged() { canvas.recenterNavigation() }
+        function onPositionChanged() {
+            canvas.updateTravelledRoute()
+            canvas.recenterNavigation()
+        }
         function onStateChanged() {
-            if (!routeNavigationController.active) {
-                map.bearing = 0
-                map.tilt = 0
-                routeRefreshTimer.restart()
-            }
+            // Deviation emits navigation state before RoutingController enters loading.
+            // Defer the stop decision so re-routing keeps the last route, puck and camera.
+            Qt.callLater(canvas.settleNavigationState)
         }
     }
 

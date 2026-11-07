@@ -8,22 +8,25 @@ preserved in Git history through `e0a8086`.
 - Units 03--05 are squash-merged into `main`; Unit 06 performance work is also
   present on `origin/main`.
 - Unit 07 is a dependency-ordered stack whose five branches have remote backup
-  copies. No Unit 07 pull request is open.
+  copies. Unit 07B is under review as PR #35.
 - Qt 5.15.18 is the production baseline. Qt 5.15.13 is comparison-only.
 
 ## Current Goal
 
-Review PR #33, then prepare focused Unit 07 pull requests. Do not push to
-`main`.
+Review PR #35 (Unit 07B) and, after it is squash-merged, prepare the focused
+07C pull request. Do not push to `main`.
 
 ## Publication Status
 
 - PR [#33](https://github.com/Viet281101/qt-maps/pull/33),
   `docs/qt-5-15-18-alignment` → `main`, was squash-merged as `4193f07`.
 - PR [#34](https://github.com/Viet281101/qt-maps/pull/34),
-  `chore/07a-repo-structure-maintenance` → `main`, is open, assigned to
-  `Viet281101`, linked to parent Issue #24 and child Issues #25--#27, and is
-  `In Progress` on Project #6 with P1 / Week 2 fields.
+  `chore/07a-repo-structure-maintenance` → `main`, was squash-merged as
+  `4a61d46`.
+- PR [#35](https://github.com/Viet281101/qt-maps/pull/35),
+  `feat/07b-demo-shell-ui` → `main`, is open, assigned to `Viet281101`,
+  linked to Issue #3, and is `In Progress` on Project #6 with P0 / Week 1
+  fields.
 - The Unit 07 remote backups are `origin/chore/07a-repo-structure-maintenance`,
   `origin/feat/07b-demo-shell-ui`, `origin/feat/07c-offline-raster`,
   `origin/feat/07d-hanoi-cartography`, and `origin/unit-07e-verify`.
@@ -32,8 +35,8 @@ Review PR #33, then prepare focused Unit 07 pull requests. Do not push to
 
 | Unit | Branch / head | State |
 | --- | --- | --- |
-| 07A | `chore/07a-repo-structure-maintenance` / `3a5cbe7` | PR #34 open; first stack branch |
-| 07B | `feat/07b-demo-shell-ui` / `1ce45e4` | pushed; depends on 07A |
+| 07A | `chore/07a-repo-structure-maintenance` / `4a61d46` | merged as PR #34 |
+| 07B | `feat/07b-demo-shell-ui` / current PR #35 head | open; follows 07A |
 | 07C | `feat/07c-offline-raster` / `a4227ba` | pushed; depends on 07B |
 | 07D | `feat/07d-hanoi-cartography` / `bd854fa` | pushed; depends on 07C |
 | 07E | `unit-07e-verify` / `50fc763` | pushed; depends on 07D |
@@ -72,12 +75,19 @@ remains allowed.
 
 ## Next Up
 
-1. Review PR #34 without merging directly to `main`.
-2. Create focused Unit 07 stack PRs after 07A, update the tracker with their live URLs
-   and publication state, then verify the linked issue/milestone/Project metadata.
+1. Review PR #35 without merging directly to `main`.
+2. After PR #35 is squash-merged, create the focused 07C pull request and
+   update the tracker with its live URL and publication state.
+3. Follow up in separate PRs on default-disabled instrumentation/performance
+   badge behavior and software-backend CTest coverage; do not fold either into
+   Unit 07B.
 
 ## Latest Verification
 
-- On 2026-11-07, `make QT_EXPECTED_VERSION=5.15.18 test` passed all 13 CTest
-  tests without a render benchmark.
-- Remote `origin/main` is `e0a8086`; the remote currently exposes only `main`.
+- On 2026-11-07, `QT_QUICK_BACKEND=software make
+  QT_EXPECTED_VERSION=5.15.18 test` passed all 10 CTest tests. This includes
+  an offscreen `qtmaps` smoke test and a QML test that creates a `QQuickWindow`;
+  no application was run manually, no benchmark ran, and GPU/MapLibre behavior
+  was not verified.
+- Remote `origin/main` is `4a61d46` (the squash merge of PR #34); PR #35's
+  branch is the current `feat/07b-demo-shell-ui` head.

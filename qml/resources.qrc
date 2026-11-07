@@ -6,6 +6,7 @@
         <file alias="probes/MapboxGlProbe.qml">probes/MapboxGlProbe.qml</file>
         <file alias="probes/NavigationProbe.qml">probes/NavigationProbe.qml</file>
         <file alias="components/ConnectionStatus.qml">components/ConnectionStatus.qml</file>
+        <file alias="components/DemoToolsOverlay.qml">components/DemoToolsOverlay.qml</file>
         <file alias="components/MapCanvas.qml">components/MapCanvas.qml</file>
         <file alias="components/NavigationOverlay.qml">components/NavigationOverlay.qml</file>
         <file alias="components/RoutePanel.qml">components/RoutePanel.qml</file>

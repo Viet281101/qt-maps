@@ -4,7 +4,11 @@
 
 QtMaps uses a map-first, familiar navigation layout inspired by common desktop map applications without copying branded assets. The map occupies the window, while floating controls and panels preserve maximum geographic context. The interface must remain readable over raster, vector, and orthography imagery and must expose offline, loading, degraded, and error states clearly.
 
-Exact colors, fonts, radii, spacing, icon set, component dimensions, and accessibility contrast targets have not been selected. They remain TODO items in `progress-tracker.md`; do not invent final values during implementation.
+Unit 07B commits a dark floating-control theme for the management demo. Text
+must meet WCAG AA 4.5:1 contrast on its actual panel/control background, ordinary
+pointer targets are at least 36 px high, and keyboard focus uses a visible
+high-contrast outline. The map cartography remains light; a later dark-map theme
+is not implied by the dark control surfaces.
 
 Unit 02 may introduce a minimal `qml/theme/Theme.qml` singleton so the performance overlay consumes semantic tokens. Values used by that diagnostic overlay are provisional implementation tokens, not the final visual-system decision, and must remain isolated behind the singleton.
 
@@ -14,10 +18,10 @@ Reusable visual tokens belong in a QML singleton, planned as `qml/theme/Theme.qm
 
 | Category | Planned semantic properties | Current value |
 | --- | --- | --- |
-| Color | `mapOverlay`, `surface`, `surfaceElevated`, `textPrimary`, `textSecondary`, `accent`, `border`, `error`, `warning`, `success`, `route`, `routeOutline` | TODO |
-| Typography | `fontFamily`, `fontSizeCaption`, `fontSizeBody`, `fontSizeTitle`, `fontWeightRegular`, `fontWeightEmphasis` | TODO; prefer an available system font unless a licensed bundled font is approved |
-| Spacing | `spaceXs`, `spaceSm`, `spaceMd`, `spaceLg`, `spaceXl` | TODO |
-| Radius | `radiusControl`, `radiusPanel`, `radiusPill` | TODO |
+| Color | `mapOverlay`, `surface`, `surfaceElevated`, `surfaceInput`, `textPrimary`, `textSecondary`, `accent`, `border`, `error`, `warning`, `success`, `route`, `routeOutline`, `routeTravelled`, `markerOrigin`, `markerDestination` | Unit 07B dark demo palette in `Theme.qml`; route starts at `#1A73E8` with white outline, travelled route is grey, and A/B markers use `#1E8E3E` / `#D93025` |
+| Typography | `fontFamily`, `fontSizeCaption`, `fontSizeBody`, `fontSizeTitle`, `fontSizeDisplay`, `fontWeightRegular`, `fontWeightEmphasis` | Available system sans-serif; no bundled font until the licensed cartography-font gate |
+| Spacing | `spaceXs`, `spaceSm`, `spaceMd`, `spaceLg`, `spaceXl` | 4 / 8 / 12 / 16 / 24 px |
+| Radius | `radiusControl`, `radiusPanel`, `radiusPill` | 8 / 12 / 999 px |
 | Elevation | `shadowLow`, `shadowHigh` or equivalent Qt 5.15-compatible properties | TODO |
 | Motion | `durationFast`, `durationNormal`, `easingStandard` | TODO; respect measured render cost |
 
@@ -34,7 +38,9 @@ Theme implementation must use Qt 5.15.18-compatible QML and must not depend on Q
 - **Map actions:** zoom, recenter, and navigation controls are grouped consistently and remain reachable without covering essential route content.
 - **Status:** online/offline state, missing data, service startup, and benchmark recording have concise visible indicators.
 
-Desktop placement, breakpoints, minimum window size, keyboard behavior, and final dimensions remain TODO until the initial QML shell is measured.
+The minimum supported window is 900x580. At that size the route panel scrolls
+independently, navigation automatically collapses it, and the banner/status
+overlays must not intersect. Demo review also covers 1366x768 and 1920x1080.
 
 ## Component Conventions
 
@@ -48,12 +54,18 @@ Desktop placement, breakpoints, minimum window size, keyboard behavior, and fina
 ## Map and Navigation Presentation
 
 - The selected route must remain distinguishable from roads and imagery at supported zoom levels.
+- Qt 5.15 `MapPolyline` does not expose cap/join controls in QML. The route therefore relies on the MapLibre renderer's joins, while circular A/B markers cover its endpoint caps; visual review at every supported viewport is the acceptance check.
 - Origin, destination, current simulated position, and selected search result use distinct semantic marker roles.
 - Camera following and map rotation must have an obvious exit/recenter action.
 - Re-routing must preserve the last valid route until a replacement succeeds or clearly report that no route is available.
+- During re-routing, keep the navigation camera, travelled segment, current-position puck, and last valid route. The destination marker remains part of the route even when camera-follow framing places it outside the viewport.
 - Attribution required by map and imagery licenses remains visible and readable.
 - The performance overlay must be switchable and must avoid obscuring primary navigation information.
+- A performance value that has not been sampled is shown with an em dash; the UI must never present a synthetic zero RSS measurement.
+- The connection pill uses an everyday Vietnamese label while retaining the source identity, for example `Valhalla (cục bộ)`, and stays below the navigation banner at every review viewport.
 
 ## Pending UI Decisions
 
-The following are intentionally unresolved and tracked in `progress-tracker.md`: token values, icon source, minimum window size, side-panel placement and sizing, keyboard shortcuts, contrast target, and whether light/dark map-aware variants are required.
+The icon source and any light/dark map-aware variant remain unresolved. Unit 07B
+uses text/Unicode directional symbols only; introducing an icon asset set still
+requires license review. F3 is the committed performance-detail shortcut.

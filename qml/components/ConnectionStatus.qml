@@ -6,6 +6,18 @@ Item {
     property color statusColor: Theme.warning
     property bool navigationActive: false
     property real navigationBannerHeight: 0
+    property string connectionLabel: ""
+    readonly property string statusText: friendlyConnectionLabel(connectionLabel)
+
+    function friendlyConnectionLabel(label) {
+        if (label === "Valhalla local — loopback")
+            return qsTr("Valhalla (cục bộ)")
+        if (label === "offline — fixture fallback")
+            return qsTr("Ngoại tuyến · tuyến dự phòng")
+        if (label === "offline — fixture")
+            return qsTr("Ngoại tuyến · tuyến mô phỏng")
+        return label.replace("Valhalla local", qsTr("Valhalla cục bộ"))
+    }
 
     Rectangle {
         id: connectionStatusPill
@@ -31,7 +43,7 @@ Item {
                 width: 10; height: 10; radius: 5
                 color: statusOverlay.statusColor
             }
-            Text { color: Theme.textPrimary; text: routingController.connectionLabel }
+            Text { color: Theme.textPrimary; text: statusOverlay.statusText }
         }
     }
 
