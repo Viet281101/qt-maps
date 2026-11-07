@@ -23,7 +23,7 @@ If implementation changes the architecture, scope, or
 standards documented in the context files, update the
 relevant file before continuing.
 
-QtMaps targets Qt 5.15.13 and uses CMake with Ninja. Qt 5.13.2
+QtMaps targets Qt 5.15.18 and uses CMake with Ninja. Qt 5.15.13
 is retained only as an explicit comparison configuration. Do not use
 Qt 6 CMake APIs such as `qt_add_executable`,
 `qt_add_qml_module`, or `qt_standard_project_setup`. Use the

@@ -1,6 +1,6 @@
 # QtMaps
 
-QtMaps là ứng dụng bản đồ desktop cho Việt Nam, được xây dựng bằng Qt 5.15.13, MapLibre Native Qt v3.0.0 liên kết động, C++ và QML/Qt Quick trên Linux. Qt 5.13.2 chỉ được giữ để đối chiếu. Dự án tập trung vào khả năng chạy local/offline, tìm đường ô tô và trình bày chế độ dẫn đường theo phong cách quen thuộc của các ứng dụng bản đồ hiện đại.
+QtMaps là ứng dụng bản đồ desktop cho Việt Nam, được xây dựng bằng Qt 5.15.18, MapLibre Native Qt v3.0.0 liên kết động, C++ và QML/Qt Quick trên Linux. Qt 5.15.13 chỉ được giữ để đối chiếu. Dự án tập trung vào khả năng chạy local/offline, tìm đường ô tô và trình bày chế độ dẫn đường theo phong cách quen thuộc của các ứng dụng bản đồ hiện đại.
 
 ## Yêu cầu dự án
 
@@ -32,7 +32,7 @@ Phạm vi dữ liệu toàn quốc ở độ chi tiết cao, pipeline dữ liệ
 
 | Thành phần     | Định hướng hiện tại                                            |
 | -------------- | -------------------------------------------------------------- |
-| UI và runtime  | Qt 5.15.13, MapLibre Native Qt v3.0.0, C++, QML, Qt Quick      |
+| UI và runtime  | Qt 5.15.18, MapLibre Native Qt v3.0.0, C++, QML, Qt Quick      |
 | Build          | CMake và Ninja với Qt 5 CMake APIs                             |
 | Raster         | Fallback diagnostic localhost đã xác nhận; raster thật để sau  |
 | Vector         | MapLibre Native Qt v3.0.0 đã duyệt, dùng MBTiles local hợp lệ  |
@@ -42,7 +42,7 @@ Phạm vi dữ liệu toàn quốc ở độ chi tiết cao, pipeline dữ liệ
 | GPS mô phỏng   | QtPositioning và route/NMEA replay                             |
 | Hiệu năng      | FPS từ frame render; CPU/RAM tính cả application process tree  |
 
-Các công nghệ mang trạng thái đề xuất không được xem là đã chốt cho đến khi có bằng chứng build/chạy trên Qt 5.15.13 và máy tham chiếu.
+Các công nghệ mang trạng thái đề xuất không được xem là đã chốt cho đến khi có bằng chứng build/chạy trên Qt 5.15.18 và máy tham chiếu.
 
 ## Workflow phát triển
 
@@ -76,7 +76,7 @@ Dùng `make check` trong lúc phát triển, sau đó commit hoặc stash toàn 
 
 ## Chi tiết build và chạy
 
-Workflow Release đã kiểm chứng chọn rõ Qt 5.15.13 của hệ thống và không đổi `PATH` toàn cục:
+Workflow Release đã kiểm chứng chọn rõ Qt 5.15.18 của hệ thống và không đổi `PATH` toàn cục:
 
 ```bash
 make requirements
@@ -129,7 +129,7 @@ service và config. `QTMAPS_APP` có thể chọn binary đã build khác;
 
 ## Nguyên tắc triển khai
 
-- Chỉ dùng API tương thích Qt 5.15.13; không dùng API chỉ có trên Qt 6.
+- Chỉ dùng API tương thích Qt 5.15.18; không dùng API chỉ có trên Qt 6.
 - CMake phải dùng `find_package(Qt5 ...)`, `CMAKE_AUTOMOC`/`CMAKE_AUTORCC`, `qt5_add_resources` và `add_executable`.
 - Không thực hiện I/O, routing, database hoặc chờ process theo kiểu blocking trên UI thread.
 - Dữ liệu sinh ra, cache, routing graph, MBTiles và artifact bên thứ ba không được commit vào Git.
@@ -156,7 +156,7 @@ Kết quả thực tế được ghi theo [mẫu benchmark](docs/benchmarks/benc
 
 ## Trạng thái hiện tại
 
-- Qt 5.15.13 hệ thống và MapLibre Native Qt v3.0.0 liên kết động là baseline đã duyệt; Qt 5.13.2 tại `/home/viet/Qt/5.13.2/gcc_64` được giữ để đối chiếu.
+- Qt 5.15.18 hệ thống và MapLibre Native Qt v3.0.0 liên kết động là baseline đã duyệt; Qt 5.15.13 được giữ để đối chiếu khi có kit tách biệt.
 - CMake/Ninja/ccache Release build và CTest đã được xác nhận. Việc chọn Qt dùng `CMAKE_PREFIX_PATH` hoặc biến Makefile, không đổi `PATH` toàn cục.
 - Package vector có checksum hiện chỉ bao phủ vùng Hà Nội giới hạn ở zoom 12–15; chưa phải dữ liệu toàn quốc.
 - PR #20 đã merge. Tuyến 5,47 km và chuyển động 40 km/h của Unit 03 vẫn là fixture navigation mô phỏng xác định trước, chưa phải kết quả từ routing engine.
@@ -188,6 +188,6 @@ docs/                benchmark và báo cáo tuần
 context/             nguồn sự thật về phạm vi và quyết định dự án
 ```
 
-Cách build đối chiếu Qt 5.13.2 và cấu hình runtime MapLibre được ghi trong [code standards](context/code-standards.md) và [evidence Unit 01b](docs/benchmarks/unit-01b-vector-feasibility.md).
+Cách build đối chiếu Qt 5.15.13 và cấu hình runtime MapLibre được ghi trong [code standards](context/code-standards.md) và [evidence Unit 01b](docs/benchmarks/unit-01b-vector-feasibility.md).
 
 Attribution bên thứ ba và kế hoạch đóng gói dynamic link đã duyệt được ghi trong [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) và [hướng dẫn đóng gói Linux](docs/packaging/linux-dynamic-linking.md).

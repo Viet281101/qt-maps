@@ -1,6 +1,6 @@
 # QtMaps
 
-QtMaps is a Linux desktop mapping application for Vietnam built with Qt 5.15.13, dynamically linked MapLibre Native Qt v3.0.0, C++, and QML/Qt Quick. Qt 5.13.2 is retained for comparison evidence. The project focuses on local and offline operation, car routing, and a navigation experience inspired by familiar modern mapping applications.
+QtMaps is a Linux desktop mapping application for Vietnam built with Qt 5.15.18, dynamically linked MapLibre Native Qt v3.0.0, C++, and QML/Qt Quick. Qt 5.15.13 is retained for comparison evidence. The project focuses on local and offline operation, car routing, and a navigation experience inspired by familiar modern mapping applications.
 
 ## Project Requirements
 
@@ -32,7 +32,7 @@ Nationwide high-detail coverage, a complete data pipeline, installer packaging, 
 
 | Component           | Current direction                                                     |
 | ------------------- | --------------------------------------------------------------------- |
-| UI and runtime      | Qt 5.15.13, MapLibre Native Qt v3.0.0, C++, QML, and Qt Quick          |
+| UI and runtime      | Qt 5.15.18, MapLibre Native Qt v3.0.0, C++, QML, and Qt Quick          |
 | Build system        | CMake and Ninja using Qt 5 CMake APIs                                 |
 | Raster rendering    | Diagnostic localhost fallback validated; real raster data deferred    |
 | Vector rendering    | Approved MapLibre Native Qt v3.0.0 over validated local MBTiles       |
@@ -42,7 +42,7 @@ Nationwide high-detail coverage, a complete data pipeline, installer packaging, 
 | Position simulation | QtPositioning with route or NMEA replay                               |
 | Performance         | Rendered-frame FPS and process-tree CPU/RAM measurements              |
 
-A proposed technology is not committed until it has been built and exercised successfully with Qt 5.15.13 on the reference machine.
+A proposed technology is not committed until it has been built and exercised successfully with Qt 5.15.18 on the reference machine.
 
 ## Developer workflow
 
@@ -76,7 +76,7 @@ merge gate reviews exactly the committed branch state.
 
 ## Build and run details
 
-The validated Release workflow selects system Qt 5.15.13 explicitly and does not change the global `PATH`:
+The validated Release workflow selects system Qt 5.15.18 explicitly and does not change the global `PATH`:
 
 ```bash
 make requirements
@@ -129,7 +129,7 @@ reports the exact missing path and does not silently draw a fixture route.
 
 ## Current status and limitations
 
-- Qt 5.15.13 plus dynamically linked MapLibre Native Qt v3.0.0 is the production baseline. Qt 5.13.2 is retained only for explicit comparison.
+- Qt 5.15.18 plus dynamically linked MapLibre Native Qt v3.0.0 is the production baseline. Qt 5.15.13 is retained only for explicit comparison.
 - The checksummed local vector package currently covers bounded Hanoi data at zoom 12–15. It is not nationwide coverage.
 - PR #20 is merged. Its visible 5.47 km path and 40 km/h movement remain deterministic Unit 03 navigation fixtures, not output from a routing engine.
 - The Unit 04 route-planning flow now runs a managed, loopback-only Valhalla 3.9.1 service and returns real route geometry, distance, duration, and Vietnamese maneuvers for the bounded greater-Hanoi graph. Recorded fixtures remain available only through the explicitly labeled fixture mode or a visible request-failure fallback; missing startup files do not trigger them.
@@ -145,7 +145,7 @@ reports the exact missing path and does not silently draw a fixture route.
 
 ## Implementation Principles
 
-- Use only APIs compatible with Qt 5.15.13; do not use Qt 6-only APIs.
+- Use only APIs compatible with Qt 5.15.18; do not use Qt 6-only APIs.
 - CMake must use `find_package(Qt5 ...)`, `CMAKE_AUTOMOC`/`CMAKE_AUTORCC`, `qt5_add_resources`, and `add_executable`.
 - Never perform blocking network, routing, database, filesystem, or process waits on the UI thread.
 - Do not commit generated datasets, caches, routing graphs, MBTiles, or third-party artifacts to Git.
@@ -186,6 +186,6 @@ docs/                Benchmarks and weekly reports
 context/             Authoritative scope and project decisions
 ```
 
-Qt 5.13.2 comparison and MapLibre runtime-path details are documented in [the code standards](context/code-standards.md) and [Unit 01b evidence](docs/benchmarks/unit-01b-vector-feasibility.md).
+Qt 5.15.13 comparison and MapLibre runtime-path details are documented in [the code standards](context/code-standards.md) and [Unit 01b evidence](docs/benchmarks/unit-01b-vector-feasibility.md).
 
 Third-party attribution and the approved dynamic-link distribution plan are recorded in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [the Linux packaging guide](docs/packaging/linux-dynamic-linking.md).
