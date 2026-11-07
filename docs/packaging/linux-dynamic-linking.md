@@ -4,7 +4,7 @@ Status: approved architecture direction; implementation and distributable releas
 
 ## Selected model
 
-QtMaps uses dynamically linked Qt 5.15.13 and MapLibre Native Qt v3.0.0 shared libraries. The application executable, Qt/MapLibre shared objects, plugins, QML modules, map dataset packages, and notices remain separable. Do not statically link Qt or the LGPL-selected MapLibre Qt/QML bindings into a release artifact without a separate owner and legal review.
+QtMaps uses dynamically linked Qt 5.15.18 and MapLibre Native Qt v3.0.0 shared libraries. The application executable, Qt/MapLibre shared objects, plugins, QML modules, map dataset packages, and notices remain separable. Do not statically link Qt or the LGPL-selected MapLibre Qt/QML bindings into a release artifact without a separate owner and legal review.
 
 ## Proposed bundle layout
 
@@ -26,7 +26,7 @@ Use a relative, documented runtime search configuration that still permits libra
 
 ## Release checklist
 
-1. Build only from the approved Qt 5.15.13 and signed MapLibre v3.0.0 identities; record compiler, flags, patches, submodule commits, and checksums.
+1. Build only from the approved Qt 5.15.18 and signed MapLibre v3.0.0 identities; record compiler, flags, patches, submodule commits, and checksums.
 2. Confirm `ldd` for the executable, Qt plugins, QML plugins, and MapLibre libraries has no missing dependency and contains no accidental Qt 5.13 or build-tree path.
 3. Keep the executable dynamically linked. Verify that replacing the packaged LGPL shared libraries with ABI-compatible rebuilt versions is technically possible and document the commands/search paths needed to run that modified combination.
 4. Include `THIRD_PARTY_NOTICES.md`, the complete LGPL-3.0 and GPL-3.0 texts required by the selected LGPL terms, BSD-2-Clause notices for MapLibre core, Qt module/third-party notices, and every transitive notice emitted by the exact build.
@@ -45,7 +45,7 @@ Baseline configure/build/test:
 cmake -S . -B build-qt515 -G Ninja \
   -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_PREFIX_PATH=/usr \
-  -DQTMAPS_MIN_QT_VERSION=5.15.13 \
+  -DQTMAPS_MIN_QT_VERSION=5.15.18 \
   -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 cmake --build build-qt515 --parallel
 ctest --test-dir build-qt515 --output-on-failure

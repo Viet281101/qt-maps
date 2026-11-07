@@ -25,7 +25,7 @@ QtMaps must dynamically link the MapLibre/Qt shared objects and preserve the BSD
 
 ## Qt
 
-- **Version:** Qt 5.15.13 baseline; Qt 5.13.2 is comparison-only and is not the planned release runtime.
+- **Version:** Qt 5.15.18 baseline; Qt 5.15.13 is comparison-only and is not the planned release runtime.
 - **Use:** Core, Gui, Location, Positioning, Qml, Quick, and their required runtime dependencies. Qt Test is build/test-only.
 - **License choice:** open-source Qt modules are used under GNU LGPL v3 where that option is available. Each packaged module and its third-party code must be checked against Qt's module-specific license metadata before distribution.
 - **Links:** <https://doc.qt.io/archives/qt-5.15/licensing.html>, <https://www.qt.io/development/open-source-lgpl-obligations>.

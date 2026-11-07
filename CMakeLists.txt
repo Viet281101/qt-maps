@@ -9,8 +9,8 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-set(QTMAPS_MIN_QT_VERSION "5.15.13" CACHE STRING
-    "Minimum Qt 5 version; set to 5.13 only for the documented comparison build")
+set(QTMAPS_MIN_QT_VERSION "5.15.18" CACHE STRING
+    "Minimum Qt 5 version; set to 5.15.13 only for the documented comparison build")
 
 find_package(Qt5 ${QTMAPS_MIN_QT_VERSION} REQUIRED COMPONENTS
     Core

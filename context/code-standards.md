@@ -5,9 +5,9 @@
 - Keep modules small, single-purpose, and aligned with the boundaries in `architecture.md`.
 - Fix root causes instead of layering silent fallbacks or duplicate state.
 - Keep UI, data generation, rendering, routing, search, and performance collection separable and independently testable.
-- Do not add a dependency without documenting its purpose, compatibility with Qt 5.15.13, license, footprint, and decision status.
+- Do not add a dependency without documenting its purpose, compatibility with Qt 5.15.18, license, footprint, and decision status.
 - Treat external files, network responses, environment variables, and child-process output as untrusted input.
-- Avoid deprecated APIs. If Qt 5.15.13 offers no non-deprecated alternative, document the exception beside the use and in the relevant spec.
+- Avoid deprecated APIs. If Qt 5.15.18 offers no non-deprecated alternative, document the exception beside the use and in the relevant spec.
 
 ## C++
 
@@ -22,8 +22,8 @@
 
 ## Qt and QML
 
-- Use Qt 5.15.13 APIs only for production code. Check the Qt 5.15 documentation before accepting code suggested for Qt 6 or current upstream.
-- QML files use explicit versioned imports no newer than the modules shipped with Qt 5.15.13. Existing 2.13/5.13 imports may remain where they help the documented Qt 5.13 comparison and do not block the baseline.
+- Use Qt 5.15.18 APIs only for production code. Check the Qt 5.15 documentation before accepting code suggested for Qt 6 or current upstream.
+- QML files use explicit versioned imports no newer than the modules shipped with Qt 5.15.18. Existing 2.13/5.13 imports may remain where they help the documented Qt 5.15.13 comparison and do not block the baseline.
 - QML owns presentation and interaction state; C++ services own I/O, process control, data parsing, and domain behavior.
 - Expose narrow models and controllers to QML instead of broad singleton service locators.
 - Never block the GUI thread. Use queued signals, asynchronous Qt APIs, or bounded workers for slow operations.
@@ -32,20 +32,20 @@
 
 ## CMake
 
-- Use CMake with the Ninja generator. The baseline Release configure command is `cmake -S . -B build-qt515 -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/usr -DQTMAPS_MIN_QT_VERSION=5.15.13 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache`; build with `cmake --build build-qt515 --parallel`.
+- Use CMake with the Ninja generator. The baseline Release configure command is `cmake -S . -B build-qt515 -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/usr -DQTMAPS_MIN_QT_VERSION=5.15.18 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache`; build with `cmake --build build-qt515 --parallel`.
 - The root `Makefile` is a convenience wrapper around the validated CMake/Ninja workflow, not a second build system. Keep CMake authoritative and expose machine-specific paths through overridable variables such as `QT_PREFIX`, `BUILD_DIR`, and `BUILD_TYPE`.
 - Keep the common developer interface short and intention-revealing: `make run` builds and starts the full local Release demo, `make debug-run` uses an isolated Debug build, `make debug-gdb` launches that Debug demo under GDB, `make check` runs the ordinary pre-commit checks, and `make review` runs the isolated Release merge gate. Debug output must never be reported as benchmark evidence.
 - Target Qt 5 explicitly with `find_package(Qt5 REQUIRED COMPONENTS ...)` and `Qt5::` imported targets.
 - Use the Qt 5-compatible building blocks `CMAKE_AUTOMOC`, `CMAKE_AUTORCC`, `qt5_add_resources`, and `add_executable` as required by the project layout.
-- Do not use Qt 6-only CMake APIs, including `qt_add_executable`, `qt_add_qml_module`, `qt_standard_project_setup`, or other unverified `qt_*` convenience APIs introduced after Qt 5.15.13.
+- Do not use Qt 6-only CMake APIs, including `qt_add_executable`, `qt_add_qml_module`, `qt_standard_project_setup`, or other unverified `qt_*` convenience APIs introduced after Qt 5.15.18.
 - Keep generator-specific assumptions out of `CMakeLists.txt`; select Ninja with the configure command rather than embedding a machine-specific generator path.
 
-The root `Makefile` defaults to Qt 5.15.13 under `/usr`. Keep the comparison build isolated and explicit:
+The root `Makefile` defaults to Qt 5.15.18 under `/usr`. Keep the comparison build isolated and explicit when a Qt 5.15.13 kit is provisioned:
 
 ```bash
-make QT_PREFIX=/home/viet/Qt/5.13.2/gcc_64 \
-  QT_EXPECTED_VERSION=5.13.2 QTMAPS_MIN_QT_VERSION=5.13 \
-  BUILD_DIR=build-qt513 test
+make QT_PREFIX=<qt-5.15.13-prefix> \
+  QT_EXPECTED_VERSION=5.15.13 QTMAPS_MIN_QT_VERSION=5.15.13 \
+  BUILD_DIR=build-qt51513 test
 ```
 
 Do not reuse one configured build directory across Qt kits and do not change global `PATH`. CMake rejects a resolved `Qt5Core` version below `QTMAPS_MIN_QT_VERSION`, including mixed component caches.
