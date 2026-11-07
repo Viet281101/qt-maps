@@ -7,24 +7,34 @@ preserved in Git history through `e0a8086`.
 
 - Units 03--05 are squash-merged into `main`; Unit 06 performance work is also
   present on `origin/main`.
-- Unit 07 is a local, dependency-ordered stack. Its branches have not yet been
-  pushed and no Unit 07 pull request is open.
+- Unit 07 is a dependency-ordered stack whose five branches have remote backup
+  copies. No Unit 07 pull request is open.
 - Qt 5.15.18 is the production baseline. Qt 5.15.13 is comparison-only.
 
 ## Current Goal
 
-Publish the Qt 5.15.18 documentation alignment and make a remote backup of the
-Unit 07 branch stack through focused pull requests. Do not push to `main`.
+Review PR #33, then prepare focused Unit 07 pull requests. Do not push to
+`main`.
+
+## Publication Status
+
+- PR [#33](https://github.com/Viet281101/qt-maps/pull/33),
+  `docs/qt-5-15-18-alignment` → `main`, is open, assigned to `Viet281101`,
+  linked to Issue #1, Project #6, and the current `First Management Demo`
+  milestone.
+- The Unit 07 remote backups are `origin/chore/07a-repo-structure-maintenance`,
+  `origin/feat/07b-demo-shell-ui`, `origin/feat/07c-offline-raster`,
+  `origin/feat/07d-hanoi-cartography`, and `origin/unit-07e-verify`.
 
 ## Unit 07 Status
 
 | Unit | Branch / head | State |
 | --- | --- | --- |
-| 07A | `chore/07a-repo-structure-maintenance` / `cccfcb7` | first stack branch; local only |
-| 07B | `feat/07b-demo-shell-ui` / `1ce45e4` | depends on 07A; local only |
-| 07C | `feat/07c-offline-raster` / `a4227ba` | depends on 07B; local only |
-| 07D | `feat/07d-hanoi-cartography` / `bd854fa` | depends on 07C; local only |
-| 07E | `unit-07e-verify` / `50fc763` | depends on 07D; local only |
+| 07A | `chore/07a-repo-structure-maintenance` / `cccfcb7` | pushed; first stack branch |
+| 07B | `feat/07b-demo-shell-ui` / `1ce45e4` | pushed; depends on 07A |
+| 07C | `feat/07c-offline-raster` / `a4227ba` | pushed; depends on 07B |
+| 07D | `feat/07d-hanoi-cartography` / `bd854fa` | pushed; depends on 07C |
+| 07E | `unit-07e-verify` / `50fc763` | pushed; depends on 07D |
 
 `chore/fix-benchmark-qt-runtime` is a separate local follow-up above 07E and
 is not part of the requested Unit 07 backup push.
@@ -60,10 +70,9 @@ remains allowed.
 
 ## Next Up
 
-1. Commit, push, and open the Qt 5.15.18 alignment documentation PR.
-2. Push the five Unit 07 branches in dependency order as remote backups.
-3. Create focused stack PRs, update the tracker with their live URLs and
-   publication state, then verify the linked issue/milestone/Project metadata.
+1. Review PR #33 without merging directly to `main`.
+2. Create focused Unit 07 stack PRs, update the tracker with their live URLs
+   and publication state, then verify the linked issue/milestone/Project metadata.
 
 ## Latest Verification
 
