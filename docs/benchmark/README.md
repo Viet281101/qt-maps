@@ -1,10 +1,17 @@
 # QtMaps Process-Tree Benchmark
 
 This directory documents the Unit 06 benchmark used for the 2026-11-03
-management demo. Only Qt 5.15.13 Release results from the reference Dell
+management demo. Only Qt 5.15.18 Release results from the reference Dell
 Latitude 5480 are accepted as project benchmark evidence. The locked thresholds
 are defined in `context/feature-specs/06_process-tree-benchmark.md` and must not
 be changed after measurements are observed.
+
+## Temporary render-benchmark freeze
+
+Render benchmarks are temporarily frozen while the open i915 stability blocker
+is resolved. Existing render measurements remain retained historical evidence,
+but must not be used as a current performance or stability conclusion. The
+freeze does not block non-render build and test verification.
 
 ## One-command run
 

@@ -14,8 +14,17 @@ def main():
         raise SystemExit("usage: smoke_cli.py APP REPOSITORY_ROOT")
     app = Path(sys.argv[1]).resolve()
     root = Path(sys.argv[2]).resolve()
-    qml_runtime = root / "generated/unit-01b/qml-runtime/usr/lib/x86_64-linux-gnu/qt5"
-    maplibre = root / "generated/unit-01b/maplibre-install"
+    qml_runtime = Path(
+        os.environ.get(
+            "QTMAPS_QML_RUNTIME",
+            root / "generated/unit-01b/qml-runtime/usr/lib/x86_64-linux-gnu/qt5",
+        )
+    ).expanduser().resolve()
+    maplibre = Path(
+        os.environ.get(
+            "QTMAPS_MAPLIBRE_INSTALL", root / "generated/unit-01b/maplibre-install"
+        )
+    ).expanduser().resolve()
     environment = os.environ.copy()
     environment.update(
         {

@@ -2,7 +2,7 @@
 
 - **Date/timezone:** 2026-10-28, Asia/Bangkok
 - **Git commit:** `4fa777e` (unrelated workspace edits present)
-- **Build/machine:** Qt 5.15.13 Release; Dell Latitude 5480, i5-6300U (2 physical / 4 logical CPUs), 15.50 GiB RAM
+- **Build/machine:** Qt 5.15.18 Release; Dell Latitude 5480, i5-6300U (2 physical / 4 logical CPUs), 15.50 GiB RAM
 - **MapLibre / Valhalla / data:** 3.0.0 / 3.9.1; Hanoi tiles 14.00 MiB, graph 166.93 MiB
 - **Sampling:** 500 ms CPU/RSS; 2,000 ms PSS; 5-second warm-up; 3 repetitions
 
