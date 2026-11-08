@@ -13,8 +13,8 @@ preserved in Git history through `e0a8086`.
 
 ## Current Goal
 
-Await owner review of the local 07C Qt-runtime repair and its one permitted
-CTest rerun. Do not push or open a 07C PR until the owner confirms.
+Review PR #37 for the completed 07C offline-raster fallback. Do not merge it
+or open a 07D PR until the owner confirms.
 
 ## Publication Status
 
@@ -28,6 +28,10 @@ CTest rerun. Do not push or open a 07C PR until the owner confirms.
 - PR [#36](https://github.com/Viet281101/qt-maps/pull/36),
   `chore/ctest-software-backend` → `main`, was squash-merged as `0fc791d`;
   it forces software Qt Quick rendering for the CTest smoke and QML tests.
+- PR [#37](https://github.com/Viet281101/qt-maps/pull/37),
+  `feat/07c-offline-raster-pr` → `main`, is open for review; it references
+  #11 and uses the current, expired `First Management Demo` milestone pending
+  owner approval of a replacement.
 - The Unit 07 remote backups are `origin/chore/07a-repo-structure-maintenance`,
   `origin/feat/07b-demo-shell-ui`, `origin/feat/07c-offline-raster`,
   `origin/feat/07d-hanoi-cartography`, and `origin/unit-07e-verify`.
@@ -38,7 +42,7 @@ CTest rerun. Do not push or open a 07C PR until the owner confirms.
 | --- | --- | --- |
 | 07A | `chore/07a-repo-structure-maintenance` / `4a61d46` | merged as PR #34 |
 | 07B | `feat/07b-demo-shell-ui` / `e294167` | merged as PR #35 |
-| 07C | `feat/07c-offline-raster` / `a4227ba` | pushed; depends on 07B |
+| 07C | `feat/07c-offline-raster-pr` / `9fa1137` | PR #37 open; old branch remains backup |
 | 07D | `feat/07d-hanoi-cartography` / `bd854fa` | pushed; depends on 07C |
 | 07E | `unit-07e-verify` / `50fc763` | pushed; depends on 07D |
 
@@ -76,8 +80,8 @@ remains allowed.
 
 ## Next Up
 
-1. The single owner-authorized CTest rerun passed. Await owner review before
-   pushing or opening the focused 07C pull request.
+1. The single owner-authorized CTest rerun passed; await owner review of PR
+   #37 before a squash merge. Do not open 07D first.
 2. The owner may inspect i915/DRM journal evidence as a follow-up check; do
    not restart rendering or benchmark work.
 3. Follow up separately on default-disabled instrumentation/performance-badge
