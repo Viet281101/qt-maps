@@ -69,6 +69,9 @@ def main():
         if result.returncode != 0:
             print(result.stdout)
             raise SystemExit(f"startup scenario exited {result.returncode}")
+        if "QTMAPS_CTEST_BACKEND QT_QUICK_BACKEND=software" not in result.stdout:
+            print(result.stdout)
+            raise SystemExit("qtmaps did not confirm QT_QUICK_BACKEND=software")
         events = []
         for line in result.stdout.splitlines():
             marker = line.find("QTMAPS_BENCHMARK_EVENT")

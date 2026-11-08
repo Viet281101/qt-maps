@@ -187,6 +187,8 @@ if(BUILD_TESTING)
             "${CMAKE_SOURCE_DIR}/tests/benchmark/smoke_cli.py"
             "$<TARGET_FILE:qtmaps>"
             "${CMAKE_SOURCE_DIR}")
+    set_tests_properties(qtmaps_benchmark_cli_smoke PROPERTIES
+        ENVIRONMENT "QT_QUICK_BACKEND=software;QTMAPS_ASSERT_SOFTWARE_BACKEND=1")
 
     add_executable(qtmaps_perf_tests tests/perf/tst_Performance.cpp)
     target_link_libraries(qtmaps_perf_tests PRIVATE qtmaps_perf Qt5::Test)
@@ -252,6 +254,6 @@ if(BUILD_TESTING)
     add_test(NAME qtmaps_routing_qml_tests COMMAND qtmaps_routing_qml_tests)
     set_tests_properties(qtmaps_routing_qml_tests PROPERTIES
         ENVIRONMENT
-            "QT_QPA_PLATFORM=offscreen;QML2_IMPORT_PATH=${CMAKE_SOURCE_DIR}/generated/unit-01b/qml-runtime/usr/lib/x86_64-linux-gnu/qt5/qml")
+            "QT_QPA_PLATFORM=offscreen;QML2_IMPORT_PATH=${CMAKE_SOURCE_DIR}/generated/unit-01b/qml-runtime/usr/lib/x86_64-linux-gnu/qt5/qml;QT_QUICK_BACKEND=software")
 
 endif()

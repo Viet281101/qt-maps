@@ -154,6 +154,15 @@ int main(int argc, char *argv[])
         parser.isSet(QStringLiteral("routing-demo")) || useBenchmarkScenario;
     const bool useBlankProbe = parser.isSet(QStringLiteral("blank-probe"));
     const bool instrumentationEnabled = !parser.isSet(QStringLiteral("disable-instrumentation"));
+    if (qEnvironmentVariableIsSet("QTMAPS_ASSERT_SOFTWARE_BACKEND")) {
+        const QString quickBackend = qEnvironmentVariable("QT_QUICK_BACKEND");
+        qInfo().noquote() << QStringLiteral("QTMAPS_CTEST_BACKEND QT_QUICK_BACKEND=%1")
+                                 .arg(quickBackend);
+        if (quickBackend != QStringLiteral("software")) {
+            qCritical() << "QTMAPS_ASSERT_SOFTWARE_BACKEND requires QT_QUICK_BACKEND=software";
+            return 2;
+        }
+    }
 
     const QStringList providers = QGeoServiceProvider::availableServiceProviders();
     qInfo().noquote() << "availableServiceProviders=" << providers.join(QLatin1Char(','));
