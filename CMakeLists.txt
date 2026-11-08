@@ -71,12 +71,19 @@ target_link_libraries(qtmaps_perf PUBLIC Qt5::Core Qt5::Quick)
 add_library(qtmaps_map STATIC
     src/map/DirectoryTileSource.cpp
     src/map/DirectoryTileSource.h
+    src/map/EncodedTileCache.cpp
+    src/map/EncodedTileCache.h
     src/map/MapPackageManifest.cpp
     src/map/MapPackageManifest.h
+    src/map/MapPackageContract.h
     src/map/MapSourceController.cpp
     src/map/MapSourceController.h
     src/map/MbTilesTileSource.cpp
     src/map/MbTilesTileSource.h
+    src/map/RasterPackageManifest.cpp
+    src/map/RasterPackageManifest.h
+    src/map/RasterTileSource.cpp
+    src/map/RasterTileSource.h
     src/map/TileSource.h
 )
 target_include_directories(qtmaps_map PUBLIC "${CMAKE_SOURCE_DIR}/src")
@@ -136,6 +143,7 @@ target_link_libraries(qtmaps_benchmark PUBLIC
 
 qt5_add_resources(QTMAPS_QML_RESOURCES qml/resources.qrc)
 qt5_add_resources(QTMAPS_ROUTING_RESOURCES resources/routing.qrc)
+qt5_add_resources(QTMAPS_RASTER_RENDERER_RESOURCES tools/raster-renderer/raster_renderer.qrc)
 set(QTMAPS_RESOURCES
     ${QTMAPS_QML_RESOURCES}
     ${QTMAPS_ROUTING_RESOURCES}
@@ -163,6 +171,20 @@ target_link_libraries(qtmaps PRIVATE
     Qt5::Sql
 )
 target_compile_definitions(qtmaps PRIVATE QTMAPS_BUILD_ID="${QTMAPS_BUILD_ID}")
+
+add_executable(qtmaps_raster_renderer
+    tools/raster-renderer/main.cpp
+    ${QTMAPS_RASTER_RENDERER_RESOURCES}
+)
+target_link_libraries(qtmaps_raster_renderer PRIVATE
+    qtmaps_map
+    Qt5::Core
+    Qt5::Gui
+    Qt5::Location
+    Qt5::Positioning
+    Qt5::Qml
+    Qt5::Quick
+)
 
 include(CTest)
 if(BUILD_TESTING)
@@ -207,6 +229,9 @@ if(BUILD_TESTING)
         Qt5::Test
     )
     add_test(NAME qtmaps_map_pipeline_tests COMMAND qtmaps_map_pipeline_tests)
+    add_test(NAME qtmaps_raster_package_tool_tests
+        COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_SOURCE_DIR}/tests/map/test_build_hanoi_raster_package.py")
 
     add_executable(qtmaps_routing_tests tests/routing/tst_Routing.cpp)
     target_compile_definitions(qtmaps_routing_tests PRIVATE
@@ -244,6 +269,7 @@ if(BUILD_TESTING)
     )
     target_link_libraries(qtmaps_routing_qml_tests PRIVATE
         qtmaps_app_core
+        qtmaps_map
         qtmaps_perf
         qtmaps_routing
         Qt5::Gui

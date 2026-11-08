@@ -9,10 +9,13 @@ Window {
     height: 700
     minimumWidth: 900
     minimumHeight: 580
+    maximumWidth: 1920
+    maximumHeight: 1080
     visible: true
     title: qsTr("QtMaps — Lập tuyến Hà Nội")
     property bool performanceOverlayVisible: false
     property bool panelCollapsed: false
+    property string loadedMapStyleUrl: mapSourceController.activeStyleUrl
     readonly property bool endpointSelectionEnabled:
         !routeNavigationController.active
         && !(routingController.loading && routeNavigationController.routeAvailable)
@@ -26,8 +29,14 @@ Window {
 
     function applyEndpoints() { routePanel.applyEndpoints() }
     function calculateRequestedRoute() { routePanel.calculateRequestedRoute() }
-    function recenterNavigation() { mapCanvas.recenterNavigation() }
-    function fitRouteWithPanelPadding() { mapCanvas.fitRouteWithPanelPadding() }
+    function recenterNavigation() {
+        if (mapCanvasLoader.item)
+            mapCanvasLoader.item.recenterNavigation()
+    }
+    function fitRouteWithPanelPadding() {
+        if (mapCanvasLoader.item)
+            mapCanvasLoader.item.fitRouteWithPanelPadding()
+    }
 
     onClosing: {
         close.accepted = false
@@ -35,14 +44,30 @@ Window {
         shutdownCoordinator.requestQuit()
     }
 
-    MapCanvas {
-        id: mapCanvas
+    Rectangle {
         anchors.fill: parent
-        endpointSelectionEnabled: root.endpointSelectionEnabled
-        panelCollapsed: root.panelCollapsed
-        panelWidth: routePanel.width
-        onTogglePerformanceOverlayRequested:
-            root.performanceOverlayVisible = !root.performanceOverlayVisible
+        color: "#dce7f5"
+        Text {
+            anchors.centerIn: parent
+            color: "#243447"
+            text: mapSourceController.mapStatusText
+        }
+    }
+
+    Loader {
+        id: mapCanvasLoader
+        anchors.fill: parent
+        active: root.loadedMapStyleUrl.length > 0
+        sourceComponent: Component {
+            MapCanvas {
+                styleUrl: root.loadedMapStyleUrl
+                endpointSelectionEnabled: root.endpointSelectionEnabled
+                panelCollapsed: root.panelCollapsed
+                panelWidth: routePanel.width
+                onTogglePerformanceOverlayRequested:
+                    root.performanceOverlayVisible = !root.performanceOverlayVisible
+            }
+        }
     }
 
     RoutePanel {
@@ -101,6 +126,24 @@ Window {
         navigationBannerHeight: navigationOverlay.bannerHeight
         connectionLabel: routingController.connectionLabel
         z: 20
+    }
+
+    Connections {
+        target: mapSourceController
+        function onStateChanged() {
+            if (root.loadedMapStyleUrl === mapSourceController.activeStyleUrl)
+                return
+            mapCanvasLoader.active = false
+            root.loadedMapStyleUrl = mapSourceController.activeStyleUrl
+            mapReloadTimer.restart()
+        }
+    }
+
+    Timer {
+        id: mapReloadTimer
+        interval: 0
+        repeat: false
+        onTriggered: mapCanvasLoader.active = root.loadedMapStyleUrl.length > 0
     }
 
     Connections {

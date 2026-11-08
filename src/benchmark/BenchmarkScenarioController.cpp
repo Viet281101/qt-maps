@@ -135,19 +135,34 @@ void BenchmarkScenarioController::notifyMapReady()
 
 void BenchmarkScenarioController::handleFrameSwapped()
 {
-    if (!enabled() || !mapReady_ || firstMapFrameSeen_) {
+    if (!enabled() || !mapReady_) {
         return;
     }
-    firstMapFrameSeen_ = true;
-    firstMapFrameMilliseconds_ = elapsedFromLaunchMilliseconds();
-    emitEvent(QStringLiteral("first_rendered_map_frame"),
-              {{QStringLiteral("startup_ms"), firstMapFrameMilliseconds_}});
-    if (scenario_ == QLatin1String("startup")) {
-        startupSamplePending_ = true;
-        performanceMonitor_->sampleNow();
-        return;
+
+    if (!firstMapFrameSeen_) {
+        firstMapFrameSeen_ = true;
+        firstMapFrameMilliseconds_ = elapsedFromLaunchMilliseconds();
+        emitEvent(QStringLiteral("first_rendered_map_frame"),
+                  {{QStringLiteral("startup_ms"), firstMapFrameMilliseconds_}});
+        if (scenario_ == QLatin1String("startup")) {
+            startupSamplePending_ = true;
+            performanceMonitor_->sampleNow();
+            return;
+        }
+        maybeScheduleWarmup();
     }
-    maybeScheduleWarmup();
+
+    // Qt Location's raster renderer is event-driven and otherwise stops swapping
+    // frames between discrete replay points. Keep the benchmark interaction window
+    // continuously driven so frame intervals measure rendering cadence rather than
+    // the intentional pause between two camera or navigation commands. This is a
+    // benchmark-only update request; normal product rendering remains event-driven.
+    if (measurementStarted_ && !finished_ &&
+        (scenario_ == QLatin1String("pan_zoom") ||
+         scenario_ == QLatin1String("navigation_replay")) &&
+        window_) {
+        window_->update();
+    }
 }
 
 void BenchmarkScenarioController::handleProcessMetrics()

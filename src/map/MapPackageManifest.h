@@ -12,6 +12,8 @@ struct MapPackageManifest
     QString schemaVersion;
     QString dataVersion;
     QString styleContractVersion;
+    QString styleRevision;
+    int layerSchemaVersion = 0;
     double west = 0.0;
     double south = 0.0;
     double east = 0.0;

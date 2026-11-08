@@ -13,8 +13,8 @@ preserved in Git history through `e0a8086`.
 
 ## Current Goal
 
-Review the focused CTest software-backend PR. Do not push to `main` or open
-07C yet.
+Await owner review of the local 07C Qt-runtime repair and its one permitted
+CTest rerun. Do not push or open a 07C PR until the owner confirms.
 
 ## Publication Status
 
@@ -26,8 +26,8 @@ Review the focused CTest software-backend PR. Do not push to `main` or open
 - PR [#35](https://github.com/Viet281101/qt-maps/pull/35),
   `feat/07b-demo-shell-ui` → `main`, was squash-merged as `e294167`.
 - PR [#36](https://github.com/Viet281101/qt-maps/pull/36),
-  `chore/ctest-software-backend` → `main`, is open for review; it forces
-  software Qt Quick rendering for the CTest smoke and QML tests.
+  `chore/ctest-software-backend` → `main`, was squash-merged as `0fc791d`;
+  it forces software Qt Quick rendering for the CTest smoke and QML tests.
 - The Unit 07 remote backups are `origin/chore/07a-repo-structure-maintenance`,
   `origin/feat/07b-demo-shell-ui`, `origin/feat/07c-offline-raster`,
   `origin/feat/07d-hanoi-cartography`, and `origin/unit-07e-verify`.
@@ -76,19 +76,28 @@ remains allowed.
 
 ## Next Up
 
-1. Review the focused CTest software-backend PR. The owner captured clean
-   i915/DRM journal evidence after the one permitted CTest run.
-2. After approval and that PR's squash merge, create the focused 07C pull
-   request and update the tracker with its live URL and publication state.
+1. The single owner-authorized CTest rerun passed. Await owner review before
+   pushing or opening the focused 07C pull request.
+2. The owner may inspect i915/DRM journal evidence as a follow-up check; do
+   not restart rendering or benchmark work.
 3. Follow up separately on default-disabled instrumentation/performance-badge
-   behavior; do not fold it into the CTest PR.
+   behavior; do not fold it into 07C.
 
 ## Latest Verification
 
-- On 2026-11-08, `QT_QUICK_BACKEND=software
-  QTMAPS_ASSERT_SOFTWARE_BACKEND=1 make QT_EXPECTED_VERSION=5.15.18 test`
-  passed all 10 CTest tests in `build-qt515` (9.38 s). The 30-second offscreen
-  smoke test verified `QTMAPS_CTEST_BACKEND QT_QUICK_BACKEND=software`; the
-  QML test used offscreen/software rendering. No application was run manually,
-  no benchmark ran, and GPU/MapLibre behavior remains unverified and forbidden.
-- Remote `origin/main` is `e294167` (the squash merge of PR #35).
+- The 07C merge commit `5ef2e4a` resolved the `CMakeLists.txt`/`Makefile`
+  conflicts by retaining 5.15.13 defaults and dropping the smoke's
+  `QTMAPS_QML_RUNTIME`/`QTMAPS_MAPLIBRE_INSTALL` overrides. That made the
+  smoke fall back to the 5.15.13 generated QML runtime while loading the
+  5.15.18 MapLibre install, causing the incompatible-Qt abort. A minimal
+  follow-up `2b467bf` restores the `origin/main` 5.15.18 defaults and runtime
+  overrides. A fresh `build-07c-qt51518-rerun` configured and built against
+  Qt 5.15.18; `readelf` found no binary RPATH/RUNPATH. The QML test's
+  `generated/unit-01b/qml-runtime` import path is inherited unchanged from
+  `origin/main`; its plugins have no RPATH/RUNPATH or 5.15.13 strings.
+- On 2026-11-08, the one authorized software-backend CTest run passed all
+  11/11 tests in 11.24 s. The 30-second smoke test passed in 1.05 s and its
+  log is `generated/ctest/20261108-07c-rerun.log`. No app was launched
+  manually, no standalone MapLibre/OpenGL path or benchmark ran, and no
+  additional CTest rerun is authorized.
+- Remote `origin/main` is `0fc791d` (the squash merge of PR #36).

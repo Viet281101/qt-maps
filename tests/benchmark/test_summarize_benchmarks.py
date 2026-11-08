@@ -30,6 +30,7 @@ class BenchmarkSummaryTest(unittest.TestCase):
                 "rss_bytes",
                 "pss_bytes",
                 "pss_available",
+                "pss_sample_age_ms",
                 "cpu_percent_one_core_100",
                 "cpu_percent_all_cores_100",
                 "sampler_duration_ms",
@@ -43,6 +44,7 @@ class BenchmarkSummaryTest(unittest.TestCase):
                     "rss_bytes": str(200 * summary.MIB),
                     "pss_bytes": str(150 * summary.MIB),
                     "pss_available": "1",
+                    "pss_sample_age_ms": "0",
                     "cpu_percent_one_core_100": "40",
                     "cpu_percent_all_cores_100": "10",
                     "sampler_duration_ms": "5",
@@ -55,6 +57,7 @@ class BenchmarkSummaryTest(unittest.TestCase):
                     "rss_bytes": str(220 * summary.MIB),
                     "pss_bytes": "0",
                     "pss_available": "0",
+                    "pss_sample_age_ms": "500",
                     "cpu_percent_one_core_100": "80",
                     "cpu_percent_all_cores_100": "20",
                     "sampler_duration_ms": "8",
@@ -67,6 +70,7 @@ class BenchmarkSummaryTest(unittest.TestCase):
                     "rss_bytes": str(100 * summary.MIB),
                     "pss_bytes": str(90 * summary.MIB),
                     "pss_available": "1",
+                    "pss_sample_age_ms": "0",
                     "cpu_percent_all_cores_100": "15",
                 },
             ]
@@ -81,6 +85,7 @@ class BenchmarkSummaryTest(unittest.TestCase):
             self.assertEqual(metrics["cpu_one_average"], 60)
             self.assertEqual(metrics["cpu_all_peak"], 20)
             self.assertEqual(metrics["valhalla_cpu_all_peak"], 15)
+            self.assertEqual(metrics["pss_fresh_samples"], 1)
 
     def test_locked_threshold_failure_is_not_retuned(self):
         group = {
