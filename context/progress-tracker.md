@@ -25,6 +25,9 @@ Review the focused CTest software-backend PR. Do not push to `main` or open
   `4a61d46`.
 - PR [#35](https://github.com/Viet281101/qt-maps/pull/35),
   `feat/07b-demo-shell-ui` → `main`, was squash-merged as `e294167`.
+- PR [#36](https://github.com/Viet281101/qt-maps/pull/36),
+  `chore/ctest-software-backend` → `main`, is open for review; it forces
+  software Qt Quick rendering for the CTest smoke and QML tests.
 - The Unit 07 remote backups are `origin/chore/07a-repo-structure-maintenance`,
   `origin/feat/07b-demo-shell-ui`, `origin/feat/07c-offline-raster`,
   `origin/feat/07d-hanoi-cartography`, and `origin/unit-07e-verify`.
