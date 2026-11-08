@@ -13,8 +13,8 @@ preserved in Git history through `e0a8086`.
 
 ## Current Goal
 
-Review PR #38 for the style-only 07D squash. Do not merge it or open a 07E PR
-until the owner confirms.
+Repair the official demo launcher's Qt runtime selection without opening a
+window or restarting render/benchmark work. Do not open a 07E PR.
 
 ## Publication Status
 
@@ -88,6 +88,13 @@ remains allowed.
    behavior; do not fold it into 07C.
 
 ## Latest Verification
+
+- On 2026-11-08, a clean `ef30610` build reached an incompatible-Qt abort
+  before Scene Graph initialization because `tools/run-demo.sh` prepended the
+  stale `generated/unit-01b/qml-runtime` plugin root and Qt loaded its
+  `sqldrivers/libqsqlite.so`. The runtime-selection repair must use the active
+  Qt 5.15.18 kit and reject a MapLibre payload built against another Qt patch
+  release. No further window, OpenGL, or benchmark run is authorized here.
 
 - The 07C merge commit `5ef2e4a` resolved the `CMakeLists.txt`/`Makefile`
   conflicts by retaining 5.15.13 defaults and dropping the smoke's

@@ -58,8 +58,10 @@ the authoritative build system. The common commands are intentionally short:
 | Check work before commit | `make check` | Formatting, Release tests, and unstaged/staged diff checks |
 | Review before merge | `make review` | Requires a clean worktree; isolated Release build plus branch diff checks |
 
-`make run`, `make debug-run`, and `make debug-gdb` provision the runtime paths
-and launch the full map/routing/navigation flow through `tools/run-demo.sh`.
+`make run`, `make debug-run`, and `make debug-gdb` query the selected Qt kit,
+validate that it is Qt 5.15.18, then launch through `tools/run-demo.sh`. The
+launcher requires a MapLibre v3.0.0 payload built against the same Qt 5.15.18
+kit; it fails before opening a window when the payload is stale or incomplete.
 `make run` already depends on the build, so `make build && make run` is valid
 but redundant. Pass optional application arguments with `DEMO_ARGS`, for example:
 
@@ -84,21 +86,18 @@ make test
 make run
 ```
 
-The current MapLibre development install and Qt QML/runtime plugins are ignored local dependencies. This successful local smoke command runs the checksummed Hanoi package for 15 seconds; the Unit 03 evidence wraps it in the network namespace used for the disconnected check:
+The MapLibre development install is an ignored local dependency. Rebuild it
+against Qt 5.15.18 before using `make run`; the launcher obtains QML and plugin
+paths from that kit's `qmake` rather than from `generated/unit-01b/qml-runtime`.
+Use the launcher as the official command:
 
 ```bash
-LD_LIBRARY_PATH="$PWD/generated/unit-01b/maplibre-install/lib" \
-QT_PLUGIN_PATH="$PWD/generated/unit-01b/maplibre-install/plugins:$PWD/generated/unit-01b/qml-runtime/usr/lib/x86_64-linux-gnu/qt5/plugins" \
-QML2_IMPORT_PATH="$PWD/generated/unit-01b/maplibre-install/qml:$PWD/generated/unit-01b/qml-runtime/usr/lib/x86_64-linux-gnu/qt5/qml" \
-QSG_RENDER_LOOP=threaded \
-./build-qt515/qtmaps --unit03-local-map --navigation-benchmark \
-  --map-package data/packages/current --exit-after 15 \
-  --network-mode network-namespace-offline \
-  --dataset-id hanoi-20261024-v1 \
-  --dataset-coverage "Hanoi bounds 105.78,20.97,105.90,21.10; z12-z15"
+make run
 ```
 
-The recorded 120-second benchmark uses the same command and runtime variables, replacing `--exit-after 15` with:
+Historical benchmark commands remain documented in the benchmark evidence; they
+must use the same launcher-selected Qt runtime and a verified matching MapLibre
+payload:
 
 ```bash
 --benchmark-output /tmp/qtmaps-unit03.csv \

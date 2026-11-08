@@ -96,7 +96,8 @@ test: build
 		ctest --test-dir "$(BUILD_DIR)" --output-on-failure
 
 run: build
-	QTMAPS_APP="$(abspath $(QTMAPS))" ./tools/run-demo.sh $(DEMO_ARGS)
+	QTMAPS_APP="$(abspath $(QTMAPS))" QTMAPS_QT_PREFIX="$(QT_PREFIX)" \
+		QTMAPS_MAPLIBRE_INSTALL="$(abspath $(MAPLIBRE_INSTALL))" ./tools/run-demo.sh $(DEMO_ARGS)
 
 run-app: build
 	"$(QTMAPS)" $(APP_ARGS)
@@ -109,14 +110,16 @@ debug-build:
 	+$(MAKE) BUILD_DIR="$(DEBUG_BUILD_DIR)" BUILD_TYPE=Debug build
 
 debug-run: debug-build
-	QTMAPS_APP="$(abspath $(DEBUG_BUILD_DIR)/qtmaps)" ./tools/run-demo.sh $(DEMO_ARGS)
+	QTMAPS_APP="$(abspath $(DEBUG_BUILD_DIR)/qtmaps)" QTMAPS_QT_PREFIX="$(QT_PREFIX)" \
+		QTMAPS_MAPLIBRE_INSTALL="$(abspath $(MAPLIBRE_INSTALL))" ./tools/run-demo.sh $(DEMO_ARGS)
 
 debug-gdb: debug-build
 	@command -v "$(GDB)" >/dev/null || { \
 		echo "error: GDB is required; set GDB to its executable" >&2; \
 		exit 1; \
 	}
-	QTMAPS_APP="$(abspath $(DEBUG_BUILD_DIR)/qtmaps)" QTMAPS_GDB=1 QTMAPS_GDB_BIN="$(GDB)" \
+	QTMAPS_APP="$(abspath $(DEBUG_BUILD_DIR)/qtmaps)" QTMAPS_QT_PREFIX="$(QT_PREFIX)" \
+		QTMAPS_MAPLIBRE_INSTALL="$(abspath $(MAPLIBRE_INSTALL))" QTMAPS_GDB=1 QTMAPS_GDB_BIN="$(GDB)" \
 		./tools/run-demo.sh $(DEMO_ARGS)
 
 check: format-check test
