@@ -13,6 +13,8 @@ import subprocess
 import sys
 import time
 
+from build_hanoi_style import render_style
+
 
 BOUNDS = [105.78, 20.97, 105.90, 21.10]
 MIN_ZOOM = 12
@@ -20,7 +22,6 @@ MAX_ZOOM = 15
 SCHEMA_VERSION = "qtmaps-map-package-v1"
 STYLE_CONTRACT_VERSION = "qtmaps-style-v1"
 ATTRIBUTION = "© OpenStreetMap contributors, ODbL 1.0"
-BASE_URL_TOKEN = "__QTMAPS_BASE_URL__"
 PLANETILER_VERSION = "0.10.2"
 PLANETILER_SHA256 = "f310bd0413e2e4512b27f4046d418664e8e1d3bf31603c2a70e23de06c167e4d"
 SOURCE_LAYERS = ["building", "place", "transportation"]
@@ -97,7 +98,7 @@ def main():
         resources = staging / "resources"
         subprocess.run(
             [sys.executable, str(repository / "tools/generate_vector_fixture.py"),
-             "--real-style-only", "--output", str(resources)],
+             "--resources-only", "--output", str(resources)],
             cwd=repository, check=True,
         )
 
@@ -109,15 +110,10 @@ def main():
         sprites_dir.mkdir()
         shutil.copy2(resources / "sprite.json", sprites_dir / "sprite.json")
         shutil.copy2(resources / "sprite.png", sprites_dir / "sprite.png")
-        style = json.loads((resources / "style.json").read_text(encoding="utf-8"))
-        style["sprite"] = f"{BASE_URL_TOKEN}/sprites/sprite"
-        style["glyphs"] = f"{BASE_URL_TOKEN}/glyphs/{{fontstack}}/{{range}}.pbf"
-        style["sources"]["qtmaps"]["tiles"] = [
-            f"{BASE_URL_TOKEN}/tiles/{{z}}/{{x}}/{{y}}.pbf"
-        ]
-        (style_dir / "style.json").write_text(
-            json.dumps(style, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
-        )
+        style_template_path = repository / "resources/map/hanoi-style.json"
+        rendered_style = render_style(style_template_path)
+        style_revision = json.loads(rendered_style)["metadata"]["qtmaps:style_revision"]
+        (style_dir / "style.json").write_text(rendered_style, encoding="utf-8")
         shutil.rmtree(resources)
         shutil.rmtree(staging / "tmp", ignore_errors=True)
         schema_path.unlink()
@@ -141,9 +137,10 @@ def main():
             "pipeline_config": {
                 "revision": "unit03-v1",
                 "sha256": sha256(source_schema_path),
+                "style_template_sha256": sha256(style_template_path),
             },
             "resources": {
-                "style_revision": "qtmaps-hanoi-v1",
+                "style_revision": style_revision,
                 "glyph_revision": "qtmaps-sans-v1",
                 "sprite_revision": "qtmaps-empty-v1",
             },

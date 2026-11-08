@@ -13,8 +13,8 @@ preserved in Git history through `e0a8086`.
 
 ## Current Goal
 
-Review PR #37 for the completed 07C offline-raster fallback. Do not merge it
-or open a 07D PR until the owner confirms.
+Review PR #38 for the style-only 07D squash. Do not merge it or open a 07E PR
+until the owner confirms.
 
 ## Publication Status
 
@@ -29,9 +29,10 @@ or open a 07D PR until the owner confirms.
   `chore/ctest-software-backend` → `main`, was squash-merged as `0fc791d`;
   it forces software Qt Quick rendering for the CTest smoke and QML tests.
 - PR [#37](https://github.com/Viet281101/qt-maps/pull/37),
-  `feat/07c-offline-raster-pr` → `main`, is open for review; it references
-  #11 and uses the current, expired `First Management Demo` milestone pending
-  owner approval of a replacement.
+  `feat/07c-offline-raster-pr` → `main`, was squash-merged as `90366bd`.
+- PR [#38](https://github.com/Viet281101/qt-maps/pull/38),
+  `feat/07d-style-only-pr` → `main`, is open for review; it references #28
+  and #29. The current milestone is expired and no replacement is approved.
 - The Unit 07 remote backups are `origin/chore/07a-repo-structure-maintenance`,
   `origin/feat/07b-demo-shell-ui`, `origin/feat/07c-offline-raster`,
   `origin/feat/07d-hanoi-cartography`, and `origin/unit-07e-verify`.
@@ -42,8 +43,8 @@ or open a 07D PR until the owner confirms.
 | --- | --- | --- |
 | 07A | `chore/07a-repo-structure-maintenance` / `4a61d46` | merged as PR #34 |
 | 07B | `feat/07b-demo-shell-ui` / `e294167` | merged as PR #35 |
-| 07C | `feat/07c-offline-raster-pr` / `9fa1137` | PR #37 open; old branch remains backup |
-| 07D | `feat/07d-hanoi-cartography` / `bd854fa` | pushed; depends on 07C |
+| 07C | `feat/07c-offline-raster-pr` / `90366bd` | merged as PR #37; old branch remains backup |
+| 07D | `feat/07d-style-only-pr` / `aa7f868` | PR #38 open; old branch remains backup |
 | 07E | `unit-07e-verify` / `50fc763` | pushed; depends on 07D |
 
 `chore/fix-benchmark-qt-runtime` is a separate local follow-up above 07E and
@@ -80,10 +81,9 @@ remains allowed.
 
 ## Next Up
 
-1. The single owner-authorized CTest rerun passed; await owner review of PR
-   #37 before a squash merge. Do not open 07D first.
-2. The owner may inspect i915/DRM journal evidence as a follow-up check; do
-   not restart rendering or benchmark work.
+1. The one authorized 07D software-backend CTest passed. Await owner review of
+   PR #38 before a squash merge; do not open 07E first.
+2. Do not restart rendering or benchmark work.
 3. Follow up separately on default-disabled instrumentation/performance-badge
    behavior; do not fold it into 07C.
 
@@ -104,4 +104,9 @@ remains allowed.
   log is `generated/ctest/20261108-07c-rerun.log`. No app was launched
   manually, no standalone MapLibre/OpenGL path or benchmark ran, and no
   additional CTest rerun is authorized.
+- On 2026-11-08, style-only 07D's one authorized software-backend CTest run
+  passed all 12/12 tests in 11.32 s. The 30-second smoke passed in 1.00 s; the
+  added `qtmaps_hanoi_style_tests` passed in 0.34 s. Its log is
+  `generated/ctest/20261108-07d.log`; no manual app, MapLibre/OpenGL path, or
+  benchmark ran.
 - Remote `origin/main` is `0fc791d` (the squash merge of PR #36).
