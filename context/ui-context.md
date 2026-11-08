@@ -25,7 +25,7 @@ Reusable visual tokens belong in a QML singleton, planned as `qml/theme/Theme.qm
 | Elevation | `shadowLow`, `shadowHigh` or equivalent Qt 5.15-compatible properties | TODO |
 | Motion | `durationFast`, `durationNormal`, `easingStandard` | TODO; respect measured render cost |
 
-Theme implementation must use Qt 5.15.18-compatible QML and must not depend on Qt 6-only APIs or graphical effects.
+Theme implementation must use Qt 5.15.13-compatible QML and must not depend on Qt 6-only APIs or graphical effects.
 
 ## Layout Patterns
 
@@ -37,10 +37,13 @@ Theme implementation must use Qt 5.15.18-compatible QML and must not depend on Q
 - **Navigation banner:** a prominent top banner shows the next maneuver and distance while navigation simulation is active.
 - **Map actions:** zoom, recenter, and navigation controls are grouped consistently and remain reachable without covering essential route content.
 - **Status:** online/offline state, missing data, service startup, and benchmark recording have concise visible indicators.
+- **Layer state:** the layer menu distinguishes local vector, manually selected offline raster, automatic raster fallback, loading, and package failure. Raster warns that views above z16 are overzoomed at lower resolution; switching never hides attribution or route/navigation overlays.
 
 The minimum supported window is 900x580. At that size the route panel scrolls
 independently, navigation automatically collapses it, and the banner/status
 overlays must not intersect. Demo review also covers 1366x768 and 1920x1080.
+The supported maximum is 1920x1080 so the bounded raster visible-texture
+working-set calculation remains valid on the reference configuration.
 
 ## Component Conventions
 
