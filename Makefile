@@ -26,6 +26,7 @@ MAPLIBRE_INSTALL_NEW ?= generated/unit-01b/maplibre-install-qt51518
 QT_PRIVATE_OVERLAY ?= generated/unit-01b/qt51518-private
 MAPLIBRE_EXTRA_CXX_FLAGS ?= -include cstdint
 MAPLIBRE_BUILD_KEEP_GOING ?= 1
+QTMAPS_SYSTEM_PACKAGES := qtbase5-dev qtbase5-private-dev qtdeclarative5-dev qtdeclarative5-private-dev qtlocation5-dev qtpositioning5-dev libicu-dev
 QML_RUNTIME ?= $(shell "$(QMAKE)" -query QT_INSTALL_ARCHDATA 2>/dev/null)
 QT_RUNTIME_PLUGIN_PATH ?= $(shell "$(QMAKE)" -query QT_INSTALL_PLUGINS 2>/dev/null)
 
@@ -46,13 +47,14 @@ $(error maplibre-qt51518 requires qmake Qt 5.15.18 at $(QMAKE), found '$(MAPLIBR
 endif
 endif
 
-.PHONY: help requirements configure build test run run-app benchmark debug-build debug-run debug-gdb check \
+.PHONY: help requirements requirements-apt configure build test run run-app benchmark debug-build debug-run debug-gdb check \
 	review format format-check diagnostic-tiles vector-fixture vector-real-style hanoi-package hanoi-raster-render hanoi-raster-package \
 	raster serve-diagnostic-tiles serve-vector-fixture run-mapboxgl-probe maplibre-qt51518 clean clean-old-builds
 
 help:
 	@echo "QtMaps development targets"
-	@echo "  make requirements          Verify the Qt/C++ toolchain and helper tools"
+	@echo "  make requirements          Verify the Qt/C++ toolchain and required development packages"
+	@echo "  make requirements-apt      Print the approved APT restore/manual-mark commands"
 	@echo "  make configure             Configure a CMake build with Ninja"
 	@echo "  make build                 Configure and build QtMaps"
 	@echo "  make test                  Build and run CTest with failures shown"
@@ -95,7 +97,23 @@ requirements:
 			echo "error: expected Qt $(QT_EXPECTED_VERSION) at $(QT_PREFIX), found $$qt_version" >&2; \
 			exit 1; \
 		}
-	@echo "requirements: OK (Qt $(QT_EXPECTED_VERSION), CMake, Ninja, ccache, g++; Python 3 for tools)"
+	@missing=""; \
+		for package in $(QTMAPS_SYSTEM_PACKAGES); do \
+			dpkg-query -W -f='$${db:Status-Status}' "$$package" 2>/dev/null | grep -Fxq installed || missing="$$missing $$package"; \
+		done; \
+		test -z "$$missing" || { \
+			echo "error: missing required development packages:$$missing" >&2; \
+			echo "hint: run make requirements-apt, then execute the printed install command" >&2; \
+			exit 1; \
+		}
+	@test -f /usr/include/unicode/uchar.h || { echo "error: ICU development header missing: /usr/include/unicode/uchar.h" >&2; exit 1; }
+	@test -e /usr/lib/x86_64-linux-gnu/libicuuc.so || { echo "error: ICU development library missing: /usr/lib/x86_64-linux-gnu/libicuuc.so" >&2; exit 1; }
+	@echo "requirements: OK (Qt $(QT_EXPECTED_VERSION), Qt/ICU development packages, CMake, Ninja, ccache, g++; Python 3 for tools)"
+
+requirements-apt:
+	@echo "This target does not run APT or sudo. Review and execute manually:"
+	@echo "  sudo apt install --no-install-recommends $(QTMAPS_SYSTEM_PACKAGES)"
+	@echo "  sudo apt-mark manual $(QTMAPS_SYSTEM_PACKAGES)"
 
 configure: requirements
 	"$(CMAKE)" -S . -B "$(BUILD_DIR)" -G Ninja \

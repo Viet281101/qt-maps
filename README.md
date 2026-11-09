@@ -84,6 +84,12 @@ make test
 make run
 ```
 
+If a machine is missing Qt/ICU development dependencies, run
+`make requirements-apt`. It only prints the reviewed `apt install` and
+`apt-mark manual` commands; it never invokes `sudo`. Marking the listed
+top-level packages manual prevents `apt autoremove` from removing their
+otherwise auto-installed dependency closure.
+
 ### Intentional MapLibre Qt 5.15.18 rebuild
 
 `make maplibre-qt51518` is an explicit maintenance operation, not part of
