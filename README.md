@@ -84,6 +84,18 @@ make test
 make run
 ```
 
+### Intentional MapLibre Qt 5.15.18 rebuild
+
+`make maplibre-qt51518` is an explicit maintenance operation, not part of
+`make test`, `make check`, or `make review`. It configures a fresh Release
+MapLibre Native Qt build against `/usr` Qt 5.15.18, using the approved ignored
+private-header overlay at `generated/unit-01b/qt51518-private/`, installs to
+`generated/unit-01b/maplibre-install-qt51518/`, and rejects an installed core
+library without a `5.15.18` marker. The historical estimate is about 16 minutes
+and 1.1 GiB peak RSS. Override `MAPLIBRE_SRC`, `MAPLIBRE_BUILD_NEW`,
+`MAPLIBRE_INSTALL_NEW`, or `QT_PRIVATE_OVERLAY` only when intentionally using
+separate generated paths.
+
 The current MapLibre development install and Qt QML/runtime plugins are ignored local dependencies. This successful local smoke command runs the checksummed Hanoi package for 15 seconds; the Unit 03 evidence wraps it in the network namespace used for the disconnected check:
 
 ```bash

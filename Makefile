@@ -20,15 +20,32 @@ HANOI_PBF ?= generated/unit-01b/source/vietnam-latest.osm.pbf
 PLANETILER_JAR ?= generated/unit-01b/tools/planetiler.jar
 MAP_PACKAGE ?= data/packages/current
 MAPLIBRE_INSTALL ?= generated/unit-01b/maplibre-install
+MAPLIBRE_SRC ?= generated/unit-01b/maplibre-native-qt
+MAPLIBRE_BUILD_NEW ?= generated/unit-01b/maplibre-build-qt51518
+MAPLIBRE_INSTALL_NEW ?= generated/unit-01b/maplibre-install-qt51518
+QT_PRIVATE_OVERLAY ?= generated/unit-01b/qt51518-private
 QML_RUNTIME ?= $(shell "$(QMAKE)" -query QT_INSTALL_ARCHDATA 2>/dev/null)
 QT_RUNTIME_PLUGIN_PATH ?= $(shell "$(QMAKE)" -query QT_INSTALL_PLUGINS 2>/dev/null)
 
 QMAKE := $(QT_PREFIX)/bin/qmake
 QTMAPS := $(BUILD_DIR)/qtmaps
 
+ifneq (,$(filter maplibre-qt51518,$(MAKECMDGOALS)))
+ifeq ($(wildcard $(QT_PRIVATE_OVERLAY)),)
+$(error maplibre-qt51518 requires Qt 5.15.18 private-header overlay directory: $(QT_PRIVATE_OVERLAY))
+endif
+ifeq ($(wildcard $(QT_PRIVATE_OVERLAY)/qt5-private-targets.cmake),)
+$(error maplibre-qt51518 requires $(QT_PRIVATE_OVERLAY)/qt5-private-targets.cmake)
+endif
+MAPLIBRE_QT51518_VERSION := $(shell "$(QMAKE)" -query QT_VERSION 2>/dev/null)
+ifneq ($(MAPLIBRE_QT51518_VERSION),5.15.18)
+$(error maplibre-qt51518 requires qmake Qt 5.15.18 at $(QMAKE), found '$(MAPLIBRE_QT51518_VERSION)')
+endif
+endif
+
 .PHONY: help requirements configure build test run run-app benchmark debug-build debug-run debug-gdb check \
 	review format format-check diagnostic-tiles vector-fixture vector-real-style hanoi-package hanoi-raster-render hanoi-raster-package \
-	raster serve-diagnostic-tiles serve-vector-fixture run-mapboxgl-probe clean clean-old-builds
+	raster serve-diagnostic-tiles serve-vector-fixture run-mapboxgl-probe maplibre-qt51518 clean clean-old-builds
 
 help:
 	@echo "QtMaps development targets"
@@ -54,12 +71,14 @@ help:
 	@echo "  make hanoi-raster-package  Package locally rendered z12-z16 PNG tiles; requires RASTER_TILES"
 	@echo "  make hanoi-raster-render   Render local z12-z16 PNG tiles from MAP_PACKAGE"
 	@echo "  make raster                Re-render and package raster after style/schema migration"
+	@echo "  make maplibre-qt51518      Deliberately rebuild MapLibre for Qt 5.15.18 (~16 min, ~1.1 GiB peak RSS)"
 	@echo "  make serve-vector-fixture  Serve the vector fixture on 127.0.0.1:8766"
 	@echo "  make run-mapboxgl-probe    Run probe (vector fixture server must be separate)"
 	@echo "  make clean                 Clean compiled outputs through CMake"
 	@echo "  make clean-old-builds      Remove other root build/build-* CMake directories; keep BUILD_DIR"
 	@echo
 	@echo "Overrides: QT_PREFIX, BUILD_DIR, BUILD_TYPE, DEBUG_BUILD_DIR, REVIEW_BUILD_DIR, DEMO_ARGS, APP_ARGS, BENCHMARK_ARGS, GDB, CLANG_FORMAT"
+	@echo "MapLibre rebuild overrides: MAPLIBRE_SRC, MAPLIBRE_BUILD_NEW, MAPLIBRE_INSTALL_NEW, QT_PRIVATE_OVERLAY"
 
 requirements:
 	@command -v "$(CMAKE)" >/dev/null || { echo "error: CMake is required" >&2; exit 1; }
@@ -84,6 +103,28 @@ configure: requirements
 
 build: configure
 	"$(CMAKE)" --build "$(BUILD_DIR)" --parallel
+
+maplibre-qt51518:
+	@echo "maplibre-qt51518: intentional Qt 5.15.18 rebuild; historical estimate ~16 min and ~1.1 GiB peak RSS"
+	"$(CMAKE)" --fresh -S "$(MAPLIBRE_SRC)" -B "$(MAPLIBRE_BUILD_NEW)" -G Ninja \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_PREFIX_PATH=/usr \
+		-DQt5_DIR=/usr/lib/x86_64-linux-gnu/cmake/Qt5 \
+		-DQT_VERSION_MAJOR=5 \
+		-DMLN_QT_WITH_WIDGETS=OFF \
+		-DCMAKE_PROJECT_INCLUDE="$(abspath $(QT_PRIVATE_OVERLAY)/qt5-private-targets.cmake)" \
+		-DCMAKE_INSTALL_PREFIX="$(abspath $(MAPLIBRE_INSTALL_NEW))"
+	"$(CMAKE)" --build "$(MAPLIBRE_BUILD_NEW)" --parallel 2
+	"$(CMAKE)" --install "$(MAPLIBRE_BUILD_NEW)"
+	@test -f "$(MAPLIBRE_INSTALL_NEW)/lib/libQMapLibre.so.3.0.0" || { \
+		echo "error: MapLibre install is missing libQMapLibre.so.3.0.0 under $(MAPLIBRE_INSTALL_NEW)/lib" >&2; \
+		exit 1; \
+	}
+	@strings "$(MAPLIBRE_INSTALL_NEW)/lib/libQMapLibre.so.3.0.0" | grep -Fxq "5.15.18" || { \
+		echo "error: MapLibre payload does not contain the required Qt 5.15.18 version marker" >&2; \
+		exit 1; \
+	}
+	@echo "maplibre-qt51518: installed payload contains the Qt 5.15.18 marker"
 
 test: build
 	@test -f "$(QT_RUNTIME_PLUGIN_PATH)/sqldrivers/libqsqlite.so" || { \

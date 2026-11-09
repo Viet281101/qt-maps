@@ -13,8 +13,9 @@ preserved in Git history through `e0a8086`.
 
 ## Current Goal
 
-Review PR #38 for the style-only 07D squash. Do not merge it or open a 07E PR
-until the owner confirms.
+Prepare the explicitly invoked MapLibre Qt 5.15.18 rebuild target without
+running a MapLibre build, opening a window, or restarting render/benchmark work.
+Do not open a 07E PR.
 
 ## Publication Status
 
@@ -88,6 +89,17 @@ remains allowed.
    behavior; do not fold it into 07C.
 
 ## Latest Verification
+
+- The approved ignored Qt 5.15.18 private-header overlay is at
+  `generated/unit-01b/qt51518-private/`. The separate
+  `maplibre-qt51518` Makefile target is intended to configure a fresh Release
+  MapLibre install only when explicitly invoked; it is not part of normal
+  CTest/check/review flows. Its generated-path and Qt-version preconditions are
+  checked before the recipe executes. On 2026-11-09, `make -n` printed the
+  approved configure/build/install sequence and rejected a missing overlay;
+  the one authorized software-backend CTest pass was 11/11 in 11.42 s
+  (`generated/ctest/20261109-maplibre-qt51518-target.log`). No MapLibre build
+  or window/OpenGL/benchmark run occurred.
 
 - The 07C merge commit `5ef2e4a` resolved the `CMakeLists.txt`/`Makefile`
   conflicts by retaining 5.15.13 defaults and dropping the smoke's

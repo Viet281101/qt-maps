@@ -84,6 +84,17 @@ make test
 make run
 ```
 
+### Rebuild MapLibre Qt 5.15.18 có chủ đích
+
+`make maplibre-qt51518` là thao tác bảo trì chủ đích, không thuộc `make test`,
+`make check` hay `make review`. Target này cấu hình mới MapLibre Native Qt
+Release với Qt 5.15.18 tại `/usr`, dùng private-header overlay ignored đã duyệt
+ở `generated/unit-01b/qt51518-private/`, cài vào
+`generated/unit-01b/maplibre-install-qt51518/`, và từ chối core library không
+có marker `5.15.18`. Ước lượng lịch sử là khoảng 16 phút và peak RSS 1,1 GiB.
+Chỉ override `MAPLIBRE_SRC`, `MAPLIBRE_BUILD_NEW`, `MAPLIBRE_INSTALL_NEW` hoặc
+`QT_PRIVATE_OVERLAY` khi chủ đích dùng các đường dẫn generated riêng.
+
 MapLibre development install và các Qt QML/runtime plugin hiện là dependency local nằm ngoài Git. Lệnh smoke local đã chạy thành công dưới đây mở package Hà Nội có checksum trong 15 giây; evidence Unit 03 bọc lệnh này trong network namespace dùng cho kiểm chứng mất mạng:
 
 ```bash
