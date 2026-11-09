@@ -95,6 +95,11 @@ có marker `5.15.18`. Ước lượng lịch sử là khoảng 16 phút và peak
 Chỉ override `MAPLIBRE_SRC`, `MAPLIBRE_BUILD_NEW`, `MAPLIBRE_INSTALL_NEW` hoặc
 `QT_PRIVATE_OVERLAY` khi chủ đích dùng các đường dẫn generated riêng.
 
+Target mặc định `MAPLIBRE_EXTRA_CXX_FLAGS=-include cstdint` như workaround
+cô lập cho các header MapLibre v3 không tự đủ dưới GCC 15. Mặc định
+`MAPLIBRE_BUILD_KEEP_GOING=1` truyền `-k 0` cho Ninja để thu các lỗi compile độc
+lập trong một lượt build đã được chủ dự án duyệt; đặt `0` để dừng ở lỗi đầu.
+
 MapLibre development install và các Qt QML/runtime plugin hiện là dependency local nằm ngoài Git. Lệnh smoke local đã chạy thành công dưới đây mở package Hà Nội có checksum trong 15 giây; evidence Unit 03 bọc lệnh này trong network namespace dùng cho kiểm chứng mất mạng:
 
 ```bash

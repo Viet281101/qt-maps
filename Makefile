@@ -24,11 +24,14 @@ MAPLIBRE_SRC ?= generated/unit-01b/maplibre-native-qt
 MAPLIBRE_BUILD_NEW ?= generated/unit-01b/maplibre-build-qt51518
 MAPLIBRE_INSTALL_NEW ?= generated/unit-01b/maplibre-install-qt51518
 QT_PRIVATE_OVERLAY ?= generated/unit-01b/qt51518-private
+MAPLIBRE_EXTRA_CXX_FLAGS ?= -include cstdint
+MAPLIBRE_BUILD_KEEP_GOING ?= 1
 QML_RUNTIME ?= $(shell "$(QMAKE)" -query QT_INSTALL_ARCHDATA 2>/dev/null)
 QT_RUNTIME_PLUGIN_PATH ?= $(shell "$(QMAKE)" -query QT_INSTALL_PLUGINS 2>/dev/null)
 
 QMAKE := $(QT_PREFIX)/bin/qmake
 QTMAPS := $(BUILD_DIR)/qtmaps
+MAPLIBRE_NINJA_KEEP_GOING_ARGS := $(if $(filter 0 false no off,$(MAPLIBRE_BUILD_KEEP_GOING)),,-- -k 0)
 
 ifneq (,$(filter maplibre-qt51518,$(MAKECMDGOALS)))
 ifeq ($(wildcard $(QT_PRIVATE_OVERLAY)),)
@@ -78,7 +81,7 @@ help:
 	@echo "  make clean-old-builds      Remove other root build/build-* CMake directories; keep BUILD_DIR"
 	@echo
 	@echo "Overrides: QT_PREFIX, BUILD_DIR, BUILD_TYPE, DEBUG_BUILD_DIR, REVIEW_BUILD_DIR, DEMO_ARGS, APP_ARGS, BENCHMARK_ARGS, GDB, CLANG_FORMAT"
-	@echo "MapLibre rebuild overrides: MAPLIBRE_SRC, MAPLIBRE_BUILD_NEW, MAPLIBRE_INSTALL_NEW, QT_PRIVATE_OVERLAY"
+	@echo "MapLibre rebuild overrides: MAPLIBRE_SRC, MAPLIBRE_BUILD_NEW, MAPLIBRE_INSTALL_NEW, QT_PRIVATE_OVERLAY, MAPLIBRE_EXTRA_CXX_FLAGS, MAPLIBRE_BUILD_KEEP_GOING"
 
 requirements:
 	@command -v "$(CMAKE)" >/dev/null || { echo "error: CMake is required" >&2; exit 1; }
@@ -112,9 +115,10 @@ maplibre-qt51518:
 		-DQt5_DIR=/usr/lib/x86_64-linux-gnu/cmake/Qt5 \
 		-DQT_VERSION_MAJOR=5 \
 		-DMLN_QT_WITH_WIDGETS=OFF \
+		-DCMAKE_CXX_FLAGS="$(MAPLIBRE_EXTRA_CXX_FLAGS)" \
 		-DCMAKE_PROJECT_INCLUDE="$(abspath $(QT_PRIVATE_OVERLAY)/qt5-private-targets.cmake)" \
 		-DCMAKE_INSTALL_PREFIX="$(abspath $(MAPLIBRE_INSTALL_NEW))"
-	"$(CMAKE)" --build "$(MAPLIBRE_BUILD_NEW)" --parallel 2
+	"$(CMAKE)" --build "$(MAPLIBRE_BUILD_NEW)" --parallel 2 $(MAPLIBRE_NINJA_KEEP_GOING_ARGS)
 	"$(CMAKE)" --install "$(MAPLIBRE_BUILD_NEW)"
 	@test -f "$(MAPLIBRE_INSTALL_NEW)/lib/libQMapLibre.so.3.0.0" || { \
 		echo "error: MapLibre install is missing libQMapLibre.so.3.0.0 under $(MAPLIBRE_INSTALL_NEW)/lib" >&2; \

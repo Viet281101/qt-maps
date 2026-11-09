@@ -96,6 +96,12 @@ and 1.1 GiB peak RSS. Override `MAPLIBRE_SRC`, `MAPLIBRE_BUILD_NEW`,
 `MAPLIBRE_INSTALL_NEW`, or `QT_PRIVATE_OVERLAY` only when intentionally using
 separate generated paths.
 
+The target defaults `MAPLIBRE_EXTRA_CXX_FLAGS=-include cstdint` as a contained
+workaround for MapLibre v3 headers that are not self-sufficient under GCC 15.
+It also defaults `MAPLIBRE_BUILD_KEEP_GOING=1`, passing Ninja `-k 0` to collect
+independent compile failures in one owner-authorized build; set it to `0` to
+stop at the first failure.
+
 The current MapLibre development install and Qt QML/runtime plugins are ignored local dependencies. This successful local smoke command runs the checksummed Hanoi package for 15 seconds; the Unit 03 evidence wraps it in the network namespace used for the disconnected check:
 
 ```bash

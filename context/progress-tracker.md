@@ -100,6 +100,11 @@ remains allowed.
   the one authorized software-backend CTest pass was 11/11 in 11.42 s
   (`generated/ctest/20261109-maplibre-qt51518-target.log`). No MapLibre build
   or window/OpenGL/benchmark run occurred.
+- The Qt 5.15.18 MapLibre rebuild later reached compilation under GCC 15.2.0
+  and exposed a non-self-sufficient vendor header missing `<cstdint>`. The
+  isolated target defaults to `-include cstdint` and Ninja keep-going (`-k 0`)
+  so a future owner-authorized build can collect independent compiler failures;
+  neither workaround changes QtMaps application compilation.
 
 - The 07C merge commit `5ef2e4a` resolved the `CMakeLists.txt`/`Makefile`
   conflicts by retaining 5.15.13 defaults and dropping the smoke's
