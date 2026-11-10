@@ -17,6 +17,9 @@ Prepare the explicitly invoked MapLibre Qt 5.15.18 rebuild target without
 running a MapLibre build, opening a window, or restarting render/benchmark work.
 Do not open a 07E PR.
 
+Repair the official demo launcher's Qt runtime selection without opening a
+window or restarting render/benchmark work. Do not open a 07E PR.
+
 ## Publication Status
 
 - PR [#33](https://github.com/Viet281101/qt-maps/pull/33),
@@ -108,6 +111,24 @@ remains allowed.
 - `make requirements` verifies the Qt 5.15.18/ICU development-package set;
   `make requirements-apt` only prints the reviewed restore and `apt-mark manual`
   commands, so package installation remains an owner action.
+
+- On 2026-11-08, a clean `ef30610` build reached an incompatible-Qt abort
+  before Scene Graph initialization because `tools/run-demo.sh` prepended the
+  stale `generated/unit-01b/qml-runtime` plugin root and Qt loaded its
+  `sqldrivers/libqsqlite.so`. The runtime-selection repair must use the active
+  Qt 5.15.18 kit and reject a MapLibre payload built against another Qt patch
+  release. No further window, OpenGL, or benchmark run is authorized here.
+- On 2026-11-10, integration retained the rebuild and launcher changes. The
+  Qt 5.15.18 payload's `libQMapLibre.so.3.0.0` has only the `5.15.18` marker,
+  its four MapLibre libraries/plugins resolve Qt and ICU from `/usr`, and
+  `tools/run-demo.sh --print-env` succeeds with that payload. The pipeline
+  check was changed to process substitution so Bash `pipefail` does not turn a
+  successful early `grep -q` match into a `strings` SIGPIPE failure.
+- The one permitted CTest run on 2026-11-10 is logged at
+  `generated/ctest/20261110-qt51518-runtime-integration.log`: 11/13 passed.
+  The stale `build-unit07e-qt51518` tree's smoke executable aborts from a Qt
+  5.15.13/5.15.18 mix, and its obsolete `qtmaps_hanoi_v2_schema_tests` entry
+  names a removed source file. Do not rerun or rebuild without owner approval.
 
 - The 07C merge commit `5ef2e4a` resolved the `CMakeLists.txt`/`Makefile`
   conflicts by retaining 5.15.13 defaults and dropping the smoke's

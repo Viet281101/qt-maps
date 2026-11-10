@@ -235,6 +235,9 @@ if(BUILD_TESTING)
     add_test(NAME qtmaps_hanoi_style_tests
         COMMAND "${Python3_EXECUTABLE}"
             "${CMAKE_SOURCE_DIR}/tests/map/test_build_hanoi_style.py")
+    add_test(NAME qtmaps_runtime_launcher_tests
+        COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_SOURCE_DIR}/tests/tools/test_run_demo_runtime.py")
 
     add_executable(qtmaps_routing_tests tests/routing/tst_Routing.cpp)
     target_compile_definitions(qtmaps_routing_tests PRIVATE
