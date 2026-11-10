@@ -110,3 +110,10 @@ remains allowed.
   `generated/ctest/20261108-07d.log`; no manual app, MapLibre/OpenGL path, or
   benchmark ran.
 - Remote `origin/main` is `0fc791d` (the squash merge of PR #36).
+
+## Documentation Planning
+
+- Issue #43 records the evidence-backed Hanoi cartography audit and staged
+  upgrade plan for the scoped follow-up sequence (#30--#32). It adds no
+  runtime, package, rendering, or benchmark behavior; the i915 freeze remains
+  in effect.
