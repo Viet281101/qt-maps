@@ -114,6 +114,7 @@ remains allowed.
 ## Documentation Planning
 
 - Issue #43 records the evidence-backed Hanoi cartography audit and staged
-  upgrade plan for the scoped follow-up sequence (#30--#32). It adds no
-  runtime, package, rendering, or benchmark behavior; the i915 freeze remains
-  in effect.
+  upgrade plan for the scoped follow-up sequence (#30--#32). PR #44 references
+  it and is `In Progress` in Project #6 under `Post-demo stabilization`. It
+  adds no runtime, package, rendering, or benchmark behavior; the i915 freeze
+  remains in effect.
