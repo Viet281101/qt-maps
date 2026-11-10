@@ -13,12 +13,9 @@ preserved in Git history through `e0a8086`.
 
 ## Current Goal
 
-Prepare the explicitly invoked MapLibre Qt 5.15.18 rebuild target without
-running a MapLibre build, opening a window, or restarting render/benchmark work.
-Do not open a 07E PR.
-
-Repair the official demo launcher's Qt runtime selection without opening a
-window or restarting render/benchmark work. Do not open a 07E PR.
+Prepare the Qt 5.15.18 MapLibre rebuild target and runtime-selection repair
+for focused review, without running a MapLibre build, opening a window, or
+restarting render/benchmark work. Do not open a 07E PR.
 
 ## Publication Status
 
@@ -35,8 +32,9 @@ window or restarting render/benchmark work. Do not open a 07E PR.
 - PR [#37](https://github.com/Viet281101/qt-maps/pull/37),
   `feat/07c-offline-raster-pr` → `main`, was squash-merged as `90366bd`.
 - PR [#38](https://github.com/Viet281101/qt-maps/pull/38),
-  `feat/07d-style-only-pr` → `main`, is open for review; it references #28
-  and #29. The current milestone is expired and no replacement is approved.
+  `feat/07d-style-only-pr` → `main`, was squash-merged as `ef30610`.
+- The active follow-up milestone is `Post-demo stabilization`; it has no due
+  date until the owner confirms the next delivery target.
 - The Unit 07 remote backups are `origin/chore/07a-repo-structure-maintenance`,
   `origin/feat/07b-demo-shell-ui`, `origin/feat/07c-offline-raster`,
   `origin/feat/07d-hanoi-cartography`, and `origin/unit-07e-verify`.
@@ -48,7 +46,7 @@ window or restarting render/benchmark work. Do not open a 07E PR.
 | 07A | `chore/07a-repo-structure-maintenance` / `4a61d46` | merged as PR #34 |
 | 07B | `feat/07b-demo-shell-ui` / `e294167` | merged as PR #35 |
 | 07C | `feat/07c-offline-raster-pr` / `90366bd` | merged as PR #37; old branch remains backup |
-| 07D | `feat/07d-style-only-pr` / `aa7f868` | PR #38 open; old branch remains backup |
+| 07D | `feat/07d-style-only-pr` / `aa7f868` | merged as PR #38; old branch remains backup |
 | 07E | `unit-07e-verify` / `50fc763` | pushed; depends on 07D |
 
 `chore/fix-benchmark-qt-runtime` is a separate local follow-up above 07E and
@@ -66,6 +64,10 @@ remains allowed.
 ## Working Rules
 
 - Before each commit run `make QT_EXPECTED_VERSION=5.15.18 test`.
+- If configure or build reports a missing library or development dependency,
+  run `make requirements` first. If it reports a missing package, use
+  `make requirements-apt` to print the reviewed restore and `apt-mark manual`
+  commands; review and run those privileged commands manually before retrying.
 - Use Qt 5 CMake APIs and CMake/Ninja. Do not use Qt 6 CMake APIs.
 - Do not force-push, rewrite pushed history, push to `main`, or delete local
   branches/tags.
@@ -76,17 +78,15 @@ remains allowed.
 
 ## Decisions Waiting for Owner
 
-1. New milestone name and due date after the expired `First Management Demo`
-   milestone; the owner requested a proposal but must approve creation.
-2. Any privileged i915 investigation, GPU configuration change, or restart of
+1. Any privileged i915 investigation, GPU configuration change, or restart of
    render benchmarking.
-3. Atomic integration decision for the 07D cartography work and its associated
-   package migration.
+2. Scope, sequencing, and acceptance evidence for the planned Hanoi
+   cartography contract migration (#30--#32).
 
 ## Next Up
 
-1. The one authorized 07D software-backend CTest passed. Await owner review of
-   PR #38 before a squash merge; do not open 07E first.
+1. Review the focused Qt 5.15.18 rebuild/runtime-selection change; do not open
+   07E first.
 2. Do not restart rendering or benchmark work.
 3. Follow up separately on default-disabled instrumentation/performance-badge
    behavior; do not fold it into 07C.
@@ -129,6 +129,11 @@ remains allowed.
   The stale `build-unit07e-qt51518` tree's smoke executable aborts from a Qt
   5.15.13/5.15.18 mix, and its obsolete `qtmaps_hanoi_v2_schema_tests` entry
   names a removed source file. Do not rerun or rebuild without owner approval.
+- On 2026-11-10, the smoke and routing-QML CTest paths were changed to derive
+  the QML runtime and plugin roots from the selected Qt 5.15.18 qmake rather
+  than `generated/unit-01b/qml-runtime`. A Ninja reconfigure and app-only
+  rebuild of `build-qt515` succeeded; its software-backend CTest pass was
+  13/13 in 11.64 s (`generated/ctest/20261110-qt51518-runtime-smoke-fix-ctest.log`).
 
 - The 07C merge commit `5ef2e4a` resolved the `CMakeLists.txt`/`Makefile`
   conflicts by retaining 5.15.13 defaults and dropping the smoke's

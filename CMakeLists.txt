@@ -24,6 +24,22 @@ find_package(Qt5 ${QTMAPS_MIN_QT_VERSION} REQUIRED COMPONENTS
     Test
 )
 
+get_target_property(QTMAPS_QMAKE_EXECUTABLE Qt5::qmake IMPORTED_LOCATION)
+if(NOT QTMAPS_QMAKE_EXECUTABLE)
+    message(FATAL_ERROR "Qt5::qmake has no executable location.")
+endif()
+execute_process(
+    COMMAND "${QTMAPS_QMAKE_EXECUTABLE}" -query QT_INSTALL_ARCHDATA
+    RESULT_VARIABLE QTMAPS_QT_ARCHDATA_QUERY_RESULT
+    OUTPUT_VARIABLE QTMAPS_QT_ARCHDATA
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+if(NOT QTMAPS_QT_ARCHDATA_QUERY_RESULT EQUAL 0 OR NOT IS_DIRECTORY "${QTMAPS_QT_ARCHDATA}/qml")
+    message(FATAL_ERROR
+        "Could not locate the QML runtime from ${QTMAPS_QMAKE_EXECUTABLE}. "
+        "Expected QT_INSTALL_ARCHDATA/qml, got '${QTMAPS_QT_ARCHDATA}'.")
+endif()
+
 if(Qt5Core_VERSION_STRING VERSION_LESS QTMAPS_MIN_QT_VERSION)
     message(FATAL_ERROR
         "Resolved Qt Core ${Qt5Core_VERSION_STRING}, below required ${QTMAPS_MIN_QT_VERSION}. "
@@ -286,6 +302,6 @@ if(BUILD_TESTING)
     add_test(NAME qtmaps_routing_qml_tests COMMAND qtmaps_routing_qml_tests)
     set_tests_properties(qtmaps_routing_qml_tests PROPERTIES
         ENVIRONMENT
-            "QT_QPA_PLATFORM=offscreen;QML2_IMPORT_PATH=${CMAKE_SOURCE_DIR}/generated/unit-01b/qml-runtime/usr/lib/x86_64-linux-gnu/qt5/qml;QT_QUICK_BACKEND=software")
+            "QT_QPA_PLATFORM=offscreen;QML2_IMPORT_PATH=${QTMAPS_QT_ARCHDATA}/qml;QT_QUICK_BACKEND=software")
 
 endif()
