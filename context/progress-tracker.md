@@ -33,6 +33,9 @@ restarting render/benchmark work. Do not open a 07E PR.
   `feat/07c-offline-raster-pr` → `main`, was squash-merged as `90366bd`.
 - PR [#38](https://github.com/Viet281101/qt-maps/pull/38),
   `feat/07d-style-only-pr` → `main`, was squash-merged as `ef30610`.
+- PR [#42](https://github.com/Viet281101/qt-maps/pull/42),
+  `codex/qt51518-runtime-integration` → `main`, is open for review; it
+  references #41 and is tracked as `In Progress` in Project #6.
 - The active follow-up milestone is `Post-demo stabilization`; it has no due
   date until the owner confirms the next delivery target.
 - The Unit 07 remote backups are `origin/chore/07a-repo-structure-maintenance`,
@@ -85,8 +88,8 @@ remains allowed.
 
 ## Next Up
 
-1. Review the focused Qt 5.15.18 rebuild/runtime-selection change; do not open
-   07E first.
+1. Review PR #42, the focused Qt 5.15.18 rebuild/runtime-selection change; do
+   not open 07E first.
 2. Do not restart rendering or benchmark work.
 3. Follow up separately on default-disabled instrumentation/performance-badge
    behavior; do not fold it into 07C.
