@@ -86,10 +86,12 @@ make test
 make run
 ```
 
-Nếu máy thiếu development dependency Qt/ICU, dùng `make requirements-apt`.
-Target này chỉ in lệnh `apt install` và `apt-mark manual` đã rà soát, không tự
-gọi `sudo`. Đánh dấu các gói top-level này là manual giúp `apt autoremove`
-không gỡ chuỗi dependency được cài tự động cho chúng.
+Nếu máy thiếu development dependency Qt thông thường, dùng
+`make requirements-apt`. Riêng target MapLibre rebuild chủ đích dùng
+`make maplibre-requirements-apt` để in thêm dependency private-Qt/ICU. Cả hai
+target chỉ in lệnh `apt install` và `apt-mark manual` đã rà soát, không tự gọi
+`sudo`. Đánh dấu các gói top-level này là manual giúp `apt autoremove` không
+gỡ chuỗi dependency được cài tự động cho chúng.
 
 ### Rebuild MapLibre Qt 5.15.18 có chủ đích
 

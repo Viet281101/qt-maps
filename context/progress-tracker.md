@@ -111,9 +111,11 @@ remains allowed.
   isolated target defaults to `-include cstdint` and Ninja keep-going (`-k 0`)
   so a future owner-authorized build can collect independent compiler failures;
   neither workaround changes QtMaps application compilation.
-- `make requirements` verifies the Qt 5.15.18/ICU development-package set;
-  `make requirements-apt` only prints the reviewed restore and `apt-mark manual`
-  commands, so package installation remains an owner action.
+- `make requirements` verifies only normal QtMaps build dependencies.
+  `make maplibre-requirements` adds the private-Qt/ICU checks required solely
+  by the explicit MapLibre rebuild target. Their `*-apt` companions only print
+  reviewed restore and `apt-mark manual` commands, so package installation
+  remains an owner action.
 
 - On 2026-11-08, a clean `ef30610` build reached an incompatible-Qt abort
   before Scene Graph initialization because `tools/run-demo.sh` prepended the
@@ -137,6 +139,11 @@ remains allowed.
   than `generated/unit-01b/qml-runtime`. A Ninja reconfigure and app-only
   rebuild of `build-qt515` succeeded; its software-backend CTest pass was
   13/13 in 11.64 s (`generated/ctest/20261110-qt51518-runtime-smoke-fix-ctest.log`).
+- On 2026-11-11, normal QtMaps requirements were split from the private-Qt/ICU
+  requirements of the explicit MapLibre rebuild target. `make requirements`,
+  `make maplibre-requirements`, a dry-run `make maplibre-qt51518`, and the
+  software-backend CTest suite all passed; CTest was 13/13 in 11.72 s. No
+  MapLibre rebuild, application window, OpenGL path, or benchmark ran.
 
 - The 07C merge commit `5ef2e4a` resolved the `CMakeLists.txt`/`Makefile`
   conflicts by retaining 5.15.13 defaults and dropping the smoke's

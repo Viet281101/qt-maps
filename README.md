@@ -86,11 +86,13 @@ make test
 make run
 ```
 
-If a machine is missing Qt/ICU development dependencies, run
-`make requirements-apt`. It only prints the reviewed `apt install` and
-`apt-mark manual` commands; it never invokes `sudo`. Marking the listed
-top-level packages manual prevents `apt autoremove` from removing their
-otherwise auto-installed dependency closure.
+If a machine is missing normal Qt development dependencies, run
+`make requirements-apt`. For the explicit MapLibre rebuild target, use
+`make maplibre-requirements-apt` to print its additional private-Qt/ICU
+dependencies. Both targets only print reviewed `apt install` and `apt-mark
+manual` commands; they never invoke `sudo`. Marking the listed top-level
+packages manual prevents `apt autoremove` from removing their otherwise
+auto-installed dependency closure.
 
 ### Intentional MapLibre Qt 5.15.18 rebuild
 
