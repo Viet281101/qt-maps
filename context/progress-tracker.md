@@ -118,3 +118,7 @@ remains allowed.
   it and is `In Progress` in Project #6 under `Post-demo stabilization`. It
   adds no runtime, package, rendering, or benchmark behavior; the i915 freeze
   remains in effect.
+- On 2026-11-11, PR #44 was corrected to use the merged 07D product-style
+  baseline: source-controlled class-aware roads are complete; the remaining
+  implementation is atomic #30/#32 package migration followed by #31
+  typography/labels. Its next dependency is the runtime fix in PR #42.
