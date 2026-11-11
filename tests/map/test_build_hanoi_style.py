@@ -31,12 +31,15 @@ class HanoiStyleTest(unittest.TestCase):
         self.assertNotIn("https://", first)
 
         style = json.loads(first)
+        self.assertEqual(style["metadata"]["qtmaps:style_revision"], "qtmaps-hanoi-v2")
         self.assertEqual(
             style["sources"]["qtmaps"]["tiles"],
             ["__QTMAPS_BASE_URL__/tiles/{z}/{x}/{y}.pbf"],
         )
         layers = {layer["id"]: layer for layer in style["layers"]}
         self.assertIn("road-major-fill", layers)
+        self.assertEqual(layers["water"]["source-layer"], "water")
+        self.assertEqual(layers["green-areas"]["source-layer"], "landuse")
         self.assertIn("road-secondary-fill", layers)
         self.assertIn("road-local-fill", layers)
         self.assertEqual(layers["road-labels-prepared"]["layout"]["visibility"], "none")

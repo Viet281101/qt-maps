@@ -117,8 +117,9 @@ bool MapPackageManifest::loadAndValidate(const QString &packagePath, MapPackageM
         parsed.north = bounds.at(3).toDouble();
     }
     const QRegularExpression digestPattern(QStringLiteral("^[0-9a-f]{64}$"));
-    const QStringList expectedLayers = {QStringLiteral("building"), QStringLiteral("place"),
-                                        QStringLiteral("transportation")};
+    const QStringList expectedLayers = {QStringLiteral("building"), QStringLiteral("landuse"),
+                                        QStringLiteral("place"), QStringLiteral("transportation"),
+                                        QStringLiteral("water")};
     if (parsed.schemaVersion != contract::mapPackageSchemaVersion() ||
         parsed.styleContractVersion != contract::styleContractVersion() ||
         parsed.styleRevision != contract::styleRevision() || parsed.dataVersion.isEmpty() ||
@@ -220,7 +221,7 @@ bool MapPackageManifest::loadAndValidate(const QString &packagePath, MapPackageM
         tileUrls.size() != 1 ||
         tileUrls.at(0).toString() != token + QStringLiteral("/tiles/{z}/{x}/{y}.pbf")) {
         if (errorMessage) {
-            *errorMessage = QStringLiteral("Style resource URLs violate qtmaps-style-v1");
+            *errorMessage = QStringLiteral("Style resource URLs violate the qtmaps contract");
         }
         return false;
     }

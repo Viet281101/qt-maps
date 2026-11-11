@@ -13,9 +13,9 @@ preserved in Git history through `e0a8086`.
 
 ## Current Goal
 
-Prepare the Qt 5.15.18 MapLibre rebuild target and runtime-selection repair
-for focused review, without running a MapLibre build, opening a window, or
-restarting render/benchmark work. Do not open a 07E PR.
+Complete the atomic #30 + #32 Hanoi v2 package-contract migration from current
+`main`, without reusing the stale 07E branch or running a MapLibre window,
+OpenGL path, render benchmark, or GPU experiment.
 
 ## Publication Status
 
@@ -34,8 +34,11 @@ restarting render/benchmark work. Do not open a 07E PR.
 - PR [#38](https://github.com/Viet281101/qt-maps/pull/38),
   `feat/07d-style-only-pr` → `main`, was squash-merged as `ef30610`.
 - PR [#42](https://github.com/Viet281101/qt-maps/pull/42),
-  `codex/qt51518-runtime-integration` → `main`, is open for review; it
-  references #41 and is tracked as `In Progress` in Project #6.
+  `codex/qt51518-runtime-integration` → `main`, was squash-merged as
+  `1157c866`.
+- PR [#44](https://github.com/Viet281101/qt-maps/pull/44),
+  `docs/hanoi-cartography-upgrade-plan` → `main`, was squash-merged as
+  `1c7a05d`.
 - The active follow-up milestone is `Post-demo stabilization`; it has no due
   date until the owner confirms the next delivery target.
 - The Unit 07 remote backups are `origin/chore/07a-repo-structure-maintenance`,
@@ -50,7 +53,7 @@ restarting render/benchmark work. Do not open a 07E PR.
 | 07B | `feat/07b-demo-shell-ui` / `e294167` | merged as PR #35 |
 | 07C | `feat/07c-offline-raster-pr` / `90366bd` | merged as PR #37; old branch remains backup |
 | 07D | `feat/07d-style-only-pr` / `aa7f868` | merged as PR #38; old branch remains backup |
-| 07E | `unit-07e-verify` / `50fc763` | pushed; depends on 07D |
+| 07E | `unit-07e-verify` / `50fc763` | archived backup; do not revive or open a PR |
 
 `chore/fix-benchmark-qt-runtime` is a separate local follow-up above 07E and
 is not part of the requested Unit 07 backup push.
@@ -83,16 +86,18 @@ remains allowed.
 
 1. Any privileged i915 investigation, GPU configuration change, or restart of
    render benchmarking.
-2. Scope, sequencing, and acceptance evidence for the planned Hanoi
-   cartography contract migration (#30--#32).
+2. Owner approval for a MapLibre/OpenGL visual review or render benchmark after
+   a generated v2 package is available.
 
 ## Next Up
 
-1. Review PR #42, the focused Qt 5.15.18 rebuild/runtime-selection change; do
-   not open 07E first.
-2. Do not restart rendering or benchmark work.
-3. Follow up separately on default-disabled instrumentation/performance-badge
-   behavior; do not fold it into 07C.
+1. Finish the #30 + #32 v2 schema/style/manifest migration and its non-render
+   tests on `codex/hanoi-v2-contract`; both issues are `In Progress` in
+   Project #6.
+2. Request owner approval before rendering the matching ignored raster v2
+   package; do not download data or run a MapLibre/OpenGL path under the i915
+   freeze.
+3. Keep #31 typography/labels and instrumentation follow-up separate.
 
 ## Latest Verification
 
@@ -180,3 +185,17 @@ remains allowed.
   baseline: source-controlled class-aware roads are complete; the remaining
   implementation is atomic #30/#32 package migration followed by #31
   typography/labels. Its next dependency is the runtime fix in PR #42.
+- On 2026-11-11, after #42 and #44 were squash-merged, work began on the
+  atomic #30 + #32 migration from `origin/main`. The tracked source schema,
+  product style, vector/raster validators, and test fixtures now use the v2
+  contract (`building`, `landuse`, `place`, `transportation`, `water`).
+  `java -jar ... verify` accepted the schema and the approved local PBF/JAR
+  generated ignored `data/packages/hanoi-20261111-v2-r1` with no network,
+  two threads, a 6 GiB heap cap, 59.289 s duration, and 2,454,948 KiB peak
+  RSS. The first generated v2 package exposed a stale builder layer-schema
+  value; it was retained as ignored diagnostic output, the builder was fixed,
+  and only `v2-r1` became `current`. The matching raster v2 package, render,
+  OpenGL path, and benchmark remain unrun under the i915 freeze.
+- The post-fix `make QT_EXPECTED_VERSION=5.15.18 test` passed 14/14 in
+  11.78 s with software backend; the actual-current-package CLI smoke passed
+  in 0.93 s. `make ... format-check` and `git diff --check` passed.

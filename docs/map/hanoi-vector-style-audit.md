@@ -4,12 +4,14 @@ Audit date: 2026-11-11
 
 ## Verdict
 
-Unit 07D already replaced the former synthetic five-pixel road presentation
-with a source-controlled, class- and zoom-aware Hanoi product style. The active
-runtime contract remains `qtmaps-style-v1` with three source layers, so water,
-landuse context and general Vietnamese basemap labels are intentionally not yet
-visible. There is no evidence that a renderer defect is needed to explain the
-remaining omissions.
+Unit 07D replaced the former synthetic five-pixel road presentation with a
+source-controlled, class- and zoom-aware Hanoi product style. The active source
+and runtime contract now require `qtmaps-style-v2` with five bounded source
+layers. The ignored v2 vector package is generated from the approved local PBF;
+the matching raster package still needs regeneration before raster fallback can
+show this cartography. An existing v1 package is rejected explicitly.
+There is no evidence that a renderer defect is needed to explain the remaining
+typography/label omission.
 
 ## Current production state
 
@@ -17,7 +19,9 @@ remaining omissions.
   package builder validates and canonicalizes it with
   `tools/data-pipeline/build_hanoi_style.py`; the synthetic fixture provides
   only diagnostic resources and does not define the product style.
-- The active v1 package contains `building`, `transportation`, and `place`.
+- The v2 package contract contains `building`, `landuse`, `place`,
+  `transportation`, and `water`. `landuse` and `water` use documented polygon
+  allowlists only; POIs and extra name attributes are not added.
   `transportation.class` drives major, secondary, local and path styling with
   zoom-aware widths. The template uses only local URL tokens and preserves OSM
   attribution.
@@ -30,19 +34,19 @@ remaining omissions.
 
 ## Remaining gap
 
-The bounded local data has no active `water` or `landuse` source layers, so the
-map cannot distinguish those areas from ordinary land. A draft v2 Planetiler
-configuration exists, but it is deliberately inactive until the package/style
-contract migration is accepted. Activating it without the matching manifest,
-validator, vector package and raster-package regeneration would violate the
-runtime contract.
+The checked-in v2 schema and style are coupled to the manifest validators. The
+local `hanoi-20261111-v2-r1` vector package was generated with the pinned
+Planetiler JAR, two threads, a 6 GiB heap cap, and no network access; it
+contains all five declared vector layers. Its matching raster package remains
+blocked by the i915 render freeze, so the runtime rejects stale raster v1 rather
+than presenting an inconsistent fallback.
 
 ## Follow-up sequence
 
-1. **#30 + #32, one atomic migration:** activate bounded water and landuse
-   layers, version the source-layer/style contract together, update validation,
-   rebuild ignored vector/raster packages, and record reproducibility and
-   negative compatibility evidence.
+1. **#30 + #32, one active atomic migration:** activate bounded water and
+   landuse layers, version the source-layer/style contract together, update
+   validation, rebuild ignored vector/raster packages, and record
+   reproducibility and negative compatibility evidence.
 2. **#31, separate typography and labels:** select and document a licensed
    Vietnamese font, generate glyph ranges reproducibly, then enable bounded
    road/place labels with collision and zoom rules.

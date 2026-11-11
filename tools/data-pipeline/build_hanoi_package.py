@@ -19,12 +19,13 @@ from build_hanoi_style import render_style
 BOUNDS = [105.78, 20.97, 105.90, 21.10]
 MIN_ZOOM = 12
 MAX_ZOOM = 15
-SCHEMA_VERSION = "qtmaps-map-package-v1"
-STYLE_CONTRACT_VERSION = "qtmaps-style-v1"
+SCHEMA_VERSION = "qtmaps-map-package-v2"
+STYLE_CONTRACT_VERSION = "qtmaps-style-v2"
+LAYER_SCHEMA_VERSION = 2
 ATTRIBUTION = "© OpenStreetMap contributors, ODbL 1.0"
 PLANETILER_VERSION = "0.10.2"
 PLANETILER_SHA256 = "f310bd0413e2e4512b27f4046d418664e8e1d3bf31603c2a70e23de06c167e4d"
-SOURCE_LAYERS = ["building", "place", "transportation"]
+SOURCE_LAYERS = ["building", "landuse", "place", "transportation", "water"]
 
 
 def sha256(path):
@@ -41,7 +42,7 @@ def parse_args():
     parser.add_argument("--planetiler-jar", type=Path, required=True)
     parser.add_argument("--output-root", type=Path, default=Path("data/packages"))
     parser.add_argument("--date", default=datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d"))
-    parser.add_argument("--revision", default="v1")
+    parser.add_argument("--revision", default="v2")
     parser.add_argument("--heap", default="6g")
     parser.add_argument("--threads", type=int, default=2)
     return parser.parse_args()
@@ -73,7 +74,7 @@ def main():
     started = time.monotonic()
 
     try:
-        source_schema_path = repository / "tools/data-pipeline/unit01b-hanoi.yml"
+        source_schema_path = repository / "tools/data-pipeline/unit07d-hanoi-v2.yml"
         source_schema = source_schema_path.read_text(encoding="utf-8")
         source_schema = source_schema.replace(
             "local_path: generated/unit-01b/source/vietnam-latest.osm.pbf",
@@ -128,14 +129,14 @@ def main():
             "schema_version": SCHEMA_VERSION,
             "data_version": package_id,
             "style_contract_version": STYLE_CONTRACT_VERSION,
-            "layer_schema": {"version": 1, "source_layers": SOURCE_LAYERS},
+            "layer_schema": {"version": LAYER_SCHEMA_VERSION, "source_layers": SOURCE_LAYERS},
             "bounds": BOUNDS,
             "min_zoom": MIN_ZOOM,
             "max_zoom": MAX_ZOOM,
             "planetiler": {"version": PLANETILER_VERSION, "sha256": jar_sha256},
             "source_pbf": {"name": pbf.name, "sha256": sha256(pbf)},
             "pipeline_config": {
-                "revision": "unit03-v1",
+                "revision": "unit07d-v2",
                 "sha256": sha256(source_schema_path),
                 "style_template_sha256": sha256(style_template_path),
             },
