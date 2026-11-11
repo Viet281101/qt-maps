@@ -168,3 +168,15 @@ remains allowed.
   `generated/ctest/20261108-07d.log`; no manual app, MapLibre/OpenGL path, or
   benchmark ran.
 - Remote `origin/main` is `0fc791d` (the squash merge of PR #36).
+
+## Documentation Planning
+
+- Issue #43 records the evidence-backed Hanoi cartography audit and staged
+  upgrade plan for the scoped follow-up sequence (#30--#32). PR #44 references
+  it and is `In Progress` in Project #6 under `Post-demo stabilization`. It
+  adds no runtime, package, rendering, or benchmark behavior; the i915 freeze
+  remains in effect.
+- On 2026-11-11, PR #44 was corrected to use the merged 07D product-style
+  baseline: source-controlled class-aware roads are complete; the remaining
+  implementation is atomic #30/#32 package migration followed by #31
+  typography/labels. Its next dependency is the runtime fix in PR #42.
