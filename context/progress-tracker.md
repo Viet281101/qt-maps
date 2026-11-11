@@ -39,6 +39,10 @@ OpenGL path, render benchmark, or GPU experiment.
 - PR [#44](https://github.com/Viet281101/qt-maps/pull/44),
   `docs/hanoi-cartography-upgrade-plan` → `main`, was squash-merged as
   `1c7a05d`.
+- PR [#45](https://github.com/Viet281101/qt-maps/pull/45),
+  `codex/hanoi-v2-contract` → `main`, is open for review. It references #30
+  and #32, and is tracked as `In Progress` in Project #6; it must not close or
+  represent either issue as complete while raster v2/render evidence is frozen.
 - The active follow-up milestone is `Post-demo stabilization`; it has no due
   date until the owner confirms the next delivery target.
 - The Unit 07 remote backups are `origin/chore/07a-repo-structure-maintenance`,
