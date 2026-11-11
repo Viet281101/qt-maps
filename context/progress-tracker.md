@@ -144,6 +144,8 @@ remains allowed.
   `make maplibre-requirements`, a dry-run `make maplibre-qt51518`, and the
   software-backend CTest suite all passed; CTest was 13/13 in 11.72 s. No
   MapLibre rebuild, application window, OpenGL path, or benchmark ran.
+- The isolated `make review` gate then passed after formatting the adjacent
+  software-backend assertion in `app/main.cpp`; no behavior changed.
 
 - The 07C merge commit `5ef2e4a` resolved the `CMakeLists.txt`/`Makefile`
   conflicts by retaining 5.15.13 defaults and dropping the smoke's
