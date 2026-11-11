@@ -13,8 +13,9 @@ preserved in Git history through `e0a8086`.
 
 ## Current Goal
 
-Review PR #38 for the style-only 07D squash. Do not merge it or open a 07E PR
-until the owner confirms.
+Prepare the Qt 5.15.18 MapLibre rebuild target and runtime-selection repair
+for focused review, without running a MapLibre build, opening a window, or
+restarting render/benchmark work. Do not open a 07E PR.
 
 ## Publication Status
 
@@ -31,8 +32,12 @@ until the owner confirms.
 - PR [#37](https://github.com/Viet281101/qt-maps/pull/37),
   `feat/07c-offline-raster-pr` → `main`, was squash-merged as `90366bd`.
 - PR [#38](https://github.com/Viet281101/qt-maps/pull/38),
-  `feat/07d-style-only-pr` → `main`, is open for review; it references #28
-  and #29. The current milestone is expired and no replacement is approved.
+  `feat/07d-style-only-pr` → `main`, was squash-merged as `ef30610`.
+- PR [#42](https://github.com/Viet281101/qt-maps/pull/42),
+  `codex/qt51518-runtime-integration` → `main`, is open for review; it
+  references #41 and is tracked as `In Progress` in Project #6.
+- The active follow-up milestone is `Post-demo stabilization`; it has no due
+  date until the owner confirms the next delivery target.
 - The Unit 07 remote backups are `origin/chore/07a-repo-structure-maintenance`,
   `origin/feat/07b-demo-shell-ui`, `origin/feat/07c-offline-raster`,
   `origin/feat/07d-hanoi-cartography`, and `origin/unit-07e-verify`.
@@ -44,7 +49,7 @@ until the owner confirms.
 | 07A | `chore/07a-repo-structure-maintenance` / `4a61d46` | merged as PR #34 |
 | 07B | `feat/07b-demo-shell-ui` / `e294167` | merged as PR #35 |
 | 07C | `feat/07c-offline-raster-pr` / `90366bd` | merged as PR #37; old branch remains backup |
-| 07D | `feat/07d-style-only-pr` / `aa7f868` | PR #38 open; old branch remains backup |
+| 07D | `feat/07d-style-only-pr` / `aa7f868` | merged as PR #38; old branch remains backup |
 | 07E | `unit-07e-verify` / `50fc763` | pushed; depends on 07D |
 
 `chore/fix-benchmark-qt-runtime` is a separate local follow-up above 07E and
@@ -62,6 +67,10 @@ remains allowed.
 ## Working Rules
 
 - Before each commit run `make QT_EXPECTED_VERSION=5.15.18 test`.
+- If configure or build reports a missing library or development dependency,
+  run `make requirements` first. If it reports a missing package, use
+  `make requirements-apt` to print the reviewed restore and `apt-mark manual`
+  commands; review and run those privileged commands manually before retrying.
 - Use Qt 5 CMake APIs and CMake/Ninja. Do not use Qt 6 CMake APIs.
 - Do not force-push, rewrite pushed history, push to `main`, or delete local
   branches/tags.
@@ -72,22 +81,71 @@ remains allowed.
 
 ## Decisions Waiting for Owner
 
-1. New milestone name and due date after the expired `First Management Demo`
-   milestone; the owner requested a proposal but must approve creation.
-2. Any privileged i915 investigation, GPU configuration change, or restart of
+1. Any privileged i915 investigation, GPU configuration change, or restart of
    render benchmarking.
-3. Atomic integration decision for the 07D cartography work and its associated
-   package migration.
+2. Scope, sequencing, and acceptance evidence for the planned Hanoi
+   cartography contract migration (#30--#32).
 
 ## Next Up
 
-1. The one authorized 07D software-backend CTest passed. Await owner review of
-   PR #38 before a squash merge; do not open 07E first.
+1. Review PR #42, the focused Qt 5.15.18 rebuild/runtime-selection change; do
+   not open 07E first.
 2. Do not restart rendering or benchmark work.
 3. Follow up separately on default-disabled instrumentation/performance-badge
    behavior; do not fold it into 07C.
 
 ## Latest Verification
+
+- The approved ignored Qt 5.15.18 private-header overlay is at
+  `generated/unit-01b/qt51518-private/`. The separate
+  `maplibre-qt51518` Makefile target is intended to configure a fresh Release
+  MapLibre install only when explicitly invoked; it is not part of normal
+  CTest/check/review flows. Its generated-path and Qt-version preconditions are
+  checked before the recipe executes. On 2026-11-09, `make -n` printed the
+  approved configure/build/install sequence and rejected a missing overlay;
+  the one authorized software-backend CTest pass was 11/11 in 11.42 s
+  (`generated/ctest/20261109-maplibre-qt51518-target.log`). No MapLibre build
+  or window/OpenGL/benchmark run occurred.
+- The Qt 5.15.18 MapLibre rebuild later reached compilation under GCC 15.2.0
+  and exposed a non-self-sufficient vendor header missing `<cstdint>`. The
+  isolated target defaults to `-include cstdint` and Ninja keep-going (`-k 0`)
+  so a future owner-authorized build can collect independent compiler failures;
+  neither workaround changes QtMaps application compilation.
+- `make requirements` verifies only normal QtMaps build dependencies.
+  `make maplibre-requirements` adds the private-Qt/ICU checks required solely
+  by the explicit MapLibre rebuild target. Their `*-apt` companions only print
+  reviewed restore and `apt-mark manual` commands, so package installation
+  remains an owner action.
+
+- On 2026-11-08, a clean `ef30610` build reached an incompatible-Qt abort
+  before Scene Graph initialization because `tools/run-demo.sh` prepended the
+  stale `generated/unit-01b/qml-runtime` plugin root and Qt loaded its
+  `sqldrivers/libqsqlite.so`. The runtime-selection repair must use the active
+  Qt 5.15.18 kit and reject a MapLibre payload built against another Qt patch
+  release. No further window, OpenGL, or benchmark run is authorized here.
+- On 2026-11-10, integration retained the rebuild and launcher changes. The
+  Qt 5.15.18 payload's `libQMapLibre.so.3.0.0` has only the `5.15.18` marker,
+  its four MapLibre libraries/plugins resolve Qt and ICU from `/usr`, and
+  `tools/run-demo.sh --print-env` succeeds with that payload. The pipeline
+  check was changed to process substitution so Bash `pipefail` does not turn a
+  successful early `grep -q` match into a `strings` SIGPIPE failure.
+- The one permitted CTest run on 2026-11-10 is logged at
+  `generated/ctest/20261110-qt51518-runtime-integration.log`: 11/13 passed.
+  The stale `build-unit07e-qt51518` tree's smoke executable aborts from a Qt
+  5.15.13/5.15.18 mix, and its obsolete `qtmaps_hanoi_v2_schema_tests` entry
+  names a removed source file. Do not rerun or rebuild without owner approval.
+- On 2026-11-10, the smoke and routing-QML CTest paths were changed to derive
+  the QML runtime and plugin roots from the selected Qt 5.15.18 qmake rather
+  than `generated/unit-01b/qml-runtime`. A Ninja reconfigure and app-only
+  rebuild of `build-qt515` succeeded; its software-backend CTest pass was
+  13/13 in 11.64 s (`generated/ctest/20261110-qt51518-runtime-smoke-fix-ctest.log`).
+- On 2026-11-11, normal QtMaps requirements were split from the private-Qt/ICU
+  requirements of the explicit MapLibre rebuild target. `make requirements`,
+  `make maplibre-requirements`, a dry-run `make maplibre-qt51518`, and the
+  software-backend CTest suite all passed; CTest was 13/13 in 11.72 s. No
+  MapLibre rebuild, application window, OpenGL path, or benchmark ran.
+- The isolated `make review` gate then passed after formatting the adjacent
+  software-backend assertion in `app/main.cpp`; no behavior changed.
 
 - The 07C merge commit `5ef2e4a` resolved the `CMakeLists.txt`/`Makefile`
   conflicts by retaining 5.15.13 defaults and dropping the smoke's

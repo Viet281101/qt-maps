@@ -195,8 +195,8 @@ int main(int argc, char *argv[])
     const bool instrumentationEnabled = !parser.isSet(QStringLiteral("disable-instrumentation"));
     if (qEnvironmentVariableIsSet("QTMAPS_ASSERT_SOFTWARE_BACKEND")) {
         const QString quickBackend = qEnvironmentVariable("QT_QUICK_BACKEND");
-        qInfo().noquote() << QStringLiteral("QTMAPS_CTEST_BACKEND QT_QUICK_BACKEND=%1")
-                                 .arg(quickBackend);
+        qInfo().noquote()
+            << QStringLiteral("QTMAPS_CTEST_BACKEND QT_QUICK_BACKEND=%1").arg(quickBackend);
         if (quickBackend != QStringLiteral("software")) {
             qCritical() << "QTMAPS_ASSERT_SOFTWARE_BACKEND requires QT_QUICK_BACKEND=software";
             return 2;

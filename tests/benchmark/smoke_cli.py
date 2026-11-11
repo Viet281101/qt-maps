@@ -9,17 +9,47 @@ import tempfile
 from pathlib import Path
 
 
+def qmake_query(qmake: Path, key: str) -> str:
+    result = subprocess.run(
+        [str(qmake), "-query", key],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    if result.returncode != 0:
+        raise SystemExit(f"qmake query failed for {key}: {result.stderr.strip()}")
+    value = result.stdout.strip()
+    if not value:
+        raise SystemExit(f"qmake returned an empty value for {key}")
+    return value
+
+
+def selected_qt_runtime(environment: dict[str, str]) -> tuple[Path, Path]:
+    qt_prefix = Path(environment.get("QTMAPS_QT_PREFIX", "/usr")).expanduser().resolve()
+    qmake = qt_prefix / "bin" / "qmake"
+    if not qmake.is_file() or not qmake.stat().st_mode & 0o111:
+        raise SystemExit(f"qmake is not executable under QTMAPS_QT_PREFIX: {qmake}")
+    expected_version = environment.get("QTMAPS_QT_EXPECTED_VERSION", "5.15.18")
+    actual_version = qmake_query(qmake, "QT_VERSION")
+    if actual_version != expected_version:
+        raise SystemExit(
+            f"expected Qt {expected_version} from {qmake}, found {actual_version}"
+        )
+    archdata = Path(qmake_query(qmake, "QT_INSTALL_ARCHDATA"))
+    plugin_root = Path(qmake_query(qmake, "QT_INSTALL_PLUGINS"))
+    if not (archdata / "qml").is_dir():
+        raise SystemExit(f"Qt QML runtime is missing: {archdata / 'qml'}")
+    if not plugin_root.is_dir():
+        raise SystemExit(f"Qt plugin root is missing: {plugin_root}")
+    return archdata, plugin_root
+
+
 def main():
     if len(sys.argv) != 3:
         raise SystemExit("usage: smoke_cli.py APP REPOSITORY_ROOT")
     app = Path(sys.argv[1]).resolve()
     root = Path(sys.argv[2]).resolve()
-    qml_runtime = Path(
-        os.environ.get(
-            "QTMAPS_QML_RUNTIME",
-            root / "generated/unit-01b/qml-runtime/usr/lib/x86_64-linux-gnu/qt5",
-        )
-    ).expanduser().resolve()
+    qml_runtime, qt_plugin_root = selected_qt_runtime(os.environ)
     maplibre = Path(
         os.environ.get(
             "QTMAPS_MAPLIBRE_INSTALL", root / "generated/unit-01b/maplibre-install"
@@ -30,9 +60,10 @@ def main():
         {
             "QT_QPA_PLATFORM": "offscreen",
             "QSG_RENDER_LOOP": "threaded",
+            "QTMAPS_ASSERT_SOFTWARE_BACKEND": "1",
             "LD_LIBRARY_PATH": str(maplibre / "lib"),
             "QT_PLUGIN_PATH": os.pathsep.join(
-                [str(maplibre / "plugins"), str(qml_runtime / "plugins")]
+                [str(maplibre / "plugins"), str(qt_plugin_root)]
             ),
             "QML2_IMPORT_PATH": os.pathsep.join(
                 [str(maplibre / "qml"), str(qml_runtime / "qml")]

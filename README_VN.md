@@ -58,8 +58,10 @@ là hệ thống build có thẩm quyền. Các thao tác thường ngày đư�
 | Kiểm tra trước commit | `make check` | Format, Release test và kiểm tra staged/unstaged diff |
 | Review trước merge | `make review` | Yêu cầu worktree sạch; Release build cô lập và kiểm tra branch diff |
 
-`make run`, `make debug-run` và `make debug-gdb` tự cấu hình runtime path rồi
-khởi chạy đầy đủ map/routing/navigation qua `tools/run-demo.sh`. `make run` đã
+`make run`, `make debug-run` và `make debug-gdb` truy vấn Qt kit đã chọn,
+kiểm tra đúng Qt 5.15.18 rồi khởi chạy qua `tools/run-demo.sh`. Launcher yêu
+cầu payload MapLibre v3.0.0 được build bằng cùng Qt 5.15.18 và sẽ dừng trước
+khi mở cửa sổ nếu payload cũ hoặc thiếu. `make run` đã
 phụ thuộc vào build, vì vậy `make build && make run` vẫn đúng nhưng bị lặp.
 Có thể truyền tham số tùy chọn qua `DEMO_ARGS`:
 
@@ -84,21 +86,42 @@ make test
 make run
 ```
 
+Nếu máy thiếu development dependency Qt thông thường, dùng
+`make requirements-apt`. Riêng target MapLibre rebuild chủ đích dùng
+`make maplibre-requirements-apt` để in thêm dependency private-Qt/ICU. Cả hai
+target chỉ in lệnh `apt install` và `apt-mark manual` đã rà soát, không tự gọi
+`sudo`. Đánh dấu các gói top-level này là manual giúp `apt autoremove` không
+gỡ chuỗi dependency được cài tự động cho chúng.
+
+### Rebuild MapLibre Qt 5.15.18 có chủ đích
+
+`make maplibre-qt51518` là thao tác bảo trì chủ đích, không thuộc `make test`,
+`make check` hay `make review`. Target này cấu hình mới MapLibre Native Qt
+Release với Qt 5.15.18 tại `/usr`, dùng private-header overlay ignored đã duyệt
+ở `generated/unit-01b/qt51518-private/`, cài vào
+`generated/unit-01b/maplibre-install-qt51518/`, và từ chối core library không
+có marker `5.15.18`. Ước lượng lịch sử là khoảng 16 phút và peak RSS 1,1 GiB.
+Chỉ override `MAPLIBRE_SRC`, `MAPLIBRE_BUILD_NEW`, `MAPLIBRE_INSTALL_NEW` hoặc
+`QT_PRIVATE_OVERLAY` khi chủ đích dùng các đường dẫn generated riêng.
+
+Target mặc định `MAPLIBRE_EXTRA_CXX_FLAGS=-include cstdint` như workaround
+cô lập cho các header MapLibre v3 không tự đủ dưới GCC 15. Mặc định
+`MAPLIBRE_BUILD_KEEP_GOING=1` truyền `-k 0` cho Ninja để thu các lỗi compile độc
+lập trong một lượt build đã được chủ dự án duyệt; đặt `0` để dừng ở lỗi đầu.
+
 MapLibre development install và các Qt QML/runtime plugin hiện là dependency local nằm ngoài Git. Lệnh smoke local đã chạy thành công dưới đây mở package Hà Nội có checksum trong 15 giây; evidence Unit 03 bọc lệnh này trong network namespace dùng cho kiểm chứng mất mạng:
 
+MapLibre development install là dependency local nằm ngoài Git. Cần rebuild
+payload bằng Qt 5.15.18 trước khi dùng `make run`; launcher lấy QML/plugin path
+từ `qmake` của kit đó, không lấy từ `generated/unit-01b/qml-runtime`. Lệnh
+chính thức là:
+
 ```bash
-LD_LIBRARY_PATH="$PWD/generated/unit-01b/maplibre-install/lib" \
-QT_PLUGIN_PATH="$PWD/generated/unit-01b/maplibre-install/plugins:$PWD/generated/unit-01b/qml-runtime/usr/lib/x86_64-linux-gnu/qt5/plugins" \
-QML2_IMPORT_PATH="$PWD/generated/unit-01b/maplibre-install/qml:$PWD/generated/unit-01b/qml-runtime/usr/lib/x86_64-linux-gnu/qt5/qml" \
-QSG_RENDER_LOOP=threaded \
-./build-qt515/qtmaps --unit03-local-map --navigation-benchmark \
-  --map-package data/packages/current --exit-after 15 \
-  --network-mode network-namespace-offline \
-  --dataset-id hanoi-20261024-v1 \
-  --dataset-coverage "Hanoi bounds 105.78,20.97,105.90,21.10; z12-z15"
+make run
 ```
 
-Benchmark 120 giây đã ghi nhận dùng cùng lệnh và các biến runtime trên, thay `--exit-after 15` bằng:
+Lệnh benchmark lịch sử vẫn được ghi trong evidence benchmark; chúng phải dùng
+cùng runtime Qt do launcher chọn và payload MapLibre đã xác minh khớp version:
 
 ```bash
 --benchmark-output /tmp/qtmaps-unit03.csv \

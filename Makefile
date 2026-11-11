@@ -20,19 +20,44 @@ HANOI_PBF ?= generated/unit-01b/source/vietnam-latest.osm.pbf
 PLANETILER_JAR ?= generated/unit-01b/tools/planetiler.jar
 MAP_PACKAGE ?= data/packages/current
 MAPLIBRE_INSTALL ?= generated/unit-01b/maplibre-install
+MAPLIBRE_SRC ?= generated/unit-01b/maplibre-native-qt
+MAPLIBRE_BUILD_NEW ?= generated/unit-01b/maplibre-build-qt51518
+MAPLIBRE_INSTALL_NEW ?= generated/unit-01b/maplibre-install-qt51518
+QT_PRIVATE_OVERLAY ?= generated/unit-01b/qt51518-private
+MAPLIBRE_EXTRA_CXX_FLAGS ?= -include cstdint
+MAPLIBRE_BUILD_KEEP_GOING ?= 1
+QTMAPS_SYSTEM_PACKAGES := qtbase5-dev qtdeclarative5-dev qtlocation5-dev qtpositioning5-dev
+MAPLIBRE_SYSTEM_PACKAGES := $(QTMAPS_SYSTEM_PACKAGES) qtbase5-private-dev qtdeclarative5-private-dev libicu-dev
 QML_RUNTIME ?= $(shell "$(QMAKE)" -query QT_INSTALL_ARCHDATA 2>/dev/null)
 QT_RUNTIME_PLUGIN_PATH ?= $(shell "$(QMAKE)" -query QT_INSTALL_PLUGINS 2>/dev/null)
 
 QMAKE := $(QT_PREFIX)/bin/qmake
 QTMAPS := $(BUILD_DIR)/qtmaps
+MAPLIBRE_NINJA_KEEP_GOING_ARGS := $(if $(filter 0 false no off,$(MAPLIBRE_BUILD_KEEP_GOING)),,-- -k 0)
 
-.PHONY: help requirements configure build test run run-app benchmark debug-build debug-run debug-gdb check \
+ifneq (,$(filter maplibre-qt51518,$(MAKECMDGOALS)))
+ifeq ($(wildcard $(QT_PRIVATE_OVERLAY)),)
+$(error maplibre-qt51518 requires Qt 5.15.18 private-header overlay directory: $(QT_PRIVATE_OVERLAY))
+endif
+ifeq ($(wildcard $(QT_PRIVATE_OVERLAY)/qt5-private-targets.cmake),)
+$(error maplibre-qt51518 requires $(QT_PRIVATE_OVERLAY)/qt5-private-targets.cmake)
+endif
+MAPLIBRE_QT51518_VERSION := $(shell "$(QMAKE)" -query QT_VERSION 2>/dev/null)
+ifneq ($(MAPLIBRE_QT51518_VERSION),5.15.18)
+$(error maplibre-qt51518 requires qmake Qt 5.15.18 at $(QMAKE), found '$(MAPLIBRE_QT51518_VERSION)')
+endif
+endif
+
+.PHONY: help requirements requirements-apt maplibre-requirements maplibre-requirements-apt configure build test run run-app benchmark debug-build debug-run debug-gdb check \
 	review format format-check diagnostic-tiles vector-fixture vector-real-style hanoi-package hanoi-raster-render hanoi-raster-package \
-	raster serve-diagnostic-tiles serve-vector-fixture run-mapboxgl-probe clean clean-old-builds
+	raster serve-diagnostic-tiles serve-vector-fixture run-mapboxgl-probe maplibre-qt51518 clean clean-old-builds
 
 help:
 	@echo "QtMaps development targets"
-	@echo "  make requirements          Verify the Qt/C++ toolchain and helper tools"
+	@echo "  make requirements          Verify the Qt/C++ toolchain for normal QtMaps builds"
+	@echo "  make requirements-apt      Print normal-build APT restore/manual-mark commands"
+	@echo "  make maplibre-requirements Verify private Qt/ICU prerequisites for a MapLibre rebuild"
+	@echo "  make maplibre-requirements-apt Print MapLibre rebuild APT restore/manual-mark commands"
 	@echo "  make configure             Configure a CMake build with Ninja"
 	@echo "  make build                 Configure and build QtMaps"
 	@echo "  make test                  Build and run CTest with failures shown"
@@ -54,12 +79,14 @@ help:
 	@echo "  make hanoi-raster-package  Package locally rendered z12-z16 PNG tiles; requires RASTER_TILES"
 	@echo "  make hanoi-raster-render   Render local z12-z16 PNG tiles from MAP_PACKAGE"
 	@echo "  make raster                Re-render and package raster after style/schema migration"
+	@echo "  make maplibre-qt51518      Deliberately rebuild MapLibre for Qt 5.15.18 (~16 min, ~1.1 GiB peak RSS)"
 	@echo "  make serve-vector-fixture  Serve the vector fixture on 127.0.0.1:8766"
 	@echo "  make run-mapboxgl-probe    Run probe (vector fixture server must be separate)"
 	@echo "  make clean                 Clean compiled outputs through CMake"
 	@echo "  make clean-old-builds      Remove other root build/build-* CMake directories; keep BUILD_DIR"
 	@echo
 	@echo "Overrides: QT_PREFIX, BUILD_DIR, BUILD_TYPE, DEBUG_BUILD_DIR, REVIEW_BUILD_DIR, DEMO_ARGS, APP_ARGS, BENCHMARK_ARGS, GDB, CLANG_FORMAT"
+	@echo "MapLibre rebuild overrides: MAPLIBRE_SRC, MAPLIBRE_BUILD_NEW, MAPLIBRE_INSTALL_NEW, QT_PRIVATE_OVERLAY, MAPLIBRE_EXTRA_CXX_FLAGS, MAPLIBRE_BUILD_KEEP_GOING"
 
 requirements:
 	@command -v "$(CMAKE)" >/dev/null || { echo "error: CMake is required" >&2; exit 1; }
@@ -73,7 +100,40 @@ requirements:
 			echo "error: expected Qt $(QT_EXPECTED_VERSION) at $(QT_PREFIX), found $$qt_version" >&2; \
 			exit 1; \
 		}
-	@echo "requirements: OK (Qt $(QT_EXPECTED_VERSION), CMake, Ninja, ccache, g++; Python 3 for tools)"
+	@missing=""; \
+		for package in $(QTMAPS_SYSTEM_PACKAGES); do \
+			dpkg-query -W -f='$${db:Status-Status}' "$$package" 2>/dev/null | grep -Fxq installed || missing="$$missing $$package"; \
+		done; \
+		test -z "$$missing" || { \
+			echo "error: missing required development packages:$$missing" >&2; \
+			echo "hint: run make requirements-apt, then execute the printed install command" >&2; \
+			exit 1; \
+		}
+	@echo "requirements: OK (Qt $(QT_EXPECTED_VERSION), normal Qt development packages, CMake, Ninja, ccache, g++; Python 3 for tools)"
+
+requirements-apt:
+	@echo "This target does not run APT or sudo. Review and execute manually:"
+	@echo "  sudo apt install --no-install-recommends $(QTMAPS_SYSTEM_PACKAGES)"
+	@echo "  sudo apt-mark manual $(QTMAPS_SYSTEM_PACKAGES)"
+
+maplibre-requirements: requirements
+	@missing=""; \
+		for package in qtbase5-private-dev qtdeclarative5-private-dev libicu-dev; do \
+			dpkg-query -W -f='$${db:Status-Status}' "$$package" 2>/dev/null | grep -Fxq installed || missing="$$missing $$package"; \
+		done; \
+		test -z "$$missing" || { \
+			echo "error: missing MapLibre rebuild development packages:$$missing" >&2; \
+			echo "hint: run make maplibre-requirements-apt, then execute the printed install command" >&2; \
+			exit 1; \
+		}
+	@test -f /usr/include/unicode/uchar.h || { echo "error: ICU development header missing: /usr/include/unicode/uchar.h" >&2; exit 1; }
+	@test -e /usr/lib/x86_64-linux-gnu/libicuuc.so || { echo "error: ICU development library missing: /usr/lib/x86_64-linux-gnu/libicuuc.so" >&2; exit 1; }
+	@echo "maplibre-requirements: OK (private Qt/ICU development packages for the explicit rebuild target)"
+
+maplibre-requirements-apt:
+	@echo "This target does not run APT or sudo. Review and execute manually:"
+	@echo "  sudo apt install --no-install-recommends $(MAPLIBRE_SYSTEM_PACKAGES)"
+	@echo "  sudo apt-mark manual $(MAPLIBRE_SYSTEM_PACKAGES)"
 
 configure: requirements
 	"$(CMAKE)" -S . -B "$(BUILD_DIR)" -G Ninja \
@@ -84,6 +144,29 @@ configure: requirements
 
 build: configure
 	"$(CMAKE)" --build "$(BUILD_DIR)" --parallel
+
+maplibre-qt51518: maplibre-requirements
+	@echo "maplibre-qt51518: intentional Qt 5.15.18 rebuild; historical estimate ~16 min and ~1.1 GiB peak RSS"
+	"$(CMAKE)" --fresh -S "$(MAPLIBRE_SRC)" -B "$(MAPLIBRE_BUILD_NEW)" -G Ninja \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_PREFIX_PATH=/usr \
+		-DQt5_DIR=/usr/lib/x86_64-linux-gnu/cmake/Qt5 \
+		-DQT_VERSION_MAJOR=5 \
+		-DMLN_QT_WITH_WIDGETS=OFF \
+		-DCMAKE_CXX_FLAGS="$(MAPLIBRE_EXTRA_CXX_FLAGS)" \
+		-DCMAKE_PROJECT_INCLUDE="$(abspath $(QT_PRIVATE_OVERLAY)/qt5-private-targets.cmake)" \
+		-DCMAKE_INSTALL_PREFIX="$(abspath $(MAPLIBRE_INSTALL_NEW))"
+	"$(CMAKE)" --build "$(MAPLIBRE_BUILD_NEW)" --parallel 2 $(MAPLIBRE_NINJA_KEEP_GOING_ARGS)
+	"$(CMAKE)" --install "$(MAPLIBRE_BUILD_NEW)"
+	@test -f "$(MAPLIBRE_INSTALL_NEW)/lib/libQMapLibre.so.3.0.0" || { \
+		echo "error: MapLibre install is missing libQMapLibre.so.3.0.0 under $(MAPLIBRE_INSTALL_NEW)/lib" >&2; \
+		exit 1; \
+	}
+	@strings "$(MAPLIBRE_INSTALL_NEW)/lib/libQMapLibre.so.3.0.0" | grep -Fxq "5.15.18" || { \
+		echo "error: MapLibre payload does not contain the required Qt 5.15.18 version marker" >&2; \
+		exit 1; \
+	}
+	@echo "maplibre-qt51518: installed payload contains the Qt 5.15.18 marker"
 
 test: build
 	@test -f "$(QT_RUNTIME_PLUGIN_PATH)/sqldrivers/libqsqlite.so" || { \
@@ -96,7 +179,8 @@ test: build
 		ctest --test-dir "$(BUILD_DIR)" --output-on-failure
 
 run: build
-	QTMAPS_APP="$(abspath $(QTMAPS))" ./tools/run-demo.sh $(DEMO_ARGS)
+	QTMAPS_APP="$(abspath $(QTMAPS))" QTMAPS_QT_PREFIX="$(QT_PREFIX)" \
+		QTMAPS_MAPLIBRE_INSTALL="$(abspath $(MAPLIBRE_INSTALL))" ./tools/run-demo.sh $(DEMO_ARGS)
 
 run-app: build
 	"$(QTMAPS)" $(APP_ARGS)
@@ -109,14 +193,16 @@ debug-build:
 	+$(MAKE) BUILD_DIR="$(DEBUG_BUILD_DIR)" BUILD_TYPE=Debug build
 
 debug-run: debug-build
-	QTMAPS_APP="$(abspath $(DEBUG_BUILD_DIR)/qtmaps)" ./tools/run-demo.sh $(DEMO_ARGS)
+	QTMAPS_APP="$(abspath $(DEBUG_BUILD_DIR)/qtmaps)" QTMAPS_QT_PREFIX="$(QT_PREFIX)" \
+		QTMAPS_MAPLIBRE_INSTALL="$(abspath $(MAPLIBRE_INSTALL))" ./tools/run-demo.sh $(DEMO_ARGS)
 
 debug-gdb: debug-build
 	@command -v "$(GDB)" >/dev/null || { \
 		echo "error: GDB is required; set GDB to its executable" >&2; \
 		exit 1; \
 	}
-	QTMAPS_APP="$(abspath $(DEBUG_BUILD_DIR)/qtmaps)" QTMAPS_GDB=1 QTMAPS_GDB_BIN="$(GDB)" \
+	QTMAPS_APP="$(abspath $(DEBUG_BUILD_DIR)/qtmaps)" QTMAPS_QT_PREFIX="$(QT_PREFIX)" \
+		QTMAPS_MAPLIBRE_INSTALL="$(abspath $(MAPLIBRE_INSTALL))" QTMAPS_GDB=1 QTMAPS_GDB_BIN="$(GDB)" \
 		./tools/run-demo.sh $(DEMO_ARGS)
 
 check: format-check test
