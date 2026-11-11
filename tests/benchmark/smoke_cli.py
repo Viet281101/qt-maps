@@ -60,6 +60,7 @@ def main():
         {
             "QT_QPA_PLATFORM": "offscreen",
             "QSG_RENDER_LOOP": "threaded",
+            "QTMAPS_ASSERT_SOFTWARE_BACKEND": "1",
             "LD_LIBRARY_PATH": str(maplibre / "lib"),
             "QT_PLUGIN_PATH": os.pathsep.join(
                 [str(maplibre / "plugins"), str(qt_plugin_root)]
