@@ -17,15 +17,23 @@ Item {
                                                && routingController.routeAvailable)
     signal togglePerformanceOverlayRequested()
 
+    function applyCamera(state) {
+        if (!map)
+            return
+        map.center = QtPositioning.coordinate(state.latitude, state.longitude)
+        map.zoomLevel = state.zoom
+        map.bearing = state.bearing
+        map.tilt = state.tilt
+    }
+
     function recenterNavigation() {
         if (!map || !routeNavigationController.active
                 || !routeNavigationController.coordinate.isValid)
             return
-        map.center = routeNavigationController.coordinate
-        map.bearing = routeNavigationController.bearing
-        map.tilt = 45
-        if (map.zoomLevel < 16)
-            map.zoomLevel = 16
+        applyCamera(boundedCameraController.navigationCamera(
+                        routeNavigationController.coordinate.latitude,
+                        routeNavigationController.coordinate.longitude,
+                        routeNavigationController.bearing, map.zoomLevel))
     }
 
     function updateTravelledRoute() {
@@ -105,8 +113,9 @@ Item {
         var centerShiftPixels = routeTargetX - map.width / 2
         var mapCenterLongitude = routeCenterLongitude
                 - centerShiftPixels * 360 / worldPixels
-        map.zoomLevel = Math.max(map.minimumZoomLevel, fittedZoom)
-        map.center = QtPositioning.coordinate(routeCenterLatitude, mapCenterLongitude)
+        applyCamera(boundedCameraController.normalizedCamera(
+                        routeCenterLatitude, mapCenterLongitude,
+                        Math.max(map.minimumZoomLevel, fittedZoom), map.bearing, map.tilt))
     }
 
     Loader {
@@ -410,8 +419,9 @@ Item {
         function onCameraCommand(coordinate, zoomLevel, bearing) {
             if (!canvas.map)
                 return
-            map.center = coordinate
-            map.zoomLevel = zoomLevel
+            canvas.applyCamera(boundedCameraController.normalizedCamera(
+                                 coordinate.latitude, coordinate.longitude,
+                                 zoomLevel, map.bearing, map.tilt))
             map.bearing = bearing
         }
     }

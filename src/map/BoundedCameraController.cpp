@@ -27,6 +27,32 @@ qreal normalizedBearing(qreal bearing)
 
 } // namespace
 
+BoundedCameraController::BoundedCameraController(QObject *parent) : QObject(parent) {}
+
+QVariantMap BoundedCameraController::normalizedCamera(qreal latitude, qreal longitude,
+                                                       qreal zoom, qreal bearing, qreal tilt) const
+{
+    const CameraState state = normalize({QGeoCoordinate(latitude, longitude), zoom, bearing, tilt});
+    return {{QStringLiteral("latitude"), state.center.latitude()},
+            {QStringLiteral("longitude"), state.center.longitude()},
+            {QStringLiteral("zoom"), state.zoom},
+            {QStringLiteral("bearing"), state.bearing},
+            {QStringLiteral("tilt"), state.tilt}};
+}
+
+QVariantMap BoundedCameraController::navigationCamera(qreal latitude, qreal longitude,
+                                                       qreal bearing, qreal currentZoom) const
+{
+    CameraState current = overview();
+    current.zoom = currentZoom;
+    const CameraState state = navigationFollow(QGeoCoordinate(latitude, longitude), bearing, current);
+    return {{QStringLiteral("latitude"), state.center.latitude()},
+            {QStringLiteral("longitude"), state.center.longitude()},
+            {QStringLiteral("zoom"), state.zoom},
+            {QStringLiteral("bearing"), state.bearing},
+            {QStringLiteral("tilt"), state.tilt}};
+}
+
 CameraState BoundedCameraController::overview()
 {
     CameraState state;

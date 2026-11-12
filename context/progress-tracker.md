@@ -14,8 +14,8 @@ preserved in Git history through `e0a8086`.
 ## Current Goal
 
 Implement Unit 08's bounded-data camera controller (#40) from current `main`.
-The initial pure bounds/normalization/navigation-follow controller and its
-non-GPU tests are present; QML intent wiring remains the next slice.
+The pure controller and non-GPU tests now normalize QML route-fit, focus,
+recenter, and navigation-follow requests; visual/GPU review remains separate.
 
 ## Publication Status
 
