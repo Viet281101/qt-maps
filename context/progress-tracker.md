@@ -43,6 +43,11 @@ render/benchmark scope.
   `codex/hanoi-v2-contract` → `main`, was squash-merged as `8fdfd3f`. Its
   Project #6 item is `Done`; #30 is closed/Done and #32 remains In Progress
   for its broader verification scope.
+- PR [#46](https://github.com/Viet281101/qt-maps/pull/46),
+  `codex/hanoi-vietnamese-labels` → `main`, is a draft linked to #31/#32,
+  assigned to Viet281101, and tracked In Progress/P1/After Demo in Project #6.
+  It must remain draft until a matching v3 raster and graphical review are
+  explicitly authorized and recorded.
 - The active follow-up milestone is `Post-demo stabilization`; it has no due
   date until the owner confirms the next delivery target.
 - The Unit 07 remote backups are `origin/chore/07a-repo-structure-maintenance`,
