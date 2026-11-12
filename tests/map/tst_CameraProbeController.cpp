@@ -7,6 +7,7 @@
 using qtmaps::diagnostics::CameraProbeController;
 using qtmaps::map::BoundedCameraController;
 using qtmaps::map::CameraState;
+using qtmaps::map::CameraViewport;
 
 class CameraProbeControllerTest final : public QObject
 {
@@ -77,6 +78,38 @@ private slots:
         QCOMPARE(followed.zoom, BoundedCameraController::kNavigationZoom);
         QCOMPARE(followed.bearing, 45.0);
         QCOMPARE(followed.tilt, 45.0);
+    }
+
+    void fitsRouteWithPanelSafePadding()
+    {
+        const CameraViewport viewport = {1366.0, 768.0, 362.0, 48.0, 32.0, 32.0};
+        CameraState fitted;
+        QVERIFY(BoundedCameraController::routeFit(QGeoCoordinate(21.0000, 105.8000),
+                                                  QGeoCoordinate(21.0500, 105.8500), viewport,
+                                                  BoundedCameraController::overview(), &fitted));
+        QVERIFY(BoundedCameraController::isWithinBounds(fitted.center));
+        QVERIFY(fitted.zoom >= BoundedCameraController::kMinimumZoom);
+        QVERIFY(fitted.zoom <= BoundedCameraController::kMaximumZoom);
+        QVERIFY(fitted.center.longitude() < 105.8250);
+
+        CameraState repeated;
+        QVERIFY(BoundedCameraController::routeFit(QGeoCoordinate(21.0000, 105.8000),
+                                                  QGeoCoordinate(21.0500, 105.8500), viewport,
+                                                  BoundedCameraController::overview(), &repeated));
+        QCOMPARE(repeated.center.latitude(), fitted.center.latitude());
+        QCOMPARE(repeated.center.longitude(), fitted.center.longitude());
+        QCOMPARE(repeated.zoom, fitted.zoom);
+    }
+
+    void rejectsDegenerateRouteFitInputs()
+    {
+        const CameraViewport viewport = {900.0, 580.0, 48.0, 48.0, 32.0, 32.0};
+        CameraState result = BoundedCameraController::overview();
+        QVERIFY(!BoundedCameraController::routeFit(QGeoCoordinate(21.02, 105.82),
+                                                   QGeoCoordinate(21.02, 105.82), viewport, result,
+                                                   &result));
+        QCOMPARE(result.center.latitude(), BoundedCameraController::overview().center.latitude());
+        QCOMPARE(result.center.longitude(), BoundedCameraController::overview().center.longitude());
     }
 };
 

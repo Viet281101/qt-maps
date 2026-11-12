@@ -15,6 +15,16 @@ struct CameraState
     qreal tilt = 0.0;
 };
 
+struct CameraViewport
+{
+    qreal width = 0.0;
+    qreal height = 0.0;
+    qreal leftPadding = 0.0;
+    qreal rightPadding = 0.0;
+    qreal topPadding = 0.0;
+    qreal bottomPadding = 0.0;
+};
+
 class BoundedCameraController final : public QObject
 {
     Q_OBJECT
@@ -25,12 +35,20 @@ public:
 
     static CameraState overview();
     static CameraState normalize(const CameraState &requested);
+    static bool routeFit(const QGeoCoordinate &southwest, const QGeoCoordinate &northeast,
+                         const CameraViewport &viewport, const CameraState &current,
+                         CameraState *result);
     static CameraState navigationFollow(const QGeoCoordinate &coordinate, qreal bearing,
                                         const CameraState &current);
     static bool isWithinBounds(const QGeoCoordinate &coordinate);
     explicit BoundedCameraController(QObject *parent = nullptr);
+    Q_INVOKABLE QVariantMap overviewCamera() const;
     Q_INVOKABLE QVariantMap normalizedCamera(qreal latitude, qreal longitude, qreal zoom,
                                              qreal bearing, qreal tilt) const;
+    Q_INVOKABLE QVariantMap routeFitCamera(qreal south, qreal north, qreal west, qreal east,
+                                           qreal width, qreal height, qreal leftPadding,
+                                           qreal rightPadding, qreal topPadding,
+                                           qreal bottomPadding, qreal bearing, qreal tilt) const;
     Q_INVOKABLE QVariantMap navigationCamera(qreal latitude, qreal longitude, qreal bearing,
                                              qreal currentZoom) const;
 };

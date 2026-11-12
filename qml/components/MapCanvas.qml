@@ -18,12 +18,16 @@ Item {
     signal togglePerformanceOverlayRequested()
 
     function applyCamera(state) {
-        if (!map)
+        if (!map || !state.valid)
             return
         map.center = QtPositioning.coordinate(state.latitude, state.longitude)
         map.zoomLevel = state.zoom
         map.bearing = state.bearing
         map.tilt = state.tilt
+    }
+
+    function applyOverviewCamera() {
+        applyCamera(boundedCameraController.overviewCamera())
     }
 
     function settleUserCamera() {
@@ -103,33 +107,10 @@ Item {
                                          : panelWidth + Theme.spaceLg * 2
         var rightPadding = Theme.spaceLg * 3
         var verticalPadding = Theme.spaceLg * 2
-        var usableWidth = Math.max(240, map.width - leftPadding - rightPadding)
-        var usableHeight = Math.max(240, map.height - verticalPadding * 2)
-        var longitudeSpan = Math.max(0.000001, maxLongitude - minLongitude)
-        function mercatorY(latitude) {
-            var radians = latitude * Math.PI / 180
-            return (1 - Math.log(Math.tan(radians) + 1 / Math.cos(radians))
-                    / Math.PI) / 2
-        }
-        function latitudeFromMercator(y) {
-            return Math.atan(Math.sinh(Math.PI * (1 - 2 * y))) * 180 / Math.PI
-        }
-        var northY = mercatorY(maxLatitude)
-        var southY = mercatorY(minLatitude)
-        var latitudeSpan = Math.max(0.000001, southY - northY)
-        var zoomX = Math.log(usableWidth * 360 / (256 * longitudeSpan)) / Math.LN2
-        var zoomY = Math.log(usableHeight / (256 * latitudeSpan)) / Math.LN2
-        var fittedZoom = Math.min(zoomX, zoomY, map.maximumZoomLevel)
-        var worldPixels = 256 * Math.pow(2, fittedZoom)
-        var routeCenterLongitude = (minLongitude + maxLongitude) / 2
-        var routeCenterLatitude = latitudeFromMercator((northY + southY) / 2)
-        var routeTargetX = leftPadding + usableWidth / 2
-        var centerShiftPixels = routeTargetX - map.width / 2
-        var mapCenterLongitude = routeCenterLongitude
-                - centerShiftPixels * 360 / worldPixels
-        applyCamera(boundedCameraController.normalizedCamera(
-                        routeCenterLatitude, mapCenterLongitude,
-                        Math.max(map.minimumZoomLevel, fittedZoom), map.bearing, map.tilt))
+        applyCamera(boundedCameraController.routeFitCamera(
+                        minLatitude, maxLatitude, minLongitude, maxLongitude,
+                        map.width, map.height, leftPadding, rightPadding,
+                        verticalPadding, verticalPadding, map.bearing, map.tilt))
     }
 
     Loader {
@@ -208,6 +189,7 @@ Item {
                 } else {
                     activeMapType = supportedMapTypes[0]
                 }
+                canvas.applyOverviewCamera()
                 routeRefreshTimer.restart()
                 benchmarkScenarioController.notifyMapReady()
             }
@@ -458,8 +440,9 @@ Item {
         function onFocusCoordinateRequested(coordinate, zoomLevel) {
             if (!canvas.map)
                 return
-            map.center = coordinate
-            map.zoomLevel = zoomLevel
+            canvas.applyCamera(boundedCameraController.normalizedCamera(
+                                     coordinate.latitude, coordinate.longitude,
+                                     zoomLevel, map.bearing, map.tilt))
         }
     }
 

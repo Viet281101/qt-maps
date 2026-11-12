@@ -33,6 +33,23 @@ The source of truth is the active validated map package manifest. A missing,
 invalid, or incompatible package leaves the existing fail-closed map state in
 place; it must not silently use broad Vietnam or world bounds.
 
+### Camera constants
+
+The controller reads the Hanoi extent from `MapPackageContract`: west `105.78`,
+south `20.97`, east `105.90`, and north `21.10`. Its overview is the extent
+midpoint (`21.035`, `105.84`), zoom `14`, bearing `0`, and tilt `0`. Every
+camera request is clamped to zoom `12` through `18`, bearing `[0, 360)`, and
+tilt `0` through `60` degrees.
+
+Route fitting receives an antimeridian-free latitude/longitude bounding box
+and the current map viewport in Qt Quick logical pixels. `MapCanvas` supplies
+left padding of `panelWidth + 32 px` while the route panel is visible (or
+`16 px` while collapsed), right padding `48 px`, and top/bottom padding
+`32 px`. The pure controller calculates the Web-Mercator fit and center shift;
+it rejects an empty, degenerate, non-finite, or non-positive usable viewport
+without changing the map. The resulting camera is normalized once before QML
+applies it.
+
 | Intent | Trigger | Required behavior |
 | --- | --- | --- |
 | `initial` | package becomes ready | use documented Hanoi overview camera |
