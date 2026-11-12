@@ -13,8 +13,7 @@ preserved in Git history through `e0a8086`.
 
 ## Current Goal
 
-Publish the final #32 evidence-only verification PR from current `main` to
-close Unit 07 without reviving the archived 07E branch.
+Plan Unit 08's bounded-data camera controller (#40) from current `main`.
 
 ## Publication Status
 
@@ -94,8 +93,8 @@ without another explicit owner instruction; the recorded measurements remain sco
 
 ## Next Up
 
-1. Publish the evidence-only #32 PR; merge closes Unit 07.
-2. Keep #39/#40 as separately authorized post-demo work.
+1. Unit 07 is complete: PR #47 merged, #32 closed/Done.
+2. Plan #40 before #39; both remain separately authorized post-demo work.
 
 ## Latest Verification
 
