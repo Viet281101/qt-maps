@@ -148,8 +148,9 @@ bool MapPackageManifest::loadAndValidate(const QString &packagePath, MapPackageM
 
     const QJsonObject files = object.value(QStringLiteral("files")).toObject();
     const QStringList required = {
-        QStringLiteral("tiles.mbtiles"), QStringLiteral("style/style.json"),
-        QStringLiteral("sprites/sprite.json"), QStringLiteral("sprites/sprite.png")};
+        QStringLiteral("tiles.mbtiles"),          QStringLiteral("style/style.json"),
+        QStringLiteral("sprites/sprite.json"),    QStringLiteral("sprites/sprite.png"),
+        QStringLiteral("sprites/sprite@2x.json"), QStringLiteral("sprites/sprite@2x.png")};
     for (auto iterator = files.constBegin(); iterator != files.constEnd(); ++iterator) {
         const QString relativePath = iterator.key();
         const QJsonObject fileEntry = iterator.value().toObject();

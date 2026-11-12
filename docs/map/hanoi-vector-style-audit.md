@@ -8,8 +8,8 @@ Unit 07D replaced the former synthetic five-pixel road presentation with a
 source-controlled, class- and zoom-aware Hanoi product style. The active source
 and runtime contract now require `qtmaps-style-v2` with five bounded source
 layers. The ignored v2 vector package is generated from the approved local PBF;
-the matching raster package still needs regeneration before raster fallback can
-show this cartography. An existing v1 package is rejected explicitly.
+the matching raster package has been regenerated and runtime-tested. An
+existing v1 package is rejected explicitly.
 There is no evidence that a renderer defect is needed to explain the remaining
 typography/label omission.
 
@@ -35,11 +35,13 @@ typography/label omission.
 ## Remaining gap
 
 The checked-in v2 schema and style are coupled to the manifest validators. The
-local `hanoi-20261111-v2-r1` vector package was generated with the pinned
+local `hanoi-20261111-v2-r2` vector package was generated with the pinned
 Planetiler JAR, two threads, a 6 GiB heap cap, and no network access; it
-contains all five declared vector layers. Its matching raster package remains
-blocked by the i915 render freeze, so the runtime rejects stale raster v1 rather
-than presenting an inconsistent fallback.
+contains all five declared vector layers. Its matching
+`hanoi-raster-20261111-v2-r2` package contains 847 256×256 tiles bound to the
+same vector manifest. A 1366×768 vector → raster → vector runtime review
+completed without a HiDPI sprite request failure and released raster resources
+on return to vector.
 
 ## Follow-up sequence
 
@@ -50,9 +52,10 @@ than presenting an inconsistent fallback.
 2. **#31, separate typography and labels:** select and document a licensed
    Vietnamese font, generate glyph ranges reproducibly, then enable bounded
    road/place labels with collision and zoom rules.
-3. **Visual/performance evidence:** capture fixed camera reviews and run the
-   locked Release matrix only after explicit owner approval lifts the i915
-   render-benchmark freeze. Historical results are not current evidence.
+3. **Visual/performance evidence:** owner-authorized focused v2 direct-GPU
+   pan/zoom and real-Valhalla navigation runs now pass their locked thresholds.
+   A full Release matrix or soak remains outside this authorization while the
+   i915 blocker is open.
 
 ## Non-goals
 

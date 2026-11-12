@@ -10,8 +10,9 @@
 - License: Open Database License 1.0. The product always displays
   `© OpenStreetMap contributors, ODbL 1.0`.
 - Renderer: dynamically linked MapLibre Native Qt 3.0.0 using the validated
-  `hanoi-20261024-v1` vector package and `qtmaps-hanoi-v1` style. Rendering and
-  serving use loopback only; no public raster/vector tile endpoint is contacted.
+  `hanoi-20261111-v2-r2` vector package and `qtmaps-hanoi-v2` style. Rendering
+  and serving use loopback only; no public raster/vector tile endpoint is
+  contacted.
 
 ## Coverage and measured package
 
@@ -31,19 +32,23 @@ strict subset of the Valhalla graph bbox
 | 16 | 621 |
 | **Total** | **847** |
 
-The 2026-10-31 provisional pre-07D render took 543.626 seconds. Its immutable
-MBTiles is 27,054,080 bytes (25.80 MiB), well below the 256 MiB review cap, with
-SHA-256 `26a18c4ba04ad4862a1a50e23ca19ca84ea02a23e0ae6665df060ffca5c2d4e7`.
-Two independent packaging runs produced identical manifest and MBTiles bytes;
-the manifest SHA-256 is
-`f2cfd074c36ebf50c506dcd3dbf43b4f4fbfb281bcc1789d048d75ec6076919c`.
+The current 2026-11-11 v2 render produced all 847 tiles in 230.734 seconds.
+It detected a 2× HiDPI window capture and downsampled each exact integral
+capture to the required 256×256 tile; unexpected sizes remain a hard error.
+The immutable v2 MBTiles is 15,831,040 bytes (15.10 MiB), well below the 256
+MiB review cap, with SHA-256
+`de4b199a708ce5ca1d1607919e3c2609bfa8298c6252f1aba0bba2a144fc0f08`.
+Its vector binding is `hanoi-20261111-v2-r2`, vector manifest SHA-256
+`41370119febcdb3acc70134073837602a5647fbae6e6d60282f8a3c6c8d3bee9`, schema
+`qtmaps-map-package-v2`, and style revision `qtmaps-hanoi-v2`.
 
 The current vector input ends at z15, so the provisional z16 raster is rendered
 from overzoomed z15 vector content. It provides 256 px tiles along the full demo
 bounds but not new source detail. The UI labels views above z16 as lower
-resolution. Unit 07D/#32 must rebuild the vector package and then regenerate
-this raster; the runtime rejects the old style/package contract after that
-migration.
+resolution. The migration is complete: the runtime rejects stale v1 contracts
+and accepts only the matching v2 vector/raster binding. Both DPR sprite
+endpoints are packaged, preventing the HiDPI `sprite@2x` lookup from becoming a
+runtime 404.
 
 ## Reproduction
 
@@ -125,4 +130,9 @@ A marker, position puck, source state, attribution, and the persistent
 Valhalla is deliberately paused by the review harness. These review, benchmark,
 trace, and raster artifacts remain ignored and are not committed.
 
-Repeat the complete render/package/visual/benchmark evidence after Unit 07D/#32.
+The historical 2026-10-31 matrix above remains historical v1 evidence. On
+2026-11-11, with explicit owner authorization and verified Intel HD 520 GPU
+acceleration, focused v2 N=3 pan/zoom and real-Valhalla navigation runs passed
+their locked thresholds. This is not a replacement for an all-scenario Release
+matrix or soak; those require separate approval while the i915 blocker remains
+open.

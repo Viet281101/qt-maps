@@ -220,6 +220,9 @@ if(BUILD_TESTING)
     add_test(NAME qtmaps_benchmark_summary_tests
         COMMAND "${Python3_EXECUTABLE}"
             "${CMAKE_SOURCE_DIR}/tests/benchmark/test_summarize_benchmarks.py")
+    add_test(NAME qtmaps_benchmark_runtime_tests
+        COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_SOURCE_DIR}/tests/benchmark/test_run_benchmarks.py")
     add_test(NAME qtmaps_benchmark_cli_smoke
         COMMAND "${Python3_EXECUTABLE}"
             "${CMAKE_SOURCE_DIR}/tests/benchmark/smoke_cli.py"

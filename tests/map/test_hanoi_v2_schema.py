@@ -48,6 +48,8 @@ class HanoiV2SchemaTest(unittest.TestCase):
         self.assertIn('SCHEMA_VERSION = "qtmaps-map-package-v2"', builder)
         self.assertIn('STYLE_CONTRACT_VERSION = "qtmaps-style-v2"', builder)
         self.assertIn("LAYER_SCHEMA_VERSION = 2", builder)
+        self.assertIn('sprites_dir / "sprite@2x.json"', builder)
+        self.assertIn('sprites_dir / "sprite@2x.png"', builder)
         self.assertIn('SOURCE_LAYERS = ["building", "landuse", "place", "transportation", "water"]', builder)
         self.assertIn('repository / "tools/data-pipeline/unit07d-hanoi-v2.yml"', builder)
 

@@ -72,6 +72,8 @@ QString createPackage(QTemporaryDir &temporary)
               QByteArrayLiteral("glyph-fixture"));
     writeFile(root + QStringLiteral("/sprites/sprite.json"), QByteArrayLiteral("{}\n"));
     writeFile(root + QStringLiteral("/sprites/sprite.png"), QByteArrayLiteral("png-fixture"));
+    writeFile(root + QStringLiteral("/sprites/sprite@2x.json"), QByteArrayLiteral("{}\n"));
+    writeFile(root + QStringLiteral("/sprites/sprite@2x.png"), QByteArrayLiteral("png-fixture"));
 
     const QString connection =
         QStringLiteral("package-fixture-%1").arg(QUuid::createUuid().toString());
@@ -101,6 +103,8 @@ QString createPackage(QTemporaryDir &temporary)
         QStringLiteral("glyphs/Noto Sans Regular/0-255.pbf"),
         QStringLiteral("sprites/sprite.json"),
         QStringLiteral("sprites/sprite.png"),
+        QStringLiteral("sprites/sprite@2x.json"),
+        QStringLiteral("sprites/sprite@2x.png"),
     };
     QJsonObject files;
     for (const QString &relative : paths) {
@@ -289,7 +293,7 @@ private slots:
         QVERIFY2(qtmaps::map::MapPackageManifest::loadAndValidate(root, &manifest, &error),
                  qPrintable(error));
         QCOMPARE(manifest.dataVersion, QStringLiteral("hanoi-20261111-v2"));
-        QCOMPARE(manifest.fileSha256.size(), 5);
+        QCOMPARE(manifest.fileSha256.size(), 7);
     }
 
     void manifestRejectsMissingAndCorruptFiles()
@@ -302,6 +306,14 @@ private slots:
         qtmaps::map::MapPackageManifest manifest;
         QString error;
         QVERIFY(!qtmaps::map::MapPackageManifest::loadAndValidate(root, &manifest, &error));
+        QVERIFY(error.contains(QStringLiteral("Cannot read package file")));
+
+        QTemporaryDir highDpiTemporary;
+        QVERIFY(highDpiTemporary.isValid());
+        const QString highDpiRoot = createPackage(highDpiTemporary);
+        QVERIFY(!highDpiRoot.isEmpty());
+        QVERIFY(QFile::remove(highDpiRoot + QStringLiteral("/sprites/sprite@2x.png")));
+        QVERIFY(!qtmaps::map::MapPackageManifest::loadAndValidate(highDpiRoot, &manifest, &error));
         QVERIFY(error.contains(QStringLiteral("Cannot read package file")));
 
         QTemporaryDir corruptTemporary;

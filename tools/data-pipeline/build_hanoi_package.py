@@ -111,6 +111,10 @@ def main():
         sprites_dir.mkdir()
         shutil.copy2(resources / "sprite.json", sprites_dir / "sprite.json")
         shutil.copy2(resources / "sprite.png", sprites_dir / "sprite.png")
+        # v2 deliberately has an empty sprite, but MapLibre requests DPR-specific
+        # endpoints on HiDPI displays. Non-empty future sprites need a true 2x asset.
+        shutil.copy2(resources / "sprite.json", sprites_dir / "sprite@2x.json")
+        shutil.copy2(resources / "sprite.png", sprites_dir / "sprite@2x.png")
         style_template_path = repository / "resources/map/hanoi-style.json"
         rendered_style = render_style(style_template_path)
         style_revision = json.loads(rendered_style)["metadata"]["qtmaps:style_revision"]

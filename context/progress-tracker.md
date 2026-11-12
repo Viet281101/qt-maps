@@ -13,9 +13,9 @@ preserved in Git history through `e0a8086`.
 
 ## Current Goal
 
-Complete the atomic #30 + #32 Hanoi v2 package-contract migration from current
-`main`, without reusing the stale 07E branch or running a MapLibre window,
-OpenGL path, render benchmark, or GPU experiment.
+Complete review and publication of the atomic #30 + #32 Hanoi v2
+package-contract migration from current `main`, without reusing the stale 07E
+branch or expanding the owner-approved render/benchmark scope.
 
 ## Publication Status
 
@@ -41,8 +41,9 @@ OpenGL path, render benchmark, or GPU experiment.
   `1c7a05d`.
 - PR [#45](https://github.com/Viet281101/qt-maps/pull/45),
   `codex/hanoi-v2-contract` → `main`, is open for review. It references #30
-  and #32, and is tracked as `In Progress` in Project #6; it must not close or
-  represent either issue as complete while raster v2/render evidence is frozen.
+  and #32, and is tracked as `In Progress` in Project #6. Its v2 vector and
+  raster artifacts, runtime toggle, and focused direct-GPU measurements are
+  recorded below; it does not claim a full soak or all-scenario Release matrix.
 - The active follow-up milestone is `Post-demo stabilization`; it has no due
   date until the owner confirms the next delivery target.
 - The Unit 07 remote backups are `origin/chore/07a-repo-structure-maintenance`,
@@ -64,12 +65,12 @@ is not part of the requested Unit 07 backup push.
 
 ## i915 Render-Benchmark Freeze
 
-Render benchmarks are frozen while the open i915 stability blocker is resolved.
-Do not run the application, MapLibre/OpenGL paths, GPU benchmarks, or GPU
-configuration experiments without explicit owner approval. Retained render
-measurements are historical evidence only and must not be used as current
-performance or stability conclusions. Non-render build and test verification
-remains allowed.
+The i915 stability blocker remains open. On 2026-11-11 the owner explicitly
+authorized only the v2 raster render, runtime toggle, and focused benchmark
+validation recorded below. Do not run further application, MapLibre/OpenGL,
+GPU benchmark, GPU configuration, or i915-investigation work without another
+explicit owner instruction. Historical measurements remain historical; the
+new scoped direct-GPU measurements are current only for their stated scenarios.
 
 ## Working Rules
 
@@ -88,20 +89,16 @@ remains allowed.
 
 ## Decisions Waiting for Owner
 
-1. Any privileged i915 investigation, GPU configuration change, or restart of
-   render benchmarking.
-2. Owner approval for a MapLibre/OpenGL visual review or render benchmark after
-   a generated v2 package is available.
+1. Any privileged i915 investigation or GPU configuration change.
+2. Any benchmark expansion beyond the recorded v2 pan/zoom and real-Valhalla
+   navigation scenarios, including a full soak or all-scenario Release matrix.
 
 ## Next Up
 
-1. Finish the #30 + #32 v2 schema/style/manifest migration and its non-render
-   tests on `codex/hanoi-v2-contract`; both issues are `In Progress` in
-   Project #6.
-2. Request owner approval before rendering the matching ignored raster v2
-   package; do not download data or run a MapLibre/OpenGL path under the i915
-   freeze.
-3. Keep #31 typography/labels and instrumentation follow-up separate.
+1. Complete final test/review gates for PR #45 and request its merge when the
+   remote branch is clean and all evidence is documented.
+2. Keep #31 typography/labels and instrumentation follow-up separate.
+3. Do not broaden GPU work while the i915 blocker is unresolved.
 
 ## Latest Verification
 
@@ -198,8 +195,32 @@ remains allowed.
   two threads, a 6 GiB heap cap, 59.289 s duration, and 2,454,948 KiB peak
   RSS. The first generated v2 package exposed a stale builder layer-schema
   value; it was retained as ignored diagnostic output, the builder was fixed,
-  and only `v2-r1` became `current`. The matching raster v2 package, render,
-  OpenGL path, and benchmark remain unrun under the i915 freeze.
-- The post-fix `make QT_EXPECTED_VERSION=5.15.18 test` passed 14/14 in
-  11.78 s with software backend; the actual-current-package CLI smoke passed
-  in 0.93 s. `make ... format-check` and `git diff --check` passed.
+  and only `v2-r1` became `current`.
+- On 2026-11-11, following explicit owner authorization, the v2 renderer
+  exposed a HiDPI 512×512 capture while the package contract requires 256×256.
+  The renderer now accepts only an exact integral 2×--4× capture and smoothly
+  downscales it to 256×256; other dimensions remain a hard failure. Rendering
+  produced 847/847 256×256 local PNGs in 230.734 s. The builder and manifest
+  now include required `sprite@2x.json` and `sprite@2x.png` resources so
+  MapLibre no longer issues HiDPI sprite 404s.
+- The ignored current vector package is
+  `data/packages/hanoi-20261111-v2-r2`; its style and tiles are byte-identical
+  to v2-r1, with the required HiDPI sprite resources added. The ignored current
+  raster package is `data/raster-packages/hanoi-raster-20261111-v2-r2`: 847
+  PNG tiles, 15,831,040 bytes, SHA-256
+  `de4b199a708ce5ca1d1607919e3c2609bfa8298c6252f1aba0bba2a144fc0f08`, bound
+  to vector manifest SHA-256
+  `41370119febcdb3acc70134073837602a5647fbae6e6d60282f8a3c6c8d3bee9`.
+  A 1366×768 vector → raster → vector review completed with the r2 packages,
+  retained/released raster resources correctly, and had no sprite 404.
+- The benchmark runner previously selected a stale Qt 5.15.13 runtime. It now
+  queries the selected Qt prefix's qmake for QML/plugin paths, with a dedicated
+  regression test. Xvfb is llvmpipe and its failing output is not performance
+  evidence. On the physical display, Mesa Intel HD 520 acceleration was
+  confirmed. Direct-GPU N=3 medians passed every locked threshold for v2
+  pan/zoom (59.00 FPS average, 44.33 FPS p5, 117.09 MiB PSS peak, 12.53% CPU
+  peak) and real-Valhalla navigation replay (59.25 FPS average, 52.46 FPS p5,
+  485.54 MiB PSS peak, 21.63% CPU peak). This is focused current evidence, not
+  a full Release matrix or soak; sampler-overhead collection was not run.
+- The post-fix `make QT_EXPECTED_VERSION=5.15.18 test`, format check, and
+  `git diff --check` must pass again after the final review commit.
