@@ -26,6 +26,20 @@ Item {
         map.tilt = state.tilt
     }
 
+    function settleUserCamera() {
+        if (!map)
+            return
+        var state = boundedCameraController.normalizedCamera(
+                    map.center.latitude, map.center.longitude, map.zoomLevel,
+                    map.bearing, map.tilt)
+        if (Math.abs(state.latitude - map.center.latitude) > 0.0000001
+                || Math.abs(state.longitude - map.center.longitude) > 0.0000001
+                || Math.abs(state.zoom - map.zoomLevel) > 0.0001
+                || Math.abs(state.bearing - map.bearing) > 0.0001
+                || Math.abs(state.tilt - map.tilt) > 0.0001)
+            applyCamera(state)
+    }
+
     function recenterNavigation() {
         if (!map || !routeNavigationController.active
                 || !routeNavigationController.coordinate.isValid)
@@ -169,6 +183,11 @@ Item {
         maximumZoomLevel: canvas.rasterMode ? 18 : 20
         zoomLevel: 14
         gesture.enabled: !routeNavigationController.running
+        gesture.onPanFinished: canvas.settleUserCamera()
+        gesture.onFlickFinished: canvas.settleUserCamera()
+        gesture.onPinchFinished: canvas.settleUserCamera()
+        gesture.onRotationFinished: canvas.settleUserCamera()
+        gesture.onTiltFinished: canvas.settleUserCamera()
         focus: true
         onCenterChanged: rasterRouteOverlay.requestPaint()
         onZoomLevelChanged: rasterRouteOverlay.requestPaint()

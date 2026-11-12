@@ -15,7 +15,8 @@ preserved in Git history through `e0a8086`.
 
 Implement Unit 08's bounded-data camera controller (#40) from current `main`.
 The pure controller and non-GPU tests now normalize QML route-fit, focus,
-recenter, and navigation-follow requests; visual/GPU review remains separate.
+recenter, navigation-follow, and gesture-completion requests. An approved
+direct-GPU startup smoke passed; interactive pan/zoom visual review remains separate.
 
 ## Publication Status
 
