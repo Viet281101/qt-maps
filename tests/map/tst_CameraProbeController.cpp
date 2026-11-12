@@ -163,6 +163,23 @@ private slots:
         QCOMPARE(result.center.latitude(), BoundedCameraController::overview().center.latitude());
         QCOMPARE(result.center.longitude(), BoundedCameraController::overview().center.longitude());
     }
+
+    void rejectsRouteFitOutsideThePackageOrWithNegativePadding()
+    {
+        CameraState result = BoundedCameraController::overview();
+        const CameraViewport viewport = {900.0, 580.0, 48.0, 48.0, 32.0, 32.0};
+        QVERIFY(!BoundedCameraController::routeFit(QGeoCoordinate(20.96, 105.80),
+                                                   QGeoCoordinate(21.02, 105.85), viewport, result,
+                                                   &result));
+
+        CameraViewport invalidPadding = viewport;
+        invalidPadding.leftPadding = -1.0;
+        QVERIFY(!BoundedCameraController::routeFit(QGeoCoordinate(21.00, 105.80),
+                                                   QGeoCoordinate(21.02, 105.85), invalidPadding,
+                                                   result, &result));
+        QCOMPARE(result.center.latitude(), BoundedCameraController::overview().center.latitude());
+        QCOMPARE(result.center.longitude(), BoundedCameraController::overview().center.longitude());
+    }
 };
 
 QTEST_GUILESS_MAIN(CameraProbeControllerTest)

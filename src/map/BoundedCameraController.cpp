@@ -226,7 +226,9 @@ bool BoundedCameraController::routeFit(const QGeoCoordinate &southwest,
         southwest.longitude() >= northeast.longitude() || !std::isfinite(viewport.width) ||
         !std::isfinite(viewport.height) || !std::isfinite(viewport.leftPadding) ||
         !std::isfinite(viewport.rightPadding) || !std::isfinite(viewport.topPadding) ||
-        !std::isfinite(viewport.bottomPadding)) {
+        !std::isfinite(viewport.bottomPadding) || viewport.leftPadding < 0.0 ||
+        viewport.rightPadding < 0.0 || viewport.topPadding < 0.0 || viewport.bottomPadding < 0.0 ||
+        !isWithinBounds(southwest) || !isWithinBounds(northeast)) {
         return false;
     }
 

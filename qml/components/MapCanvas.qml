@@ -8,7 +8,8 @@ Item {
     property bool endpointSelectionEnabled: true
     property bool panelCollapsed: false
     property real panelWidth: 330
-    property bool cameraGestureActive: false
+    property int activeGestureCount: 0
+    readonly property bool cameraGestureActive: activeGestureCount > 0
     property string styleUrl: ""
     property var travelledRoutePath: []
     readonly property bool rasterMode: mapSourceController.layerMode === "raster"
@@ -32,8 +33,7 @@ Item {
     }
 
     function settleUserCamera() {
-        cameraGestureActive = false
-        if (!map)
+        if (!map || cameraGestureActive)
             return
         var state = boundedCameraController.normalizedCamera(
                     map.center.latitude, map.center.longitude, map.zoomLevel,
@@ -44,6 +44,16 @@ Item {
                 || Math.abs(state.bearing - map.bearing) > 0.0001
                 || Math.abs(state.tilt - map.tilt) > 0.0001)
             applyCamera(state)
+    }
+
+    function beginCameraGesture() {
+        activeGestureCount += 1
+    }
+
+    function endCameraGesture() {
+        activeGestureCount = Math.max(0, activeGestureCount - 1)
+        if (!cameraGestureActive)
+            cameraSettleTimer.restart()
     }
 
     function recenterNavigation() {
@@ -169,16 +179,16 @@ Item {
         maximumZoomLevel: 18
         zoomLevel: 14
         gesture.enabled: !routeNavigationController.running
-        gesture.onPanStarted: canvas.cameraGestureActive = true
-        gesture.onPanFinished: canvas.settleUserCamera()
-        gesture.onFlickStarted: canvas.cameraGestureActive = true
-        gesture.onFlickFinished: canvas.settleUserCamera()
-        gesture.onPinchStarted: canvas.cameraGestureActive = true
-        gesture.onPinchFinished: canvas.settleUserCamera()
-        gesture.onRotationStarted: canvas.cameraGestureActive = true
-        gesture.onRotationFinished: canvas.settleUserCamera()
-        gesture.onTiltStarted: canvas.cameraGestureActive = true
-        gesture.onTiltFinished: canvas.settleUserCamera()
+        gesture.onPanStarted: canvas.beginCameraGesture()
+        gesture.onPanFinished: canvas.endCameraGesture()
+        gesture.onFlickStarted: canvas.beginCameraGesture()
+        gesture.onFlickFinished: canvas.endCameraGesture()
+        gesture.onPinchStarted: canvas.beginCameraGesture()
+        gesture.onPinchFinished: canvas.endCameraGesture()
+        gesture.onRotationStarted: canvas.beginCameraGesture()
+        gesture.onRotationFinished: canvas.endCameraGesture()
+        gesture.onTiltStarted: canvas.beginCameraGesture()
+        gesture.onTiltFinished: canvas.endCameraGesture()
         focus: true
         onCenterChanged: rasterRouteOverlay.requestPaint()
         onZoomLevelChanged: rasterRouteOverlay.requestPaint()
@@ -468,6 +478,13 @@ Item {
             // Defer the stop decision so re-routing keeps the last route, puck and camera.
             Qt.callLater(canvas.settleNavigationState)
         }
+    }
+
+    Timer {
+        id: cameraSettleTimer
+        interval: 0
+        repeat: false
+        onTriggered: canvas.settleUserCamera()
     }
 
     Timer {

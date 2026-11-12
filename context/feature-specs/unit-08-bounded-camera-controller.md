@@ -48,8 +48,8 @@ and the current map viewport in Qt Quick logical pixels. `MapCanvas` supplies
 left padding of `panelWidth + 32 px` while the route panel is visible (or
 `16 px` while collapsed), right padding `48 px`, and top/bottom padding
 `32 px`. The pure controller calculates the Web-Mercator fit and center shift;
-it rejects an empty, degenerate, non-finite, or non-positive usable viewport
-without changing the map. It clamps the final zoom before calculating the
+it rejects an empty, degenerate, out-of-package, non-finite, negatively padded,
+or non-positive usable viewport without changing the map. It clamps the final zoom before calculating the
 padded center shift, then projects the usable viewport by bearing to constrain
 the center. The resulting camera is normalized once before QML applies it.
 
@@ -67,7 +67,7 @@ the center. The resulting camera is normalized once before QML applies it.
    permitted package extent after accounting for bearing and padding; every
    emitted zoom is within the contract range.
 2. A user gesture cannot be overwritten by route or navigation updates while
-   it is active.
+   it is active; overlapping gesture signals settle only after the final one ends.
 3. Invalid geometry, a degenerate route, or an unavailable package produces a
    defined no-op/fallback result, never NaN coordinates or an unbounded jump.
 4. Route fitting and recentering are idempotent for unchanged inputs.

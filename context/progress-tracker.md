@@ -19,8 +19,8 @@ Unit 08's bounded-data camera controller is ready to merge before starting #39. 
   route-fit, navigation follow, and automated pan/zoom normalization. Route-fit
   clamps zoom before computing its padded center shift, protects against
   non-finite input, applies bearing-aware usable-viewport bounds, and rejects
-  invalid or degenerate input without moving the map. Route refresh waits for
-  an active gesture to finish. `MapCanvas` has no direct focus-coordinate
+  invalid, negatively padded, or out-of-package input without moving the map.
+  Route refresh waits for all active gesture signals to finish. `MapCanvas` has no direct focus-coordinate
   assignment bypassing the controller.
 
 The branch also contains the small-viewport text-containment repair for shared
