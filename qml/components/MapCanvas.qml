@@ -440,8 +440,7 @@ Item {
                 return
             canvas.applyCamera(boundedCameraController.normalizedCamera(
                                  coordinate.latitude, coordinate.longitude,
-                                 zoomLevel, map.bearing, map.tilt))
-            map.bearing = bearing
+                                 zoomLevel, bearing, map.tilt))
         }
     }
 
