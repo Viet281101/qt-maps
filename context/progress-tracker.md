@@ -9,12 +9,12 @@ preserved in Git history through `e0a8086` and the cited pull requests.
   included. Qt 5.15.18 is the production baseline; Qt 5.15.13 is comparison
   only.
 - The active milestone is `Post-demo stabilization` with no due date.
-- Unit 08 is in progress on `codex/unit-08-camera-controller` (draft PR #49,
-  `Refs #40`, Project #6 `In Progress` / P1 / After Demo).
+- Unit 08 is complete on `codex/unit-08-camera-controller` and ready for PR
+  review (#49, `Closes #40`, Project #6 `In Progress` / P1 / After Demo).
 
 ## Current Goal
 
-Complete Unit 08's bounded-data camera controller before starting #39. The
+Unit 08's bounded-data camera controller is ready to merge before starting #39. The
 controller now owns overview, user-gesture completion, maneuver focus,
 route-fit, navigation follow, and automated pan/zoom normalization. Route-fit
 math uses the documented viewport padding in C++ and rejects invalid or
@@ -22,8 +22,9 @@ degenerate input without moving the map. `MapCanvas` has no direct
 focus-coordinate assignment bypassing the controller.
 
 The branch also contains the small-viewport text-containment repair for shared
-action buttons and the navigation-banner status row. It elides and bounds text
-instead of painting labels beneath controls.
+action buttons, navigation-banner status, search/status stacking, and the
+compact route panel. It elides and bounds text instead of painting labels
+beneath controls.
 
 ## Unit 08 Verification
 
@@ -40,9 +41,13 @@ instead of painting labels beneath controls.
   `QTMAPS_MAPLIBRE_INSTALL=generated/unit-01b/maplibre-install-qt51518`.
   Correcting that launcher default is separate runtime follow-up work and is
   not included in Unit 08.
-- The remaining Unit 08 acceptance item is fixed-viewport interactive pan/zoom
-  review. Automation has no native input surface for an actual drag/pinch, so
-  it must be completed visibly on the desktop before merge.
+- The owner accepted direct-GPU fixture review at 900x580, 1366x768, and
+  1920x1080 after testing pan, zoom, rotation, route-fit, recenter, and
+  navigation follow. The 900x580 overlay crowding repair was re-reviewed and
+  accepted. This is functional-layout evidence only, not a benchmark.
+- The 1920x1080 review exposed a missing local glyph request for `8192-8447.pbf`.
+  It is pre-existing package work tracked separately in #50; do not conflate it
+  with the Unit 08 camera change.
 
 ## Publication Status
 
@@ -52,8 +57,8 @@ instead of painting labels beneath controls.
   `origin/chore/07a-repo-structure-maintenance`,
   `origin/feat/07b-demo-shell-ui`, `origin/feat/07c-offline-raster`,
   `origin/feat/07d-hanoi-cartography`, and `origin/unit-07e-verify`.
-- Draft PR #49 contains the Unit 08 work. Do not mark #40 done or merge it
-  until its remaining visual review is accepted.
+- PR #49 contains the accepted Unit 08 work and is ready for review. #40 closes
+  on its squash merge; keep its Project item In Progress until then.
 
 ## Unit 07 Summary
 
@@ -88,16 +93,14 @@ artifacts remain ignored at
 
 ## Decisions Waiting for Owner
 
-1. Fixed-viewport direct-GPU interactive pan/zoom review for Unit 08 on the
-   visible desktop.
-2. Any privileged i915 investigation or GPU configuration change.
-3. Any benchmark expansion beyond the completed #32 matrix, including a soak.
+1. Any privileged i915 investigation or GPU configuration change.
+2. Any benchmark expansion beyond the completed #32 matrix, including a soak.
 
 ## Next Up
 
-1. Complete the visible interactive review, then update PR #49 and #40
-   truthfully.
-2. Start #39 only after the Unit 08 controller contract is accepted.
+1. Squash-merge PR #49 after PR review, which closes #40.
+2. Address #50's missing bounded glyph range before making further map-label
+   quality claims, then start #39.
 
 ## Current Environment Evidence
 

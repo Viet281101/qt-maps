@@ -7,6 +7,9 @@ Item {
     property bool panelCollapsed: false
     property real panelWidth: 330
     property bool layersOpen: false
+    readonly property real statusSafeTop: layersOpen
+                                       ? layerMenu.y + layerMenu.height + Theme.spaceMd
+                                       : layerButton.y + layerButton.height + Theme.spaceMd
 
     Rectangle {
         id: searchPlaceholder
@@ -16,15 +19,18 @@ Item {
            ? Math.max(Theme.spaceXl, (toolsOverlay.width - 360) / 2)
            : toolsOverlay.panelWidth + Theme.spaceXl * 2
         y: Theme.spaceMd
-        width: Math.max(240, Math.min(360, toolsOverlay.width - x - 210))
+        width: Math.max(0, Math.min(360, toolsOverlay.width - x - Theme.spaceMd))
         height: 44
         radius: Theme.radiusControl
         color: Theme.surfaceElevated
         border.color: Theme.border
+        clip: true
 
         Text {
             anchors.left: parent.left
+            anchors.right: parent.right
             anchors.leftMargin: Theme.spaceLg
+            anchors.rightMargin: Theme.spaceLg
             anchors.verticalCenter: parent.verticalCenter
             color: Theme.textSecondary
             text: qsTr("⌕  Tìm địa điểm — sắp có trong 07F")
@@ -53,6 +59,7 @@ Item {
     }
 
     Rectangle {
+        id: layerMenu
         visible: toolsOverlay.layersOpen && !toolsOverlay.navigationActive
         anchors.right: layerButton.right
         anchors.top: layerButton.bottom

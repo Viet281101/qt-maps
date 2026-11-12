@@ -3,7 +3,7 @@ import "../theme"
 
 Rectangle {
     id: routePanel
-    width: 330
+    width: parent && parent.width <= 960 ? 300 : 330
     radius: Theme.radiusPanel
     color: Theme.surfaceElevated
     border.color: Theme.border

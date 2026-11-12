@@ -498,21 +498,25 @@ private slots:
         QFile bannerFile(QStringLiteral(":/qml/components/NavigationBanner.qml"));
         QFile panelFile(QStringLiteral(":/qml/components/RoutePanel.qml"));
         QFile toolsFile(QStringLiteral(":/qml/components/DemoToolsOverlay.qml"));
+        QFile statusFile(QStringLiteral(":/qml/components/ConnectionStatus.qml"));
         QVERIFY(mainFile.open(QIODevice::ReadOnly));
         QVERIFY(mapFile.open(QIODevice::ReadOnly));
         QVERIFY(navigationFile.open(QIODevice::ReadOnly));
         QVERIFY(bannerFile.open(QIODevice::ReadOnly));
         QVERIFY(panelFile.open(QIODevice::ReadOnly));
         QVERIFY(toolsFile.open(QIODevice::ReadOnly));
+        QVERIFY(statusFile.open(QIODevice::ReadOnly));
         const QByteArray mainQml = mainFile.readAll();
         const QByteArray mapQml = mapFile.readAll();
         const QByteArray navigationQml = navigationFile.readAll();
         const QByteArray bannerQml = bannerFile.readAll();
         const QByteArray panelQml = panelFile.readAll();
         const QByteArray toolsQml = toolsFile.readAll();
+        const QByteArray statusQml = statusFile.readAll();
         QVERIFY(mapQml.contains("panelWidth + Theme.spaceLg * 2"));
         QVERIFY(mainQml.contains("property bool panelCollapsed"));
-        const QByteArray qml = mainQml + mapQml + navigationQml + bannerQml + panelQml + toolsQml;
+        const QByteArray qml =
+            mainQml + mapQml + navigationQml + bannerQml + panelQml + toolsQml + statusQml;
         QVERIFY(qml.contains("routingController.streetLabels"));
         QVERIFY(qml.contains("map.zoomLevel >= 15"));
         QVERIFY(qml.contains("routingController.currentManeuverIndex"));
@@ -542,6 +546,11 @@ private slots:
         QVERIFY(qml.contains("&& !routingController.loading"));
         QVERIFY(qml.contains("navigationActive: navigationOverlay.guidanceVisible"));
         QVERIFY(qml.contains("shutdownCoordinator.requestQuit()"));
+        QVERIFY(mainQml.contains("normalTopMargin: demoTools.statusSafeTop"));
+        QVERIFY(toolsQml.contains("readonly property real statusSafeTop"));
+        QVERIFY(toolsQml.contains("id: layerMenu"));
+        QVERIFY(statusQml.contains("elide: Text.ElideRight"));
+        QVERIFY(statusQml.contains("width: Math.min(264"));
     }
 };
 

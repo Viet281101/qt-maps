@@ -45,6 +45,12 @@ overlays must not intersect. Demo review also covers 1366x768 and 1920x1080.
 The supported maximum is 1920x1080 so the bounded raster visible-texture
 working-set calculation remains valid on the reference configuration.
 
+At widths through 960 px, the route panel uses a 300 px compact width. Search
+text clips/elides inside its surface; connection status occupies the next
+available top-right row beneath the layer control, and moves below the expanded
+layer menu. This prevents status/search and status/menu overlap without hiding
+the connection source.
+
 ## Component Conventions
 
 - Create focused QML components for the search box, layer selector, route panel, maneuver row/list, navigation banner, map actions, status indicator, and performance overlay.

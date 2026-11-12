@@ -94,6 +94,7 @@ Window {
     }
 
     DemoToolsOverlay {
+        id: demoTools
         anchors.fill: parent
         navigationActive: navigationOverlay.guidanceVisible
         panelCollapsed: root.panelCollapsed
@@ -124,6 +125,7 @@ Window {
         statusColor: root.routeSummaryColor
         navigationActive: navigationOverlay.guidanceVisible
         navigationBannerHeight: navigationOverlay.bannerHeight
+        normalTopMargin: demoTools.statusSafeTop
         connectionLabel: routingController.connectionLabel
         z: 20
     }

@@ -84,6 +84,19 @@ applies it.
   with separate owner authorization; no performance conclusion is implied by
   unit tests.
 
+## Verification Evidence
+
+On 2026-11-12, the owner accepted direct-GPU fixture-route review at 900x580,
+1366x768, and 1920x1080 after exercising pan, zoom, rotation, route-fit,
+recenter, and navigation follow. The 900x580 review exposed top-overlay
+crowding; the compact panel/status stacking repair was implemented and accepted
+in a repeated 900x580 review. `make test` and the isolated Release `make review`
+passed 16/16. These are functional-layout checks, not benchmark evidence.
+
+The 1920x1080 runtime also exposed a pre-existing missing local glyph request
+for `8192-8447.pbf`; it is tracked separately as #50 and does not change the
+Unit 08 camera contract.
+
 ## Non-goals
 
 - Replacing the Canvas route overlay (#39), changing route geometry, or adding
