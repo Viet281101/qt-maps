@@ -19,8 +19,12 @@ Rectangle {
 
     Text {
         anchors.centerIn: parent
+        width: Math.max(0, parent.width - Theme.spaceMd * 2)
         color: root.textColor
+        elide: Text.ElideRight
+        horizontalAlignment: Text.AlignHCenter
         font.bold: true
+        font.pixelSize: parent.width < 132 ? Theme.fontSizeCaption : Theme.fontSizeBody
         text: root.text
     }
     MouseArea {

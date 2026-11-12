@@ -18,6 +18,9 @@ The pure controller and non-GPU tests now normalize QML route-fit, focus,
 recenter, navigation-follow, gesture-completion, and automated pan/zoom requests.
 Approved direct-GPU startup and automated pan/zoom smokes passed; interactive
 pan/zoom visual review remains separate.
+- Unit 08 also corrects small-viewport text overflow in shared action buttons
+  and the navigation banner status row; it uses elision and bounded widths rather
+  than allowing labels to paint underneath controls.
 
 ## Publication Status
 
