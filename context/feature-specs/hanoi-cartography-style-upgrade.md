@@ -29,9 +29,9 @@ archived `unit-07e-verify` branch or mix this work with i915 investigation.
 - Owner-authorized fixed-camera/runtime review and focused direct-GPU N=3
   pan/zoom plus real-Valhalla navigation evidence are complete. The v3 label
   contract also has a 1366×768 vector/raster transition and rendered-label
-  review; a direct-GPU rerun is blocked by unavailable Xauthority access, not
-  interpreted as a performance result. A full Release matrix and soak remain
-  out of scope until separately authorized.
+  review plus an accelerated direct-GPU N=3 pan/zoom median that passes every
+  locked threshold. A full Release matrix and soak remain out of scope until
+  separately authorized.
 
 ## Increment B: Vietnamese typography and bounded labels (#31, in progress)
 

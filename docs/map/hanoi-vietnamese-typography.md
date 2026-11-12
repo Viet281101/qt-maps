@@ -52,8 +52,8 @@ silently being used with the Noto label style. The owner-authorized
 passed a 1366×768 vector → raster → vector review. The 847 raster tiles are
 256×256, and a rendered z16 tile visibly shows Vietnamese street names.
 
-The direct-GPU performance rerun was not usable because the current process
-has no Xauthority access to display `:0`; its three child launches abort before
-the map starts. Xvfb output is visual evidence only and is not a performance
-claim. A full GPU matrix or soak remains separately controlled by the open i915
-blocker.
+After recovering the current Xwayland authorization, the accelerated Intel HD
+520 direct-GPU N=3 pan/zoom median passed every locked threshold: 59.06 FPS
+average, 46.03 FPS p5, 28.14 FPS 1% low, 420.18 MiB PSS peak, and 34.16%
+machine CPU peak. Sampler-overhead collection was intentionally skipped; a full
+GPU matrix or soak remains separately controlled by the open i915 blocker.

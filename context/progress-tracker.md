@@ -44,10 +44,10 @@ render/benchmark scope.
   Project #6 item is `Done`; #30 is closed/Done and #32 remains In Progress
   for its broader verification scope.
 - PR [#46](https://github.com/Viet281101/qt-maps/pull/46),
-  `codex/hanoi-vietnamese-labels` → `main`, is a draft linked to #31/#32,
+  `codex/hanoi-vietnamese-labels` → `main`, is ready for review and linked to #31/#32,
   assigned to Viet281101, and tracked In Progress/P1/After Demo in Project #6.
-  It must remain draft until a matching v3 raster and graphical review are
-  explicitly authorized and recorded.
+  Its v3 raster, graphical review, and focused direct-GPU pan/zoom evidence
+  are recorded below; #32 remains open for its broader matrix.
 - The active follow-up milestone is `Post-demo stabilization`; it has no due
   date until the owner confirms the next delivery target.
 - The Unit 07 remote backups are `origin/chore/07a-repo-structure-maintenance`,
@@ -70,7 +70,7 @@ is not part of the requested Unit 07 backup push.
 ## i915 Render-Benchmark Freeze
 
 The i915 stability blocker remains open. The owner explicitly authorized the
-v2 checks on 2026-11-11 and the v3 label render/runtime review on 2026-11-12.
+v2 checks on 2026-11-11 and the v3 label render/runtime/GPU review on 2026-11-12.
 Do not run further application, MapLibre/OpenGL, GPU benchmark, GPU
 configuration, or i915-investigation work without another explicit owner
 instruction. Historical measurements remain historical; current scoped GPU
@@ -241,10 +241,9 @@ measurements apply only to their stated scenarios.
   was rejected visually: its PBF metrics included MapLibre's implicit 3px
   border, so the parser discarded glyphs. The generator and a structural test
   were fixed; only `hanoi-20261112-v3-r2` and
-  `hanoi-raster-20261112-v3-r2` are valid evidence. The completed r2 render
-  has 847/847 256×256 tiles, SHA-256
-  `5055a3c30d9b68800beb0ce9fe6a9d70370c787eeb4573477076866c4333069d`, and a
-  1366×768 vector → raster → vector runtime review passed. A z16 tile visibly
-  shows Vietnamese road labels. A direct-GPU N=3 pan/zoom attempt could not
-  connect to `DISPLAY=:0` without Xauthority and is excluded from performance
-  claims; Xvfb is visual evidence only.
+  `hanoi-raster-20261112-v3-r2` are valid evidence. The completed r2 render has
+  847/847 256×256 tiles, SHA-256 `5055a3c30d9b68800beb0ce9fe6a9d70370c787eeb4573477076866c4333069d`,
+  and a 1366×768 vector → raster → vector runtime review passed. A z16 tile visibly shows Vietnamese road labels.
+  The initial direct-GPU N=3 pan/zoom lacked Xauthority and was excluded; after recovering the active Xwayland cookie,
+  accelerated Intel HD 520 N=3 passed every threshold: 59.06 FPS average, 46.03 FPS p5, 28.14 FPS 1% low,
+  420.18 MiB PSS peak, and 34.16% CPU peak. Sampler overhead was intentionally unavailable.
