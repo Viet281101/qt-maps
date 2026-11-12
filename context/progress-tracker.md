@@ -13,9 +13,8 @@ preserved in Git history through `e0a8086`.
 
 ## Current Goal
 
-Complete #31's Vietnamese typography and bounded-label contract from current
-`main`, without reusing the stale 07E branch or expanding the owner-approved
-render/benchmark scope.
+Publish the final #32 evidence-only verification PR from current `main` to
+close Unit 07 without reviving the archived 07E branch.
 
 ## Publication Status
 
@@ -44,10 +43,9 @@ render/benchmark scope.
   Project #6 item is `Done`; #30 is closed/Done and #32 remains In Progress
   for its broader verification scope.
 - PR [#46](https://github.com/Viet281101/qt-maps/pull/46),
-  `codex/hanoi-vietnamese-labels` → `main`, is ready for review and linked to #31/#32,
-  assigned to Viet281101, and tracked In Progress/P1/After Demo in Project #6.
-  Its v3 raster, graphical review, and focused direct-GPU pan/zoom evidence
-  are recorded below; #32 remains open for its broader matrix.
+  `codex/hanoi-vietnamese-labels` → `main`, was squash-merged as `35470fd`.
+  It closed #31 and its Project #6 item is Done; #32 remains In Progress only
+  for publication of the completed full-matrix evidence.
 - The active follow-up milestone is `Post-demo stabilization`; it has no due
   date until the owner confirms the next delivery target.
 - The Unit 07 remote backups are `origin/chore/07a-repo-structure-maintenance`,
@@ -70,11 +68,9 @@ is not part of the requested Unit 07 backup push.
 ## i915 Render-Benchmark Freeze
 
 The i915 stability blocker remains open. The owner explicitly authorized the
-v2 checks on 2026-11-11 and the v3 label render/runtime/GPU review on 2026-11-12.
-Do not run further application, MapLibre/OpenGL, GPU benchmark, GPU
-configuration, or i915-investigation work without another explicit owner
-instruction. Historical measurements remain historical; current scoped GPU
-measurements apply only to their stated scenarios.
+v2, v3, and full #32 matrix checks on 2026-11-12. Do not run further
+application, MapLibre/OpenGL, GPU benchmark, GPU configuration, or i915 work
+without another explicit owner instruction; the recorded measurements remain scoped.
 
 ## Working Rules
 
@@ -94,15 +90,12 @@ measurements apply only to their stated scenarios.
 ## Decisions Waiting for Owner
 
 1. Any privileged i915 investigation or GPU configuration change.
-2. Any benchmark expansion beyond the recorded v2 pan/zoom and real-Valhalla
-   navigation scenarios, including a full soak or all-scenario Release matrix.
+2. Any benchmark expansion beyond the completed #32 matrix, including a soak.
 
 ## Next Up
 
-1. Complete #31 typography/labels on `codex/hanoi-vietnamese-labels` and
-   retain a fail-closed v3 package/raster boundary until graphical review.
-2. Keep #32 verification and instrumentation follow-up separate.
-3. Do not broaden GPU work while the i915 blocker is unresolved.
+1. Publish the evidence-only #32 PR; merge closes Unit 07.
+2. Keep #39/#40 as separately authorized post-demo work.
 
 ## Latest Verification
 
@@ -247,3 +240,8 @@ measurements apply only to their stated scenarios.
   The initial direct-GPU N=3 pan/zoom lacked Xauthority and was excluded; after recovering the active Xwayland cookie,
   accelerated Intel HD 520 N=3 passed every threshold: 59.06 FPS average, 46.03 FPS p5, 28.14 FPS 1% low,
   420.18 MiB PSS peak, and 34.16% CPU peak. Sampler overhead was intentionally unavailable.
+- On 2026-11-12, the owner-authorized direct-GPU full #32 Release matrix ran
+  all 30 scenario/mode/repetition combinations against v3-r2; every locked
+  threshold passed. Pan/zoom medians were 58.86--59.05 FPS (p5 45.58--45.89),
+  and navigation replay was 59.14--59.30 FPS (p5 50.44--50.92). Raw artifacts
+  remain ignored at `generated/benchmarks/20261112-hanoi-v3-r2-full-matrix-gpu`.

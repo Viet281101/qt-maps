@@ -55,5 +55,6 @@ passed a 1366×768 vector → raster → vector review. The 847 raster tiles are
 After recovering the current Xwayland authorization, the accelerated Intel HD
 520 direct-GPU N=3 pan/zoom median passed every locked threshold: 59.06 FPS
 average, 46.03 FPS p5, 28.14 FPS 1% low, 420.18 MiB PSS peak, and 34.16%
-machine CPU peak. Sampler-overhead collection was intentionally skipped; a full
-GPU matrix or soak remains separately controlled by the open i915 blocker.
+machine CPU peak. The subsequently authorized full GPU matrix also passed all
+30 scenario/mode/repetition combinations; a soak remains separately controlled
+by the open i915 blocker.

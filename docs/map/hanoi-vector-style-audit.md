@@ -48,13 +48,10 @@ rendered z16 evidence shows Vietnamese road labels.
 
 1. **#30:** complete. Bounded water and landuse layers are in the accepted
    local package contract.
-2. **#31, typography and labels:** implementation, fixed-viewport visual
-   review, and focused direct-GPU pan/zoom verification are complete; PR #46
-   is ready for review. #32 retains its separately scoped full-matrix work.
-3. **Visual/performance evidence:** owner-authorized focused v2 direct-GPU
-   pan/zoom and real-Valhalla navigation runs now pass their locked thresholds.
-   A full Release matrix or soak remains outside this authorization while the
-   i915 blocker is open.
+2. **#31, typography and labels:** complete and squash-merged as PR #46.
+3. **#32, verification:** the owner-authorized v3-r2 direct-GPU Release matrix
+   completed all 30 combinations of five scenarios, two modes, and three runs;
+   every locked threshold passed. A soak remains outside this evidence.
 
 ## Non-goals
 
