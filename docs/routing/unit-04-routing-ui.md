@@ -31,9 +31,9 @@ point.
 The successful local command was:
 
 ```bash
-LD_LIBRARY_PATH="$PWD/generated/unit-01b/maplibre-install/lib" \
-QT_PLUGIN_PATH="$PWD/generated/unit-01b/maplibre-install/plugins:$PWD/generated/unit-01b/qml-runtime/usr/lib/x86_64-linux-gnu/qt5/plugins" \
-QML2_IMPORT_PATH="$PWD/generated/unit-01b/maplibre-install/qml:$PWD/generated/unit-01b/qml-runtime/usr/lib/x86_64-linux-gnu/qt5/qml" \
+LD_LIBRARY_PATH="$PWD/generated/unit-01b/maplibre-install-qt51518/lib" \
+QT_PLUGIN_PATH="$PWD/generated/unit-01b/maplibre-install-qt51518/plugins:/usr/lib/x86_64-linux-gnu/qt5/plugins" \
+QML2_IMPORT_PATH="$PWD/generated/unit-01b/maplibre-install-qt51518/qml:/usr/lib/x86_64-linux-gnu/qt5/qml" \
 QSG_RENDER_LOOP=threaded \
 ./build-qt515/qtmaps --unit03-local-map --routing-demo \
   --map-package data/packages/current --exit-after 30 \

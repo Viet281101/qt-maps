@@ -551,6 +551,8 @@ private slots:
         QVERIFY(toolsQml.contains("id: layerMenu"));
         QVERIFY(statusQml.contains("elide: Text.ElideRight"));
         QVERIFY(statusQml.contains("width: Math.min(264"));
+        QVERIFY(mapQml.contains("property bool cameraGestureActive: false"));
+        QVERIFY(mapQml.contains("if (canvas.cameraGestureActive)"));
     }
 };
 

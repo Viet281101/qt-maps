@@ -8,6 +8,7 @@ Item {
     property bool endpointSelectionEnabled: true
     property bool panelCollapsed: false
     property real panelWidth: 330
+    property bool cameraGestureActive: false
     property string styleUrl: ""
     property var travelledRoutePath: []
     readonly property bool rasterMode: mapSourceController.layerMode === "raster"
@@ -27,15 +28,16 @@ Item {
     }
 
     function applyOverviewCamera() {
-        applyCamera(boundedCameraController.overviewCamera())
+        applyCamera(boundedCameraController.overviewCamera(map.width, map.height))
     }
 
     function settleUserCamera() {
+        cameraGestureActive = false
         if (!map)
             return
         var state = boundedCameraController.normalizedCamera(
                     map.center.latitude, map.center.longitude, map.zoomLevel,
-                    map.bearing, map.tilt)
+                    map.bearing, map.tilt, map.width, map.height)
         if (Math.abs(state.latitude - map.center.latitude) > 0.0000001
                 || Math.abs(state.longitude - map.center.longitude) > 0.0000001
                 || Math.abs(state.zoom - map.zoomLevel) > 0.0001
@@ -51,7 +53,7 @@ Item {
         applyCamera(boundedCameraController.navigationCamera(
                         routeNavigationController.coordinate.latitude,
                         routeNavigationController.coordinate.longitude,
-                        routeNavigationController.bearing, map.zoomLevel))
+                        routeNavigationController.bearing, map.zoomLevel, map.width, map.height))
     }
 
     function updateTravelledRoute() {
@@ -160,14 +162,22 @@ Item {
             }
         }
         center: QtPositioning.coordinate(21.0278, 105.8342)
-        minimumZoomLevel: canvas.rasterMode ? 12 : 0
-        maximumZoomLevel: canvas.rasterMode ? 18 : 20
+        // Local source tiles stop at z15/z16, but MapLibre deliberately overzooms them to
+        // the camera contract's z18 display ceiling. Keep the provider inside that contract
+        // even while a gesture is still in progress.
+        minimumZoomLevel: 12
+        maximumZoomLevel: 18
         zoomLevel: 14
         gesture.enabled: !routeNavigationController.running
+        gesture.onPanStarted: canvas.cameraGestureActive = true
         gesture.onPanFinished: canvas.settleUserCamera()
+        gesture.onFlickStarted: canvas.cameraGestureActive = true
         gesture.onFlickFinished: canvas.settleUserCamera()
+        gesture.onPinchStarted: canvas.cameraGestureActive = true
         gesture.onPinchFinished: canvas.settleUserCamera()
+        gesture.onRotationStarted: canvas.cameraGestureActive = true
         gesture.onRotationFinished: canvas.settleUserCamera()
+        gesture.onTiltStarted: canvas.cameraGestureActive = true
         gesture.onTiltFinished: canvas.settleUserCamera()
         focus: true
         onCenterChanged: rasterRouteOverlay.requestPaint()
@@ -422,7 +432,7 @@ Item {
                 return
             canvas.applyCamera(boundedCameraController.normalizedCamera(
                                  coordinate.latitude, coordinate.longitude,
-                                 zoomLevel, bearing, map.tilt))
+                                 zoomLevel, bearing, map.tilt, map.width, map.height))
         }
     }
 
@@ -442,7 +452,7 @@ Item {
                 return
             canvas.applyCamera(boundedCameraController.normalizedCamera(
                                      coordinate.latitude, coordinate.longitude,
-                                     zoomLevel, map.bearing, map.tilt))
+                                     zoomLevel, map.bearing, map.tilt, map.width, map.height))
         }
     }
 
@@ -465,6 +475,10 @@ Item {
         interval: 100
         repeat: false
         onTriggered: {
+            if (canvas.cameraGestureActive) {
+                restart()
+                return
+            }
             if (canvas.map)
                 canvas.map.refreshRoute()
             rasterRouteOverlay.requestPaint()

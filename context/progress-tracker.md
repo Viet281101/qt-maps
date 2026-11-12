@@ -15,11 +15,13 @@ preserved in Git history through `e0a8086` and the cited pull requests.
 ## Current Goal
 
 Unit 08's bounded-data camera controller is ready to merge before starting #39. The
-controller now owns overview, user-gesture completion, maneuver focus,
-route-fit, navigation follow, and automated pan/zoom normalization. Route-fit
-math uses the documented viewport padding in C++ and rejects invalid or
-degenerate input without moving the map. `MapCanvas` has no direct
-focus-coordinate assignment bypassing the controller.
+  controller now owns overview, user-gesture completion, maneuver focus,
+  route-fit, navigation follow, and automated pan/zoom normalization. Route-fit
+  clamps zoom before computing its padded center shift, protects against
+  non-finite input, applies bearing-aware usable-viewport bounds, and rejects
+  invalid or degenerate input without moving the map. Route refresh waits for
+  an active gesture to finish. `MapCanvas` has no direct focus-coordinate
+  assignment bypassing the controller.
 
 The branch also contains the small-viewport text-containment repair for shared
 action buttons, navigation-banner status, search/status stacking, and the
@@ -35,12 +37,10 @@ beneath controls.
 - The owner authorized a direct-GPU startup on 2026-11-12. With the explicit
   Qt 5.15.18 MapLibre payload, fixture routing reached `mapReady=true` on the
   Intel HD 520; this was not a benchmark or i915 configuration change.
-- The default `tools/run-demo.sh` path still selects the stale
-  `generated/unit-01b/maplibre-install` payload marked Qt 5.15.13 and correctly
-  fails closed. The successful review startup set
-  `QTMAPS_MAPLIBRE_INSTALL=generated/unit-01b/maplibre-install-qt51518`.
-  Correcting that launcher default is separate runtime follow-up work and is
-  not included in Unit 08.
+- The default `Makefile`, `tools/run-demo.sh`, software smoke runtime, and
+  benchmark runtime now select the Qt 5.15.18 MapLibre payload at
+  `generated/unit-01b/maplibre-install-qt51518`; an explicit environment
+  override remains available for controlled comparison only.
 - The owner accepted direct-GPU fixture review at 900x580, 1366x768, and
   1920x1080 after testing pan, zoom, rotation, route-fit, recenter, and
   navigation follow. The 900x580 overlay crowding repair was re-reviewed and
@@ -109,8 +109,9 @@ artifacts remain ignored at
   `maplibre-qt51518` target is not part of ordinary CTest/review flows; it
   validates prerequisites before running and currently needs a future
   owner-authorized rebuild to investigate the vendor `<cstdint>` include issue.
-- `tools/run-demo.sh --print-env` selects the Qt 5.15.18 payload. The normal
-  software-backend suite last passed 16/16 before Unit 08; the stale
+- `tools/run-demo.sh --print-env` selects the Qt 5.15.18 payload by default.
+  The normal software-backend suite last passed 16/16 after the Unit 08 review
+  fixes; the stale
   `build-unit07e-qt51518` tree is obsolete and must not be rebuilt or tested.
 - Current ignored valid packages are `hanoi-20261112-v3-r2` and
   `hanoi-raster-20261112-v3-r2`. They have 847 256x256 raster tiles, matching

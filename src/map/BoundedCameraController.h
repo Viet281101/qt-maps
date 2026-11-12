@@ -1,5 +1,7 @@
 #pragma once
 
+#include "map/MapPackageContract.h"
+
 #include <QGeoCoordinate>
 #include <QObject>
 #include <QVariantMap>
@@ -29,12 +31,14 @@ class BoundedCameraController final : public QObject
 {
     Q_OBJECT
 public:
-    static constexpr qreal kMinimumZoom = 12.0;
-    static constexpr qreal kMaximumZoom = 18.0;
+    static constexpr qreal kMinimumZoom = contract::kDisplayMinimumZoom;
+    static constexpr qreal kMaximumZoom = contract::kDisplayMaximumZoom;
     static constexpr qreal kNavigationZoom = 16.0;
 
     static CameraState overview();
     static CameraState normalize(const CameraState &requested);
+    static CameraState normalizeForViewport(const CameraState &requested,
+                                            const CameraViewport &viewport);
     static bool routeFit(const QGeoCoordinate &southwest, const QGeoCoordinate &northeast,
                          const CameraViewport &viewport, const CameraState &current,
                          CameraState *result);
@@ -42,15 +46,16 @@ public:
                                         const CameraState &current);
     static bool isWithinBounds(const QGeoCoordinate &coordinate);
     explicit BoundedCameraController(QObject *parent = nullptr);
-    Q_INVOKABLE QVariantMap overviewCamera() const;
+    Q_INVOKABLE QVariantMap overviewCamera(qreal width, qreal height) const;
     Q_INVOKABLE QVariantMap normalizedCamera(qreal latitude, qreal longitude, qreal zoom,
-                                             qreal bearing, qreal tilt) const;
+                                             qreal bearing, qreal tilt, qreal width,
+                                             qreal height) const;
     Q_INVOKABLE QVariantMap routeFitCamera(qreal south, qreal north, qreal west, qreal east,
                                            qreal width, qreal height, qreal leftPadding,
                                            qreal rightPadding, qreal topPadding,
                                            qreal bottomPadding, qreal bearing, qreal tilt) const;
     Q_INVOKABLE QVariantMap navigationCamera(qreal latitude, qreal longitude, qreal bearing,
-                                             qreal currentZoom) const;
+                                             qreal currentZoom, qreal width, qreal height) const;
 };
 
 } // namespace map
