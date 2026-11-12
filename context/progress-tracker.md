@@ -34,6 +34,12 @@ instead of painting labels beneath controls.
 - The owner authorized a direct-GPU startup on 2026-11-12. With the explicit
   Qt 5.15.18 MapLibre payload, fixture routing reached `mapReady=true` on the
   Intel HD 520; this was not a benchmark or i915 configuration change.
+- The default `tools/run-demo.sh` path still selects the stale
+  `generated/unit-01b/maplibre-install` payload marked Qt 5.15.13 and correctly
+  fails closed. The successful review startup set
+  `QTMAPS_MAPLIBRE_INSTALL=generated/unit-01b/maplibre-install-qt51518`.
+  Correcting that launcher default is separate runtime follow-up work and is
+  not included in Unit 08.
 - The remaining Unit 08 acceptance item is fixed-viewport interactive pan/zoom
   review. Automation has no native input surface for an actual drag/pinch, so
   it must be completed visibly on the desktop before merge.
