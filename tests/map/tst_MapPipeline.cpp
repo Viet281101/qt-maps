@@ -52,7 +52,7 @@ QString digest(const QString &path)
 
 QString createPackage(QTemporaryDir &temporary)
 {
-    const QString root = temporary.path() + QStringLiteral("/hanoi-20261024-v1");
+    const QString root = temporary.path() + QStringLiteral("/hanoi-20261111-v2");
     if (!QDir().mkpath(root + QStringLiteral("/style")) ||
         !QDir().mkpath(root + QStringLiteral("/glyphs/Noto Sans Regular")) ||
         !QDir().mkpath(root + QStringLiteral("/sprites"))) {
@@ -63,6 +63,8 @@ QString createPackage(QTemporaryDir &temporary)
                                 "\"glyphs\":\"__QTMAPS_BASE_URL__/glyphs/{fontstack}/{range}.pbf\","
                                 "\"sources\":{\"qtmaps\":{\"type\":\"vector\",\"tiles\":["
                                 "\"__QTMAPS_BASE_URL__/tiles/{z}/{x}/{y}.pbf\"]}},\"layers\":["
+                                "{\"id\":\"water\",\"source-layer\":\"water\"},"
+                                "{\"id\":\"green\",\"source-layer\":\"landuse\"},"
                                 "{\"id\":\"building\",\"source-layer\":\"building\"},"
                                 "{\"id\":\"place\",\"source-layer\":\"place\"},"
                                 "{\"id\":\"road\",\"source-layer\":\"transportation\"}]}\n"));
@@ -70,6 +72,8 @@ QString createPackage(QTemporaryDir &temporary)
               QByteArrayLiteral("glyph-fixture"));
     writeFile(root + QStringLiteral("/sprites/sprite.json"), QByteArrayLiteral("{}\n"));
     writeFile(root + QStringLiteral("/sprites/sprite.png"), QByteArrayLiteral("png-fixture"));
+    writeFile(root + QStringLiteral("/sprites/sprite@2x.json"), QByteArrayLiteral("{}\n"));
+    writeFile(root + QStringLiteral("/sprites/sprite@2x.png"), QByteArrayLiteral("png-fixture"));
 
     const QString connection =
         QStringLiteral("package-fixture-%1").arg(QUuid::createUuid().toString());
@@ -99,6 +103,8 @@ QString createPackage(QTemporaryDir &temporary)
         QStringLiteral("glyphs/Noto Sans Regular/0-255.pbf"),
         QStringLiteral("sprites/sprite.json"),
         QStringLiteral("sprites/sprite.png"),
+        QStringLiteral("sprites/sprite@2x.json"),
+        QStringLiteral("sprites/sprite@2x.png"),
     };
     QJsonObject files;
     for (const QString &relative : paths) {
@@ -116,14 +122,15 @@ QString createPackage(QTemporaryDir &temporary)
     QJsonObject sourcePbf;
     sourcePbf.insert(QStringLiteral("sha256"), QString(64, QLatin1Char('a')));
     QJsonObject manifest;
-    manifest.insert(QStringLiteral("schema_version"), QStringLiteral("qtmaps-map-package-v1"));
-    manifest.insert(QStringLiteral("data_version"), QStringLiteral("hanoi-20261024-v1"));
-    manifest.insert(QStringLiteral("style_contract_version"), QStringLiteral("qtmaps-style-v1"));
+    manifest.insert(QStringLiteral("schema_version"), QStringLiteral("qtmaps-map-package-v2"));
+    manifest.insert(QStringLiteral("data_version"), QStringLiteral("hanoi-20261111-v2"));
+    manifest.insert(QStringLiteral("style_contract_version"), QStringLiteral("qtmaps-style-v2"));
     QJsonObject layerSchema;
-    layerSchema.insert(QStringLiteral("version"), 1);
+    layerSchema.insert(QStringLiteral("version"), 2);
     layerSchema.insert(QStringLiteral("source_layers"),
-                       QJsonArray{QStringLiteral("building"), QStringLiteral("place"),
-                                  QStringLiteral("transportation")});
+                       QJsonArray{QStringLiteral("building"), QStringLiteral("landuse"),
+                                  QStringLiteral("place"), QStringLiteral("transportation"),
+                                  QStringLiteral("water")});
     manifest.insert(QStringLiteral("layer_schema"), layerSchema);
     manifest.insert(QStringLiteral("bounds"), QJsonArray{105.78, 20.97, 105.90, 21.10});
     manifest.insert(QStringLiteral("min_zoom"), 12);
@@ -135,7 +142,7 @@ QString createPackage(QTemporaryDir &temporary)
     pipelineConfig.insert(QStringLiteral("sha256"), QString(64, QLatin1Char('b')));
     manifest.insert(QStringLiteral("pipeline_config"), pipelineConfig);
     QJsonObject resources;
-    resources.insert(QStringLiteral("style_revision"), QStringLiteral("qtmaps-hanoi-v1"));
+    resources.insert(QStringLiteral("style_revision"), QStringLiteral("qtmaps-hanoi-v2"));
     resources.insert(QStringLiteral("glyph_revision"), QStringLiteral("glyph-test-v1"));
     resources.insert(QStringLiteral("sprite_revision"), QStringLiteral("sprite-test-v1"));
     manifest.insert(QStringLiteral("resources"), resources);
@@ -149,7 +156,7 @@ QString createPackage(QTemporaryDir &temporary)
 
 QString createRasterPackage(QTemporaryDir &temporary)
 {
-    const QString root = temporary.path() + QStringLiteral("/hanoi-raster-20261030-v1");
+    const QString root = temporary.path() + QStringLiteral("/hanoi-raster-20261111-v2");
     if (!QDir().mkpath(root)) {
         return QString();
     }
@@ -183,12 +190,12 @@ QString createRasterPackage(QTemporaryDir &temporary)
 
     QJsonObject vector;
     vector.insert(QStringLiteral("package_schema_version"),
-                  QStringLiteral("qtmaps-map-package-v1"));
-    vector.insert(QStringLiteral("data_version"), QStringLiteral("hanoi-20261024-v1"));
+                  QStringLiteral("qtmaps-map-package-v2"));
+    vector.insert(QStringLiteral("data_version"), QStringLiteral("hanoi-20261111-v2"));
     vector.insert(QStringLiteral("manifest_sha256"), QString(64, QLatin1Char('b')));
-    vector.insert(QStringLiteral("style_contract_version"), QStringLiteral("qtmaps-style-v1"));
-    vector.insert(QStringLiteral("style_revision"), QStringLiteral("qtmaps-hanoi-v1"));
-    vector.insert(QStringLiteral("layer_schema_version"), 1);
+    vector.insert(QStringLiteral("style_contract_version"), QStringLiteral("qtmaps-style-v2"));
+    vector.insert(QStringLiteral("style_revision"), QStringLiteral("qtmaps-hanoi-v2"));
+    vector.insert(QStringLiteral("layer_schema_version"), 2);
     QJsonObject sourcePbf;
     sourcePbf.insert(QStringLiteral("name"), QStringLiteral("vietnam-latest.osm.pbf"));
     sourcePbf.insert(QStringLiteral("sha256"), QString(64, QLatin1Char('a')));
@@ -204,7 +211,7 @@ QString createRasterPackage(QTemporaryDir &temporary)
     tiles.insert(QStringLiteral("sha256"), digest(databasePath));
     QJsonObject manifest;
     manifest.insert(QStringLiteral("schema_version"), QStringLiteral("qtmaps-raster-package-v1"));
-    manifest.insert(QStringLiteral("package_id"), QStringLiteral("hanoi-raster-20261030-v1"));
+    manifest.insert(QStringLiteral("package_id"), QStringLiteral("hanoi-raster-20261111-v2"));
     manifest.insert(QStringLiteral("source_vector_package"), vector);
     manifest.insert(QStringLiteral("source_pbf"), sourcePbf);
     manifest.insert(QStringLiteral("bounds"), QJsonArray{105.78, 20.97, 105.90, 21.10});
@@ -285,8 +292,8 @@ private slots:
         QString error;
         QVERIFY2(qtmaps::map::MapPackageManifest::loadAndValidate(root, &manifest, &error),
                  qPrintable(error));
-        QCOMPARE(manifest.dataVersion, QStringLiteral("hanoi-20261024-v1"));
-        QCOMPARE(manifest.fileSha256.size(), 5);
+        QCOMPARE(manifest.dataVersion, QStringLiteral("hanoi-20261111-v2"));
+        QCOMPARE(manifest.fileSha256.size(), 7);
     }
 
     void manifestRejectsMissingAndCorruptFiles()
@@ -299,6 +306,14 @@ private slots:
         qtmaps::map::MapPackageManifest manifest;
         QString error;
         QVERIFY(!qtmaps::map::MapPackageManifest::loadAndValidate(root, &manifest, &error));
+        QVERIFY(error.contains(QStringLiteral("Cannot read package file")));
+
+        QTemporaryDir highDpiTemporary;
+        QVERIFY(highDpiTemporary.isValid());
+        const QString highDpiRoot = createPackage(highDpiTemporary);
+        QVERIFY(!highDpiRoot.isEmpty());
+        QVERIFY(QFile::remove(highDpiRoot + QStringLiteral("/sprites/sprite@2x.png")));
+        QVERIFY(!qtmaps::map::MapPackageManifest::loadAndValidate(highDpiRoot, &manifest, &error));
         QVERIFY(error.contains(QStringLiteral("Cannot read package file")));
 
         QTemporaryDir corruptTemporary;
@@ -383,13 +398,13 @@ private slots:
                  qPrintable(error));
         QCOMPARE(manifest.tileCount, 847);
         QCOMPARE(manifest.maximumZoom, 16);
-        QCOMPARE(manifest.styleRevision, QStringLiteral("qtmaps-hanoi-v1"));
+        QCOMPARE(manifest.styleRevision, QStringLiteral("qtmaps-hanoi-v2"));
 
         QTemporaryDir mismatchTemporary;
         const QString mismatchRoot = createRasterPackage(mismatchTemporary);
         mutateManifest(mismatchRoot, [](QJsonObject &object) {
             QJsonObject vector = object.value(QStringLiteral("source_vector_package")).toObject();
-            vector.insert(QStringLiteral("style_revision"), QStringLiteral("qtmaps-hanoi-v2"));
+            vector.insert(QStringLiteral("style_revision"), QStringLiteral("future-v3"));
             object.insert(QStringLiteral("source_vector_package"), vector);
         });
         QVERIFY(

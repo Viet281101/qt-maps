@@ -137,14 +137,34 @@ def collect_metadata(args, root, output_dir):
     }
 
 
-def runtime_environment(root, platform_name=None):
+def runtime_environment(root, qt_prefix, platform_name=None):
+    qmake = qt_prefix / "bin/qmake"
+    if not qmake.is_file():
+        raise RuntimeError(f"Qt qmake is missing: {qmake}")
+
+    def qmake_query(key):
+        result = subprocess.run(
+            [str(qmake), "-query", key],
+            check=True,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+        )
+        value = result.stdout.strip()
+        if not value:
+            raise RuntimeError(f"Qt qmake returned no value for {key}: {qmake}")
+        return Path(value)
+
     environment = os.environ.copy()
-    qml_runtime = root / "generated/unit-01b/qml-runtime/usr/lib/x86_64-linux-gnu/qt5"
+    qt_archdata = qmake_query("QT_INSTALL_ARCHDATA")
+    qt_plugins = qmake_query("QT_INSTALL_PLUGINS")
+    if not (qt_archdata / "qml").is_dir() or not qt_plugins.is_dir():
+        raise RuntimeError(f"Selected Qt runtime is incomplete under {qt_prefix}")
     maplibre = root / "generated/unit-01b/maplibre-install"
     for name, paths in {
         "LD_LIBRARY_PATH": [maplibre / "lib"],
-        "QT_PLUGIN_PATH": [maplibre / "plugins", qml_runtime / "plugins"],
-        "QML2_IMPORT_PATH": [maplibre / "qml", qml_runtime / "qml"],
+        "QT_PLUGIN_PATH": [maplibre / "plugins", qt_plugins],
+        "QML2_IMPORT_PATH": [maplibre / "qml", qt_archdata / "qml"],
     }.items():
         existing = environment.get(name)
         values = [str(path) for path in paths]
@@ -595,6 +615,7 @@ def main():
     root = Path(__file__).resolve().parents[2]
     args = parse_args(root)
     args.app = args.app.resolve()
+    args.qt_prefix = args.qt_prefix.resolve()
     args.map_package = args.map_package.resolve()
     args.raster_package = args.raster_package.resolve()
     args.valhalla_service = args.valhalla_service.resolve()
@@ -611,7 +632,7 @@ def main():
     timestamp = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
     session_dir = (args.output or root / "generated/benchmarks" / timestamp).resolve()
     session_dir.mkdir(parents=True, exist_ok=False)
-    environment = runtime_environment(root, args.platform)
+    environment = runtime_environment(root, args.qt_prefix, args.platform)
     modes = ("online", "offline") if args.mode == "both" else (args.mode,)
     if "offline" in modes:
         verify_offline_available(root, environment)

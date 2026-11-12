@@ -46,12 +46,16 @@ These directories describe intended ownership. Application-code directories are 
 
 ## Storage Model
 
-- **MBTiles**: committed Unit 03 vector-tile container inside ignored `data/packages/hanoi-<yyyymmdd>-v1/`; the package includes a checksummed manifest and style/glyph/sprite resources plus an ignored `current` pointer.
+- **MBTiles**: ignored immutable vector-tile containers live at
+  `data/packages/hanoi-<yyyymmdd>-v2/`; the v2 package includes a checksummed
+  manifest, the five-layer bounded schema, and style/glyph/sprite resources
+  plus an ignored `current` pointer. A v1 package is intentionally rejected by
+  the v2 runtime contract rather than being silently downgraded.
 - **Product style source**: `resources/map/hanoi-style.json` is the canonical
   source-controlled template. The package pipeline validates and canonicalizes
   its local URL token deterministically; the synthetic vector fixture neither
   defines nor emits the product style.
-- **Raster MBTiles**: ignored immutable `data/raster-packages/hanoi-raster-<yyyymmdd>-v1/` packages contain locally rendered PNG tiles plus a checksummed manifest. The manifest binds the raster to the exact map-package schema, style contract/revision, source PBF checksum, bounds, and zoom range; incompatible packages are rejected and regenerated after Unit 07D/#32.
+- **Raster MBTiles**: ignored immutable `data/raster-packages/hanoi-raster-<yyyymmdd>-v2/` packages contain locally rendered PNG tiles plus a checksummed manifest. The manifest binds the raster to the exact map-package schema, style contract/revision, source PBF checksum, bounds, and zoom range; incompatible packages are rejected and regenerated with the matching vector package.
 - **Routing graph**: generated Valhalla graph tiles, versioned by source extract and build configuration outside Git.
 - **Geocoding database**: proposed SQLite database with FTS5 tables generated from selected source data.
 - **Orthography files or tiles**: bounded by the agreed region, zoom range, license, and attribution requirements.

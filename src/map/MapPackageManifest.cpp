@@ -117,8 +117,9 @@ bool MapPackageManifest::loadAndValidate(const QString &packagePath, MapPackageM
         parsed.north = bounds.at(3).toDouble();
     }
     const QRegularExpression digestPattern(QStringLiteral("^[0-9a-f]{64}$"));
-    const QStringList expectedLayers = {QStringLiteral("building"), QStringLiteral("place"),
-                                        QStringLiteral("transportation")};
+    const QStringList expectedLayers = {QStringLiteral("building"), QStringLiteral("landuse"),
+                                        QStringLiteral("place"), QStringLiteral("transportation"),
+                                        QStringLiteral("water")};
     if (parsed.schemaVersion != contract::mapPackageSchemaVersion() ||
         parsed.styleContractVersion != contract::styleContractVersion() ||
         parsed.styleRevision != contract::styleRevision() || parsed.dataVersion.isEmpty() ||
@@ -147,8 +148,9 @@ bool MapPackageManifest::loadAndValidate(const QString &packagePath, MapPackageM
 
     const QJsonObject files = object.value(QStringLiteral("files")).toObject();
     const QStringList required = {
-        QStringLiteral("tiles.mbtiles"), QStringLiteral("style/style.json"),
-        QStringLiteral("sprites/sprite.json"), QStringLiteral("sprites/sprite.png")};
+        QStringLiteral("tiles.mbtiles"),          QStringLiteral("style/style.json"),
+        QStringLiteral("sprites/sprite.json"),    QStringLiteral("sprites/sprite.png"),
+        QStringLiteral("sprites/sprite@2x.json"), QStringLiteral("sprites/sprite@2x.png")};
     for (auto iterator = files.constBegin(); iterator != files.constEnd(); ++iterator) {
         const QString relativePath = iterator.key();
         const QJsonObject fileEntry = iterator.value().toObject();
@@ -220,7 +222,7 @@ bool MapPackageManifest::loadAndValidate(const QString &packagePath, MapPackageM
         tileUrls.size() != 1 ||
         tileUrls.at(0).toString() != token + QStringLiteral("/tiles/{z}/{x}/{y}.pbf")) {
         if (errorMessage) {
-            *errorMessage = QStringLiteral("Style resource URLs violate qtmaps-style-v1");
+            *errorMessage = QStringLiteral("Style resource URLs violate the qtmaps contract");
         }
         return false;
     }

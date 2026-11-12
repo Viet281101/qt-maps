@@ -6,7 +6,7 @@ namespace qtmaps {
 namespace map {
 namespace contract {
 
-constexpr int kLayerSchemaVersion = 1;
+constexpr int kLayerSchemaVersion = 2;
 constexpr double kWest = 105.78;
 constexpr double kSouth = 20.97;
 constexpr double kEast = 105.90;
@@ -17,11 +17,11 @@ constexpr int kRasterMinimumZoom = 12;
 constexpr int kRasterMaximumZoom = 16;
 constexpr int kRasterTileCount = 847;
 
-inline QString mapPackageSchemaVersion() { return QStringLiteral("qtmaps-map-package-v1"); }
+inline QString mapPackageSchemaVersion() { return QStringLiteral("qtmaps-map-package-v2"); }
 
-inline QString styleContractVersion() { return QStringLiteral("qtmaps-style-v1"); }
+inline QString styleContractVersion() { return QStringLiteral("qtmaps-style-v2"); }
 
-inline QString styleRevision() { return QStringLiteral("qtmaps-hanoi-v1"); }
+inline QString styleRevision() { return QStringLiteral("qtmaps-hanoi-v2"); }
 
 inline QString attribution() { return QStringLiteral("© OpenStreetMap contributors, ODbL 1.0"); }
 

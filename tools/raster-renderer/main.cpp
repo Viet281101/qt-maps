@@ -5,6 +5,7 @@
 #include <QFileInfo>
 #include <QGeoCoordinate>
 #include <QGuiApplication>
+#include <QImage>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QQuickWindow>
@@ -129,9 +130,21 @@ private slots:
             return;
         }
         rendering_ = false;
-        const QImage image = window_->grabWindow();
-        if (image.size() != QSize(256, 256)) {
-            qCritical() << "Unexpected raster tile image size" << image.size();
+        QImage image = window_->grabWindow();
+        const QSize tileSize(256, 256);
+        if (image.size() != tileSize) {
+            const int scale = image.width() / tileSize.width();
+            if (scale <= 1 || scale > 4 || image.width() != tileSize.width() * scale ||
+                image.height() != tileSize.height() * scale) {
+                qCritical() << "Unexpected raster tile image size" << image.size();
+                emit completed(false);
+                return;
+            }
+            qInfo() << "Downsampling HiDPI raster capture" << image.size() << "to" << tileSize;
+            image = image.scaled(tileSize, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+        }
+        if (image.size() != tileSize) {
+            qCritical() << "Cannot normalize raster tile image size" << image.size();
             emit completed(false);
             return;
         }
@@ -171,6 +184,7 @@ private:
 
 int main(int argc, char *argv[])
 {
+    QCoreApplication::setAttribute(Qt::AA_DisableHighDpiScaling);
     QGuiApplication application(argc, argv);
     QCoreApplication::setApplicationName(QStringLiteral("QtMaps raster renderer"));
     QCommandLineParser parser;

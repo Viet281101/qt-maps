@@ -2,11 +2,11 @@
 
 ## Status and purpose
 
-This is approved backlog planning, not active implementation. Unit 07D already
-delivered the source-controlled, class-aware Hanoi v1 style. This plan covers
-only the remaining bounded-data context, package-contract migration, and
-Vietnamese typography work while preserving offline operation, attribution,
-package integrity, and performance evidence.
+Unit 07D delivered the source-controlled, class-aware Hanoi v1 style.
+Increment A is implemented on a dedicated branch from current `main`; it covers
+the bounded-data context and atomic package-contract migration. Increment B
+remains planned. Both preserve offline operation, attribution, package
+integrity, and performance evidence.
 
 The factual baseline is `docs/map/hanoi-vector-style-audit.md`. Implement each
 increment on a dedicated branch from then-current `main`; do not revive the
@@ -22,9 +22,13 @@ archived `unit-07e-verify` branch or mix this work with i915 investigation.
   `SOURCE_LAYERS`, resource/package revisions, `MapPackageManifest`, and
   positive/negative tests without weakening checksum or loopback URL checks.
 - Rebuild ignored vector and raster packages reproducibly from approved local
-  inputs. A v1/v2 mismatch must be a visible rejection, never a fallback.
-- Capture fixed-camera visual evidence and run the Release matrix only when the
-  owner explicitly authorizes render/benchmark work.
+  inputs only after confirming the local inputs and available disk space. This
+  is complete for `hanoi-20261111-v2-r2` and
+  `hanoi-raster-20261111-v2-r2`; a v1/v2 mismatch is a visible rejection,
+  never a fallback.
+- Owner-authorized fixed-camera/runtime review and focused direct-GPU N=3
+  pan/zoom plus real-Valhalla navigation evidence are complete. A full Release
+  matrix and soak remain out of scope until separately authorized.
 
 ## Increment B: Vietnamese typography and bounded labels (#31)
 

@@ -13,9 +13,9 @@ preserved in Git history through `e0a8086`.
 
 ## Current Goal
 
-Prepare the Qt 5.15.18 MapLibre rebuild target and runtime-selection repair
-for focused review, without running a MapLibre build, opening a window, or
-restarting render/benchmark work. Do not open a 07E PR.
+Complete review and publication of the atomic #30 + #32 Hanoi v2
+package-contract migration from current `main`, without reusing the stale 07E
+branch or expanding the owner-approved render/benchmark scope.
 
 ## Publication Status
 
@@ -34,8 +34,16 @@ restarting render/benchmark work. Do not open a 07E PR.
 - PR [#38](https://github.com/Viet281101/qt-maps/pull/38),
   `feat/07d-style-only-pr` → `main`, was squash-merged as `ef30610`.
 - PR [#42](https://github.com/Viet281101/qt-maps/pull/42),
-  `codex/qt51518-runtime-integration` → `main`, is open for review; it
-  references #41 and is tracked as `In Progress` in Project #6.
+  `codex/qt51518-runtime-integration` → `main`, was squash-merged as
+  `1157c866`.
+- PR [#44](https://github.com/Viet281101/qt-maps/pull/44),
+  `docs/hanoi-cartography-upgrade-plan` → `main`, was squash-merged as
+  `1c7a05d`.
+- PR [#45](https://github.com/Viet281101/qt-maps/pull/45),
+  `codex/hanoi-v2-contract` → `main`, is open for review. It references #30
+  and #32, and is tracked as `In Progress` in Project #6. Its v2 vector and
+  raster artifacts, runtime toggle, and focused direct-GPU measurements are
+  recorded below; it does not claim a full soak or all-scenario Release matrix.
 - The active follow-up milestone is `Post-demo stabilization`; it has no due
   date until the owner confirms the next delivery target.
 - The Unit 07 remote backups are `origin/chore/07a-repo-structure-maintenance`,
@@ -50,19 +58,19 @@ restarting render/benchmark work. Do not open a 07E PR.
 | 07B | `feat/07b-demo-shell-ui` / `e294167` | merged as PR #35 |
 | 07C | `feat/07c-offline-raster-pr` / `90366bd` | merged as PR #37; old branch remains backup |
 | 07D | `feat/07d-style-only-pr` / `aa7f868` | merged as PR #38; old branch remains backup |
-| 07E | `unit-07e-verify` / `50fc763` | pushed; depends on 07D |
+| 07E | `unit-07e-verify` / `50fc763` | archived backup; do not revive or open a PR |
 
 `chore/fix-benchmark-qt-runtime` is a separate local follow-up above 07E and
 is not part of the requested Unit 07 backup push.
 
 ## i915 Render-Benchmark Freeze
 
-Render benchmarks are frozen while the open i915 stability blocker is resolved.
-Do not run the application, MapLibre/OpenGL paths, GPU benchmarks, or GPU
-configuration experiments without explicit owner approval. Retained render
-measurements are historical evidence only and must not be used as current
-performance or stability conclusions. Non-render build and test verification
-remains allowed.
+The i915 stability blocker remains open. On 2026-11-11 the owner explicitly
+authorized only the v2 raster render, runtime toggle, and focused benchmark
+validation recorded below. Do not run further application, MapLibre/OpenGL,
+GPU benchmark, GPU configuration, or i915-investigation work without another
+explicit owner instruction. Historical measurements remain historical; the
+new scoped direct-GPU measurements are current only for their stated scenarios.
 
 ## Working Rules
 
@@ -81,18 +89,16 @@ remains allowed.
 
 ## Decisions Waiting for Owner
 
-1. Any privileged i915 investigation, GPU configuration change, or restart of
-   render benchmarking.
-2. Scope, sequencing, and acceptance evidence for the planned Hanoi
-   cartography contract migration (#30--#32).
+1. Any privileged i915 investigation or GPU configuration change.
+2. Any benchmark expansion beyond the recorded v2 pan/zoom and real-Valhalla
+   navigation scenarios, including a full soak or all-scenario Release matrix.
 
 ## Next Up
 
-1. Review PR #42, the focused Qt 5.15.18 rebuild/runtime-selection change; do
-   not open 07E first.
-2. Do not restart rendering or benchmark work.
-3. Follow up separately on default-disabled instrumentation/performance-badge
-   behavior; do not fold it into 07C.
+1. Complete final test/review gates for PR #45 and request its merge when the
+   remote branch is clean and all evidence is documented.
+2. Keep #31 typography/labels and instrumentation follow-up separate.
+3. Do not broaden GPU work while the i915 blocker is unresolved.
 
 ## Latest Verification
 
@@ -180,3 +186,41 @@ remains allowed.
   baseline: source-controlled class-aware roads are complete; the remaining
   implementation is atomic #30/#32 package migration followed by #31
   typography/labels. Its next dependency is the runtime fix in PR #42.
+- On 2026-11-11, after #42 and #44 were squash-merged, work began on the
+  atomic #30 + #32 migration from `origin/main`. The tracked source schema,
+  product style, vector/raster validators, and test fixtures now use the v2
+  contract (`building`, `landuse`, `place`, `transportation`, `water`).
+  `java -jar ... verify` accepted the schema and the approved local PBF/JAR
+  generated ignored `data/packages/hanoi-20261111-v2-r1` with no network,
+  two threads, a 6 GiB heap cap, 59.289 s duration, and 2,454,948 KiB peak
+  RSS. The first generated v2 package exposed a stale builder layer-schema
+  value; it was retained as ignored diagnostic output, the builder was fixed,
+  and only `v2-r1` became `current`.
+- On 2026-11-11, following explicit owner authorization, the v2 renderer
+  exposed a HiDPI 512×512 capture while the package contract requires 256×256.
+  The renderer now accepts only an exact integral 2×--4× capture and smoothly
+  downscales it to 256×256; other dimensions remain a hard failure. Rendering
+  produced 847/847 256×256 local PNGs in 230.734 s. The builder and manifest
+  now include required `sprite@2x.json` and `sprite@2x.png` resources so
+  MapLibre no longer issues HiDPI sprite 404s.
+- The ignored current vector package is
+  `data/packages/hanoi-20261111-v2-r2`; its style and tiles are byte-identical
+  to v2-r1, with the required HiDPI sprite resources added. The ignored current
+  raster package is `data/raster-packages/hanoi-raster-20261111-v2-r2`: 847
+  PNG tiles, 15,831,040 bytes, SHA-256
+  `de4b199a708ce5ca1d1607919e3c2609bfa8298c6252f1aba0bba2a144fc0f08`, bound
+  to vector manifest SHA-256
+  `41370119febcdb3acc70134073837602a5647fbae6e6d60282f8a3c6c8d3bee9`.
+  A 1366×768 vector → raster → vector review completed with the r2 packages,
+  retained/released raster resources correctly, and had no sprite 404.
+- The benchmark runner previously selected a stale Qt 5.15.13 runtime. It now
+  queries the selected Qt prefix's qmake for QML/plugin paths, with a dedicated
+  regression test. Xvfb is llvmpipe and its failing output is not performance
+  evidence. On the physical display, Mesa Intel HD 520 acceleration was
+  confirmed. Direct-GPU N=3 medians passed every locked threshold for v2
+  pan/zoom (59.00 FPS average, 44.33 FPS p5, 117.09 MiB PSS peak, 12.53% CPU
+  peak) and real-Valhalla navigation replay (59.25 FPS average, 52.46 FPS p5,
+  485.54 MiB PSS peak, 21.63% CPU peak). This is focused current evidence, not
+  a full Release matrix or soak; sampler-overhead collection was not run.
+- The post-fix `make QT_EXPECTED_VERSION=5.15.18 test`, format check, and
+  `git diff --check` must pass again after the final review commit.
