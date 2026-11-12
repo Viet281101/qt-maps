@@ -1,0 +1,84 @@
+# Unit 08: Bounded Camera Controller
+
+## Purpose
+
+Unit 08 makes camera behavior deterministic for the bounded Hanoi package.
+It resolves Issue #40 before the route-overlay replacement in #39 so map pan,
+route fitting, navigation follow, and explicit recentering have one owner and
+cannot create callback feedback loops.
+
+## Scope
+
+- Define one controller that accepts a requested camera state and returns the
+  permitted center, zoom, bearing, and pitch.
+- Bound the camera to the active package's declared Hanoi coverage plus a
+  documented viewport-aware edge allowance; never invent coverage outside it.
+- Define zoom min/max, initial/recenter camera, route-fit padding, and
+  navigation-follow camera policy in one source-controlled contract.
+- Preserve an explicit user gesture as the highest-priority request until the
+  gesture ends; do not animate a clamp response back through QML callbacks.
+- Expose a small QML-facing intent API: `initial`, `user`, `recenter`,
+  `routeFit`, and `navigationFollow`.
+- Add deterministic C++ unit coverage for bounds, zoom clamp, antimeridian-free
+  Hanoi geometry, route fit, empty/invalid routes, and intent precedence.
+
+## Contract and ownership
+
+`MapCanvas.qml` requests camera *intent* only. A C++ controller owns
+normalization and emits one resulting camera state; MapLibre receives that
+state once. The controller must not read back provider camera changes and issue
+another command merely because a value was normalized.
+
+The source of truth is the active validated map package manifest. A missing,
+invalid, or incompatible package leaves the existing fail-closed map state in
+place; it must not silently use broad Vietnam or world bounds.
+
+| Intent | Trigger | Required behavior |
+| --- | --- | --- |
+| `initial` | package becomes ready | use documented Hanoi overview camera |
+| `user` | pan/zoom/rotate gesture | clamp only at gesture completion |
+| `recenter` | explicit user control | restore overview or active follow target |
+| `routeFit` | valid route accepted | fit route with stable UI-safe padding |
+| `navigationFollow` | replay advances | keep position visible without fighting gestures |
+
+## Invariants
+
+1. Every emitted center is inside the permitted package extent after accounting
+   for viewport size; every emitted zoom is within the contract range.
+2. A user gesture cannot be overwritten by route or navigation updates while
+   it is active.
+3. Invalid geometry, a degenerate route, or an unavailable package produces a
+   defined no-op/fallback result, never NaN coordinates or an unbounded jump.
+4. Route fitting and recentering are idempotent for unchanged inputs.
+5. The controller has no render-loop, network, tile-server, or GPU dependency.
+
+## Acceptance criteria
+
+- The camera contract is documented with exact Hanoi bounds, min/max zoom,
+  overview camera, and route-fit padding units.
+- C++ tests cover ordinary, edge, degenerate, and invalid inputs without a
+  window or MapLibre runtime.
+- QML integration has one command path per intent and no bidirectional camera
+  binding/callback loop.
+- Existing routing, offline fallback, navigation replay, labels, and package
+  validation remain unchanged outside camera normalization.
+- `make check` and `make review` pass.
+- A fixed-viewport visual pan/zoom review and any GPU comparison occur only
+  with separate owner authorization; no performance conclusion is implied by
+  unit tests.
+
+## Non-goals
+
+- Replacing the Canvas route overlay (#39), changing route geometry, or adding
+  search/orthography features.
+- Nationwide coverage, GPS positioning, live traffic, or camera persistence.
+- Qt 6 APIs, renderer replacement, i915 configuration changes, GPU benchmark
+  expansion, or a soak test.
+
+## Delivery order
+
+1. Record exact bounds and camera constants beside package metadata.
+2. Implement the pure controller and unit tests.
+3. Wire QML intents without changing route overlay behavior.
+4. Run non-GPU gates, review the diff, then request scoped visual/GPU approval.
+5. Start #39 only after the controller contract is accepted.
