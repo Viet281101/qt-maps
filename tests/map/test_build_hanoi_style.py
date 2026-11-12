@@ -31,7 +31,7 @@ class HanoiStyleTest(unittest.TestCase):
         self.assertNotIn("https://", first)
 
         style = json.loads(first)
-        self.assertEqual(style["metadata"]["qtmaps:style_revision"], "qtmaps-hanoi-v2")
+        self.assertEqual(style["metadata"]["qtmaps:style_revision"], "qtmaps-hanoi-v3")
         self.assertEqual(
             style["sources"]["qtmaps"]["tiles"],
             ["__QTMAPS_BASE_URL__/tiles/{z}/{x}/{y}.pbf"],
@@ -42,8 +42,15 @@ class HanoiStyleTest(unittest.TestCase):
         self.assertEqual(layers["green-areas"]["source-layer"], "landuse")
         self.assertIn("road-secondary-fill", layers)
         self.assertIn("road-local-fill", layers)
-        self.assertEqual(layers["road-labels-prepared"]["layout"]["visibility"], "none")
-        self.assertEqual(layers["hanoi-label"]["layout"]["visibility"], "none")
+        self.assertEqual(
+            layers["road-labels-prepared"]["layout"]["text-font"], ["Noto Sans Regular"]
+        )
+        self.assertEqual(layers["road-labels-prepared"]["minzoom"], 14)
+        self.assertEqual(
+            layers["place-labels"]["layout"]["text-field"],
+            ["coalesce", ["get", "name_vi"], ["get", "name"]],
+        )
+        self.assertEqual(layers["place-labels"]["layout"]["text-font"], ["Noto Sans Regular"])
         self.assertLess(
             layers["road-local-fill"]["paint"]["line-width"]["stops"][-1][1],
             layers["road-major-fill"]["paint"]["line-width"]["stops"][-1][1],

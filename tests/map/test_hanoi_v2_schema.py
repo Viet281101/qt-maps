@@ -39,17 +39,20 @@ class HanoiV2SchemaTest(unittest.TestCase):
     def test_style_and_builder_share_the_v2_contract(self):
         style = json.loads(STYLE.read_text(encoding="utf-8"))
         layers = {layer["id"]: layer for layer in style["layers"]}
-        self.assertEqual(style["metadata"]["qtmaps:style_revision"], "qtmaps-hanoi-v2")
+        self.assertEqual(style["metadata"]["qtmaps:style_revision"], "qtmaps-hanoi-v3")
         self.assertEqual(layers["water"]["source-layer"], "water")
         self.assertEqual(layers["green-areas"]["source-layer"], "landuse")
         self.assertEqual(layers["water"]["minzoom"], 12)
         self.assertEqual(layers["green-areas"]["minzoom"], 13)
         builder = BUILDER.read_text(encoding="utf-8")
-        self.assertIn('SCHEMA_VERSION = "qtmaps-map-package-v2"', builder)
-        self.assertIn('STYLE_CONTRACT_VERSION = "qtmaps-style-v2"', builder)
+        self.assertIn('SCHEMA_VERSION = "qtmaps-map-package-v3"', builder)
+        self.assertIn('STYLE_CONTRACT_VERSION = "qtmaps-style-v3"', builder)
         self.assertIn("LAYER_SCHEMA_VERSION = 2", builder)
         self.assertIn('sprites_dir / "sprite@2x.json"', builder)
         self.assertIn('sprites_dir / "sprite@2x.png"', builder)
+        self.assertIn('generate_hanoi_glyphs.py', builder)
+        self.assertIn('FONT_STACK = "Noto Sans Regular"', builder)
+        self.assertIn('"glyph_revision": "noto-sans-regular-v1"', builder)
         self.assertIn('SOURCE_LAYERS = ["building", "landuse", "place", "transportation", "water"]', builder)
         self.assertIn('repository / "tools/data-pipeline/unit07d-hanoi-v2.yml"', builder)
 

@@ -19,13 +19,15 @@ from build_hanoi_style import render_style
 BOUNDS = [105.78, 20.97, 105.90, 21.10]
 MIN_ZOOM = 12
 MAX_ZOOM = 15
-SCHEMA_VERSION = "qtmaps-map-package-v2"
-STYLE_CONTRACT_VERSION = "qtmaps-style-v2"
+SCHEMA_VERSION = "qtmaps-map-package-v3"
+STYLE_CONTRACT_VERSION = "qtmaps-style-v3"
 LAYER_SCHEMA_VERSION = 2
 ATTRIBUTION = "© OpenStreetMap contributors, ODbL 1.0"
 PLANETILER_VERSION = "0.10.2"
 PLANETILER_SHA256 = "f310bd0413e2e4512b27f4046d418664e8e1d3bf31603c2a70e23de06c167e4d"
 SOURCE_LAYERS = ["building", "landuse", "place", "transportation", "water"]
+FONT_PATH = Path("/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf")
+FONT_STACK = "Noto Sans Regular"
 
 
 def sha256(path):
@@ -42,7 +44,7 @@ def parse_args():
     parser.add_argument("--planetiler-jar", type=Path, required=True)
     parser.add_argument("--output-root", type=Path, default=Path("data/packages"))
     parser.add_argument("--date", default=datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d"))
-    parser.add_argument("--revision", default="v2")
+    parser.add_argument("--revision", default="v3")
     parser.add_argument("--heap", default="6g")
     parser.add_argument("--threads", type=int, default=2)
     return parser.parse_args()
@@ -53,7 +55,8 @@ def main():
     repository = Path(__file__).resolve().parents[2]
     pbf = args.pbf.resolve()
     jar = args.planetiler_jar.resolve()
-    for path, label in ((pbf, "PBF"), (jar, "Planetiler jar")):
+    font_path = FONT_PATH.resolve()
+    for path, label in ((pbf, "PBF"), (jar, "Planetiler jar"), (font_path, "Noto Sans font")):
         if not path.is_file():
             raise SystemExit(f"{label} does not exist: {path}")
     jar_sha256 = sha256(jar)
@@ -107,7 +110,18 @@ def main():
         glyphs_dir = staging / "glyphs"
         sprites_dir = staging / "sprites"
         style_dir.mkdir()
-        shutil.copytree(resources / "fonts", glyphs_dir)
+        subprocess.run(
+            [
+                sys.executable,
+                str(repository / "tools/data-pipeline/generate_hanoi_glyphs.py"),
+                "--font",
+                str(font_path),
+                "--output",
+                str(glyphs_dir),
+            ],
+            cwd=repository,
+            check=True,
+        )
         sprites_dir.mkdir()
         shutil.copy2(resources / "sprite.json", sprites_dir / "sprite.json")
         shutil.copy2(resources / "sprite.png", sprites_dir / "sprite.png")
@@ -140,13 +154,18 @@ def main():
             "planetiler": {"version": PLANETILER_VERSION, "sha256": jar_sha256},
             "source_pbf": {"name": pbf.name, "sha256": sha256(pbf)},
             "pipeline_config": {
-                "revision": "unit07d-v2",
+                "revision": "unit07d-v3-typography",
                 "sha256": sha256(source_schema_path),
                 "style_template_sha256": sha256(style_template_path),
             },
             "resources": {
                 "style_revision": style_revision,
-                "glyph_revision": "qtmaps-sans-v1",
+                "glyph_revision": "noto-sans-regular-v1",
+                "glyph_font": {
+                    "family": FONT_STACK,
+                    "license": "OFL-1.1",
+                    "sha256": sha256(font_path),
+                },
                 "sprite_revision": "qtmaps-empty-v1",
             },
             "attribution": ATTRIBUTION,

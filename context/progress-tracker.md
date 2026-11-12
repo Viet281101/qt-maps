@@ -13,9 +13,9 @@ preserved in Git history through `e0a8086`.
 
 ## Current Goal
 
-Complete review and publication of the atomic #30 + #32 Hanoi v2
-package-contract migration from current `main`, without reusing the stale 07E
-branch or expanding the owner-approved render/benchmark scope.
+Complete #31's Vietnamese typography and bounded-label contract from current
+`main`, without reusing the stale 07E branch or expanding the owner-approved
+render/benchmark scope.
 
 ## Publication Status
 
@@ -40,10 +40,9 @@ branch or expanding the owner-approved render/benchmark scope.
   `docs/hanoi-cartography-upgrade-plan` → `main`, was squash-merged as
   `1c7a05d`.
 - PR [#45](https://github.com/Viet281101/qt-maps/pull/45),
-  `codex/hanoi-v2-contract` → `main`, is open for review. It references #30
-  and #32, and is tracked as `In Progress` in Project #6. Its v2 vector and
-  raster artifacts, runtime toggle, and focused direct-GPU measurements are
-  recorded below; it does not claim a full soak or all-scenario Release matrix.
+  `codex/hanoi-v2-contract` → `main`, was squash-merged as `8fdfd3f`. Its
+  Project #6 item is `Done`; #30 is closed/Done and #32 remains In Progress
+  for its broader verification scope.
 - The active follow-up milestone is `Post-demo stabilization`; it has no due
   date until the owner confirms the next delivery target.
 - The Unit 07 remote backups are `origin/chore/07a-repo-structure-maintenance`,
@@ -95,9 +94,9 @@ new scoped direct-GPU measurements are current only for their stated scenarios.
 
 ## Next Up
 
-1. Complete final test/review gates for PR #45 and request its merge when the
-   remote branch is clean and all evidence is documented.
-2. Keep #31 typography/labels and instrumentation follow-up separate.
+1. Complete #31 typography/labels on `codex/hanoi-vietnamese-labels` and
+   retain a fail-closed v3 package/raster boundary until graphical review.
+2. Keep #32 verification and instrumentation follow-up separate.
 3. Do not broaden GPU work while the i915 blocker is unresolved.
 
 ## Latest Verification
@@ -224,3 +223,13 @@ new scoped direct-GPU measurements are current only for their stated scenarios.
   a full Release matrix or soak; sampler-overhead collection was not run.
 - The post-fix `make QT_EXPECTED_VERSION=5.15.18 test`, format check, and
   `git diff --check` must pass again after the final review commit.
+- On 2026-11-12, #45 was squash-merged as `8fdfd3f`; #30 was closed and moved
+  to Done in Project #6. #31 then moved to In Progress on its dedicated branch.
+  It upgrades the contract to v3, uses local Noto Sans Regular (OFL-1.1), and
+  emits only four required glyph ranges. The ignored
+  `data/packages/hanoi-20261112-v3` vector package built offline in 62.458 s
+  with two threads and a 6 GiB heap cap; it has the verified Noto font SHA-256
+  `89c3c497f618fdaa0b2d1e98fef93582f28c71debd2c4a8cdf41f190ced2909d`.
+  Non-render `make ... test` passed 16/16 in 12.40 s. The v2 raster package is
+  correctly incompatible with this new contract; do not render or visually
+  review v3 without a new explicit owner instruction.

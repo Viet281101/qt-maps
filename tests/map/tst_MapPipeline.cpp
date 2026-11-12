@@ -52,7 +52,7 @@ QString digest(const QString &path)
 
 QString createPackage(QTemporaryDir &temporary)
 {
-    const QString root = temporary.path() + QStringLiteral("/hanoi-20261111-v2");
+    const QString root = temporary.path() + QStringLiteral("/hanoi-20261112-v3");
     if (!QDir().mkpath(root + QStringLiteral("/style")) ||
         !QDir().mkpath(root + QStringLiteral("/glyphs/Noto Sans Regular")) ||
         !QDir().mkpath(root + QStringLiteral("/sprites"))) {
@@ -69,6 +69,12 @@ QString createPackage(QTemporaryDir &temporary)
                                 "{\"id\":\"place\",\"source-layer\":\"place\"},"
                                 "{\"id\":\"road\",\"source-layer\":\"transportation\"}]}\n"));
     writeFile(root + QStringLiteral("/glyphs/Noto Sans Regular/0-255.pbf"),
+              QByteArrayLiteral("glyph-fixture"));
+    writeFile(root + QStringLiteral("/glyphs/Noto Sans Regular/256-511.pbf"),
+              QByteArrayLiteral("glyph-fixture"));
+    writeFile(root + QStringLiteral("/glyphs/Noto Sans Regular/768-1023.pbf"),
+              QByteArrayLiteral("glyph-fixture"));
+    writeFile(root + QStringLiteral("/glyphs/Noto Sans Regular/7680-7935.pbf"),
               QByteArrayLiteral("glyph-fixture"));
     writeFile(root + QStringLiteral("/sprites/sprite.json"), QByteArrayLiteral("{}\n"));
     writeFile(root + QStringLiteral("/sprites/sprite.png"), QByteArrayLiteral("png-fixture"));
@@ -101,6 +107,9 @@ QString createPackage(QTemporaryDir &temporary)
         QStringLiteral("tiles.mbtiles"),
         QStringLiteral("style/style.json"),
         QStringLiteral("glyphs/Noto Sans Regular/0-255.pbf"),
+        QStringLiteral("glyphs/Noto Sans Regular/256-511.pbf"),
+        QStringLiteral("glyphs/Noto Sans Regular/768-1023.pbf"),
+        QStringLiteral("glyphs/Noto Sans Regular/7680-7935.pbf"),
         QStringLiteral("sprites/sprite.json"),
         QStringLiteral("sprites/sprite.png"),
         QStringLiteral("sprites/sprite@2x.json"),
@@ -122,9 +131,9 @@ QString createPackage(QTemporaryDir &temporary)
     QJsonObject sourcePbf;
     sourcePbf.insert(QStringLiteral("sha256"), QString(64, QLatin1Char('a')));
     QJsonObject manifest;
-    manifest.insert(QStringLiteral("schema_version"), QStringLiteral("qtmaps-map-package-v2"));
-    manifest.insert(QStringLiteral("data_version"), QStringLiteral("hanoi-20261111-v2"));
-    manifest.insert(QStringLiteral("style_contract_version"), QStringLiteral("qtmaps-style-v2"));
+    manifest.insert(QStringLiteral("schema_version"), QStringLiteral("qtmaps-map-package-v3"));
+    manifest.insert(QStringLiteral("data_version"), QStringLiteral("hanoi-20261112-v3"));
+    manifest.insert(QStringLiteral("style_contract_version"), QStringLiteral("qtmaps-style-v3"));
     QJsonObject layerSchema;
     layerSchema.insert(QStringLiteral("version"), 2);
     layerSchema.insert(QStringLiteral("source_layers"),
@@ -142,8 +151,8 @@ QString createPackage(QTemporaryDir &temporary)
     pipelineConfig.insert(QStringLiteral("sha256"), QString(64, QLatin1Char('b')));
     manifest.insert(QStringLiteral("pipeline_config"), pipelineConfig);
     QJsonObject resources;
-    resources.insert(QStringLiteral("style_revision"), QStringLiteral("qtmaps-hanoi-v2"));
-    resources.insert(QStringLiteral("glyph_revision"), QStringLiteral("glyph-test-v1"));
+    resources.insert(QStringLiteral("style_revision"), QStringLiteral("qtmaps-hanoi-v3"));
+    resources.insert(QStringLiteral("glyph_revision"), QStringLiteral("noto-sans-regular-v1"));
     resources.insert(QStringLiteral("sprite_revision"), QStringLiteral("sprite-test-v1"));
     manifest.insert(QStringLiteral("resources"), resources);
     manifest.insert(QStringLiteral("attribution"),
@@ -190,11 +199,11 @@ QString createRasterPackage(QTemporaryDir &temporary)
 
     QJsonObject vector;
     vector.insert(QStringLiteral("package_schema_version"),
-                  QStringLiteral("qtmaps-map-package-v2"));
-    vector.insert(QStringLiteral("data_version"), QStringLiteral("hanoi-20261111-v2"));
+                  QStringLiteral("qtmaps-map-package-v3"));
+    vector.insert(QStringLiteral("data_version"), QStringLiteral("hanoi-20261112-v3"));
     vector.insert(QStringLiteral("manifest_sha256"), QString(64, QLatin1Char('b')));
-    vector.insert(QStringLiteral("style_contract_version"), QStringLiteral("qtmaps-style-v2"));
-    vector.insert(QStringLiteral("style_revision"), QStringLiteral("qtmaps-hanoi-v2"));
+    vector.insert(QStringLiteral("style_contract_version"), QStringLiteral("qtmaps-style-v3"));
+    vector.insert(QStringLiteral("style_revision"), QStringLiteral("qtmaps-hanoi-v3"));
     vector.insert(QStringLiteral("layer_schema_version"), 2);
     QJsonObject sourcePbf;
     sourcePbf.insert(QStringLiteral("name"), QStringLiteral("vietnam-latest.osm.pbf"));
@@ -292,8 +301,8 @@ private slots:
         QString error;
         QVERIFY2(qtmaps::map::MapPackageManifest::loadAndValidate(root, &manifest, &error),
                  qPrintable(error));
-        QCOMPARE(manifest.dataVersion, QStringLiteral("hanoi-20261111-v2"));
-        QCOMPARE(manifest.fileSha256.size(), 7);
+        QCOMPARE(manifest.dataVersion, QStringLiteral("hanoi-20261112-v3"));
+        QCOMPARE(manifest.fileSha256.size(), 10);
     }
 
     void manifestRejectsMissingAndCorruptFiles()
@@ -314,6 +323,15 @@ private slots:
         QVERIFY(!highDpiRoot.isEmpty());
         QVERIFY(QFile::remove(highDpiRoot + QStringLiteral("/sprites/sprite@2x.png")));
         QVERIFY(!qtmaps::map::MapPackageManifest::loadAndValidate(highDpiRoot, &manifest, &error));
+        QVERIFY(error.contains(QStringLiteral("Cannot read package file")));
+
+        QTemporaryDir glyphTemporary;
+        QVERIFY(glyphTemporary.isValid());
+        const QString glyphRoot = createPackage(glyphTemporary);
+        QVERIFY(!glyphRoot.isEmpty());
+        QVERIFY(
+            QFile::remove(glyphRoot + QStringLiteral("/glyphs/Noto Sans Regular/7680-7935.pbf")));
+        QVERIFY(!qtmaps::map::MapPackageManifest::loadAndValidate(glyphRoot, &manifest, &error));
         QVERIFY(error.contains(QStringLiteral("Cannot read package file")));
 
         QTemporaryDir corruptTemporary;
@@ -398,7 +416,7 @@ private slots:
                  qPrintable(error));
         QCOMPARE(manifest.tileCount, 847);
         QCOMPARE(manifest.maximumZoom, 16);
-        QCOMPARE(manifest.styleRevision, QStringLiteral("qtmaps-hanoi-v2"));
+        QCOMPARE(manifest.styleRevision, QStringLiteral("qtmaps-hanoi-v3"));
 
         QTemporaryDir mismatchTemporary;
         const QString mismatchRoot = createRasterPackage(mismatchTemporary);
