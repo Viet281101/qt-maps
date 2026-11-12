@@ -1,84 +1,30 @@
 # QtMaps
 
-QtMaps is a Linux desktop mapping application for Vietnam built with Qt 5.15.18, dynamically linked MapLibre Native Qt v3.0.0, C++, and QML/Qt Quick. Qt 5.15.13 is retained for comparison evidence. The project focuses on local and offline operation, car routing, and a navigation experience inspired by familiar modern mapping applications.
+**A local-first desktop map and navigation demo for Hanoi, Vietnam.**
 
-## Project Requirements
+QtMaps combines Qt/QML, local map data, car routing, and simulated navigation.
+It labels local, fixture-backed, and incomplete behavior honestly.
 
-- Render a digital map of Vietnam using OpenStreetMap data.
-- Support raster tiles, vector maps, and orthography layers where suitable licensed data is available.
-- Operate with or without an Internet connection after the required local datasets have been provisioned.
-- Calculate a car route between two points, preferring suitable national and provincial road classes when supported by the underlying OSM data.
-- Display route geometry, a trip summary, and turn-by-turn maneuvers.
-- Provide a simulated navigation mode with camera following, heading-based rotation, a maneuver banner, and re-routing.
-- Measure rendered FPS and total RAM and CPU usage for the application and its child services in a Release build.
-- Track progress and publish weekly reports through GitHub Projects and repository documentation.
+[Tiếng Việt](README_VN.md) · [Project board](https://github.com/users/Viet281101/projects/6) · [Roadmap](context/project-overview.md)
 
-Voice guidance, real-time traffic, mobile and web delivery, user accounts, and production-grade hosted services are outside the current scope.
+## What works today
 
-## First Demo Goal
+| Capability | Current state |
+| --- | --- |
+| Hanoi vector map | Bounded local data with Vietnamese labels |
+| Raster fallback | Local generated recovery fallback |
+| Car routing | Local Valhalla service for the Hanoi graph |
+| Navigation | Deterministic replay, maneuvers, and re-routing flow |
+| Performance | Release FPS, CPU, and memory instrumentation |
 
-The first management demo is due on **November 3, 2026**. During the two-week preparation window, the project prioritizes a stable, visually coherent end-to-end demo:
+The data covers a **bounded Hanoi area**, not nationwide Vietnam. Live traffic,
+GPS, voice guidance, mobile/web, hosted services, POI search, and long soak
+testing are not product capabilities yet.
 
-1. Start a Release build and display a real map centered on the agreed Vietnam demo region.
-2. Present a clear map-first interface with online/offline, layer, route, and performance states.
-3. Select two points, calculate and draw a car route, and display its summary and maneuvers.
-4. Enter a navigation-style view, replay simulated movement, and show the next maneuver.
-5. Display FPS and provide reproducible CPU and RAM measurements from the reference laptop.
-6. Add offline fallback, vector rendering, orthography, and search in that priority order once the core flow is stable.
+## Quick start
 
-Nationwide high-detail coverage, a complete data pipeline, installer packaging, long soak tests, and production hardening may be deferred when they threaten the core demo. Features backed by simulation, fixtures, the Internet, limited geographic coverage, or incomplete integrations must be identified accurately during the demonstration.
-
-## Technical Direction
-
-| Component           | Current direction                                                     |
-| ------------------- | --------------------------------------------------------------------- |
-| UI and runtime      | Qt 5.15.18, MapLibre Native Qt v3.0.0, C++, QML, and Qt Quick          |
-| Build system        | CMake and Ninja using Qt 5 CMake APIs                                 |
-| Raster rendering    | Diagnostic localhost fallback validated; real raster data deferred    |
-| Vector rendering    | Approved MapLibre Native Qt v3.0.0 over validated local MBTiles       |
-| Map data            | Versioned Hanoi package from the approved Geofabrik PBF/Planetiler    |
-| Routing             | Committed local Valhalla child process managed by QtMaps              |
-| Offline search      | A project-built SQLite FTS5 index is the proposed approach            |
-| Position simulation | QtPositioning with route or NMEA replay                               |
-| Performance         | Rendered-frame FPS and process-tree CPU/RAM measurements              |
-
-A proposed technology is not committed until it has been built and exercised successfully with Qt 5.15.18 on the reference machine.
-
-## Developer workflow
-
-The root `Makefile` is the shared developer interface; CMake and Ninja remain
-the authoritative build system. The common commands are intentionally short:
-
-| Goal | Command | Notes |
-| --- | --- | --- |
-| Run the complete local demo | `make run` | Incremental Release build, local Hanoi map, and managed Valhalla |
-| Debug the complete demo | `make debug-run` | Isolated `build-qt515-debug` build with symbols |
-| Debug native code in GDB | `make debug-gdb` | Same Debug demo, opened under GDB |
-| Run automated tests | `make test` | Incremental Release build and all CTest executables |
-| Check work before commit | `make check` | Formatting, Release tests, and unstaged/staged diff checks |
-| Review before merge | `make review` | Requires a clean worktree; isolated Release build plus branch diff checks |
-
-`make run`, `make debug-run`, and `make debug-gdb` query the selected Qt kit,
-validate that it is Qt 5.15.18, then launch through `tools/run-demo.sh`. The
-launcher requires a MapLibre v3.0.0 payload built against the same Qt 5.15.18
-kit; it fails before opening a window when the payload is stale or incomplete.
-`make run` already depends on the build, so `make build && make run` is valid
-but redundant. Pass optional application arguments with `DEMO_ARGS`, for example:
-
-```bash
-make debug-run DEMO_ARGS='--disable-instrumentation --exit-after 15'
-```
-
-Use Debug builds for investigation only. Performance and management-facing
-evidence must come from the Release workflow.
-
-Run `make check` while developing, then commit or stash all changes before
-`make review`. This separation keeps daily feedback fast while ensuring the
-merge gate reviews exactly the committed branch state.
-
-## Build and run details
-
-The validated Release workflow selects system Qt 5.15.18 explicitly and does not change the global `PATH`:
+QtMaps targets **Qt 5.15.18**, CMake, Ninja, C++, QML/Qt Quick, and MapLibre
+Native Qt 3.0.0 on Linux. Qt 5.15.13 is comparison-only.
 
 ```bash
 make requirements
@@ -86,133 +32,32 @@ make test
 make run
 ```
 
-If a machine is missing normal Qt development dependencies, run
-`make requirements-apt`. For the explicit MapLibre rebuild target, use
-`make maplibre-requirements-apt` to print its additional private-Qt/ICU
-dependencies. Both targets only print reviewed `apt install` and `apt-mark
-manual` commands; they never invoke `sudo`. Marking the listed top-level
-packages manual prevents `apt autoremove` from removing their otherwise
-auto-installed dependency closure.
+Use `make check` during development and `make review` before a PR. The latter
+requires a clean worktree. `make requirements-apt` only prints reviewed package
+commands when a prerequisite is missing.
 
-### Intentional MapLibre Qt 5.15.18 rebuild
+## Current snapshot
 
-`make maplibre-qt51518` is an explicit maintenance operation, not part of
-`make test`, `make check`, or `make review`. It configures a fresh Release
-MapLibre Native Qt build against `/usr` Qt 5.15.18, using the approved ignored
-private-header overlay at `generated/unit-01b/qt51518-private/`, installs to
-`generated/unit-01b/maplibre-install-qt51518/`, and rejects an installed core
-library without a `5.15.18` marker. The historical estimate is about 16 minutes
-and 1.1 GiB peak RSS. Override `MAPLIBRE_SRC`, `MAPLIBRE_BUILD_NEW`,
-`MAPLIBRE_INSTALL_NEW`, or `QT_PRIVATE_OVERLAY` only when intentionally using
-separate generated paths.
+- Hanoi v3 includes bounded water, landuse, road hierarchy, and local Noto
+  Sans Vietnamese labels.
+- The matching local raster fallback has 847 tiles and rejects incompatible
+  vector/style contracts.
+- The Release matrix completed 30 direct-GPU runs across five scenarios and
+  online/offline modes; every locked threshold passed.
 
-The target defaults `MAPLIBRE_EXTRA_CXX_FLAGS=-include cstdint` as a contained
-workaround for MapLibre v3 headers that are not self-sufficient under GCC 15.
-It also defaults `MAPLIBRE_BUILD_KEEP_GOING=1`, passing Ninja `-k 0` to collect
-independent compile failures in one owner-authorized build; set it to `0` to
-stop at the first failure.
+That is reference-machine evidence, not a performance guarantee. See the
+[benchmark guide](docs/benchmark/README.md) for methodology.
 
-The current MapLibre development install and Qt QML/runtime plugins are ignored local dependencies. This successful local smoke command runs the checksummed Hanoi package for 15 seconds; the Unit 03 evidence wraps it in the network namespace used for the disconnected check:
+## Find details
 
-The MapLibre development install is an ignored local dependency. Rebuild it
-against Qt 5.15.18 before using `make run`; the launcher obtains QML and plugin
-paths from that kit's `qmake` rather than from `generated/unit-01b/qml-runtime`.
-Use the launcher as the official command:
+| Need | Start here |
+| --- | --- |
+| Build, architecture, UI, and rules | [`context/`](context/) |
+| Delivery status | [Progress tracker](context/progress-tracker.md) |
+| Hanoi map contract | [`docs/map/`](docs/map/) |
+| Benchmarks | [`docs/benchmark/`](docs/benchmark/) |
+| Third-party notices | [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) |
 
-```bash
-make run
-```
+## License and attribution
 
-Historical benchmark commands remain documented in the benchmark evidence; they
-must use the same launcher-selected Qt runtime and a verified matching MapLibre
-payload:
-
-```bash
---benchmark-output /tmp/qtmaps-unit03.csv \
---benchmark-warmup 10 --benchmark-duration 120 --benchmark-interval 1000 \
---scenario unit03-navigation
-```
-
-Recreate the ignored, versioned package only from the approved local inputs:
-
-```bash
-make hanoi-package \
-  HANOI_PBF=generated/unit-01b/source/vietnam-latest.osm.pbf \
-  PLANETILER_JAR=generated/unit-01b/tools/planetiler.jar
-```
-
-Exact disconnected verification and benchmark procedures are recorded in [the Unit 03 evidence](docs/benchmarks/unit-03-local-map-data-pipeline.md).
-
-Advanced users can still run the local routing demo script directly from any directory:
-
-```bash
-/absolute/path/to/QtMaps/tools/run-demo.sh
-```
-
-The script changes to the repository root and passes absolute map, service,
-and config paths. `QTMAPS_APP` may select another already-built binary, while
-`QTMAPS_GDB=1` launches it under GDB. If either Valhalla file is absent, the UI
-reports the exact missing path and does not silently draw a fixture route.
-
-## Current status and limitations
-
-- Qt 5.15.18 plus dynamically linked MapLibre Native Qt v3.0.0 is the production baseline. Qt 5.15.13 is retained only for explicit comparison.
-- The checksummed local vector package currently covers bounded Hanoi data at zoom 12–15. It is not nationwide coverage.
-- PR #20 is merged. Its visible 5.47 km path and 40 km/h movement remain deterministic Unit 03 navigation fixtures, not output from a routing engine.
-- The Unit 04 route-planning flow now runs a managed, loopback-only Valhalla 3.9.1 service and returns real route geometry, distance, duration, and Vietnamese maneuvers for the bounded greater-Hanoi graph. Recorded fixtures remain available only through the explicitly labeled fixture mode or a visible request-failure fallback; missing startup files do not trigger them.
-- Raster fallback is a local diagnostic image that proves failure detection and switching; it is not real Hanoi raster coverage.
-- Selected-route navigation replay now provides 1x/2x/4x playback, pause/stop,
-  camera follow/recenter, heading/tilt, source-labeled maneuver guidance, remaining
-  distance/time, and arrival. A simulated deviation over 40 m can request a new
-  Valhalla route; a failed request keeps the last valid route available for
-  retry. Live GPS deviation detection is not implemented. Full
-  QtMaps-plus-Valhalla process-tree benchmarking, nationwide graph generation, offline search, orthography, final
-  product UI, installer packaging, and long-duration stability validation are
-  not implemented yet.
-
-## Implementation Principles
-
-- Use only APIs compatible with Qt 5.15.18; do not use Qt 6-only APIs.
-- CMake must use `find_package(Qt5 ...)`, `CMAKE_AUTOMOC`/`CMAKE_AUTORCC`, `qt5_add_resources`, and `add_executable`.
-- Never perform blocking network, routing, database, filesystem, or process waits on the UI thread.
-- Do not commit generated datasets, caches, routing graphs, MBTiles, or third-party artifacts to Git.
-- Management-facing results must come from a Release build and state the process scope, dataset, duration, viewport, and network mode.
-- Complete a stable vertical slice before expanding feature breadth.
-
-## Planned Data Coverage
-
-- Nationwide raster and vector coverage at zoom levels 0–10.
-- Hanoi and the surrounding Red River Delta at zoom levels 11–16; zoom 16 remains subject to storage and performance evidence.
-- Initial routing coverage from one uncropped Geofabrik Vietnam extract, to be reassessed using graph-build time and peak RAM measurements.
-- Orthography limited to an approved demo region and zoom range using a suitably licensed source.
-
-## Initial Performance Targets
-
-These values are planning targets, not measured results:
-
-- At least 30 average FPS during interactive scenarios.
-- Idle CPU at or below 25% of one logical CPU.
-- Interactive CPU at or below 150% under Linux process-level reporting.
-- Combined resident memory for QtMaps and its child services at or below 2 GiB after 30 minutes.
-
-Actual results are recorded using [the benchmark template](docs/benchmarks/benchmark-template.md).
-
-## Repository Structure
-
-```text
-app/                 Entry point and lifecycle
-qml/                 Screens, controls, overlays, and theme
-src/core/            Domain types, configuration, and lifecycle abstractions
-src/map/             Map engines, layers, and tile access
-src/routing/         Routing client, route models, and polyline decoder
-src/search/          Offline search and models
-src/perf/            FPS, process metrics, and CSV logging
-tools/data-pipeline/ Reproducible data preparation
-tests/               Qt Test and Qt Quick Test suites
-docs/                Benchmarks and weekly reports
-context/             Authoritative scope and project decisions
-```
-
-Qt 5.15.13 comparison and MapLibre runtime-path details are documented in [the code standards](context/code-standards.md) and [Unit 01b evidence](docs/benchmarks/unit-01b-vector-feasibility.md).
-
-Third-party attribution and the approved dynamic-link distribution plan are recorded in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [the Linux packaging guide](docs/packaging/linux-dynamic-linking.md).
+Map data uses OpenStreetMap attribution. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
