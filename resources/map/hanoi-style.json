@@ -2,7 +2,7 @@
   "version": 8,
   "name": "QtMaps Hanoi navigation basemap",
   "metadata": {
-    "qtmaps:style_revision": "qtmaps-hanoi-v2",
+    "qtmaps:style_revision": "qtmaps-hanoi-v3",
     "qtmaps:theme": {
       "land": "#eef3f7",
       "water": "#c8e3f5",
@@ -268,16 +268,23 @@
       "source-layer": "transportation",
       "minzoom": 14,
       "layout": {
-        "visibility": "none",
         "symbol-placement": "line",
         "text-field": "{name}",
         "text-font": [
-          "QtMapsSans"
+          "Noto Sans Regular"
         ],
         "text-size": 12,
         "text-max-angle": 35,
-        "text-padding": 4
+        "text-padding": 6
       },
+      "filter": [
+        "in",
+        "class",
+        "motorway",
+        "trunk",
+        "primary",
+        "secondary"
+      ],
       "paint": {
         "text-color": "#263746",
         "text-halo-color": "#ffffff",
@@ -285,36 +292,26 @@
       }
     },
     {
-      "id": "hanoi-label",
+      "id": "place-labels",
       "type": "symbol",
       "source": "qtmaps",
       "source-layer": "place",
-      "filter": [
-        "all",
-        [
-          "==",
-          "class",
-          "city"
-        ],
-        [
-          "==",
-          "name",
-          "Hà Nội"
-        ]
-      ],
+      "minzoom": 12,
+      "filter": ["in", "class", "city", "town"],
       "layout": {
-        "visibility": "none",
-        "icon-image": "marker",
-        "icon-size": 0.75,
-        "text-field": "HÀ NỘI",
+        "text-field": ["coalesce", ["get", "name_vi"], ["get", "name"]],
         "text-font": [
-          "QtMapsSans"
+          "Noto Sans Regular"
         ],
-        "text-size": 16,
+        "text-size": {
+          "stops": [[12, 12], [15, 16]]
+        },
         "text-offset": [
           0,
-          1.2
-        ]
+          0
+        ],
+        "text-anchor": "center",
+        "text-padding": 8
       },
       "paint": {
         "text-color": "#263746",

@@ -64,7 +64,7 @@ def parse_args():
     parser.add_argument("--vector-package", type=Path, required=True)
     parser.add_argument("--output-root", type=Path, default=Path("data/raster-packages"))
     parser.add_argument("--date", default=datetime.date.today().strftime("%Y%m%d"))
-    parser.add_argument("--revision", default="v2")
+    parser.add_argument("--revision", default="v3")
     return parser.parse_args()
 
 
@@ -162,7 +162,7 @@ def main():
             "generation": {
                 "network_access": False,
                 "generated_on": args.date,
-                "pipeline_revision": "unit07d-v2",
+                "pipeline_revision": "unit07d-v3-typography",
             },
         }
         (staging / "manifest.json").write_text(

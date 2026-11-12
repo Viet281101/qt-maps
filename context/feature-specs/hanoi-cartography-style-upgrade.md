@@ -27,17 +27,20 @@ archived `unit-07e-verify` branch or mix this work with i915 investigation.
   `hanoi-raster-20261111-v2-r2`; a v1/v2 mismatch is a visible rejection,
   never a fallback.
 - Owner-authorized fixed-camera/runtime review and focused direct-GPU N=3
-  pan/zoom plus real-Valhalla navigation evidence are complete. A full Release
-  matrix and soak remain out of scope until separately authorized.
+  pan/zoom plus real-Valhalla navigation evidence are complete. The v3 label
+  contract also has a 1366×768 vector/raster transition and rendered-label
+  review plus an accelerated direct-GPU N=3 pan/zoom median that passes every
+  locked threshold. A full Release matrix and soak remain out of scope until
+  separately authorized.
 
-## Increment B: Vietnamese typography and bounded labels (#31)
+## Increment B: Vietnamese typography and bounded labels (#31, in progress)
 
-- Select a redistributable font with Vietnamese coverage and record its
-  license, source, version, checksum, attribution and packaging method.
-- Generate only required glyph ranges reproducibly; do not use the handcrafted
-  `HÀ NỘI` diagnostic glyph set for product labels.
-- Enable street labels from `transportation.name` and place labels preferring
-  `name_vi`, then `name`, with defined collision, zoom and density rules.
+- Noto Sans Regular (OFL-1.1) is selected; its source, package version,
+  checksum, and local packaging method are in `docs/map/hanoi-vietnamese-typography.md`.
+- Generate only the documented Latin/combining/Vietnamese ranges reproducibly;
+  do not use the handcrafted `HÀ NỘI` diagnostic glyph set for product labels.
+- Enable street labels from `transportation.name` for bounded major/secondary
+  classes at zoom 14, and city/town labels preferring `name_vi`, then `name`.
 - Keep route-derived QML labels distinct from basemap labels and reassess their
   value after general labels become available.
 - Defer POIs and sprites unless their product value, licensing, zoom rules and

@@ -13,9 +13,9 @@ preserved in Git history through `e0a8086`.
 
 ## Current Goal
 
-Complete review and publication of the atomic #30 + #32 Hanoi v2
-package-contract migration from current `main`, without reusing the stale 07E
-branch or expanding the owner-approved render/benchmark scope.
+Complete #31's Vietnamese typography and bounded-label contract from current
+`main`, without reusing the stale 07E branch or expanding the owner-approved
+render/benchmark scope.
 
 ## Publication Status
 
@@ -40,10 +40,14 @@ branch or expanding the owner-approved render/benchmark scope.
   `docs/hanoi-cartography-upgrade-plan` → `main`, was squash-merged as
   `1c7a05d`.
 - PR [#45](https://github.com/Viet281101/qt-maps/pull/45),
-  `codex/hanoi-v2-contract` → `main`, is open for review. It references #30
-  and #32, and is tracked as `In Progress` in Project #6. Its v2 vector and
-  raster artifacts, runtime toggle, and focused direct-GPU measurements are
-  recorded below; it does not claim a full soak or all-scenario Release matrix.
+  `codex/hanoi-v2-contract` → `main`, was squash-merged as `8fdfd3f`. Its
+  Project #6 item is `Done`; #30 is closed/Done and #32 remains In Progress
+  for its broader verification scope.
+- PR [#46](https://github.com/Viet281101/qt-maps/pull/46),
+  `codex/hanoi-vietnamese-labels` → `main`, is ready for review and linked to #31/#32,
+  assigned to Viet281101, and tracked In Progress/P1/After Demo in Project #6.
+  Its v3 raster, graphical review, and focused direct-GPU pan/zoom evidence
+  are recorded below; #32 remains open for its broader matrix.
 - The active follow-up milestone is `Post-demo stabilization`; it has no due
   date until the owner confirms the next delivery target.
 - The Unit 07 remote backups are `origin/chore/07a-repo-structure-maintenance`,
@@ -65,12 +69,12 @@ is not part of the requested Unit 07 backup push.
 
 ## i915 Render-Benchmark Freeze
 
-The i915 stability blocker remains open. On 2026-11-11 the owner explicitly
-authorized only the v2 raster render, runtime toggle, and focused benchmark
-validation recorded below. Do not run further application, MapLibre/OpenGL,
-GPU benchmark, GPU configuration, or i915-investigation work without another
-explicit owner instruction. Historical measurements remain historical; the
-new scoped direct-GPU measurements are current only for their stated scenarios.
+The i915 stability blocker remains open. The owner explicitly authorized the
+v2 checks on 2026-11-11 and the v3 label render/runtime/GPU review on 2026-11-12.
+Do not run further application, MapLibre/OpenGL, GPU benchmark, GPU
+configuration, or i915-investigation work without another explicit owner
+instruction. Historical measurements remain historical; current scoped GPU
+measurements apply only to their stated scenarios.
 
 ## Working Rules
 
@@ -95,9 +99,9 @@ new scoped direct-GPU measurements are current only for their stated scenarios.
 
 ## Next Up
 
-1. Complete final test/review gates for PR #45 and request its merge when the
-   remote branch is clean and all evidence is documented.
-2. Keep #31 typography/labels and instrumentation follow-up separate.
+1. Complete #31 typography/labels on `codex/hanoi-vietnamese-labels` and
+   retain a fail-closed v3 package/raster boundary until graphical review.
+2. Keep #32 verification and instrumentation follow-up separate.
 3. Do not broaden GPU work while the i915 blocker is unresolved.
 
 ## Latest Verification
@@ -224,3 +228,22 @@ new scoped direct-GPU measurements are current only for their stated scenarios.
   a full Release matrix or soak; sampler-overhead collection was not run.
 - The post-fix `make QT_EXPECTED_VERSION=5.15.18 test`, format check, and
   `git diff --check` must pass again after the final review commit.
+- On 2026-11-12, #45 was squash-merged as `8fdfd3f`; #30 was closed and moved
+  to Done in Project #6. #31 then moved to In Progress on its dedicated branch.
+  It upgrades the contract to v3, uses local Noto Sans Regular (OFL-1.1), and
+  emits only four required glyph ranges. The ignored
+  `data/packages/hanoi-20261112-v3` vector package built offline in 62.458 s
+  with two threads and a 6 GiB heap cap; it has the verified Noto font SHA-256
+  `89c3c497f618fdaa0b2d1e98fef93582f28c71debd2c4a8cdf41f190ced2909d`.
+  Non-render `make ... test` passed 16/16 in 12.40 s. The v2 raster package is
+  correctly incompatible with this new contract.
+- On 2026-11-12, after the owner authorized v3 rendering, a first glyph package
+  was rejected visually: its PBF metrics included MapLibre's implicit 3px
+  border, so the parser discarded glyphs. The generator and a structural test
+  were fixed; only `hanoi-20261112-v3-r2` and
+  `hanoi-raster-20261112-v3-r2` are valid evidence. The completed r2 render has
+  847/847 256×256 tiles, SHA-256 `5055a3c30d9b68800beb0ce9fe6a9d70370c787eeb4573477076866c4333069d`,
+  and a 1366×768 vector → raster → vector runtime review passed. A z16 tile visibly shows Vietnamese road labels.
+  The initial direct-GPU N=3 pan/zoom lacked Xauthority and was excluded; after recovering the active Xwayland cookie,
+  accelerated Intel HD 520 N=3 passed every threshold: 59.06 FPS average, 46.03 FPS p5, 28.14 FPS 1% low,
+  420.18 MiB PSS peak, and 34.16% CPU peak. Sampler overhead was intentionally unavailable.

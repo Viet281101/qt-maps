@@ -26,7 +26,7 @@ MAPLIBRE_INSTALL_NEW ?= generated/unit-01b/maplibre-install-qt51518
 QT_PRIVATE_OVERLAY ?= generated/unit-01b/qt51518-private
 MAPLIBRE_EXTRA_CXX_FLAGS ?= -include cstdint
 MAPLIBRE_BUILD_KEEP_GOING ?= 1
-QTMAPS_SYSTEM_PACKAGES := qtbase5-dev qtdeclarative5-dev qtlocation5-dev qtpositioning5-dev
+QTMAPS_SYSTEM_PACKAGES := qtbase5-dev qtdeclarative5-dev qtlocation5-dev qtpositioning5-dev fonts-noto-core python3-fonttools python3-pil
 MAPLIBRE_SYSTEM_PACKAGES := $(QTMAPS_SYSTEM_PACKAGES) qtbase5-private-dev qtdeclarative5-private-dev libicu-dev
 QML_RUNTIME ?= $(shell "$(QMAKE)" -query QT_INSTALL_ARCHDATA 2>/dev/null)
 QT_RUNTIME_PLUGIN_PATH ?= $(shell "$(QMAKE)" -query QT_INSTALL_PLUGINS 2>/dev/null)
@@ -94,6 +94,8 @@ requirements:
 	@command -v ccache >/dev/null || { echo "error: ccache is required" >&2; exit 1; }
 	@command -v g++ >/dev/null || { echo "error: g++ is required" >&2; exit 1; }
 	@command -v "$(PYTHON)" >/dev/null || { echo "error: Python 3 is required" >&2; exit 1; }
+	@"$(PYTHON)" -c 'from fontTools.ttLib import TTFont; from PIL import ImageFont' || { echo "error: Python fonttools and Pillow are required" >&2; exit 1; }
+	@test -f /usr/share/fonts/truetype/noto/NotoSans-Regular.ttf || { echo "error: Noto Sans Regular is required for local Hanoi glyph generation" >&2; exit 1; }
 	@test -x "$(QMAKE)" || { echo "error: Qt qmake not found at $(QMAKE)" >&2; exit 1; }
 	@qt_version="$$($(QMAKE) -query QT_VERSION)"; \
 		test "$$qt_version" = "$(QT_EXPECTED_VERSION)" || { \
@@ -109,7 +111,7 @@ requirements:
 			echo "hint: run make requirements-apt, then execute the printed install command" >&2; \
 			exit 1; \
 		}
-	@echo "requirements: OK (Qt $(QT_EXPECTED_VERSION), normal Qt development packages, CMake, Ninja, ccache, g++; Python 3 for tools)"
+	@echo "requirements: OK (Qt $(QT_EXPECTED_VERSION), Qt development packages, local Noto glyph tooling, CMake, Ninja, ccache, g++; Python 3)"
 
 requirements-apt:
 	@echo "This target does not run APT or sudo. Review and execute manually:"

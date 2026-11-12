@@ -11,8 +11,6 @@
 #include <QJsonObject>
 #include <QRegularExpression>
 
-#include <algorithm>
-
 namespace qtmaps {
 namespace map {
 namespace {
@@ -131,7 +129,7 @@ bool MapPackageManifest::loadAndValidate(const QString &packagePath, MapPackageM
         pipelineConfig.value(QStringLiteral("revision")).toString().isEmpty() ||
         !digestPattern.match(pipelineConfig.value(QStringLiteral("sha256")).toString())
              .hasMatch() ||
-        resources.value(QStringLiteral("glyph_revision")).toString().isEmpty() ||
+        resources.value(QStringLiteral("glyph_revision")).toString() != contract::glyphRevision() ||
         resources.value(QStringLiteral("sprite_revision")).toString().isEmpty() ||
         parsed.layerSchemaVersion != contract::kLayerSchemaVersion ||
         parsed.sourceLayers != expectedLayers || bounds.size() != 4 ||
@@ -147,10 +145,16 @@ bool MapPackageManifest::loadAndValidate(const QString &packagePath, MapPackageM
     }
 
     const QJsonObject files = object.value(QStringLiteral("files")).toObject();
-    const QStringList required = {
-        QStringLiteral("tiles.mbtiles"),          QStringLiteral("style/style.json"),
-        QStringLiteral("sprites/sprite.json"),    QStringLiteral("sprites/sprite.png"),
-        QStringLiteral("sprites/sprite@2x.json"), QStringLiteral("sprites/sprite@2x.png")};
+    const QStringList required = {QStringLiteral("tiles.mbtiles"),
+                                  QStringLiteral("style/style.json"),
+                                  QStringLiteral("sprites/sprite.json"),
+                                  QStringLiteral("sprites/sprite.png"),
+                                  QStringLiteral("sprites/sprite@2x.json"),
+                                  QStringLiteral("sprites/sprite@2x.png"),
+                                  QStringLiteral("glyphs/Noto Sans Regular/0-255.pbf"),
+                                  QStringLiteral("glyphs/Noto Sans Regular/256-511.pbf"),
+                                  QStringLiteral("glyphs/Noto Sans Regular/768-1023.pbf"),
+                                  QStringLiteral("glyphs/Noto Sans Regular/7680-7935.pbf")};
     for (auto iterator = files.constBegin(); iterator != files.constEnd(); ++iterator) {
         const QString relativePath = iterator.key();
         const QJsonObject fileEntry = iterator.value().toObject();
@@ -187,17 +191,6 @@ bool MapPackageManifest::loadAndValidate(const QString &packagePath, MapPackageM
             }
             return false;
         }
-    }
-    const bool hasGlyph = std::any_of(parsed.fileSha256.keyBegin(), parsed.fileSha256.keyEnd(),
-                                      [](const QString &path) {
-                                          return path.startsWith(QStringLiteral("glyphs/")) &&
-                                                 path.endsWith(QStringLiteral(".pbf"));
-                                      });
-    if (!hasGlyph) {
-        if (errorMessage) {
-            *errorMessage = QStringLiteral("Map package contains no checksummed glyph resource");
-        }
-        return false;
     }
     QFile styleFile(root.filePath(QStringLiteral("style/style.json")));
     if (!styleFile.open(QIODevice::ReadOnly)) {
