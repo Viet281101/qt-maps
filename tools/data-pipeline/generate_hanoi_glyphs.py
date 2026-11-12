@@ -46,10 +46,7 @@ def glyph_message(codepoint, character, font):
             (PADDING - left, PADDING - top), character, font=font, fill=255, anchor="ls"
         )
         bitmap = image.tobytes()
-        width = image.width
-        height = image.height
-        left -= PADDING
-        top = -top + PADDING
+        top = -top
     else:
         top = 0
     advance = round(font.getlength(character))

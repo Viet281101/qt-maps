@@ -37,19 +37,20 @@ typography/label omission.
 ## Remaining gap
 
 The checked-in v3 style/glyph contract is coupled to the manifest validators.
-The local `hanoi-20261112-v3` vector package was generated with the pinned
+The local `hanoi-20261112-v3-r2` vector package was generated with the pinned
 Planetiler JAR, two threads, a 6 GiB heap cap, and no network access; it
 contains all five declared vector layers and only the four documented Noto
-glyph ranges. A matching raster and graphical label review have not been run
-under this contract.
+glyph ranges. Its matching `hanoi-raster-20261112-v3-r2` package has 847
+256×256 tiles. The fixed 1366×768 vector → raster → vector review passed, and
+rendered z16 evidence shows Vietnamese road labels.
 
 ## Follow-up sequence
 
 1. **#30:** complete. Bounded water and landuse layers are in the accepted
    local package contract.
-2. **#31, typography and labels:** implementation is in progress: Noto glyph
-   generation and bounded road/place style rules are source-controlled; raster
-   regeneration and visual review remain pending.
+2. **#31, typography and labels:** implementation and fixed-viewport visual
+   review are complete; PR #46 remains draft pending final source review and
+   the separately scoped #32 performance matrix decision.
 3. **Visual/performance evidence:** owner-authorized focused v2 direct-GPU
    pan/zoom and real-Valhalla navigation runs now pass their locked thresholds.
    A full Release matrix or soak remains outside this authorization while the

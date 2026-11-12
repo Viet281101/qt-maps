@@ -47,7 +47,13 @@ the generator test verifies representative `Đ` and `ộ` glyph records.
 
 The source contract is `qtmaps-map-package-v3` / `qtmaps-style-v3` with style
 revision `qtmaps-hanoi-v3`; this prevents a v2 vector or raster package from
-silently being used with the Noto label style. Non-render generation and tests
-are recorded in the progress tracker. A matching raster render and graphical
-visual review remain separate owner-authorized work while the i915 blocker is
-open.
+silently being used with the Noto label style. The owner-authorized
+`hanoi-20261112-v3-r2` vector and `hanoi-raster-20261112-v3-r2` raster pair
+passed a 1366×768 vector → raster → vector review. The 847 raster tiles are
+256×256, and a rendered z16 tile visibly shows Vietnamese street names.
+
+The direct-GPU performance rerun was not usable because the current process
+has no Xauthority access to display `:0`; its three child launches abort before
+the map starts. Xvfb output is visual evidence only and is not a performance
+claim. A full GPU matrix or soak remains separately controlled by the open i915
+blocker.

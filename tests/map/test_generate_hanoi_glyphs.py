@@ -17,6 +17,46 @@ def load_tool():
     return module
 
 
+def read_varint(data, offset):
+    value = 0
+    shift = 0
+    while True:
+        byte = data[offset]
+        offset += 1
+        value |= (byte & 0x7F) << shift
+        if not byte & 0x80:
+            return value, offset
+        shift += 7
+
+
+def fields(data):
+    offset = 0
+    while offset < len(data):
+        key, offset = read_varint(data, offset)
+        field = key >> 3
+        wire_type = key & 7
+        if wire_type == 0:
+            value, offset = read_varint(data, offset)
+        elif wire_type == 2:
+            length, offset = read_varint(data, offset)
+            value = data[offset : offset + length]
+            offset += length
+        else:
+            raise AssertionError(f"unexpected wire type {wire_type}")
+        yield field, value
+
+
+def glyph_fields(path, codepoint):
+    outer = dict(fields(path.read_bytes()))
+    for field, glyph in fields(outer[1]):
+        if field != 3:
+            continue
+        values = dict(fields(glyph))
+        if values[1] == codepoint:
+            return values
+    raise AssertionError(f"missing glyph {codepoint}")
+
+
 class HanoiGlyphsTest(unittest.TestCase):
     def test_generates_bounded_noto_ranges_with_vietnamese_glyphs(self):
         tool = load_tool()
@@ -32,6 +72,8 @@ class HanoiGlyphsTest(unittest.TestCase):
             self.assertIn(tool.FONT_STACK.encode("utf-8"), (glyph_dir / "0-255.pbf").read_bytes())
             self.assertIn(b"\x08" + tool.varint(ord("Đ")), (glyph_dir / "256-511.pbf").read_bytes())
             self.assertIn(b"\x08" + tool.varint(ord("ộ")), (glyph_dir / "7680-7935.pbf").read_bytes())
+            glyph = glyph_fields(glyph_dir / "256-511.pbf", ord("Đ"))
+            self.assertEqual(len(glyph[2]), (glyph[3] + 6) * (glyph[4] + 6))
 
 
 if __name__ == "__main__":

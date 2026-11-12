@@ -72,19 +72,22 @@ class RasterPackageToolTest(unittest.TestCase):
     def tearDown(self):
         self.temporary.cleanup()
 
-    def build(self, output):
+    def build(self, output, revision="test"):
+        command = [
+            "python3", str(TOOL), "--tiles", str(self.tiles),
+            "--vector-package", str(self.vector), "--output-root", str(output),
+            "--date", "20261030",
+        ]
+        if revision:
+            command.extend(["--revision", revision])
         subprocess.run(
-            [
-                "python3", str(TOOL), "--tiles", str(self.tiles),
-                "--vector-package", str(self.vector), "--output-root", str(output),
-                "--date", "20261030", "--revision", "test",
-            ],
+            command,
             cwd=ROOT,
             check=True,
             capture_output=True,
             text=True,
         )
-        return output / "hanoi-raster-20261030-test"
+        return output / f"hanoi-raster-20261030-{revision or 'v3'}"
 
     def test_build_is_complete_and_byte_stable(self):
         first = self.build(self.root / "first")
@@ -97,6 +100,12 @@ class RasterPackageToolTest(unittest.TestCase):
                          (second / "manifest.json").read_bytes())
         self.assertEqual((first / "raster.mbtiles").read_bytes(),
                          (second / "raster.mbtiles").read_bytes())
+
+    def test_default_revision_matches_v3_contract(self):
+        package = self.build(self.root / "default", revision=None)
+        manifest = json.loads((package / "manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual(manifest["package_id"], "hanoi-raster-20261030-v3")
+        self.assertEqual(manifest["generation"]["pipeline_revision"], "unit07d-v3-typography")
 
     def test_missing_tile_is_rejected(self):
         missing = next(self.tiles.rglob("*.png"))

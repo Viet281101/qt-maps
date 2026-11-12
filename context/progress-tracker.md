@@ -69,12 +69,12 @@ is not part of the requested Unit 07 backup push.
 
 ## i915 Render-Benchmark Freeze
 
-The i915 stability blocker remains open. On 2026-11-11 the owner explicitly
-authorized only the v2 raster render, runtime toggle, and focused benchmark
-validation recorded below. Do not run further application, MapLibre/OpenGL,
-GPU benchmark, GPU configuration, or i915-investigation work without another
-explicit owner instruction. Historical measurements remain historical; the
-new scoped direct-GPU measurements are current only for their stated scenarios.
+The i915 stability blocker remains open. The owner explicitly authorized the
+v2 checks on 2026-11-11 and the v3 label render/runtime review on 2026-11-12.
+Do not run further application, MapLibre/OpenGL, GPU benchmark, GPU
+configuration, or i915-investigation work without another explicit owner
+instruction. Historical measurements remain historical; current scoped GPU
+measurements apply only to their stated scenarios.
 
 ## Working Rules
 
@@ -236,5 +236,15 @@ new scoped direct-GPU measurements are current only for their stated scenarios.
   with two threads and a 6 GiB heap cap; it has the verified Noto font SHA-256
   `89c3c497f618fdaa0b2d1e98fef93582f28c71debd2c4a8cdf41f190ced2909d`.
   Non-render `make ... test` passed 16/16 in 12.40 s. The v2 raster package is
-  correctly incompatible with this new contract; do not render or visually
-  review v3 without a new explicit owner instruction.
+  correctly incompatible with this new contract.
+- On 2026-11-12, after the owner authorized v3 rendering, a first glyph package
+  was rejected visually: its PBF metrics included MapLibre's implicit 3px
+  border, so the parser discarded glyphs. The generator and a structural test
+  were fixed; only `hanoi-20261112-v3-r2` and
+  `hanoi-raster-20261112-v3-r2` are valid evidence. The completed r2 render
+  has 847/847 256×256 tiles, SHA-256
+  `5055a3c30d9b68800beb0ce9fe6a9d70370c787eeb4573477076866c4333069d`, and a
+  1366×768 vector → raster → vector runtime review passed. A z16 tile visibly
+  shows Vietnamese road labels. A direct-GPU N=3 pan/zoom attempt could not
+  connect to `DISPLAY=:0` without Xauthority and is excluded from performance
+  claims; Xvfb is visual evidence only.

@@ -27,8 +27,11 @@ archived `unit-07e-verify` branch or mix this work with i915 investigation.
   `hanoi-raster-20261111-v2-r2`; a v1/v2 mismatch is a visible rejection,
   never a fallback.
 - Owner-authorized fixed-camera/runtime review and focused direct-GPU N=3
-  pan/zoom plus real-Valhalla navigation evidence are complete. A full Release
-  matrix and soak remain out of scope until separately authorized.
+  pan/zoom plus real-Valhalla navigation evidence are complete. The v3 label
+  contract also has a 1366×768 vector/raster transition and rendered-label
+  review; a direct-GPU rerun is blocked by unavailable Xauthority access, not
+  interpreted as a performance result. A full Release matrix and soak remain
+  out of scope until separately authorized.
 
 ## Increment B: Vietnamese typography and bounded labels (#31, in progress)
 
