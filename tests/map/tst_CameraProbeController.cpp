@@ -71,8 +71,8 @@ private slots:
     {
         CameraState current = BoundedCameraController::overview();
         current.zoom = 13.0;
-        const CameraState followed = BoundedCameraController::navigationFollow(
-            QGeoCoordinate(20.0, 110.0), 405.0, current);
+        const CameraState followed =
+            BoundedCameraController::navigationFollow(QGeoCoordinate(20.0, 110.0), 405.0, current);
         QVERIFY(BoundedCameraController::isWithinBounds(followed.center));
         QCOMPARE(followed.zoom, BoundedCameraController::kNavigationZoom);
         QCOMPARE(followed.bearing, 45.0);

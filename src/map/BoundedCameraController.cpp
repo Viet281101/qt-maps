@@ -29,8 +29,8 @@ qreal normalizedBearing(qreal bearing)
 
 BoundedCameraController::BoundedCameraController(QObject *parent) : QObject(parent) {}
 
-QVariantMap BoundedCameraController::normalizedCamera(qreal latitude, qreal longitude,
-                                                       qreal zoom, qreal bearing, qreal tilt) const
+QVariantMap BoundedCameraController::normalizedCamera(qreal latitude, qreal longitude, qreal zoom,
+                                                      qreal bearing, qreal tilt) const
 {
     const CameraState state = normalize({QGeoCoordinate(latitude, longitude), zoom, bearing, tilt});
     return {{QStringLiteral("latitude"), state.center.latitude()},
@@ -41,11 +41,12 @@ QVariantMap BoundedCameraController::normalizedCamera(qreal latitude, qreal long
 }
 
 QVariantMap BoundedCameraController::navigationCamera(qreal latitude, qreal longitude,
-                                                       qreal bearing, qreal currentZoom) const
+                                                      qreal bearing, qreal currentZoom) const
 {
     CameraState current = overview();
     current.zoom = currentZoom;
-    const CameraState state = navigationFollow(QGeoCoordinate(latitude, longitude), bearing, current);
+    const CameraState state =
+        navigationFollow(QGeoCoordinate(latitude, longitude), bearing, current);
     return {{QStringLiteral("latitude"), state.center.latitude()},
             {QStringLiteral("longitude"), state.center.longitude()},
             {QStringLiteral("zoom"), state.zoom},
@@ -63,19 +64,18 @@ CameraState BoundedCameraController::overview()
 
 bool BoundedCameraController::isWithinBounds(const QGeoCoordinate &coordinate)
 {
-    return coordinate.isValid()
-        && coordinate.latitude() >= contract::kSouth
-        && coordinate.latitude() <= contract::kNorth
-        && coordinate.longitude() >= contract::kWest
-        && coordinate.longitude() <= contract::kEast;
+    return coordinate.isValid() && coordinate.latitude() >= contract::kSouth &&
+           coordinate.latitude() <= contract::kNorth && coordinate.longitude() >= contract::kWest &&
+           coordinate.longitude() <= contract::kEast;
 }
 
 CameraState BoundedCameraController::normalize(const CameraState &requested)
 {
     CameraState result = overview();
     if (requested.center.isValid()) {
-        result.center = QGeoCoordinate(bounded(requested.center.latitude(), contract::kSouth, contract::kNorth),
-                                       bounded(requested.center.longitude(), contract::kWest, contract::kEast));
+        result.center =
+            QGeoCoordinate(bounded(requested.center.latitude(), contract::kSouth, contract::kNorth),
+                           bounded(requested.center.longitude(), contract::kWest, contract::kEast));
     }
     result.zoom = bounded(requested.zoom, kMinimumZoom, kMaximumZoom);
     result.bearing = normalizedBearing(requested.bearing);
@@ -84,8 +84,7 @@ CameraState BoundedCameraController::normalize(const CameraState &requested)
 }
 
 CameraState BoundedCameraController::navigationFollow(const QGeoCoordinate &coordinate,
-                                                       qreal bearing,
-                                                       const CameraState &current)
+                                                      qreal bearing, const CameraState &current)
 {
     CameraState requested = current;
     requested.center = coordinate;

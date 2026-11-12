@@ -25,15 +25,14 @@ public:
 
     static CameraState overview();
     static CameraState normalize(const CameraState &requested);
-    static CameraState navigationFollow(const QGeoCoordinate &coordinate,
-                                        qreal bearing,
+    static CameraState navigationFollow(const QGeoCoordinate &coordinate, qreal bearing,
                                         const CameraState &current);
     static bool isWithinBounds(const QGeoCoordinate &coordinate);
     explicit BoundedCameraController(QObject *parent = nullptr);
-    Q_INVOKABLE QVariantMap normalizedCamera(qreal latitude, qreal longitude,
-                                             qreal zoom, qreal bearing, qreal tilt) const;
-    Q_INVOKABLE QVariantMap navigationCamera(qreal latitude, qreal longitude,
-                                             qreal bearing, qreal currentZoom) const;
+    Q_INVOKABLE QVariantMap normalizedCamera(qreal latitude, qreal longitude, qreal zoom,
+                                             qreal bearing, qreal tilt) const;
+    Q_INVOKABLE QVariantMap navigationCamera(qreal latitude, qreal longitude, qreal bearing,
+                                             qreal currentZoom) const;
 };
 
 } // namespace map
