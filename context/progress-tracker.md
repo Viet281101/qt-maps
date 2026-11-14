@@ -78,8 +78,11 @@ until the owner grants new scoped approval.
 - On 2026-11-14, #39 removed the raster Canvas route overlay and its per-camera
   repaint hooks. Retained `MapPolyline` and `MapQuickItem` children now own the
   route, travelled segment, and markers in both modes; deterministic QML tests
-  guard against reintroducing Canvas or `requestPaint`. No GPU validation or
-  benchmark is included in this increment.
+  guard against reintroducing Canvas or `requestPaint`. The 16-test Qt 5.15.18
+  suite and isolated Release review pass. The owner authorized direct-GPU visual
+  review, but the host crashed before its forced-raster pass and currently has no
+  accessible display server (`xcb: could not connect to display`); no visual
+  acceptance is claimed. No benchmark or GPU-configuration change is included.
 
 ## Publication Status
 
@@ -133,8 +136,9 @@ artifacts remain ignored at
 
 ## Next Up
 
-1. Complete #39's non-GPU verification and request separate direct-GPU visual
-   validation before merge.
+1. Restore an accessible desktop/display, then complete #39's direct-GPU visual
+   review in vector and forced-raster modes (fixture route, pan, zoom, rotation,
+   route-fit, recenter, and navigation follow) before merge.
 2. Start #16 after #39 is merged.
 
 ## Current Environment Evidence
