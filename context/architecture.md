@@ -37,6 +37,9 @@ No engine or library marked Proposed or Spike required becomes committed merely 
 - `src/search/` — offline index access and search models.
 - `src/perf/` — frame metrics, process-tree sampling, CSV output, and benchmark metadata.
 - `tools/data-pipeline/` — reproducible commands and scripts that transform source datasets; generated data does not belong in source control.
+- `tools/visual-review/` — local-only GPU visual-review executable; it drives the
+  existing production QML/controllers and captures its own `QQuickWindow` to
+  ignored PNG evidence. It opens no listener and is not a product runtime path.
 - `tests/` — Qt Test and Qt Quick Test suites and their fixtures.
 - `docs/benchmarks/` — reference hardware and benchmark procedure/result templates.
 - `docs/reports/` — weekly report templates and completed reports.

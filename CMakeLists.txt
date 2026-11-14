@@ -204,6 +204,26 @@ target_link_libraries(qtmaps_raster_renderer PRIVATE
     Qt5::Quick
 )
 
+add_executable(qtmaps_visual_review
+    tools/visual-review/main.cpp
+    ${QTMAPS_RESOURCES}
+)
+target_link_libraries(qtmaps_visual_review PRIVATE
+    qtmaps_app_core
+    qtmaps_benchmark
+    qtmaps_map
+    qtmaps_perf
+    qtmaps_routing
+    Qt5::Core
+    Qt5::Gui
+    Qt5::Location
+    Qt5::Network
+    Qt5::Positioning
+    Qt5::Qml
+    Qt5::Quick
+    Qt5::Sql
+)
+
 include(CTest)
 if(BUILD_TESTING)
     find_package(Python3 REQUIRED COMPONENTS Interpreter)

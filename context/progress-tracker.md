@@ -17,8 +17,7 @@ preserved in Git history through `e0a8086` and the cited pull requests.
 
 Complete #39 before starting search or orthography work. Its non-GPU change
 replaces the raster-only Canvas redraw loop with retained route map items shared
-by vector and raster modes. GPU pan/zoom validation remains explicitly deferred
-until the owner grants new scoped approval.
+by vector and raster modes.
 
 - On 2026-11-14, the follow-up UI-polish increment replaced the undersized
   search glyph with a centered QML magnifier, shortened the explicitly
@@ -42,6 +41,19 @@ until the owner grants new scoped approval.
   the route controls, and remaining layer/navigation/map labels use Noto Sans.
   Deterministic tests cover the 90-degree route fit, street-name binding, and
   recovered collapsed-list space; the Qt 5.15.18 suite passed 16/16.
+
+- On 2026-11-15, the owner authorized a narrow, local-only GPU visual review.
+  `qtmaps_visual_review` now drives the production QML and controllers through
+  fixture-route, pan/zoom, rotation, route-fit, recenter, and navigation states
+  in vector and forced-raster modes at 900x580, 1366x768, and 1920x1080. It
+  writes ignored PNGs only; it is neither a benchmark nor a desktop bridge or
+  browser extension. The review exposed incomplete z16 raster artifacts from
+  the old 150 ms render settle. The local raster renderer now waits 500 ms and
+  the regenerated ignored `hanoi-raster-20261115-v3-r4` package reduced
+  uniform z16 tiles from 407/621 to 5/621. Direct-GPU captures show the route,
+  navigation puck, map, and warnings in every reviewed state. Raster's
+  provider-owned duplicate OSM footer is disabled while the single app-owned
+  attribution pill remains visible. The Qt 5.15.18 suite passed 16/16.
 
 ## Unit 08 Verification
 
@@ -86,6 +98,11 @@ until the owner grants new scoped approval.
   capture the native window, so pan/zoom/rotation screenshots and visual
   acceptance are not claimed. No benchmark or GPU-configuration change is
   included.
+- On 2026-11-15, the approved local-only production-QML capture harness
+  completed that visual acceptance on the same Intel HD 520: vector and raster
+  captures are nonblank at all three viewports and cover pan/zoom, rotation,
+  route-fit, recenter, and navigation follow. This remains visual evidence only,
+  not a performance result.
 
 ## Publication Status
 
@@ -139,10 +156,9 @@ artifacts remain ignored at
 
 ## Next Up
 
-1. Restore native-window access for the desktop bridge, then complete #39's
-   direct-GPU visual review in vector and forced-raster modes (fixture route,
-   pan, zoom, rotation, route-fit, recenter, and navigation follow) before
-   merge.
+1. Commit and push the completed #39 visual-review/pipeline repair, then review
+   the PR before merge. No desktop bridge, browser extension, network listener,
+   or benchmark is part of this work.
 2. Start #16 after #39 is merged.
 
 ## Current Environment Evidence
@@ -157,6 +173,6 @@ artifacts remain ignored at
   fixes; the stale
   `build-unit07e-qt51518` tree is obsolete and must not be rebuilt or tested.
 - Current ignored valid packages are `hanoi-20261114-v3-r3` and
-  `hanoi-raster-20261114-v3-r3`. They have the v2 glyph revision, 847 256×256
+  `hanoi-raster-20261115-v3-r4`. They have the v2 glyph revision, 847 256×256
   raster tiles, and matching v3 manifests. Keep generated packages and raw
   evidence out of Git.

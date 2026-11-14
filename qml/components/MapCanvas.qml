@@ -180,6 +180,8 @@ Item {
         minimumZoomLevel: 12
         maximumZoomLevel: 18
         zoomLevel: 14
+        // ConnectionStatus owns the single persistent OSM attribution for both providers.
+        copyrightsVisible: false
         gesture.enabled: !routeNavigationController.running
         gesture.onPanStarted: canvas.beginCameraGesture()
         gesture.onPanFinished: canvas.endCameraGesture()

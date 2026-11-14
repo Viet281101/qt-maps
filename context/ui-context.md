@@ -68,7 +68,8 @@ the connection source.
   raster modes. Qt 5.15 `MapPolyline` does not expose cap/join controls in QML;
   circular A/B markers cover its endpoint caps. A Canvas redraw loop is not
   permitted for camera changes; visual review at every supported viewport is
-  the acceptance check.
+  the acceptance check. The local-only visual-review harness may capture the
+  production window to ignored PNGs for this check; it is not a benchmark.
 - Origin, destination, current simulated position, and selected search result use distinct semantic marker roles.
 - Camera following and map rotation must have an obvious exit/recenter action.
 - Re-routing must preserve the last valid route until a replacement succeeds or clearly report that no route is available.
