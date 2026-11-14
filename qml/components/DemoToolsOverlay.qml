@@ -138,6 +138,8 @@ Item {
                 width: parent.width
                 color: mapSourceController.layerMode === "error" ? Theme.error
                                                                   : Theme.textSecondary
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSizeBody
                 wrapMode: Text.WordWrap
                 text: mapSourceController.mapStatusText
             }
@@ -145,14 +147,21 @@ Item {
                 visible: mapSourceController.layerMode === "raster"
                 width: parent.width
                 color: Theme.warning
+                font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSizeCaption
                 wrapMode: Text.WordWrap
                 text: qsTr("Nguồn chi tiết đến z15; từ z16, độ phân giải thấp hơn.")
             }
-            Text { color: Theme.warning; text: qsTr("Lớp ảnh · chưa có dữ liệu") }
+            Text {
+                color: Theme.warning
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSizeBody
+                text: qsTr("Lớp ảnh · chưa có dữ liệu")
+            }
             Text {
                 width: parent.width
                 color: Theme.textSecondary
+                font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSizeCaption
                 wrapMode: Text.WordWrap
                 text: qsTr("Mọi tài nguyên bản đồ hiện tại chỉ dùng loopback.")

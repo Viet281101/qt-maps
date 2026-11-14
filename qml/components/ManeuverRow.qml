@@ -74,7 +74,7 @@ Rectangle {
             font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSizeCaption
             elide: Text.ElideRight
-            text: root.maneuver ? root.maneuver.instruction : ""
+            text: root.maneuver ? root.maneuver.streetName : ""
         }
     }
     Text {

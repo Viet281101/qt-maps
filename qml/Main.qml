@@ -50,6 +50,8 @@ Window {
         Text {
             anchors.centerIn: parent
             color: "#243447"
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSizeBody
             text: mapSourceController.mapStatusText
         }
     }

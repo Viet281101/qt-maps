@@ -64,24 +64,26 @@ struct ViewportOffsets
     qreal maximumY = 0.0;
 };
 
-ViewportOffsets viewportOffsets(const CameraViewport &viewport, qreal bearing)
+struct RotatedBounds
+{
+    qreal minimumX = 0.0;
+    qreal maximumX = 0.0;
+    qreal minimumY = 0.0;
+    qreal maximumY = 0.0;
+};
+
+RotatedBounds rotatedBounds(const qreal xValues[2], const qreal yValues[2], qreal bearing)
 {
     const qreal radians = bearing * kPi / 180.0;
     const qreal cosine = std::cos(radians);
     const qreal sine = std::sin(radians);
-    const qreal left = std::isfinite(viewport.leftPadding) ? viewport.leftPadding : 0.0;
-    const qreal right = std::isfinite(viewport.rightPadding) ? viewport.rightPadding : 0.0;
-    const qreal top = std::isfinite(viewport.topPadding) ? viewport.topPadding : 0.0;
-    const qreal bottom = std::isfinite(viewport.bottomPadding) ? viewport.bottomPadding : 0.0;
-    const qreal xValues[] = {left - viewport.width / 2.0,
-                             viewport.width - right - viewport.width / 2.0};
-    const qreal yValues[] = {top - viewport.height / 2.0,
-                             viewport.height - bottom - viewport.height / 2.0};
-    ViewportOffsets result;
+    RotatedBounds result;
     result.minimumX = result.maximumX = cosine * xValues[0] - sine * yValues[0];
     result.minimumY = result.maximumY = sine * xValues[0] + cosine * yValues[0];
-    for (qreal x : xValues) {
-        for (qreal y : yValues) {
+    for (int xIndex = 0; xIndex < 2; ++xIndex) {
+        for (int yIndex = 0; yIndex < 2; ++yIndex) {
+            const qreal x = xValues[xIndex];
+            const qreal y = yValues[yIndex];
             const qreal rotatedX = cosine * x - sine * y;
             const qreal rotatedY = sine * x + cosine * y;
             result.minimumX = std::min(result.minimumX, rotatedX);
@@ -91,6 +93,20 @@ ViewportOffsets viewportOffsets(const CameraViewport &viewport, qreal bearing)
         }
     }
     return result;
+}
+
+ViewportOffsets viewportOffsets(const CameraViewport &viewport, qreal bearing)
+{
+    const qreal left = std::isfinite(viewport.leftPadding) ? viewport.leftPadding : 0.0;
+    const qreal right = std::isfinite(viewport.rightPadding) ? viewport.rightPadding : 0.0;
+    const qreal top = std::isfinite(viewport.topPadding) ? viewport.topPadding : 0.0;
+    const qreal bottom = std::isfinite(viewport.bottomPadding) ? viewport.bottomPadding : 0.0;
+    const qreal xValues[] = {left - viewport.width / 2.0,
+                             viewport.width - right - viewport.width / 2.0};
+    const qreal yValues[] = {top - viewport.height / 2.0,
+                             viewport.height - bottom - viewport.height / 2.0};
+    const RotatedBounds bounds = rotatedBounds(xValues, yValues, bearing);
+    return {bounds.minimumX, bounds.maximumX, bounds.minimumY, bounds.maximumY};
 }
 
 qreal minimumViewportZoom(const CameraViewport &viewport, qreal bearing)
@@ -240,31 +256,39 @@ bool BoundedCameraController::routeFit(const QGeoCoordinate &southwest,
 
     const qreal northY = mercatorY(northeast.latitude());
     const qreal southY = mercatorY(southwest.latitude());
-    const qreal longitudeSpan = northeast.longitude() - southwest.longitude();
-    const qreal latitudeSpan = southY - northY;
-    if (!std::isfinite(northY) || !std::isfinite(southY) || longitudeSpan <= 0.0 ||
-        latitudeSpan <= 0.0) {
+    const qreal xValues[] = {southwest.longitude() / 360.0, northeast.longitude() / 360.0};
+    const qreal yValues[] = {northY, southY};
+    CameraState requested = normalize(current);
+    const RotatedBounds routeBounds = rotatedBounds(xValues, yValues, requested.bearing);
+    const qreal horizontalSpan = routeBounds.maximumX - routeBounds.minimumX;
+    const qreal verticalSpan = routeBounds.maximumY - routeBounds.minimumY;
+    if (!std::isfinite(northY) || !std::isfinite(southY) || horizontalSpan <= 0.0 ||
+        verticalSpan <= 0.0) {
         return false;
     }
 
-    const qreal zoomX = std::log2(usableWidth * 360.0 / (256.0 * longitudeSpan));
-    const qreal zoomY = std::log2(usableHeight / (256.0 * latitudeSpan));
+    const qreal zoomX = std::log2(usableWidth / (256.0 * horizontalSpan));
+    const qreal zoomY = std::log2(usableHeight / (256.0 * verticalSpan));
     if (!std::isfinite(zoomX) || !std::isfinite(zoomY)) {
         return false;
     }
 
-    CameraState requested = normalize(current);
     requested.zoom =
         std::max(std::min(zoomX, zoomY), minimumViewportZoom(viewport, requested.bearing));
     requested.zoom = bounded(requested.zoom, kMinimumZoom, kMaximumZoom);
     const qreal worldPixels = 256.0 * std::pow(2.0, requested.zoom);
-    const qreal routeCenterLongitude = (southwest.longitude() + northeast.longitude()) / 2.0;
+    const qreal routeCenterX = (xValues[0] + xValues[1]) / 2.0;
     const qreal routeCenterY = (northY + southY) / 2.0;
     const qreal targetX = viewport.leftPadding + usableWidth / 2.0;
     const qreal targetY = viewport.topPadding + usableHeight / 2.0;
-    requested.center = QGeoCoordinate(
-        latitudeFromMercator(routeCenterY - (targetY - viewport.height / 2.0) / worldPixels),
-        routeCenterLongitude - (targetX - viewport.width / 2.0) * 360.0 / worldPixels);
+    const qreal targetXValues[] = {targetX - viewport.width / 2.0, targetX - viewport.width / 2.0};
+    const qreal targetYValues[] = {targetY - viewport.height / 2.0,
+                                   targetY - viewport.height / 2.0};
+    const RotatedBounds targetOffset =
+        rotatedBounds(targetXValues, targetYValues, requested.bearing);
+    requested.center =
+        QGeoCoordinate(latitudeFromMercator(routeCenterY - targetOffset.minimumY / worldPixels),
+                       (routeCenterX - targetOffset.minimumX / worldPixels) * 360.0);
     *result = normalizeForViewport(requested, viewport);
     return true;
 }

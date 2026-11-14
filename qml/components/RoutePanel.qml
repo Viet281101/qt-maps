@@ -13,6 +13,7 @@ Rectangle {
     property string destinationError: ""
     property bool maneuversCollapsed: false
     readonly property real maneuverListMinimumHeight: 120
+    readonly property real reservedManeuverHeight: maneuversCollapsed ? 0 : maneuverListMinimumHeight
     signal recenterRequested()
 
     function applyEndpoints() {
@@ -63,7 +64,7 @@ Rectangle {
         anchors.margins: Theme.spaceLg
         height: Math.max(0, Math.min(routeControls.implicitHeight,
                                      routePanel.height
-                                     - routePanel.maneuverListMinimumHeight
+                                     - routePanel.reservedManeuverHeight
                                      - Theme.spaceLg * 2
                                      - Theme.spaceSm))
         contentWidth: width

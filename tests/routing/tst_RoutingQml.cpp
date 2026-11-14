@@ -216,6 +216,12 @@ private slots:
         QVERIFY2(toggleRect.left() < panelRect.right() && toggleRect.right() > panelRect.right(),
                  "The sidebar toggle must straddle the panel edge instead of floating by search.");
         QCOMPARE(panelToggle->property("labelPixelSize").toInt(), 22);
+
+        const qreal controlsHeightWithManeuvers = controls->height();
+        routePanel->setProperty("maneuversCollapsed", true);
+        QTRY_VERIFY(!maneuvers->isVisible());
+        QVERIFY2(controls->height() > controlsHeightWithManeuvers,
+                 "Collapsing maneuvers must return their reserved space to route controls.");
     }
 
     void mapClickDoesNotChangeRouteDuringReplay()
@@ -356,6 +362,24 @@ private slots:
         QVERIFY(selected.isValid());
         QVERIFY(normal != selected);
         QCOMPARE(row->property("selected").toBool(), true);
+    }
+
+    void maneuverRowShowsTheStreetNameAsItsSecondaryLabel()
+    {
+        QQmlEngine engine;
+        QQmlComponent component(&engine,
+                                QUrl(QStringLiteral("qrc:/qml/components/ManeuverRow.qml")));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> row(component.create());
+        QVERIFY2(row, qPrintable(component.errorString()));
+        row->setProperty("maneuver",
+                         QVariantMap{{QStringLiteral("instruction"), QStringLiteral("Rẽ phải")},
+                                     {QStringLiteral("streetName"), QStringLiteral("Phố Huế")},
+                                     {QStringLiteral("distanceMeters"), 250.0}});
+
+        QObject *streetName = row->findChild<QObject *>(QStringLiteral("maneuverStreetName"));
+        QVERIFY(streetName);
+        QTRY_COMPARE(streetName->property("text").toString(), QStringLiteral("Phố Huế"));
     }
 
     void maneuverDirectionSymbolMeetsGraphicsContrast()

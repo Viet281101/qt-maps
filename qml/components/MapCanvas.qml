@@ -270,7 +270,13 @@ Item {
                 color: Theme.markerOrigin
                 border.color: Theme.surfaceElevated
                 border.width: 5
-                Text { anchors.centerIn: parent; text: "A"; font.bold: true; color: "#102018" }
+                Text {
+                    anchors.centerIn: parent
+                    text: "A"
+                    font.family: Theme.fontFamily
+                    font.bold: true
+                    color: "#102018"
+                }
             }
         }
 
@@ -290,6 +296,7 @@ Item {
                     anchors.centerIn: parent
                     text: "▲"
                     color: "#10243a"
+                    font.family: Theme.fontFamily
                     font.bold: true
                     font.pixelSize: 13
                 }
@@ -308,7 +315,13 @@ Item {
                 color: Theme.markerDestination
                 border.color: Theme.surfaceElevated
                 border.width: 5
-                Text { anchors.centerIn: parent; text: "B"; font.bold: true; color: "#301010" }
+                Text {
+                    anchors.centerIn: parent
+                    text: "B"
+                    font.family: Theme.fontFamily
+                    font.bold: true
+                    color: "#301010"
+                }
             }
         }
 
@@ -331,6 +344,7 @@ Item {
                         anchors.centerIn: parent
                         text: modelData.streetName
                         color: "#10243a"
+                        font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSizeCaption
                         font.bold: true
                     }
@@ -358,6 +372,7 @@ Item {
             id: overzoomText
             anchors.centerIn: parent
             color: Theme.warning
+            font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSizeCaption
             font.bold: true
             text: qsTr("Nguồn chi tiết đến z15 · z16+ có độ phân giải thấp hơn")

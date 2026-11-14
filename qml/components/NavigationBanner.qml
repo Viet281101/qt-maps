@@ -72,6 +72,7 @@ Rectangle {
         horizontalAlignment: Text.AlignHCenter
         text: root.directionSymbol(root.instruction)
         color: root.arrived ? Theme.success : root.rerouting ? Theme.warning : Theme.accent
+        font.family: Theme.fontFamily
         font.pixelSize: 42
         font.bold: true
     }
@@ -89,6 +90,7 @@ Rectangle {
             width: parent.width
             text: root.maneuverDistanceText
             color: root.arrived ? Theme.success : Theme.textPrimary
+            font.family: Theme.fontFamily
             font.pixelSize: 30
             font.bold: true
         }
@@ -98,6 +100,7 @@ Rectangle {
                   ? root.primaryText
                   : root.streetName.length > 0 ? root.streetName : root.primaryText
             color: Theme.textPrimary
+            font.family: Theme.fontFamily
             font.pixelSize: 18
             font.bold: true
             elide: Text.ElideRight
@@ -113,6 +116,7 @@ Rectangle {
                     ? qsTr("Tiếp theo: %1").arg(root.nextInstruction)
                     : root.primaryText
             color: root.rerouting ? Theme.warning : Theme.textSecondary
+            font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSizeBody
             elide: Text.ElideRight
         }
@@ -136,6 +140,7 @@ Rectangle {
             Text {
                 width: Math.max(0, parent.width * 0.42)
                 color: Theme.textPrimary
+                font.family: Theme.fontFamily
                 font.bold: true
                 elide: Text.ElideRight
                 text: root.remainingText
@@ -143,12 +148,14 @@ Rectangle {
             Text {
                 width: Math.max(0, parent.width * 0.30)
                 color: Theme.textSecondary
+                font.family: Theme.fontFamily
                 elide: Text.ElideRight
                 text: root.etaText
             }
             Text {
                 width: Math.max(0, parent.width * 0.28 - Theme.spaceLg * 2)
                 color: Theme.warning
+                font.family: Theme.fontFamily
                 elide: Text.ElideRight
                 text: root.sourceText
             }

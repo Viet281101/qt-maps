@@ -43,6 +43,14 @@ beneath controls.
   attribution to a readable 24 px pill. The attribution remains visible for
   license compliance.
 
+- A final 2026-11-14 PR-review repair computes route-fit dimensions and its
+  padded center offset in bearing-aware screen space, so a rotated long route
+  remains inside its usable viewport. The maneuver secondary label now shows
+  the actual street name, collapsing maneuvers returns their reserved height to
+  the route controls, and remaining layer/navigation/map labels use Noto Sans.
+  Deterministic tests cover the 90-degree route fit, street-name binding, and
+  recovered collapsed-list space; the Qt 5.15.18 suite passed 16/16.
+
 ## Unit 08 Verification
 
 - On 2026-11-12, the GUI-less `qtmaps_diagnostics_tests` passed after adding

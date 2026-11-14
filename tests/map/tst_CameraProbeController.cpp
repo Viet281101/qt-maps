@@ -138,6 +138,47 @@ private slots:
         QVERIFY(std::abs(fitted.center.longitude() - expectedLongitude) < 0.000001);
     }
 
+    void fitsRotatedRouteInsideThePaddedViewport()
+    {
+        const CameraViewport viewport = {1366.0, 768.0, 362.0, 48.0, 32.0, 32.0};
+        const QGeoCoordinate southwest(21.0200, 105.7800);
+        const QGeoCoordinate northeast(21.0250, 105.8800);
+        CameraState current = BoundedCameraController::overview();
+        current.bearing = 90.0;
+        CameraState fitted;
+        QVERIFY(
+            BoundedCameraController::routeFit(southwest, northeast, viewport, current, &fitted));
+
+        const qreal worldPixels = 256.0 * std::pow(2.0, fitted.zoom);
+        const auto mercatorY = [](qreal latitude) {
+            constexpr qreal pi = 3.14159265358979323846;
+            const qreal radians = latitude * pi / 180.0;
+            return (1.0 - std::log(std::tan(radians) + 1.0 / std::cos(radians)) / pi) / 2.0;
+        };
+        const auto screenPosition = [&](const QGeoCoordinate &coordinate) {
+            const qreal x =
+                (coordinate.longitude() - fitted.center.longitude()) / 360.0 * worldPixels;
+            const qreal y =
+                (mercatorY(coordinate.latitude()) - mercatorY(fitted.center.latitude())) *
+                worldPixels;
+            return QPointF(viewport.width / 2.0 + y, viewport.height / 2.0 - x);
+        };
+
+        const QGeoCoordinate corners[] = {
+            southwest,
+            QGeoCoordinate(southwest.latitude(), northeast.longitude()),
+            QGeoCoordinate(northeast.latitude(), southwest.longitude()),
+            northeast,
+        };
+        for (const QGeoCoordinate &corner : corners) {
+            const QPointF screen = screenPosition(corner);
+            QVERIFY(screen.x() >= viewport.leftPadding - 0.001);
+            QVERIFY(screen.x() <= viewport.width - viewport.rightPadding + 0.001);
+            QVERIFY(screen.y() >= viewport.topPadding - 0.001);
+            QVERIFY(screen.y() <= viewport.height - viewport.bottomPadding + 0.001);
+        }
+    }
+
     void keepsTheViewportFootprintInsideThePackage()
     {
         const CameraViewport viewport = {1920.0, 1080.0};
