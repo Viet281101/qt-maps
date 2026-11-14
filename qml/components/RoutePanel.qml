@@ -350,11 +350,12 @@ Rectangle {
                 width: parent.width
                 text: routeNavigationController.active
                       ? routeNavigationController.statusMessage
-                      : routingController.statusMessage + qsTr(" · Nguồn: ")
-                        + routingController.sourceLabel
+                      : routingController.routeAvailable
+                        ? qsTr("Sẵn sàng · %1").arg(routePanel.compactSource)
+                        : routingController.statusMessage
                 color: routeNavigationController.arrived || routingController.routeAvailable
                        ? Theme.success : Theme.textSecondary
-                wrapMode: Text.WordWrap
+                elide: Text.ElideRight
             }
 
             KeyboardActionButton {

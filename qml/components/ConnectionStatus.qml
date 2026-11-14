@@ -9,6 +9,7 @@ Item {
     property real normalTopMargin: Theme.spaceMd
     property string connectionLabel: ""
     readonly property string statusText: friendlyConnectionLabel(connectionLabel)
+    readonly property real attributionHeight: attributionPill.height + Theme.spaceMd
 
     function friendlyConnectionLabel(label) {
         if (label === "Valhalla local — loopback")
@@ -59,6 +60,8 @@ Item {
     }
 
     Rectangle {
+        id: attributionPill
+        objectName: "attributionPill"
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         anchors.margins: Theme.spaceMd

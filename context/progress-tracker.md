@@ -28,6 +28,15 @@ action buttons, navigation-banner status, search/status stacking, and the
 compact route panel. It elides and bounds text instead of painting labels
 beneath controls.
 
+- On 2026-11-14, the follow-up UI-polish increment replaced the undersized
+  search glyph with a centered QML magnifier, shortened the explicitly
+  unavailable-search label, made the performance panel hidden-by-default and
+  safely stack above attribution when toggled with F3, and gives maneuver
+  instructions two readable lines before a secondary street label. Route-ready
+  status is now a compact single line. The Release UI was manually reviewed at
+  900x580, 1366x768, and 1920x1080; this is functional-layout evidence, not a
+  benchmark.
+
 ## Unit 08 Verification
 
 - On 2026-11-12, the GUI-less `qtmaps_diagnostics_tests` passed after adding

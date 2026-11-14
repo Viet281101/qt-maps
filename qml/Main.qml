@@ -121,6 +121,7 @@ Window {
     }
 
     ConnectionStatus {
+        id: connectionStatus
         anchors.fill: parent
         statusColor: root.routeSummaryColor
         navigationActive: navigationOverlay.guidanceVisible
@@ -165,13 +166,14 @@ Window {
     }
 
     PerformanceOverlay {
+        objectName: "performanceOverlay"
         anchors.right: parent.right
         anchors.bottom: parent.bottom
-        anchors.bottomMargin: 50
+        anchors.bottomMargin: connectionStatus.attributionHeight + Theme.spaceSm
         anchors.rightMargin: Theme.spaceMd
         monitor: performanceMonitor
         detailed: root.performanceOverlayVisible
-        visible: instrumentationEnabled
+        visible: instrumentationEnabled && root.performanceOverlayVisible
         z: 20
     }
 

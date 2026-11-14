@@ -139,7 +139,7 @@ private slots:
                                                  &performance);
         engine.rootContext()->setContextProperty(QStringLiteral("mapSourceController"), &mapSource);
         engine.rootContext()->setContextProperty(QStringLiteral("routingFixtureOnly"), false);
-        engine.rootContext()->setContextProperty(QStringLiteral("instrumentationEnabled"), false);
+        engine.rootContext()->setContextProperty(QStringLiteral("instrumentationEnabled"), true);
         engine.rootContext()->setContextProperty(QStringLiteral("vectorStyleUrl"), QString());
 
         QQmlComponent component(&engine, QUrl(QStringLiteral("qrc:/qml/Main.qml")));
@@ -156,10 +156,20 @@ private slots:
         QQuickItem *controls = root->findChild<QQuickItem *>(QStringLiteral("routeControlsScroll"));
         QQuickItem *banner = root->findChild<QQuickItem *>(QStringLiteral("navigationBanner"));
         QQuickItem *status = root->findChild<QQuickItem *>(QStringLiteral("connectionStatusPill"));
+        QQuickItem *performanceOverlay =
+            root->findChild<QQuickItem *>(QStringLiteral("performanceOverlay"));
+        QQuickItem *attribution = root->findChild<QQuickItem *>(QStringLiteral("attributionPill"));
+        QQuickItem *searchIcon = root->findChild<QQuickItem *>(QStringLiteral("searchIcon"));
+        QQuickItem *searchLabel =
+            root->findChild<QQuickItem *>(QStringLiteral("searchPlaceholderLabel"));
         QVERIFY(maneuvers);
         QVERIFY(controls);
         QVERIFY(banner);
         QVERIFY(status);
+        QVERIFY(performanceOverlay);
+        QVERIFY(attribution);
+        QVERIFY(searchIcon);
+        QVERIFY(searchLabel);
         QTRY_VERIFY(maneuvers->height() >= 120.0);
         QVERIFY(maneuvers->property("contentHeight").toReal() > maneuvers->height());
         if (windowSize.height() == 580)
@@ -177,6 +187,26 @@ private slots:
                                 .arg(statusRect.y())
                                 .arg(statusRect.width())
                                 .arg(statusRect.height())));
+
+        root->setProperty("performanceOverlayVisible", true);
+        QTRY_VERIFY(performanceOverlay->isVisible());
+        const QRectF performanceRect(performanceOverlay->mapToScene(QPointF(0, 0)),
+                                     performanceOverlay->size());
+        const QRectF attributionRect(attribution->mapToScene(QPointF(0, 0)), attribution->size());
+        QVERIFY2(
+            performanceRect.bottom() < attributionRect.top(),
+            qPrintable(QStringLiteral("performance %1,%2 %3x%4 overlaps attribution %5,%6 %7x%8")
+                           .arg(performanceRect.x())
+                           .arg(performanceRect.y())
+                           .arg(performanceRect.width())
+                           .arg(performanceRect.height())
+                           .arg(attributionRect.x())
+                           .arg(attributionRect.y())
+                           .arg(attributionRect.width())
+                           .arg(attributionRect.height())));
+        QCOMPARE(searchIcon->width(), 24.0);
+        QVERIFY2(searchLabel->width() >= searchLabel->property("implicitWidth").toReal(),
+                 "The compact search label must not be elided at the minimum viewport.");
     }
 
     void mapClickDoesNotChangeRouteDuringReplay()
