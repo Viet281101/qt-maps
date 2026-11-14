@@ -80,9 +80,12 @@ until the owner grants new scoped approval.
   route, travelled segment, and markers in both modes; deterministic QML tests
   guard against reintroducing Canvas or `requestPaint`. The 16-test Qt 5.15.18
   suite and isolated Release review pass. The owner authorized direct-GPU visual
-  review, but the host crashed before its forced-raster pass and currently has no
-  accessible display server (`xcb: could not connect to display`); no visual
-  acceptance is claimed. No benchmark or GPU-configuration change is included.
+  review. After reconnecting the terminal to the surviving Xwayland session,
+  both the vector fixture and forced-raster fixture reached `mapReady=true` with
+  `error=0` on the Intel HD 520. The desktop bridge still cannot enumerate or
+  capture the native window, so pan/zoom/rotation screenshots and visual
+  acceptance are not claimed. No benchmark or GPU-configuration change is
+  included.
 
 ## Publication Status
 
@@ -136,9 +139,10 @@ artifacts remain ignored at
 
 ## Next Up
 
-1. Restore an accessible desktop/display, then complete #39's direct-GPU visual
-   review in vector and forced-raster modes (fixture route, pan, zoom, rotation,
-   route-fit, recenter, and navigation follow) before merge.
+1. Restore native-window access for the desktop bridge, then complete #39's
+   direct-GPU visual review in vector and forced-raster modes (fixture route,
+   pan, zoom, rotation, route-fit, recenter, and navigation follow) before
+   merge.
 2. Start #16 after #39 is merged.
 
 ## Current Environment Evidence
