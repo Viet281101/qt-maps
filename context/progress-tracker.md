@@ -37,10 +37,11 @@ beneath controls.
   900x580, 1366x768, and 1920x1080; this is functional-layout evidence, not a
   benchmark.
 
-- A second 2026-11-14 density pass made the sidebar toggle a panel-edge tab,
-  standardised the core planning UI on system Noto Sans, reduced controls to
-  the 36 px minimum target, and compacted the required OSM attribution to a
-  readable 24 px pill. The attribution remains visible for license compliance.
+- A second 2026-11-14 density pass made the sidebar toggle a panel-edge tab
+  with a 22 px chevron, standardised the core planning UI on system Noto Sans,
+  reduced controls to the 36 px minimum target, and compacted the required OSM
+  attribution to a readable 24 px pill. The attribution remains visible for
+  license compliance.
 
 ## Unit 08 Verification
 

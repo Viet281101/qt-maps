@@ -109,6 +109,8 @@ Window {
                                : routePanel.x + routePanel.width - width / 2
         y: root.panelCollapsed ? Theme.spaceMd : routePanel.y + Theme.spaceLg
         width: 38
+        labelPixelSize: 22
+        horizontalPadding: Theme.spaceXs
         z: 34
         text: root.panelCollapsed ? "›" : "‹"
         normalColor: Theme.surfaceElevated

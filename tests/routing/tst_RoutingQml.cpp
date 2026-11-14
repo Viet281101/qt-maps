@@ -215,6 +215,7 @@ private slots:
         const QRectF toggleRect(panelToggle->mapToScene(QPointF(0, 0)), panelToggle->size());
         QVERIFY2(toggleRect.left() < panelRect.right() && toggleRect.right() > panelRect.right(),
                  "The sidebar toggle must straddle the panel edge instead of floating by search.");
+        QCOMPARE(panelToggle->property("labelPixelSize").toInt(), 22);
     }
 
     void mapClickDoesNotChangeRouteDuringReplay()
