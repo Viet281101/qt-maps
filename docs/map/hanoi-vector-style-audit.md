@@ -1,6 +1,6 @@
 # Hanoi Cartography Follow-up Audit
 
-Audit date: 2026-11-12
+Audit date: 2026-11-14
 
 ## Verdict
 
@@ -34,15 +34,18 @@ typography/label omission.
   `qml/components/MapCanvas.qml` at zoom 15 and above. They are not general
   basemap labels.
 
-## Remaining gap
+## Validated package lineage
 
 The checked-in v3 style/glyph contract is coupled to the manifest validators.
-The local `hanoi-20261112-v3-r2` vector package was generated with the pinned
-Planetiler JAR, two threads, a 6 GiB heap cap, and no network access; it
-contains all five declared vector layers and only the four documented Noto
-glyph ranges. Its matching `hanoi-raster-20261112-v3-r2` package has 847
-256×256 tiles. The fixed 1366×768 vector → raster → vector review passed, and
-rendered z16 evidence shows Vietnamese road labels.
+The superseded `hanoi-20261112-v3-r2` vector package contains four Noto glyph
+ranges and is deliberately rejected by the v2 glyph revision. The current
+`hanoi-20261114-v3-r3` vector package was generated with the pinned Planetiler
+JAR, two threads, a 6 GiB heap cap, and no network access; it contains all five
+declared vector layers and the fifth `8192-8447` range for U+2013 EN DASH. Its
+matching `hanoi-raster-20261114-v3-r3` package has 847 256×256 tiles rendered
+locally by MapLibre. A fixed z15 MapLibre capture shows `Đường Long Biên – Xuân
+Quan` with its EN DASH; vector startup and a forced-raster fallback both reached
+`mapReady=true` without a glyph-resource error.
 
 ## Follow-up sequence
 

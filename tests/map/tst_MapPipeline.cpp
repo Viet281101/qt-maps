@@ -76,6 +76,8 @@ QString createPackage(QTemporaryDir &temporary)
               QByteArrayLiteral("glyph-fixture"));
     writeFile(root + QStringLiteral("/glyphs/Noto Sans Regular/7680-7935.pbf"),
               QByteArrayLiteral("glyph-fixture"));
+    writeFile(root + QStringLiteral("/glyphs/Noto Sans Regular/8192-8447.pbf"),
+              QByteArrayLiteral("glyph-fixture"));
     writeFile(root + QStringLiteral("/sprites/sprite.json"), QByteArrayLiteral("{}\n"));
     writeFile(root + QStringLiteral("/sprites/sprite.png"), QByteArrayLiteral("png-fixture"));
     writeFile(root + QStringLiteral("/sprites/sprite@2x.json"), QByteArrayLiteral("{}\n"));
@@ -110,6 +112,7 @@ QString createPackage(QTemporaryDir &temporary)
         QStringLiteral("glyphs/Noto Sans Regular/256-511.pbf"),
         QStringLiteral("glyphs/Noto Sans Regular/768-1023.pbf"),
         QStringLiteral("glyphs/Noto Sans Regular/7680-7935.pbf"),
+        QStringLiteral("glyphs/Noto Sans Regular/8192-8447.pbf"),
         QStringLiteral("sprites/sprite.json"),
         QStringLiteral("sprites/sprite.png"),
         QStringLiteral("sprites/sprite@2x.json"),
@@ -152,7 +155,7 @@ QString createPackage(QTemporaryDir &temporary)
     manifest.insert(QStringLiteral("pipeline_config"), pipelineConfig);
     QJsonObject resources;
     resources.insert(QStringLiteral("style_revision"), QStringLiteral("qtmaps-hanoi-v3"));
-    resources.insert(QStringLiteral("glyph_revision"), QStringLiteral("noto-sans-regular-v1"));
+    resources.insert(QStringLiteral("glyph_revision"), QStringLiteral("noto-sans-regular-v2"));
     resources.insert(QStringLiteral("sprite_revision"), QStringLiteral("sprite-test-v1"));
     manifest.insert(QStringLiteral("resources"), resources);
     manifest.insert(QStringLiteral("attribution"),
@@ -302,7 +305,7 @@ private slots:
         QVERIFY2(qtmaps::map::MapPackageManifest::loadAndValidate(root, &manifest, &error),
                  qPrintable(error));
         QCOMPARE(manifest.dataVersion, QStringLiteral("hanoi-20261112-v3"));
-        QCOMPARE(manifest.fileSha256.size(), 10);
+        QCOMPARE(manifest.fileSha256.size(), 11);
     }
 
     void manifestRejectsMissingAndCorruptFiles()
@@ -330,7 +333,7 @@ private slots:
         const QString glyphRoot = createPackage(glyphTemporary);
         QVERIFY(!glyphRoot.isEmpty());
         QVERIFY(
-            QFile::remove(glyphRoot + QStringLiteral("/glyphs/Noto Sans Regular/7680-7935.pbf")));
+            QFile::remove(glyphRoot + QStringLiteral("/glyphs/Noto Sans Regular/8192-8447.pbf")));
         QVERIFY(!qtmaps::map::MapPackageManifest::loadAndValidate(glyphRoot, &manifest, &error));
         QVERIFY(error.contains(QStringLiteral("Cannot read package file")));
 

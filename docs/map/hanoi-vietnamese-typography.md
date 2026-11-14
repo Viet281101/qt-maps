@@ -26,6 +26,8 @@ pixels and emits exactly these Noto Sans ranges:
 - `0-255` and `256-511` for Latin/Latin-1 and Latin Extended letters;
 - `768-1023` for combining diacritics; and
 - `7680-7935` for Vietnamese precomposed letters.
+- `8192-8447` for the U+2013 EN DASH in bounded road labels, including
+  `Đường Long Biên – Xuân Quan`.
 
 This covers Vietnamese road and place names without generating a broad font
 catalog. The generated files are checksummed in each immutable map package;

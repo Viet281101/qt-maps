@@ -27,7 +27,7 @@ inline QString styleContractVersion() { return QStringLiteral("qtmaps-style-v3")
 
 inline QString styleRevision() { return QStringLiteral("qtmaps-hanoi-v3"); }
 
-inline QString glyphRevision() { return QStringLiteral("noto-sans-regular-v1"); }
+inline QString glyphRevision() { return QStringLiteral("noto-sans-regular-v2"); }
 
 inline QString attribution() { return QStringLiteral("© OpenStreetMap contributors, ODbL 1.0"); }
 

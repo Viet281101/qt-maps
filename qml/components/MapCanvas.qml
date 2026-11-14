@@ -29,6 +29,8 @@ Item {
     }
 
     function applyOverviewCamera() {
+        if (!map)
+            return
         applyCamera(boundedCameraController.overviewCamera(map.width, map.height))
     }
 

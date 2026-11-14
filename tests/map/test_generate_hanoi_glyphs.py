@@ -65,15 +65,18 @@ class HanoiGlyphsTest(unittest.TestCase):
             output = Path(temporary) / "glyphs"
             tool.write_glyph_ranges(FONT, output)
             glyph_dir = output / tool.FONT_STACK
-            expected = {"0-255.pbf", "256-511.pbf", "768-1023.pbf", "7680-7935.pbf"}
+            expected = {"0-255.pbf", "256-511.pbf", "768-1023.pbf", "7680-7935.pbf",
+                        "8192-8447.pbf"}
             self.assertEqual({path.name for path in glyph_dir.iterdir()}, expected)
             for name in expected:
                 self.assertGreater((glyph_dir / name).stat().st_size, 1000)
             self.assertIn(tool.FONT_STACK.encode("utf-8"), (glyph_dir / "0-255.pbf").read_bytes())
             self.assertIn(b"\x08" + tool.varint(ord("Đ")), (glyph_dir / "256-511.pbf").read_bytes())
             self.assertIn(b"\x08" + tool.varint(ord("ộ")), (glyph_dir / "7680-7935.pbf").read_bytes())
+            self.assertIn(b"\x08" + tool.varint(ord("–")), (glyph_dir / "8192-8447.pbf").read_bytes())
             glyph = glyph_fields(glyph_dir / "256-511.pbf", ord("Đ"))
             self.assertEqual(len(glyph[2]), (glyph[3] + 6) * (glyph[4] + 6))
+            self.assertEqual(glyph_fields(glyph_dir / "8192-8447.pbf", ord("–"))[1], ord("–"))
 
 
 if __name__ == "__main__":
