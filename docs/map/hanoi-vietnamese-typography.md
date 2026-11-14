@@ -33,6 +33,12 @@ This covers Vietnamese road and place names without generating a broad font
 catalog. The generated files are checksummed in each immutable map package;
 the generator test verifies representative `Đ` and `ộ` glyph records.
 
+Adding a new bounded glyph range is a package-contract migration: increment
+`glyph_revision`, regenerate the vector package, then regenerate its raster
+package. Runtime validation rejects a raster whose bound vector manifest hash
+or data version differs from the active vector package, so an earlier label
+capture cannot silently mask a new glyph change.
+
 ## Label policy
 
 - Road labels are line-placed only for motorway, trunk, primary, and secondary

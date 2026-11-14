@@ -47,15 +47,15 @@ These directories describe intended ownership. Application-code directories are 
 ## Storage Model
 
 - **MBTiles**: ignored immutable vector-tile containers live at
-  `data/packages/hanoi-<yyyymmdd>-v2/`; the v2 package includes a checksummed
+  `data/packages/hanoi-<yyyymmdd>-v3-r*/`; the v3 package includes a checksummed
   manifest, the five-layer bounded schema, and style/glyph/sprite resources
-  plus an ignored `current` pointer. A v1 package is intentionally rejected by
-  the v2 runtime contract rather than being silently downgraded.
+  plus an ignored `current` pointer. Older or incompatible packages are
+  intentionally rejected rather than silently downgraded.
 - **Product style source**: `resources/map/hanoi-style.json` is the canonical
   source-controlled template. The package pipeline validates and canonicalizes
   its local URL token deterministically; the synthetic vector fixture neither
   defines nor emits the product style.
-- **Raster MBTiles**: ignored immutable `data/raster-packages/hanoi-raster-<yyyymmdd>-v2/` packages contain locally rendered PNG tiles plus a checksummed manifest. The manifest binds the raster to the exact map-package schema, style contract/revision, source PBF checksum, bounds, and zoom range; incompatible packages are rejected and regenerated with the matching vector package.
+- **Raster MBTiles**: ignored immutable `data/raster-packages/hanoi-raster-<yyyymmdd>-v3-r*/` packages contain locally rendered PNG tiles plus a checksummed manifest. The runtime binds raster to the exact active vector manifest SHA-256 and data version as well as the map-package schema, style contract/revision, source PBF checksum, bounds, and zoom range; incompatible packages are rejected and regenerated with the matching vector package.
 - **Routing graph**: generated Valhalla graph tiles, versioned by source extract and build configuration outside Git.
 - **Geocoding database**: proposed SQLite database with FTS5 tables generated from selected source data.
 - **Orthography files or tiles**: bounded by the agreed region, zoom range, license, and attribution requirements.
@@ -136,7 +136,7 @@ Large generated datasets, caches, routing graphs, and third-party artifacts must
 8. Architecture entries retain their decision status until evidence is recorded and the project owner approves a change.
 9. The application remains on the Qt 5 CMake integration (`find_package(Qt5 ...)`, `CMAKE_AUTOMOC`/`CMAKE_AUTORCC`, `qt5_add_resources`, and `add_executable`). The default minimum is Qt 5.15.13. Qt 6-only APIs still require a separate reviewed migration decision.
 10. QtMaps must not download raster or vector tiles from `tile.openstreetmap.org` or any other public tile server, including small test downloads. Real map tiles must come from the project data pipeline based on an owner-approved Geofabrik PBF, Planetiler configuration, and localhost tile service. Unit 01 may use only clearly labeled, locally generated diagnostic tiles that contain no geographic map data; unit 01b may generate a bounded real-data spike only after its explicit download/tool approval gate.
-11. Raster fallback packages must match the runtime map-package schema and style contract/revision, retain `© OpenStreetMap contributors, ODbL` attribution, and remain outside Git. A mismatch is a visible error, never a silent downgrade.
+11. Raster fallback packages must match the exact active vector manifest SHA-256 and data version, runtime map-package schema and style contract/revision, retain `© OpenStreetMap contributors, ODbL` attribution, and remain outside Git. A mismatch is a visible error, never a silent downgrade.
 
 ## Environment Provisioning Decisions
 

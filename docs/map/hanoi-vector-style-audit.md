@@ -7,10 +7,10 @@ Audit date: 2026-11-14
 Unit 07D replaced the former synthetic five-pixel road presentation with a
 source-controlled, class- and zoom-aware Hanoi product style. The active source
 and runtime contract now require `qtmaps-style-v3` with five bounded source
-layers and local Vietnamese-capable glyph resources. The ignored v3 vector
-package is generated from the approved local PBF; the v2 raster package is
-intentionally rejected until a matching v3 raster is owner-authorized. An
-existing v1 or v2 package is rejected explicitly.
+layers and local Vietnamese-capable glyph resources. Ignored versioned vector
+and raster packages are generated from the approved local PBF. The runtime
+rejects an older or mismatched package explicitly instead of silently
+downgrading.
 There is no evidence that a renderer defect is needed to explain the remaining
 typography/label omission.
 
@@ -20,7 +20,7 @@ typography/label omission.
   package builder validates and canonicalizes it with
   `tools/data-pipeline/build_hanoi_style.py`; the synthetic fixture provides
   only diagnostic resources and does not define the product style.
-- The v2 package contract contains `building`, `landuse`, `place`,
+- The v3 package contract contains `building`, `landuse`, `place`,
   `transportation`, and `water`. `landuse` and `water` use documented polygon
   allowlists only; POIs and extra name attributes are not added.
   `transportation.class` drives major, secondary, local and path styling with
@@ -43,7 +43,9 @@ ranges and is deliberately rejected by the v2 glyph revision. The current
 JAR, two threads, a 6 GiB heap cap, and no network access; it contains all five
 declared vector layers and the fifth `8192-8447` range for U+2013 EN DASH. Its
 matching `hanoi-raster-20261114-v3-r3` package has 847 256×256 tiles rendered
-locally by MapLibre. A fixed z15 MapLibre capture shows `Đường Long Biên – Xuân
+locally by MapLibre. Raster startup verifies the exact active vector manifest
+SHA-256 and data version, so a prior v3-r2 raster is rejected after the glyph
+revision changes. A fixed z15 MapLibre capture shows `Đường Long Biên – Xuân
 Quan` with its EN DASH; vector startup and a forced-raster fallback both reached
 `mapReady=true` without a glyph-resource error.
 

@@ -20,7 +20,8 @@ struct RasterPackageManifest
     int tileCount = 0;
 
     static bool loadAndValidate(const QString &packagePath, RasterPackageManifest *manifest,
-                                QString *errorMessage);
+                                QString *errorMessage,
+                                const QString &expectedVectorPackagePath = QString());
 };
 
 } // namespace map

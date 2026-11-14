@@ -30,13 +30,15 @@ class RasterTileSourceWorker final : public QObject
     Q_OBJECT
 
 public slots:
-    void start(const QString &packagePath, quint16 requestedPort)
+    void start(const QString &packagePath, const QString &expectedVectorPackagePath,
+               quint16 requestedPort)
     {
         stopResources();
         QVariantMap result;
         RasterPackageManifest manifest;
         QString validationError;
-        if (!RasterPackageManifest::loadAndValidate(packagePath, &manifest, &validationError)) {
+        if (!RasterPackageManifest::loadAndValidate(packagePath, &manifest, &validationError,
+                                                    expectedVectorPackagePath)) {
             result.insert(QStringLiteral("error"), validationError);
             emit startFinished(result);
             return;
@@ -255,7 +257,8 @@ RasterTileSource::~RasterTileSource()
     }
 }
 
-void RasterTileSource::startAsync(const QString &packagePath, quint16 requestedPort)
+void RasterTileSource::startAsync(const QString &packagePath,
+                                  const QString &expectedVectorPackagePath, quint16 requestedPort)
 {
     if (loading_ || running_) {
         return;
@@ -289,6 +292,7 @@ void RasterTileSource::startAsync(const QString &packagePath, quint16 requestedP
     loading_ = true;
     errorMessage_.clear();
     QMetaObject::invokeMethod(worker_, "start", Qt::QueuedConnection, Q_ARG(QString, packagePath),
+                              Q_ARG(QString, expectedVectorPackagePath),
                               Q_ARG(quint16, requestedPort));
 }
 

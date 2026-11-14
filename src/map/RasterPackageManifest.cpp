@@ -1,6 +1,7 @@
 #include "RasterPackageManifest.h"
 
 #include "MapPackageContract.h"
+#include "MapPackageManifest.h"
 
 #include <QCryptographicHash>
 #include <QDir>
@@ -52,7 +53,8 @@ bool reject(QString *errorMessage, const QString &message)
 } // namespace
 
 bool RasterPackageManifest::loadAndValidate(const QString &packagePath,
-                                            RasterPackageManifest *manifest, QString *errorMessage)
+                                            RasterPackageManifest *manifest, QString *errorMessage,
+                                            const QString &expectedVectorPackagePath)
 {
     if (!manifest) {
         return reject(errorMessage, QStringLiteral("Raster manifest output pointer is null"));
@@ -149,6 +151,28 @@ bool RasterPackageManifest::loadAndValidate(const QString &packagePath,
     }
     if (actualSha256 != tiles.value(QStringLiteral("sha256")).toString()) {
         return reject(errorMessage, QStringLiteral("Raster MBTiles checksum mismatch"));
+    }
+
+    if (!expectedVectorPackagePath.isEmpty()) {
+        MapPackageManifest expectedVector;
+        QString vectorError;
+        if (!MapPackageManifest::loadAndValidate(expectedVectorPackagePath, &expectedVector,
+                                                 &vectorError)) {
+            return reject(errorMessage,
+                          QStringLiteral("Active vector package is invalid: %1").arg(vectorError));
+        }
+        const QDir vectorRoot(QFileInfo(expectedVectorPackagePath).canonicalFilePath());
+        const QString expectedManifestSha256 =
+            sha256(vectorRoot.filePath(QStringLiteral("manifest.json")), &vectorError);
+        if (expectedManifestSha256.isEmpty()) {
+            return reject(errorMessage, vectorError);
+        }
+        if (parsed.vectorDataVersion != expectedVector.dataVersion ||
+            vector.value(QStringLiteral("manifest_sha256")).toString() != expectedManifestSha256) {
+            return reject(
+                errorMessage,
+                QStringLiteral("Raster package is not bound to the active vector package"));
+        }
     }
 
     *manifest = parsed;

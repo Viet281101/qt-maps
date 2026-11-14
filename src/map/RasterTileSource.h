@@ -20,7 +20,8 @@ public:
     explicit RasterTileSource(QObject *parent = nullptr);
     ~RasterTileSource() override;
 
-    void startAsync(const QString &packagePath, quint16 requestedPort = 0);
+    void startAsync(const QString &packagePath, const QString &expectedVectorPackagePath,
+                    quint16 requestedPort = 0);
     void stopAsync();
     bool running() const;
     bool loading() const;

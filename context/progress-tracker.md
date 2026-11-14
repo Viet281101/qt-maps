@@ -19,8 +19,9 @@ new v2 glyph contract requires the bounded `8192-8447.pbf` range for U+2013 EN
 DASH, used by `Đường Long Biên – Xuân Quan` and `Cầu vượt Nguyễn Văn Cừ – Hồng
 Tiến`. The ignored `hanoi-20261114-v3-r3` vector/raster pair has been rebuilt
 locally, validates its manifest linkage, and passed a fixed z15 MapLibre visual
-review plus vector and forced-raster startup checks. It is ready to commit and
-open for PR review.
+review plus vector and forced-raster startup checks. PR #51 is open; its final
+review also found and repaired the missing runtime check that binds raster to
+the exact active vector manifest.
 
 - On 2026-11-14, the follow-up UI-polish increment replaced the undersized
   search glyph with a centered QML magnifier, shortened the explicitly
@@ -72,6 +73,11 @@ open for PR review.
   fixed z15 capture visibly includes `Đường Long Biên – Xuân Quan`; vector and
   forced-raster startup both reached `mapReady=true`. The raster review also
   added a null guard for overview-camera calls during map-loader teardown.
+- The follow-up review of #50 found that raster validation checked only the
+  shape of its vector-manifest hash. It now verifies the active vector manifest
+  SHA-256 and data version on the raster worker thread; a v3-r2 raster cannot
+  be selected for the v3-r3 vector package. Deterministic map-pipeline tests
+  cover matching and mismatched active-vector packages.
 
 ## Publication Status
 
@@ -82,7 +88,8 @@ open for PR review.
   `origin/feat/07b-demo-shell-ui`, `origin/feat/07c-offline-raster`,
   `origin/feat/07d-hanoi-cartography`, and `origin/unit-07e-verify`.
 - PR #49 was squash-merged as `2f28ed0`, closing #40; Project #6 records it as
-  `Done`. Keep #50 `In Progress` until its visual review and PR are complete.
+  `Done`. PR #51 tracks #50 in `In Progress`; keep it there until the final
+  review repair is pushed and the PR is merged.
 
 ## Unit 07 Summary
 
@@ -124,7 +131,7 @@ artifacts remain ignored at
 
 ## Next Up
 
-1. Commit and open #50 for PR review.
+1. Push the final #50 review repair to PR #51 and merge after review.
 2. Start #39 after #50 is merged.
 
 ## Current Environment Evidence
