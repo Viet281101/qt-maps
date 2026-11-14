@@ -52,7 +52,7 @@ class HanoiV2SchemaTest(unittest.TestCase):
         self.assertIn('sprites_dir / "sprite@2x.png"', builder)
         self.assertIn('generate_hanoi_glyphs.py', builder)
         self.assertIn('FONT_STACK = "Noto Sans Regular"', builder)
-        self.assertIn('"glyph_revision": "noto-sans-regular-v1"', builder)
+        self.assertIn('"glyph_revision": "noto-sans-regular-v2"', builder)
         self.assertIn('SOURCE_LAYERS = ["building", "landuse", "place", "transportation", "water"]', builder)
         self.assertIn('repository / "tools/data-pipeline/unit07d-hanoi-v2.yml"', builder)
 

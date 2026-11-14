@@ -9,24 +9,19 @@ preserved in Git history through `e0a8086` and the cited pull requests.
   included. Qt 5.15.18 is the production baseline; Qt 5.15.13 is comparison
   only.
 - The active milestone is `Post-demo stabilization` with no due date.
-- Unit 08 is complete on `codex/unit-08-camera-controller` and ready for PR
-  review (#49, `Closes #40`, Project #6 `In Progress` / P1 / After Demo).
+- Unit 08 was squash-merged as PR #49 (`2f28ed0`), closing #40. Issue #50 is
+  active in Project #6 (`In Progress` / P1 / After Demo).
 
 ## Current Goal
 
-Unit 08's bounded-data camera controller is ready to merge before starting #39. The
-  controller now owns overview, user-gesture completion, maneuver focus,
-  route-fit, navigation follow, and automated pan/zoom normalization. Route-fit
-  clamps zoom before computing its padded center shift, protects against
-  non-finite input, applies bearing-aware usable-viewport bounds, and rejects
-  invalid, negatively padded, or out-of-package input without moving the map.
-  Route refresh waits for all active gesture signals to finish. `MapCanvas` has no direct focus-coordinate
-  assignment bypassing the controller.
-
-The branch also contains the small-viewport text-containment repair for shared
-action buttons, navigation-banner status, search/status stacking, and the
-compact route panel. It elides and bounds text instead of painting labels
-beneath controls.
+Close #50 before making further map-label quality claims, then start #39. The
+new v2 glyph contract requires the bounded `8192-8447.pbf` range for U+2013 EN
+DASH, used by `Đường Long Biên – Xuân Quan` and `Cầu vượt Nguyễn Văn Cừ – Hồng
+Tiến`. The ignored `hanoi-20261114-v3-r3` vector/raster pair has been rebuilt
+locally, validates its manifest linkage, and passed a fixed z15 MapLibre visual
+review plus vector and forced-raster startup checks. PR #51 is open; its final
+review also found and repaired the missing runtime check that binds raster to
+the exact active vector manifest.
 
 - On 2026-11-14, the follow-up UI-polish increment replaced the undersized
   search glyph with a centered QML magnifier, shortened the explicitly
@@ -71,6 +66,18 @@ beneath controls.
 - The 1920x1080 review exposed a missing local glyph request for `8192-8447.pbf`.
   It is pre-existing package work tracked separately in #50; do not conflate it
   with the Unit 08 camera change.
+- On 2026-11-14, #50 added the required fifth glyph range and bumped the local
+  glyph revision to v2. A direct-GPU MapLibre render completed 847/847 locally
+  generated 256×256 raster tiles without a glyph-resource error; the matching
+  vector/raster manifests validate and the Qt 5.15.18 suite passed 16/16. A
+  fixed z15 capture visibly includes `Đường Long Biên – Xuân Quan`; vector and
+  forced-raster startup both reached `mapReady=true`. The raster review also
+  added a null guard for overview-camera calls during map-loader teardown.
+- The follow-up review of #50 found that raster validation checked only the
+  shape of its vector-manifest hash. It now verifies the active vector manifest
+  SHA-256 and data version on the raster worker thread; a v3-r2 raster cannot
+  be selected for the v3-r3 vector package. Deterministic map-pipeline tests
+  cover matching and mismatched active-vector packages.
 
 ## Publication Status
 
@@ -80,8 +87,9 @@ beneath controls.
   `origin/chore/07a-repo-structure-maintenance`,
   `origin/feat/07b-demo-shell-ui`, `origin/feat/07c-offline-raster`,
   `origin/feat/07d-hanoi-cartography`, and `origin/unit-07e-verify`.
-- PR #49 contains the accepted Unit 08 work and is ready for review. #40 closes
-  on its squash merge; keep its Project item In Progress until then.
+- PR #49 was squash-merged as `2f28ed0`, closing #40; Project #6 records it as
+  `Done`. PR #51 tracks #50 in `In Progress`; keep it there until the final
+  review repair is pushed and the PR is merged.
 
 ## Unit 07 Summary
 
@@ -96,7 +104,9 @@ beneath controls.
 ## i915 Render-Benchmark Freeze
 
 The i915 stability blocker remains open. The owner authorized the v2, v3, and
-full #32 matrices on 2026-11-12 only. Do not run an application window,
+full #32 matrices on 2026-11-12 only. On 2026-11-14 the owner separately
+authorized the narrow #50 MapLibre/GPU render and visual review; it is not a
+benchmark or configuration change. Do not run other application-window,
 MapLibre/OpenGL, GPU benchmark/configuration, i915 work, a benchmark expansion,
 or soak without a new explicit owner instruction. The completed full-matrix raw
 artifacts remain ignored at
@@ -121,9 +131,8 @@ artifacts remain ignored at
 
 ## Next Up
 
-1. Squash-merge PR #49 after PR review, which closes #40.
-2. Address #50's missing bounded glyph range before making further map-label
-   quality claims, then start #39.
+1. Push the final #50 review repair to PR #51 and merge after review.
+2. Start #39 after #50 is merged.
 
 ## Current Environment Evidence
 
@@ -136,7 +145,7 @@ artifacts remain ignored at
   The normal software-backend suite last passed 16/16 after the Unit 08 review
   fixes; the stale
   `build-unit07e-qt51518` tree is obsolete and must not be rebuilt or tested.
-- Current ignored valid packages are `hanoi-20261112-v3-r2` and
-  `hanoi-raster-20261112-v3-r2`. They have 847 256x256 raster tiles, matching
-  v3 manifests, Vietnamese labels, and a completed 1366x768 vector-raster-
-  vector review. Keep generated packages and raw evidence out of Git.
+- Current ignored valid packages are `hanoi-20261114-v3-r3` and
+  `hanoi-raster-20261114-v3-r3`. They have the v2 glyph revision, 847 256×256
+  raster tiles, and matching v3 manifests. Keep generated packages and raw
+  evidence out of Git.

@@ -11,7 +11,10 @@ from PIL import Image, ImageDraw, ImageFont
 FONT_STACK = "Noto Sans Regular"
 PIXEL_SIZE = 24
 PADDING = 3
-RANGES = ((0, 256), (256, 512), (768, 1024), (7680, 7936))
+# U+2013 (EN DASH) occurs in bounded Hanoi road labels such as
+# "Đường Long Biên – Xuân Quan". MapLibre requests the complete enclosing
+# 256-codepoint PBF range, not an individual glyph.
+RANGES = ((0, 256), (256, 512), (768, 1024), (7680, 7936), (8192, 8448))
 
 
 def varint(value):

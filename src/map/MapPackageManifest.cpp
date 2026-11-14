@@ -154,7 +154,8 @@ bool MapPackageManifest::loadAndValidate(const QString &packagePath, MapPackageM
                                   QStringLiteral("glyphs/Noto Sans Regular/0-255.pbf"),
                                   QStringLiteral("glyphs/Noto Sans Regular/256-511.pbf"),
                                   QStringLiteral("glyphs/Noto Sans Regular/768-1023.pbf"),
-                                  QStringLiteral("glyphs/Noto Sans Regular/7680-7935.pbf")};
+                                  QStringLiteral("glyphs/Noto Sans Regular/7680-7935.pbf"),
+                                  QStringLiteral("glyphs/Noto Sans Regular/8192-8447.pbf")};
     for (auto iterator = files.constBegin(); iterator != files.constEnd(); ++iterator) {
         const QString relativePath = iterator.key();
         const QJsonObject fileEntry = iterator.value().toObject();

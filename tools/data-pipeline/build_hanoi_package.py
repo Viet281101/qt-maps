@@ -160,7 +160,7 @@ def main():
             },
             "resources": {
                 "style_revision": style_revision,
-                "glyph_revision": "noto-sans-regular-v1",
+                "glyph_revision": "noto-sans-regular-v2",
                 "glyph_font": {
                     "family": FONT_STACK,
                     "license": "OFL-1.1",

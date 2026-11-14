@@ -76,6 +76,8 @@ QString createPackage(QTemporaryDir &temporary)
               QByteArrayLiteral("glyph-fixture"));
     writeFile(root + QStringLiteral("/glyphs/Noto Sans Regular/7680-7935.pbf"),
               QByteArrayLiteral("glyph-fixture"));
+    writeFile(root + QStringLiteral("/glyphs/Noto Sans Regular/8192-8447.pbf"),
+              QByteArrayLiteral("glyph-fixture"));
     writeFile(root + QStringLiteral("/sprites/sprite.json"), QByteArrayLiteral("{}\n"));
     writeFile(root + QStringLiteral("/sprites/sprite.png"), QByteArrayLiteral("png-fixture"));
     writeFile(root + QStringLiteral("/sprites/sprite@2x.json"), QByteArrayLiteral("{}\n"));
@@ -110,6 +112,7 @@ QString createPackage(QTemporaryDir &temporary)
         QStringLiteral("glyphs/Noto Sans Regular/256-511.pbf"),
         QStringLiteral("glyphs/Noto Sans Regular/768-1023.pbf"),
         QStringLiteral("glyphs/Noto Sans Regular/7680-7935.pbf"),
+        QStringLiteral("glyphs/Noto Sans Regular/8192-8447.pbf"),
         QStringLiteral("sprites/sprite.json"),
         QStringLiteral("sprites/sprite.png"),
         QStringLiteral("sprites/sprite@2x.json"),
@@ -152,7 +155,7 @@ QString createPackage(QTemporaryDir &temporary)
     manifest.insert(QStringLiteral("pipeline_config"), pipelineConfig);
     QJsonObject resources;
     resources.insert(QStringLiteral("style_revision"), QStringLiteral("qtmaps-hanoi-v3"));
-    resources.insert(QStringLiteral("glyph_revision"), QStringLiteral("noto-sans-regular-v1"));
+    resources.insert(QStringLiteral("glyph_revision"), QStringLiteral("noto-sans-regular-v2"));
     resources.insert(QStringLiteral("sprite_revision"), QStringLiteral("sprite-test-v1"));
     manifest.insert(QStringLiteral("resources"), resources);
     manifest.insert(QStringLiteral("attribution"),
@@ -264,6 +267,34 @@ void mutateManifest(const QString &root, const std::function<void(QJsonObject &)
               QJsonDocument(object).toJson(QJsonDocument::Indented));
 }
 
+void bindRasterToVector(const QString &rasterRoot, const QString &vectorRoot)
+{
+    QFile vectorInput(vectorRoot + QStringLiteral("/manifest.json"));
+    QVERIFY(vectorInput.open(QIODevice::ReadOnly));
+    const QJsonObject vectorManifest = QJsonDocument::fromJson(vectorInput.readAll()).object();
+    vectorInput.close();
+    mutateManifest(rasterRoot, [&vectorManifest, &vectorRoot](QJsonObject &object) {
+        QJsonObject vector = object.value(QStringLiteral("source_vector_package")).toObject();
+        vector.insert(QStringLiteral("package_schema_version"),
+                      vectorManifest.value(QStringLiteral("schema_version")).toString());
+        vector.insert(QStringLiteral("data_version"),
+                      vectorManifest.value(QStringLiteral("data_version")).toString());
+        vector.insert(QStringLiteral("manifest_sha256"),
+                      digest(vectorRoot + QStringLiteral("/manifest.json")));
+        vector.insert(QStringLiteral("style_contract_version"),
+                      vectorManifest.value(QStringLiteral("style_contract_version")).toString());
+        const QJsonObject resources = vectorManifest.value(QStringLiteral("resources")).toObject();
+        vector.insert(QStringLiteral("style_revision"),
+                      resources.value(QStringLiteral("style_revision")).toString());
+        vector.insert(QStringLiteral("layer_schema_version"),
+                      vectorManifest.value(QStringLiteral("layer_schema"))
+                          .toObject()
+                          .value(QStringLiteral("version"))
+                          .toInt());
+        object.insert(QStringLiteral("source_vector_package"), vector);
+    });
+}
+
 class FakeTileSource final : public qtmaps::map::TileSource
 {
 public:
@@ -302,7 +333,7 @@ private slots:
         QVERIFY2(qtmaps::map::MapPackageManifest::loadAndValidate(root, &manifest, &error),
                  qPrintable(error));
         QCOMPARE(manifest.dataVersion, QStringLiteral("hanoi-20261112-v3"));
-        QCOMPARE(manifest.fileSha256.size(), 10);
+        QCOMPARE(manifest.fileSha256.size(), 11);
     }
 
     void manifestRejectsMissingAndCorruptFiles()
@@ -330,7 +361,7 @@ private slots:
         const QString glyphRoot = createPackage(glyphTemporary);
         QVERIFY(!glyphRoot.isEmpty());
         QVERIFY(
-            QFile::remove(glyphRoot + QStringLiteral("/glyphs/Noto Sans Regular/7680-7935.pbf")));
+            QFile::remove(glyphRoot + QStringLiteral("/glyphs/Noto Sans Regular/8192-8447.pbf")));
         QVERIFY(!qtmaps::map::MapPackageManifest::loadAndValidate(glyphRoot, &manifest, &error));
         QVERIFY(error.contains(QStringLiteral("Cannot read package file")));
 
@@ -377,6 +408,19 @@ private slots:
         });
         QVERIFY(!qtmaps::map::MapPackageManifest::loadAndValidate(boundsRoot, &manifest, &error));
 
+        QTemporaryDir glyphRevisionTemporary;
+        const QString glyphRevisionRoot = createPackage(glyphRevisionTemporary);
+        QVERIFY(!glyphRevisionRoot.isEmpty());
+        mutateManifest(glyphRevisionRoot, [](QJsonObject &object) {
+            QJsonObject resources = object.value(QStringLiteral("resources")).toObject();
+            resources.insert(QStringLiteral("glyph_revision"),
+                             QStringLiteral("noto-sans-regular-v1"));
+            object.insert(QStringLiteral("resources"), resources);
+        });
+        QVERIFY(!qtmaps::map::MapPackageManifest::loadAndValidate(glyphRevisionRoot, &manifest,
+                                                                  &error));
+        QVERIFY(error.contains(QStringLiteral("metadata is incompatible")));
+
         QTemporaryDir remoteStyleTemporary;
         const QString remoteStyleRoot = createPackage(remoteStyleTemporary);
         QVERIFY(!remoteStyleRoot.isEmpty());
@@ -408,26 +452,56 @@ private slots:
     void rasterManifestAcceptsBoundPackageAndRejectsContractMismatch()
     {
         QTemporaryDir temporary;
+        const QString vectorRoot = createPackage(temporary);
+        QVERIFY(!vectorRoot.isEmpty());
         const QString root = createRasterPackage(temporary);
         QVERIFY(!root.isEmpty());
+        bindRasterToVector(root, vectorRoot);
         qtmaps::map::RasterPackageManifest manifest;
         QString error;
-        QVERIFY2(qtmaps::map::RasterPackageManifest::loadAndValidate(root, &manifest, &error),
+        QVERIFY2(qtmaps::map::RasterPackageManifest::loadAndValidate(root, &manifest, &error,
+                                                                     vectorRoot),
                  qPrintable(error));
         QCOMPARE(manifest.tileCount, 847);
         QCOMPARE(manifest.maximumZoom, 16);
         QCOMPARE(manifest.styleRevision, QStringLiteral("qtmaps-hanoi-v3"));
 
         QTemporaryDir mismatchTemporary;
+        const QString mismatchVectorRoot = createPackage(mismatchTemporary);
+        QVERIFY(!mismatchVectorRoot.isEmpty());
         const QString mismatchRoot = createRasterPackage(mismatchTemporary);
+        bindRasterToVector(mismatchRoot, mismatchVectorRoot);
         mutateManifest(mismatchRoot, [](QJsonObject &object) {
             QJsonObject vector = object.value(QStringLiteral("source_vector_package")).toObject();
             vector.insert(QStringLiteral("style_revision"), QStringLiteral("future-v3"));
             object.insert(QStringLiteral("source_vector_package"), vector);
         });
-        QVERIFY(
-            !qtmaps::map::RasterPackageManifest::loadAndValidate(mismatchRoot, &manifest, &error));
+        QVERIFY(!qtmaps::map::RasterPackageManifest::loadAndValidate(mismatchRoot, &manifest,
+                                                                     &error, mismatchVectorRoot));
         QVERIFY(error.contains(QStringLiteral("style/package")));
+    }
+
+    void rasterManifestRejectsDifferentActiveVectorPackage()
+    {
+        QTemporaryDir packageTemporary;
+        const QString vectorRoot = createPackage(packageTemporary);
+        QVERIFY(!vectorRoot.isEmpty());
+        const QString rasterRoot = createRasterPackage(packageTemporary);
+        QVERIFY(!rasterRoot.isEmpty());
+        bindRasterToVector(rasterRoot, vectorRoot);
+
+        QTemporaryDir replacementTemporary;
+        const QString replacementVectorRoot = createPackage(replacementTemporary);
+        QVERIFY(!replacementVectorRoot.isEmpty());
+        mutateManifest(replacementVectorRoot, [](QJsonObject &object) {
+            object.insert(QStringLiteral("data_version"), QStringLiteral("hanoi-replacement-v3"));
+        });
+
+        qtmaps::map::RasterPackageManifest manifest;
+        QString error;
+        QVERIFY(!qtmaps::map::RasterPackageManifest::loadAndValidate(rasterRoot, &manifest, &error,
+                                                                     replacementVectorRoot));
+        QVERIFY(error.contains(QStringLiteral("not bound to the active vector package")));
     }
 
     void rasterManifestRejectsChecksumAndCoverageMismatch()
@@ -469,13 +543,16 @@ private slots:
     void rasterTileSourceStartsAsynchronouslyServesAndStops()
     {
         QTemporaryDir temporary;
+        const QString vectorRoot = createPackage(temporary);
+        QVERIFY(!vectorRoot.isEmpty());
         const QString root = createRasterPackage(temporary);
         QVERIFY(!root.isEmpty());
+        bindRasterToVector(root, vectorRoot);
         qtmaps::map::RasterTileSource source;
         QSignalSpy started(&source, &qtmaps::map::RasterTileSource::started);
         QElapsedTimer elapsed;
         elapsed.start();
-        source.startAsync(root);
+        source.startAsync(root, vectorRoot);
         QVERIFY(elapsed.elapsed() < 50);
         QVERIFY(started.wait(5000));
         QVERIFY(source.running());
@@ -497,13 +574,16 @@ private slots:
     void controllerSupportsManualAndAutomaticRasterActivation()
     {
         QTemporaryDir temporary;
+        const QString vectorRoot = createPackage(temporary);
+        QVERIFY(!vectorRoot.isEmpty());
         const QString root = createRasterPackage(temporary);
         QVERIFY(!root.isEmpty());
+        bindRasterToVector(root, vectorRoot);
         FakeTileSource vector;
         FakeTileSource diagnostic;
         qtmaps::map::MapSourceController controller(&vector, &diagnostic);
         controller.setRasterPackagePath(root);
-        QVERIFY(controller.start(QStringLiteral("vector"), QString()));
+        QVERIFY(controller.start(vectorRoot, QString()));
         QCOMPARE(controller.layerMode(), QStringLiteral("vector"));
         QVERIFY(!controller.usingRasterFallback());
         QVERIFY(!controller.rasterResourcesAllocated());
@@ -524,7 +604,7 @@ private slots:
         controller.stop();
         vector.succeeds = false;
         controller.setRasterPackagePath(root);
-        QVERIFY(controller.start(QStringLiteral("vector"), QString(), true));
+        QVERIFY(controller.start(vectorRoot, QString(), true));
         QTRY_COMPARE_WITH_TIMEOUT(controller.layerMode(), QStringLiteral("raster"), 5000);
         QVERIFY(controller.automaticFallback());
         QVERIFY(controller.mapStatusText().contains(QStringLiteral("tự động")));
@@ -532,14 +612,41 @@ private slots:
 
     void invalidRasterFailsWithoutBlockingCaller()
     {
+        QTemporaryDir temporary;
+        const QString vectorRoot = createPackage(temporary);
+        QVERIFY(!vectorRoot.isEmpty());
         qtmaps::map::RasterTileSource source;
         QSignalSpy failed(&source, &qtmaps::map::RasterTileSource::failed);
         QElapsedTimer elapsed;
         elapsed.start();
-        source.startAsync(QStringLiteral("/definitely/missing/raster-package"));
+        source.startAsync(QStringLiteral("/definitely/missing/raster-package"), vectorRoot);
         QVERIFY(elapsed.elapsed() < 50);
         QVERIFY(failed.wait(5000));
         QVERIFY(source.errorMessage().contains(QStringLiteral("missing")));
+    }
+
+    void rasterSourceRejectsDifferentActiveVectorAsynchronously()
+    {
+        QTemporaryDir packageTemporary;
+        const QString vectorRoot = createPackage(packageTemporary);
+        QVERIFY(!vectorRoot.isEmpty());
+        const QString rasterRoot = createRasterPackage(packageTemporary);
+        QVERIFY(!rasterRoot.isEmpty());
+        bindRasterToVector(rasterRoot, vectorRoot);
+
+        QTemporaryDir replacementTemporary;
+        const QString replacementVectorRoot = createPackage(replacementTemporary);
+        QVERIFY(!replacementVectorRoot.isEmpty());
+        mutateManifest(replacementVectorRoot, [](QJsonObject &object) {
+            object.insert(QStringLiteral("data_version"), QStringLiteral("hanoi-replacement-v3"));
+        });
+
+        qtmaps::map::RasterTileSource source;
+        QSignalSpy failed(&source, &qtmaps::map::RasterTileSource::failed);
+        source.startAsync(rasterRoot, replacementVectorRoot);
+        QVERIFY(failed.wait(5000));
+        QVERIFY(source.errorMessage().contains(
+            QStringLiteral("not bound to the active vector package")));
     }
 
     void mbtilesLifecycleStartStopRestartAndServe()

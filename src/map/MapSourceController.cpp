@@ -23,6 +23,7 @@ bool MapSourceController::start(const QString &packagePath, const QString &diagn
                                 bool forceVectorFailure)
 {
     stop();
+    vectorPackagePath_ = packagePath;
     bool vectorStarted = false;
     if (!forceVectorFailure && vectorSource_) {
         vectorStarted = vectorSource_->start(packagePath);
@@ -73,6 +74,7 @@ void MapSourceController::stop()
     loading_ = false;
     automaticFallback_ = false;
     fallbackReason_.clear();
+    vectorPackagePath_.clear();
     activeStyleUrl_.clear();
     layerMode_ = QStringLiteral("unavailable");
     mapStatusText_ = QStringLiteral("Bản đồ chưa sẵn sàng");
@@ -156,7 +158,7 @@ void MapSourceController::activateRaster(bool automatic)
         connect(productionRasterSource_.get(), &RasterTileSource::stopped, this,
                 [this]() { emit stateChanged(); });
     }
-    productionRasterSource_->startAsync(rasterPackagePath_);
+    productionRasterSource_->startAsync(rasterPackagePath_, vectorPackagePath_);
 }
 
 void MapSourceController::activateVector()

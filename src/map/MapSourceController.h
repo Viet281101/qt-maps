@@ -63,6 +63,7 @@ private:
     bool automaticFallback_ = false;
     QString fallbackReason_;
     QString rasterPackagePath_;
+    QString vectorPackagePath_;
     QString activeStyleUrl_;
     QString layerMode_ = QStringLiteral("unavailable");
     QString mapStatusText_ = QStringLiteral("Bản đồ chưa sẵn sàng");
