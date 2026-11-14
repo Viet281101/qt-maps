@@ -9,19 +9,16 @@ preserved in Git history through `e0a8086` and the cited pull requests.
   included. Qt 5.15.18 is the production baseline; Qt 5.15.13 is comparison
   only.
 - The active milestone is `Post-demo stabilization` with no due date.
-- Unit 08 was squash-merged as PR #49 (`2f28ed0`), closing #40. Issue #50 is
-  active in Project #6 (`In Progress` / P1 / After Demo).
+- Unit 08 was squash-merged as PR #49 (`2f28ed0`), closing #40. PR #51
+  (`3405d55`) closed #50; issue #39 is active in Project #6 (`In Progress` /
+  P1 / After Demo).
 
 ## Current Goal
 
-Close #50 before making further map-label quality claims, then start #39. The
-new v2 glyph contract requires the bounded `8192-8447.pbf` range for U+2013 EN
-DASH, used by `Đường Long Biên – Xuân Quan` and `Cầu vượt Nguyễn Văn Cừ – Hồng
-Tiến`. The ignored `hanoi-20261114-v3-r3` vector/raster pair has been rebuilt
-locally, validates its manifest linkage, and passed a fixed z15 MapLibre visual
-review plus vector and forced-raster startup checks. PR #51 is open; its final
-review also found and repaired the missing runtime check that binds raster to
-the exact active vector manifest.
+Complete #39 before starting search or orthography work. Its non-GPU change
+replaces the raster-only Canvas redraw loop with retained route map items shared
+by vector and raster modes. GPU pan/zoom validation remains explicitly deferred
+until the owner grants new scoped approval.
 
 - On 2026-11-14, the follow-up UI-polish increment replaced the undersized
   search glyph with a centered QML magnifier, shortened the explicitly
@@ -78,6 +75,11 @@ the exact active vector manifest.
   SHA-256 and data version on the raster worker thread; a v3-r2 raster cannot
   be selected for the v3-r3 vector package. Deterministic map-pipeline tests
   cover matching and mismatched active-vector packages.
+- On 2026-11-14, #39 removed the raster Canvas route overlay and its per-camera
+  repaint hooks. Retained `MapPolyline` and `MapQuickItem` children now own the
+  route, travelled segment, and markers in both modes; deterministic QML tests
+  guard against reintroducing Canvas or `requestPaint`. No GPU validation or
+  benchmark is included in this increment.
 
 ## Publication Status
 
@@ -87,9 +89,9 @@ the exact active vector manifest.
   `origin/chore/07a-repo-structure-maintenance`,
   `origin/feat/07b-demo-shell-ui`, `origin/feat/07c-offline-raster`,
   `origin/feat/07d-hanoi-cartography`, and `origin/unit-07e-verify`.
-- PR #49 was squash-merged as `2f28ed0`, closing #40; Project #6 records it as
-  `Done`. PR #51 tracks #50 in `In Progress`; keep it there until the final
-  review repair is pushed and the PR is merged.
+- PR #49 was squash-merged as `2f28ed0`, closing #40; PR #51 was squash-merged
+  as `3405d55`, closing #50. Project #6 records #50 as `Done`; #39 is
+  `In Progress`.
 
 ## Unit 07 Summary
 
@@ -131,8 +133,9 @@ artifacts remain ignored at
 
 ## Next Up
 
-1. Push the final #50 review repair to PR #51 and merge after review.
-2. Start #39 after #50 is merged.
+1. Complete #39's non-GPU verification and request separate direct-GPU visual
+   validation before merge.
+2. Start #16 after #39 is merged.
 
 ## Current Environment Evidence
 
