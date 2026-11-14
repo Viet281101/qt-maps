@@ -171,7 +171,7 @@ private slots:
 
 private:
     QString outputRoot_;
-    int settleMilliseconds_ = 150;
+    int settleMilliseconds_ = 500;
     QVector<TileCoordinate> tiles_;
     int index_ = 0;
     TileCoordinate current_;
@@ -195,7 +195,7 @@ int main(int argc, char *argv[])
                       QStringLiteral("path"), QStringLiteral("generated/unit-07c/rendered-tiles")});
     parser.addOption({QStringLiteral("settle-ms"),
                       QStringLiteral("Quiet frame interval before each capture"),
-                      QStringLiteral("milliseconds"), QStringLiteral("150")});
+                      QStringLiteral("milliseconds"), QStringLiteral("500")});
     parser.process(application);
 
     bool settleOk = false;

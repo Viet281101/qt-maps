@@ -63,7 +63,13 @@ the connection source.
 ## Map and Navigation Presentation
 
 - The selected route must remain distinguishable from roads and imagery at supported zoom levels.
-- Qt 5.15 `MapPolyline` does not expose cap/join controls in QML. The route therefore relies on the MapLibre renderer's joins, while circular A/B markers cover its endpoint caps; visual review at every supported viewport is the acceptance check.
+- Route outline, active line, travelled segment, and A/B/current-position markers
+  are retained `MapPolyline`/`MapQuickItem` map children in both vector and
+  raster modes. Qt 5.15 `MapPolyline` does not expose cap/join controls in QML;
+  circular A/B markers cover its endpoint caps. A Canvas redraw loop is not
+  permitted for camera changes; visual review at every supported viewport is
+  the acceptance check. The local-only visual-review harness may capture the
+  production window to ignored PNGs for this check; it is not a benchmark.
 - Origin, destination, current simulated position, and selected search result use distinct semantic marker roles.
 - Camera following and map rotation must have an obvious exit/recenter action.
 - Re-routing must preserve the last valid route until a replacement succeeds or clearly report that no route is available.

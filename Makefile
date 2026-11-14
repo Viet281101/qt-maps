@@ -19,6 +19,8 @@ BENCHMARK_ARGS ?=
 HANOI_PBF ?= generated/unit-01b/source/vietnam-latest.osm.pbf
 PLANETILER_JAR ?= generated/unit-01b/tools/planetiler.jar
 MAP_PACKAGE ?= data/packages/current
+RASTER_PACKAGE ?= data/raster-packages/current
+VISUAL_REVIEW_SETTLE_MS ?= 2500
 MAPLIBRE_INSTALL ?= generated/unit-01b/maplibre-install-qt51518
 MAPLIBRE_SRC ?= generated/unit-01b/maplibre-native-qt
 MAPLIBRE_BUILD_NEW ?= generated/unit-01b/maplibre-build-qt51518
@@ -50,7 +52,7 @@ endif
 
 .PHONY: help requirements requirements-apt maplibre-requirements maplibre-requirements-apt configure build test run run-app benchmark debug-build debug-run debug-gdb check \
 	review format format-check diagnostic-tiles vector-fixture vector-real-style hanoi-package hanoi-raster-render hanoi-raster-package \
-	raster serve-diagnostic-tiles serve-vector-fixture run-mapboxgl-probe maplibre-qt51518 clean clean-old-builds
+	raster visual-review serve-diagnostic-tiles serve-vector-fixture run-mapboxgl-probe maplibre-qt51518 clean clean-old-builds
 
 help:
 	@echo "QtMaps development targets"
@@ -79,6 +81,7 @@ help:
 	@echo "  make hanoi-raster-package  Package locally rendered z12-z16 PNG tiles; requires RASTER_TILES"
 	@echo "  make hanoi-raster-render   Render local z12-z16 PNG tiles from MAP_PACKAGE"
 	@echo "  make raster                Re-render and package raster after style/schema migration"
+	@echo "  make visual-review         Capture production QML/GPU frames; requires VISUAL_REVIEW_OUTPUT"
 	@echo "  make maplibre-qt51518      Deliberately rebuild MapLibre for Qt 5.15.18 (~16 min, ~1.1 GiB peak RSS)"
 	@echo "  make serve-vector-fixture  Serve the vector fixture on 127.0.0.1:8766"
 	@echo "  make run-mapboxgl-probe    Run probe (vector fixture server must be separate)"
@@ -275,6 +278,17 @@ hanoi-raster-render: build
 		"$(BUILD_DIR)/qtmaps_raster_renderer" \
 		--vector-package "$(MAP_PACKAGE)" \
 		--output "$(if $(RASTER_TILES),$(RASTER_TILES),generated/unit-07c/rendered-tiles)"
+
+visual-review: build
+	@test -n "$(VISUAL_REVIEW_OUTPUT)" || { echo "error: set VISUAL_REVIEW_OUTPUT to an empty directory" >&2; exit 1; }
+	env LD_LIBRARY_PATH="$(abspath $(MAPLIBRE_INSTALL))/lib$${LD_LIBRARY_PATH:+:$$LD_LIBRARY_PATH}" \
+		QT_PLUGIN_PATH="$(abspath $(MAPLIBRE_INSTALL))/plugins:$(abspath $(QML_RUNTIME))/plugins$${QT_PLUGIN_PATH:+:$$QT_PLUGIN_PATH}" \
+		QML2_IMPORT_PATH="$(abspath $(MAPLIBRE_INSTALL))/qml:$(abspath $(QML_RUNTIME))/qml$${QML2_IMPORT_PATH:+:$$QML2_IMPORT_PATH}" \
+		"$(BUILD_DIR)/qtmaps_visual_review" \
+		--map-package "$(MAP_PACKAGE)" \
+		--raster-package "$(RASTER_PACKAGE)" \
+		--settle-ms "$(VISUAL_REVIEW_SETTLE_MS)" \
+		--output "$(VISUAL_REVIEW_OUTPUT)"
 
 raster: RASTER_TILES := $(if $(RASTER_TILES),$(RASTER_TILES),generated/unit-07c/rendered-tiles)
 raster: hanoi-raster-render hanoi-raster-package

@@ -9,19 +9,15 @@ preserved in Git history through `e0a8086` and the cited pull requests.
   included. Qt 5.15.18 is the production baseline; Qt 5.15.13 is comparison
   only.
 - The active milestone is `Post-demo stabilization` with no due date.
-- Unit 08 was squash-merged as PR #49 (`2f28ed0`), closing #40. Issue #50 is
-  active in Project #6 (`In Progress` / P1 / After Demo).
+- Unit 08 was squash-merged as PR #49 (`2f28ed0`), closing #40. PR #51
+  (`3405d55`) closed #50; issue #39 is active in Project #6 (`In Progress` /
+  P1 / After Demo).
 
 ## Current Goal
 
-Close #50 before making further map-label quality claims, then start #39. The
-new v2 glyph contract requires the bounded `8192-8447.pbf` range for U+2013 EN
-DASH, used by `Đường Long Biên – Xuân Quan` and `Cầu vượt Nguyễn Văn Cừ – Hồng
-Tiến`. The ignored `hanoi-20261114-v3-r3` vector/raster pair has been rebuilt
-locally, validates its manifest linkage, and passed a fixed z15 MapLibre visual
-review plus vector and forced-raster startup checks. PR #51 is open; its final
-review also found and repaired the missing runtime check that binds raster to
-the exact active vector manifest.
+Complete #39 before starting search or orthography work. Its non-GPU change
+replaces the raster-only Canvas redraw loop with retained route map items shared
+by vector and raster modes.
 
 - On 2026-11-14, the follow-up UI-polish increment replaced the undersized
   search glyph with a centered QML magnifier, shortened the explicitly
@@ -45,6 +41,19 @@ the exact active vector manifest.
   the route controls, and remaining layer/navigation/map labels use Noto Sans.
   Deterministic tests cover the 90-degree route fit, street-name binding, and
   recovered collapsed-list space; the Qt 5.15.18 suite passed 16/16.
+
+- On 2026-11-15, the owner authorized a narrow, local-only GPU visual review.
+  `qtmaps_visual_review` now drives the production QML and controllers through
+  fixture-route, pan/zoom, rotation, route-fit, recenter, and navigation states
+  in vector and forced-raster modes at 900x580, 1366x768, and 1920x1080. It
+  writes ignored PNGs only; it is neither a benchmark nor a desktop bridge or
+  browser extension. The review exposed incomplete z16 raster artifacts from
+  the old 150 ms render settle. The local raster renderer now waits 500 ms and
+  the regenerated ignored `hanoi-raster-20261115-v3-r4` package reduced
+  uniform z16 tiles from 407/621 to 5/621. Direct-GPU captures show the route,
+  navigation puck, map, and warnings in every reviewed state. Raster's
+  provider-owned duplicate OSM footer is disabled while the single app-owned
+  attribution pill remains visible. The Qt 5.15.18 suite passed 16/16.
 
 ## Unit 08 Verification
 
@@ -78,6 +87,22 @@ the exact active vector manifest.
   SHA-256 and data version on the raster worker thread; a v3-r2 raster cannot
   be selected for the v3-r3 vector package. Deterministic map-pipeline tests
   cover matching and mismatched active-vector packages.
+- On 2026-11-14, #39 removed the raster Canvas route overlay and its per-camera
+  repaint hooks. Retained `MapPolyline` and `MapQuickItem` children now own the
+  route, travelled segment, and markers in both modes; deterministic QML tests
+  guard against reintroducing Canvas or `requestPaint`. The 16-test Qt 5.15.18
+  suite and isolated Release review pass. The owner authorized direct-GPU visual
+  review. After reconnecting the terminal to the surviving Xwayland session,
+  both the vector fixture and forced-raster fixture reached `mapReady=true` with
+  `error=0` on the Intel HD 520. The desktop bridge still cannot enumerate or
+  capture the native window, so pan/zoom/rotation screenshots and visual
+  acceptance are not claimed. No benchmark or GPU-configuration change is
+  included.
+- On 2026-11-15, the approved local-only production-QML capture harness
+  completed that visual acceptance on the same Intel HD 520: vector and raster
+  captures are nonblank at all three viewports and cover pan/zoom, rotation,
+  route-fit, recenter, and navigation follow. This remains visual evidence only,
+  not a performance result.
 
 ## Publication Status
 
@@ -87,9 +112,9 @@ the exact active vector manifest.
   `origin/chore/07a-repo-structure-maintenance`,
   `origin/feat/07b-demo-shell-ui`, `origin/feat/07c-offline-raster`,
   `origin/feat/07d-hanoi-cartography`, and `origin/unit-07e-verify`.
-- PR #49 was squash-merged as `2f28ed0`, closing #40; Project #6 records it as
-  `Done`. PR #51 tracks #50 in `In Progress`; keep it there until the final
-  review repair is pushed and the PR is merged.
+- PR #49 was squash-merged as `2f28ed0`, closing #40; PR #51 was squash-merged
+  as `3405d55`, closing #50. Project #6 records #50 as `Done`; #39 is
+  `In Progress`.
 
 ## Unit 07 Summary
 
@@ -131,8 +156,10 @@ artifacts remain ignored at
 
 ## Next Up
 
-1. Push the final #50 review repair to PR #51 and merge after review.
-2. Start #39 after #50 is merged.
+1. Commit and push the completed #39 visual-review/pipeline repair, then review
+   the PR before merge. No desktop bridge, browser extension, network listener,
+   or benchmark is part of this work.
+2. Start #16 after #39 is merged.
 
 ## Current Environment Evidence
 
@@ -146,6 +173,6 @@ artifacts remain ignored at
   fixes; the stale
   `build-unit07e-qt51518` tree is obsolete and must not be rebuilt or tested.
 - Current ignored valid packages are `hanoi-20261114-v3-r3` and
-  `hanoi-raster-20261114-v3-r3`. They have the v2 glyph revision, 847 256×256
+  `hanoi-raster-20261115-v3-r4`. They have the v2 glyph revision, 847 256×256
   raster tiles, and matching v3 manifests. Keep generated packages and raw
   evidence out of Git.

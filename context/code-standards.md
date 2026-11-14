@@ -84,6 +84,9 @@ Do not reuse one configured build directory across Qt kits and do not change glo
 - Use small deterministic fixtures; do not require the full Vietnam dataset for routine tests.
 - Any external-service integration test must state its dataset, ports, process lifecycle, timeout, and offline assumptions.
 - UI/render units include a manual or automated end-to-end verification on the reference hardware and current FPS/RAM/CPU results when required by their spec.
+- A diagnostics visual-review capture must reuse production QML/controllers,
+  write only to an explicit ignored output directory, use bounded readiness and
+  settle timeouts, and make no network listener or benchmark claim.
 
 ## Data and Storage
 

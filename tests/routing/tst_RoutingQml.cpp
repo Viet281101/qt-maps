@@ -591,13 +591,16 @@ private slots:
         QVERIFY(qml.contains("travelledRoutePath"));
         QVERIFY(qml.contains("Theme.routeTravelled"));
         QVERIFY(qml.contains("canvas.travelledRoutePath.length > 1"));
-        QVERIFY(qml.contains("objectName: \"rasterRouteOverlay\""));
-        QVERIFY(qml.contains("map.fromCoordinate"));
+        QVERIFY(qml.contains("visible: routingController.routePath.length > 1"));
+        QVERIFY(qml.contains("MapQuickItem"));
+        QVERIFY(!mapQml.contains("Canvas {"));
+        QVERIFY(!mapQml.contains("requestPaint"));
         QVERIFY(qml.contains("mapSourceController.activateRaster()"));
         QVERIFY(qml.contains("mapSourceController.activateVector()"));
         QVERIFY(qml.contains("độ phân giải thấp hơn"));
         QVERIFY(qml.contains("objectName: \"rasterOverzoomWarning\""));
         QVERIFY(qml.contains("map.zoomLevel >= 16"));
+        QVERIFY(mapQml.contains("copyrightsVisible: false"));
         QVERIFY(qml.contains("osm.mapping.cache.texture.size"));
         QVERIFY(qml.contains("Qt.callLater(canvas.settleNavigationState)"));
         QVERIFY(qml.contains("canvas.guidanceActive"));

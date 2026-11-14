@@ -180,6 +180,8 @@ Item {
         minimumZoomLevel: 12
         maximumZoomLevel: 18
         zoomLevel: 14
+        // ConnectionStatus owns the single persistent OSM attribution for both providers.
+        copyrightsVisible: false
         gesture.enabled: !routeNavigationController.running
         gesture.onPanStarted: canvas.beginCameraGesture()
         gesture.onPanFinished: canvas.endCameraGesture()
@@ -192,11 +194,6 @@ Item {
         gesture.onTiltStarted: canvas.beginCameraGesture()
         gesture.onTiltFinished: canvas.endCameraGesture()
         focus: true
-        onCenterChanged: rasterRouteOverlay.requestPaint()
-        onZoomLevelChanged: rasterRouteOverlay.requestPaint()
-        onBearingChanged: rasterRouteOverlay.requestPaint()
-        onTiltChanged: rasterRouteOverlay.requestPaint()
-
         onMapReadyChanged: {
             console.log("routing mapReady=" + mapReady + " error=" + error
                         + " errorString=" + errorString)
@@ -233,7 +230,7 @@ Item {
 
         MapPolyline {
             id: routeOutline
-            visible: !canvas.rasterMode
+            visible: routingController.routePath.length > 1
             path: routingController.routePath
             line.width: 12
             line.color: Theme.routeOutline
@@ -243,7 +240,7 @@ Item {
 
         MapPolyline {
             id: routeLine
-            visible: !canvas.rasterMode
+            visible: routingController.routePath.length > 1
             path: routingController.routePath
             line.width: 7
             line.color: Theme.route
@@ -252,8 +249,8 @@ Item {
 
         MapPolyline {
             id: travelledRouteLine
-            // MapLibre hides sibling polylines when an empty MapPolyline remains visible.
-            visible: !canvas.rasterMode && canvas.travelledRoutePath.length > 1
+            // Some providers hide sibling polylines when an empty MapPolyline remains visible.
+            visible: canvas.travelledRoutePath.length > 1
             path: canvas.travelledRoutePath
             line.width: 7
             line.color: Theme.routeTravelled
@@ -261,7 +258,7 @@ Item {
         }
 
         MapQuickItem {
-            visible: !canvas.rasterMode
+            visible: routingController.origin.isValid
             coordinate: routingController.origin
             anchorPoint.x: originMarker.width / 2
             anchorPoint.y: originMarker.height / 2
@@ -283,7 +280,7 @@ Item {
         }
 
         MapQuickItem {
-            visible: !canvas.rasterMode && canvas.guidanceActive
+            visible: canvas.guidanceActive && routeNavigationController.coordinate.isValid
             coordinate: routeNavigationController.coordinate
             anchorPoint.x: navigationMarker.width / 2
             anchorPoint.y: navigationMarker.height / 2
@@ -306,7 +303,7 @@ Item {
         }
 
         MapQuickItem {
-            visible: !canvas.rasterMode
+            visible: routingController.destination.isValid
             coordinate: routingController.destination
             anchorPoint.x: destinationMarker.width / 2
             anchorPoint.y: destinationMarker.height / 2
@@ -381,77 +378,6 @@ Item {
         }
     }
 
-    Canvas {
-        id: rasterRouteOverlay
-        objectName: "rasterRouteOverlay"
-        anchors.fill: parent
-        visible: canvas.rasterMode
-        z: 2
-
-        function drawPolyline(context, path, width, color) {
-            if (!path || path.length < 2)
-                return
-            context.beginPath()
-            var started = false
-            for (var index = 0; index < path.length; ++index) {
-                var point = map.fromCoordinate(path[index], false)
-                if (!isFinite(point.x) || !isFinite(point.y))
-                    continue
-                if (!started) {
-                    context.moveTo(point.x, point.y)
-                    started = true
-                } else {
-                    context.lineTo(point.x, point.y)
-                }
-            }
-            if (!started)
-                return
-            context.lineWidth = width
-            context.strokeStyle = color
-            context.lineCap = "round"
-            context.lineJoin = "round"
-            context.stroke()
-        }
-
-        function drawMarker(context, coordinate, radius, fill, label, textColor) {
-            if (!coordinate || !coordinate.isValid)
-                return
-            var point = map.fromCoordinate(coordinate, false)
-            context.beginPath()
-            context.arc(point.x, point.y, radius, 0, Math.PI * 2)
-            context.fillStyle = fill
-            context.fill()
-            context.lineWidth = 5
-            context.strokeStyle = Theme.surfaceElevated
-            context.stroke()
-            context.fillStyle = textColor
-            context.font = "bold 14px sans-serif"
-            context.textAlign = "center"
-            context.textBaseline = "middle"
-            context.fillText(label, point.x, point.y)
-        }
-
-        onPaint: {
-            var context = getContext("2d")
-            context.clearRect(0, 0, width, height)
-            if (!canvas.map)
-                return
-            drawPolyline(context, routingController.routePath, 12, Theme.routeOutline)
-            drawPolyline(context, routingController.routePath, 7, Theme.route)
-            drawPolyline(context, canvas.travelledRoutePath, 7, Theme.routeTravelled)
-            drawMarker(context, routingController.origin, 17, Theme.markerOrigin, "A", "#102018")
-            drawMarker(context, routingController.destination, 17,
-                       Theme.markerDestination, "B", "#301010")
-            if (canvas.guidanceActive)
-                drawMarker(context, routeNavigationController.coordinate, 14,
-                           Theme.accent, "▲", "#10243a")
-        }
-
-        onVisibleChanged: requestPaint()
-        onWidthChanged: requestPaint()
-        onHeightChanged: requestPaint()
-    }
-
     Connections {
         target: benchmarkScenarioController
         function onCameraCommand(coordinate, zoomLevel, bearing) {
@@ -468,7 +394,6 @@ Item {
         function onRouteChanged() {
             canvas.travelledRoutePath = []
             routeRefreshTimer.restart()
-            rasterRouteOverlay.requestPaint()
         }
         function onStateChanged() {
             if (routingController.routeAvailable && !routingController.loading)
@@ -488,7 +413,6 @@ Item {
         function onPositionChanged() {
             canvas.updateTravelledRoute()
             canvas.recenterNavigation()
-            rasterRouteOverlay.requestPaint()
         }
         function onStateChanged() {
             // Deviation emits navigation state before RoutingController enters loading.
@@ -515,7 +439,6 @@ Item {
             }
             if (canvas.map)
                 canvas.map.refreshRoute()
-            rasterRouteOverlay.requestPaint()
         }
     }
 
@@ -526,7 +449,6 @@ Item {
         onTriggered: mapLoader.active = true
     }
 
-    onTravelledRoutePathChanged: rasterRouteOverlay.requestPaint()
     onRasterModeChanged: {
         mapLoader.active = false
         mapReloadTimer.restart()
