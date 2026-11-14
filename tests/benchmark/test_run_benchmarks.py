@@ -17,7 +17,7 @@ class BenchmarkRuntimeEnvironmentTest(unittest.TestCase):
     def test_uses_qmake_reported_qt_runtime_not_stale_generated_runtime(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            maplibre = root / "generated/unit-01b/maplibre-install"
+            maplibre = root / "generated/unit-01b/maplibre-install-qt51518"
             for path in (maplibre / "lib", maplibre / "plugins", maplibre / "qml"):
                 path.mkdir(parents=True)
             qt_prefix = root / "qt"

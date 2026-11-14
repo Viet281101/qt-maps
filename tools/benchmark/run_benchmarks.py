@@ -79,7 +79,7 @@ def memory_bytes():
 
 
 def parse_maplibre_version(root):
-    version_file = root / "generated/unit-01b/maplibre-install/lib/cmake/QMapLibre/QMapLibreConfigVersion.cmake"
+    version_file = root / "generated/unit-01b/maplibre-install-qt51518/lib/cmake/QMapLibre/QMapLibreConfigVersion.cmake"
     if not version_file.exists():
         return "Unknown"
     match = re.search(r'set\(PACKAGE_VERSION "([^"]+)"\)', version_file.read_text(encoding="utf-8"))
@@ -160,7 +160,7 @@ def runtime_environment(root, qt_prefix, platform_name=None):
     qt_plugins = qmake_query("QT_INSTALL_PLUGINS")
     if not (qt_archdata / "qml").is_dir() or not qt_plugins.is_dir():
         raise RuntimeError(f"Selected Qt runtime is incomplete under {qt_prefix}")
-    maplibre = root / "generated/unit-01b/maplibre-install"
+    maplibre = root / "generated/unit-01b/maplibre-install-qt51518"
     for name, paths in {
         "LD_LIBRARY_PATH": [maplibre / "lib"],
         "QT_PLUGIN_PATH": [maplibre / "plugins", qt_plugins],

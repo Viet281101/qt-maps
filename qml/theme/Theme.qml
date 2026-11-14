@@ -27,8 +27,9 @@ QtObject {
     readonly property int radiusControl: 8
     readonly property int radiusPanel: 12
     readonly property int radiusPill: 999
-    readonly property int fontSizeBody: 14
-    readonly property int fontSizeTitle: 20
+    readonly property string fontFamily: "Noto Sans"
+    readonly property int fontSizeBody: 13
+    readonly property int fontSizeTitle: 18
     readonly property int fontSizeCaption: 12
-    readonly property int fontSizeDisplay: 28
+    readonly property int fontSizeDisplay: 26
 }

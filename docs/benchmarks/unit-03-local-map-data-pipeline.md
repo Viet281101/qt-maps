@@ -64,9 +64,9 @@ or non-loopback interface. The successful command was:
 unshare -Urn bash -c '
 set -euo pipefail
 ip link set lo up
-export LD_LIBRARY_PATH="$PWD/generated/unit-01b/maplibre-install/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
-export QT_PLUGIN_PATH="$PWD/generated/unit-01b/maplibre-install/plugins:$PWD/generated/unit-01b/qml-runtime/usr/lib/x86_64-linux-gnu/qt5/plugins${QT_PLUGIN_PATH:+:$QT_PLUGIN_PATH}"
-export QML2_IMPORT_PATH="$PWD/generated/unit-01b/maplibre-install/qml:$PWD/generated/unit-01b/qml-runtime/usr/lib/x86_64-linux-gnu/qt5/qml${QML2_IMPORT_PATH:+:$QML2_IMPORT_PATH}"
+export LD_LIBRARY_PATH="$PWD/generated/unit-01b/maplibre-install-qt51518/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+export QT_PLUGIN_PATH="$PWD/generated/unit-01b/maplibre-install-qt51518/plugins:/usr/lib/x86_64-linux-gnu/qt5/plugins${QT_PLUGIN_PATH:+:$QT_PLUGIN_PATH}"
+export QML2_IMPORT_PATH="$PWD/generated/unit-01b/maplibre-install-qt51518/qml:/usr/lib/x86_64-linux-gnu/qt5/qml${QML2_IMPORT_PATH:+:$QML2_IMPORT_PATH}"
 export QSG_RENDER_LOOP=threaded
 strace -f -e trace=connect -s 256 -o /tmp/qtmaps-pr20-offline-connect.strace \
   ./build-qt515/qtmaps --unit03-local-map --navigation-benchmark \

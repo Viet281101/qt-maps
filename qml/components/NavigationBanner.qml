@@ -72,6 +72,7 @@ Rectangle {
         horizontalAlignment: Text.AlignHCenter
         text: root.directionSymbol(root.instruction)
         color: root.arrived ? Theme.success : root.rerouting ? Theme.warning : Theme.accent
+        font.family: Theme.fontFamily
         font.pixelSize: 42
         font.bold: true
     }
@@ -89,6 +90,7 @@ Rectangle {
             width: parent.width
             text: root.maneuverDistanceText
             color: root.arrived ? Theme.success : Theme.textPrimary
+            font.family: Theme.fontFamily
             font.pixelSize: 30
             font.bold: true
         }
@@ -98,6 +100,7 @@ Rectangle {
                   ? root.primaryText
                   : root.streetName.length > 0 ? root.streetName : root.primaryText
             color: Theme.textPrimary
+            font.family: Theme.fontFamily
             font.pixelSize: 18
             font.bold: true
             elide: Text.ElideRight
@@ -113,6 +116,7 @@ Rectangle {
                     ? qsTr("Tiếp theo: %1").arg(root.nextInstruction)
                     : root.primaryText
             color: root.rerouting ? Theme.warning : Theme.textSecondary
+            font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSizeBody
             elide: Text.ElideRight
         }
@@ -128,15 +132,37 @@ Rectangle {
 
         Row {
             anchors.left: parent.left
+            anchors.right: endNavigationButton.left
             anchors.verticalCenter: parent.verticalCenter
             anchors.leftMargin: Theme.spaceLg
+            anchors.rightMargin: Theme.spaceSm
             spacing: Theme.spaceLg
-            Text { color: Theme.textPrimary; font.bold: true; text: root.remainingText }
-            Text { color: Theme.textSecondary; text: root.etaText }
-            Text { color: Theme.warning; text: root.sourceText }
+            Text {
+                width: Math.max(0, parent.width * 0.42)
+                color: Theme.textPrimary
+                font.family: Theme.fontFamily
+                font.bold: true
+                elide: Text.ElideRight
+                text: root.remainingText
+            }
+            Text {
+                width: Math.max(0, parent.width * 0.30)
+                color: Theme.textSecondary
+                font.family: Theme.fontFamily
+                elide: Text.ElideRight
+                text: root.etaText
+            }
+            Text {
+                width: Math.max(0, parent.width * 0.28 - Theme.spaceLg * 2)
+                color: Theme.warning
+                font.family: Theme.fontFamily
+                elide: Text.ElideRight
+                text: root.sourceText
+            }
         }
 
         KeyboardActionButton {
+            id: endNavigationButton
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
             anchors.rightMargin: Theme.spaceXs

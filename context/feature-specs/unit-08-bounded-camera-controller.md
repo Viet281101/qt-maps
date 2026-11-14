@@ -33,6 +33,26 @@ The source of truth is the active validated map package manifest. A missing,
 invalid, or incompatible package leaves the existing fail-closed map state in
 place; it must not silently use broad Vietnam or world bounds.
 
+### Camera constants
+
+The controller reads the Hanoi extent from `MapPackageContract`: west `105.78`,
+south `20.97`, east `105.90`, and north `21.10`. Its overview is the extent
+midpoint (`21.035`, `105.84`), zoom `14`, bearing `0`, and tilt `0`. Every
+camera request is clamped to zoom `12` through `18`, bearing `[0, 360)`, and
+tilt `0` through `60` degrees. Vector source tiles end at z15 and raster source
+tiles at z16; the validated local MapLibre renderer intentionally overzooms both
+sources through the shared z18 display ceiling.
+
+Route fitting receives an antimeridian-free latitude/longitude bounding box
+and the current map viewport in Qt Quick logical pixels. `MapCanvas` supplies
+left padding of `panelWidth + 32 px` while the route panel is visible (or
+`16 px` while collapsed), right padding `48 px`, and top/bottom padding
+`32 px`. The pure controller calculates the Web-Mercator fit and center shift;
+it rejects an empty, degenerate, out-of-package, non-finite, negatively padded,
+or non-positive usable viewport without changing the map. It clamps the final zoom before calculating the
+padded center shift, then projects the usable viewport by bearing to constrain
+the center. The resulting camera is normalized once before QML applies it.
+
 | Intent | Trigger | Required behavior |
 | --- | --- | --- |
 | `initial` | package becomes ready | use documented Hanoi overview camera |
@@ -43,10 +63,11 @@ place; it must not silently use broad Vietnam or world bounds.
 
 ## Invariants
 
-1. Every emitted center is inside the permitted package extent after accounting
-   for viewport size; every emitted zoom is within the contract range.
+1. Every emitted camera keeps the usable (uncovered) viewport inside the
+   permitted package extent after accounting for bearing and padding; every
+   emitted zoom is within the contract range.
 2. A user gesture cannot be overwritten by route or navigation updates while
-   it is active.
+   it is active; overlapping gesture signals settle only after the final one ends.
 3. Invalid geometry, a degenerate route, or an unavailable package produces a
    defined no-op/fallback result, never NaN coordinates or an unbounded jump.
 4. Route fitting and recentering are idempotent for unchanged inputs.
@@ -56,7 +77,7 @@ place; it must not silently use broad Vietnam or world bounds.
 
 - The camera contract is documented with exact Hanoi bounds, min/max zoom,
   overview camera, and route-fit padding units.
-- C++ tests cover ordinary, edge, degenerate, and invalid inputs without a
+- C++ tests cover ordinary, edge, degenerate, non-finite, and invalid inputs without a
   window or MapLibre runtime.
 - QML integration has one command path per intent and no bidirectional camera
   binding/callback loop.
@@ -66,6 +87,19 @@ place; it must not silently use broad Vietnam or world bounds.
 - A fixed-viewport visual pan/zoom review and any GPU comparison occur only
   with separate owner authorization; no performance conclusion is implied by
   unit tests.
+
+## Verification Evidence
+
+On 2026-11-12, the owner accepted direct-GPU fixture-route review at 900x580,
+1366x768, and 1920x1080 after exercising pan, zoom, rotation, route-fit,
+recenter, and navigation follow. The 900x580 review exposed top-overlay
+crowding; the compact panel/status stacking repair was implemented and accepted
+in a repeated 900x580 review. `make test` and the isolated Release `make review`
+passed 16/16. These are functional-layout checks, not benchmark evidence.
+
+The 1920x1080 runtime also exposed a pre-existing missing local glyph request
+for `8192-8447.pbf`; it is tracked separately as #50 and does not change the
+Unit 08 camera contract.
 
 ## Non-goals
 

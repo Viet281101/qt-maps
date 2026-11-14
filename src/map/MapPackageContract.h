@@ -15,6 +15,10 @@ constexpr int kVectorMinimumZoom = 12;
 constexpr int kVectorMaximumZoom = 15;
 constexpr int kRasterMinimumZoom = 12;
 constexpr int kRasterMaximumZoom = 16;
+// Source tiles stop at the values above. The validated MapLibre renderer overzooms them
+// locally through z18 so interaction and navigation keep one display-camera contract.
+constexpr int kDisplayMinimumZoom = 12;
+constexpr int kDisplayMaximumZoom = 18;
 constexpr int kRasterTileCount = 847;
 
 inline QString mapPackageSchemaVersion() { return QStringLiteral("qtmaps-map-package-v3"); }

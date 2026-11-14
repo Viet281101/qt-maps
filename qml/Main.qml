@@ -50,6 +50,8 @@ Window {
         Text {
             anchors.centerIn: parent
             color: "#243447"
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSizeBody
             text: mapSourceController.mapStatusText
         }
     }
@@ -94,6 +96,7 @@ Window {
     }
 
     DemoToolsOverlay {
+        id: demoTools
         anchors.fill: parent
         navigationActive: navigationOverlay.guidanceVisible
         panelCollapsed: root.panelCollapsed
@@ -105,12 +108,14 @@ Window {
         id: panelToggle
         objectName: "panelToggle"
         x: root.panelCollapsed ? Theme.spaceMd
-                               : routePanel.x + routePanel.width + Theme.spaceSm
-        y: Theme.spaceMd
+                               : routePanel.x + routePanel.width - width / 2
+        y: root.panelCollapsed ? Theme.spaceMd : routePanel.y + Theme.spaceLg
         width: 38
+        labelPixelSize: 22
+        horizontalPadding: Theme.spaceXs
         z: 34
         text: root.panelCollapsed ? "›" : "‹"
-        normalColor: "#dd1b2530"
+        normalColor: Theme.surfaceElevated
         pressedColor: "#334352"
         textColor: Theme.textPrimary
         onTriggered: {
@@ -120,10 +125,12 @@ Window {
     }
 
     ConnectionStatus {
+        id: connectionStatus
         anchors.fill: parent
         statusColor: root.routeSummaryColor
         navigationActive: navigationOverlay.guidanceVisible
         navigationBannerHeight: navigationOverlay.bannerHeight
+        normalTopMargin: demoTools.statusSafeTop
         connectionLabel: routingController.connectionLabel
         z: 20
     }
@@ -163,13 +170,14 @@ Window {
     }
 
     PerformanceOverlay {
+        objectName: "performanceOverlay"
         anchors.right: parent.right
         anchors.bottom: parent.bottom
-        anchors.bottomMargin: 50
+        anchors.bottomMargin: connectionStatus.attributionHeight + Theme.spaceSm
         anchors.rightMargin: Theme.spaceMd
         monitor: performanceMonitor
         detailed: root.performanceOverlayVisible
-        visible: instrumentationEnabled
+        visible: instrumentationEnabled && root.performanceOverlayVisible
         z: 20
     }
 

@@ -7,9 +7,11 @@ Rectangle {
     property color normalColor: Theme.accent
     property color pressedColor: "#2266aa"
     property color textColor: "#08243a"
+    property int labelPixelSize: width < 132 ? Theme.fontSizeCaption : Theme.fontSizeBody
+    property int horizontalPadding: Theme.spaceMd
     signal triggered()
 
-    height: 38
+    height: 36
     radius: Theme.radiusPanel
     color: buttonMouse.pressed ? pressedColor : normalColor
     opacity: enabled ? 1 : 0.55
@@ -19,8 +21,13 @@ Rectangle {
 
     Text {
         anchors.centerIn: parent
+        width: Math.max(0, parent.width - root.horizontalPadding * 2)
         color: root.textColor
+        elide: Text.ElideRight
+        horizontalAlignment: Text.AlignHCenter
         font.bold: true
+        font.family: Theme.fontFamily
+        font.pixelSize: root.labelPixelSize
         text: root.text
     }
     MouseArea {

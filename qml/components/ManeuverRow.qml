@@ -20,7 +20,7 @@ Rectangle {
         return "↑"
     }
 
-    height: Math.max(60, instructionColumn.implicitHeight + Theme.spaceLg)
+    height: Math.max(68, instructionColumn.implicitHeight + Theme.spaceLg * 2)
     radius: Theme.radiusControl
     color: selected ? Theme.accent
                     : maneuverMouse.containsMouse ? "#e6334352" : "#b8222d38"
@@ -33,13 +33,13 @@ Rectangle {
         anchors.left: parent.left
         anchors.verticalCenter: parent.verticalCenter
         anchors.leftMargin: Theme.spaceSm
-        width: 36; height: 36; radius: 18
+        width: 32; height: 32; radius: 16
         color: root.selected ? "#e8f3ff" : Theme.surfacePressed
         Text {
             objectName: "maneuverDirectionSymbol"
             anchors.centerIn: parent
             color: root.selected ? "#12334a" : Theme.accent
-            font.pixelSize: 22
+            font.pixelSize: 20
             font.bold: true
             text: root.directionSymbol(root.maneuver ? root.maneuver.type : 0)
         }
@@ -54,23 +54,27 @@ Rectangle {
         anchors.rightMargin: Theme.spaceSm
         spacing: 2
         Text {
+            objectName: "maneuverInstruction"
             width: parent.width
             color: root.selected ? "#08243a" : Theme.textPrimary
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSizeBody
             font.bold: true
+            wrapMode: Text.WordWrap
+            maximumLineCount: 2
             elide: Text.ElideRight
-            text: root.maneuver && root.maneuver.streetName
-                  && root.maneuver.streetName.length > 0
-                  ? root.maneuver.streetName
-                  : (root.maneuver ? root.maneuver.instruction : "")
+            text: root.maneuver ? root.maneuver.instruction : ""
         }
         Text {
+            objectName: "maneuverStreetName"
             width: parent.width
             visible: root.maneuver && root.maneuver.streetName
                      && root.maneuver.streetName.length > 0
             color: root.selected ? "#12334a" : Theme.textSecondary
+            font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSizeCaption
             elide: Text.ElideRight
-            text: root.maneuver ? root.maneuver.instruction : ""
+            text: root.maneuver ? root.maneuver.streetName : ""
         }
     }
     Text {
@@ -78,9 +82,11 @@ Rectangle {
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
         anchors.rightMargin: Theme.spaceSm
-        width: 58
+        width: 50
         horizontalAlignment: Text.AlignRight
         color: root.selected ? "#12334a" : Theme.textSecondary
+        font.family: Theme.fontFamily
+        font.pixelSize: Theme.fontSizeBody
         text: !root.maneuver ? ""
               : root.maneuver.distanceMeters >= 1000
                   ? (root.maneuver.distanceMeters / 1000).toFixed(1) + " km"

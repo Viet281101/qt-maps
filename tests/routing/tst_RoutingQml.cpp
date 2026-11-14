@@ -139,7 +139,7 @@ private slots:
                                                  &performance);
         engine.rootContext()->setContextProperty(QStringLiteral("mapSourceController"), &mapSource);
         engine.rootContext()->setContextProperty(QStringLiteral("routingFixtureOnly"), false);
-        engine.rootContext()->setContextProperty(QStringLiteral("instrumentationEnabled"), false);
+        engine.rootContext()->setContextProperty(QStringLiteral("instrumentationEnabled"), true);
         engine.rootContext()->setContextProperty(QStringLiteral("vectorStyleUrl"), QString());
 
         QQmlComponent component(&engine, QUrl(QStringLiteral("qrc:/qml/Main.qml")));
@@ -156,10 +156,24 @@ private slots:
         QQuickItem *controls = root->findChild<QQuickItem *>(QStringLiteral("routeControlsScroll"));
         QQuickItem *banner = root->findChild<QQuickItem *>(QStringLiteral("navigationBanner"));
         QQuickItem *status = root->findChild<QQuickItem *>(QStringLiteral("connectionStatusPill"));
+        QQuickItem *performanceOverlay =
+            root->findChild<QQuickItem *>(QStringLiteral("performanceOverlay"));
+        QQuickItem *attribution = root->findChild<QQuickItem *>(QStringLiteral("attributionPill"));
+        QQuickItem *searchIcon = root->findChild<QQuickItem *>(QStringLiteral("searchIcon"));
+        QQuickItem *searchLabel =
+            root->findChild<QQuickItem *>(QStringLiteral("searchPlaceholderLabel"));
+        QQuickItem *routePanel = root->findChild<QQuickItem *>(QStringLiteral("routePanel"));
+        QQuickItem *panelToggle = root->findChild<QQuickItem *>(QStringLiteral("panelToggle"));
         QVERIFY(maneuvers);
         QVERIFY(controls);
         QVERIFY(banner);
         QVERIFY(status);
+        QVERIFY(performanceOverlay);
+        QVERIFY(attribution);
+        QVERIFY(searchIcon);
+        QVERIFY(searchLabel);
+        QVERIFY(routePanel);
+        QVERIFY(panelToggle);
         QTRY_VERIFY(maneuvers->height() >= 120.0);
         QVERIFY(maneuvers->property("contentHeight").toReal() > maneuvers->height());
         if (windowSize.height() == 580)
@@ -177,6 +191,37 @@ private slots:
                                 .arg(statusRect.y())
                                 .arg(statusRect.width())
                                 .arg(statusRect.height())));
+
+        root->setProperty("performanceOverlayVisible", true);
+        QTRY_VERIFY(performanceOverlay->isVisible());
+        const QRectF performanceRect(performanceOverlay->mapToScene(QPointF(0, 0)),
+                                     performanceOverlay->size());
+        const QRectF attributionRect(attribution->mapToScene(QPointF(0, 0)), attribution->size());
+        QVERIFY2(
+            performanceRect.bottom() < attributionRect.top(),
+            qPrintable(QStringLiteral("performance %1,%2 %3x%4 overlaps attribution %5,%6 %7x%8")
+                           .arg(performanceRect.x())
+                           .arg(performanceRect.y())
+                           .arg(performanceRect.width())
+                           .arg(performanceRect.height())
+                           .arg(attributionRect.x())
+                           .arg(attributionRect.y())
+                           .arg(attributionRect.width())
+                           .arg(attributionRect.height())));
+        QCOMPARE(searchIcon->width(), 24.0);
+        QVERIFY2(searchLabel->width() >= searchLabel->property("implicitWidth").toReal(),
+                 "The compact search label must not be elided at the minimum viewport.");
+        const QRectF panelRect(routePanel->mapToScene(QPointF(0, 0)), routePanel->size());
+        const QRectF toggleRect(panelToggle->mapToScene(QPointF(0, 0)), panelToggle->size());
+        QVERIFY2(toggleRect.left() < panelRect.right() && toggleRect.right() > panelRect.right(),
+                 "The sidebar toggle must straddle the panel edge instead of floating by search.");
+        QCOMPARE(panelToggle->property("labelPixelSize").toInt(), 22);
+
+        const qreal controlsHeightWithManeuvers = controls->height();
+        routePanel->setProperty("maneuversCollapsed", true);
+        QTRY_VERIFY(!maneuvers->isVisible());
+        QVERIFY2(controls->height() > controlsHeightWithManeuvers,
+                 "Collapsing maneuvers must return their reserved space to route controls.");
     }
 
     void mapClickDoesNotChangeRouteDuringReplay()
@@ -317,6 +362,24 @@ private slots:
         QVERIFY(selected.isValid());
         QVERIFY(normal != selected);
         QCOMPARE(row->property("selected").toBool(), true);
+    }
+
+    void maneuverRowShowsTheStreetNameAsItsSecondaryLabel()
+    {
+        QQmlEngine engine;
+        QQmlComponent component(&engine,
+                                QUrl(QStringLiteral("qrc:/qml/components/ManeuverRow.qml")));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> row(component.create());
+        QVERIFY2(row, qPrintable(component.errorString()));
+        row->setProperty("maneuver",
+                         QVariantMap{{QStringLiteral("instruction"), QStringLiteral("Rẽ phải")},
+                                     {QStringLiteral("streetName"), QStringLiteral("Phố Huế")},
+                                     {QStringLiteral("distanceMeters"), 250.0}});
+
+        QObject *streetName = row->findChild<QObject *>(QStringLiteral("maneuverStreetName"));
+        QVERIFY(streetName);
+        QTRY_COMPARE(streetName->property("text").toString(), QStringLiteral("Phố Huế"));
     }
 
     void maneuverDirectionSymbolMeetsGraphicsContrast()
@@ -498,21 +561,25 @@ private slots:
         QFile bannerFile(QStringLiteral(":/qml/components/NavigationBanner.qml"));
         QFile panelFile(QStringLiteral(":/qml/components/RoutePanel.qml"));
         QFile toolsFile(QStringLiteral(":/qml/components/DemoToolsOverlay.qml"));
+        QFile statusFile(QStringLiteral(":/qml/components/ConnectionStatus.qml"));
         QVERIFY(mainFile.open(QIODevice::ReadOnly));
         QVERIFY(mapFile.open(QIODevice::ReadOnly));
         QVERIFY(navigationFile.open(QIODevice::ReadOnly));
         QVERIFY(bannerFile.open(QIODevice::ReadOnly));
         QVERIFY(panelFile.open(QIODevice::ReadOnly));
         QVERIFY(toolsFile.open(QIODevice::ReadOnly));
+        QVERIFY(statusFile.open(QIODevice::ReadOnly));
         const QByteArray mainQml = mainFile.readAll();
         const QByteArray mapQml = mapFile.readAll();
         const QByteArray navigationQml = navigationFile.readAll();
         const QByteArray bannerQml = bannerFile.readAll();
         const QByteArray panelQml = panelFile.readAll();
         const QByteArray toolsQml = toolsFile.readAll();
+        const QByteArray statusQml = statusFile.readAll();
         QVERIFY(mapQml.contains("panelWidth + Theme.spaceLg * 2"));
         QVERIFY(mainQml.contains("property bool panelCollapsed"));
-        const QByteArray qml = mainQml + mapQml + navigationQml + bannerQml + panelQml + toolsQml;
+        const QByteArray qml =
+            mainQml + mapQml + navigationQml + bannerQml + panelQml + toolsQml + statusQml;
         QVERIFY(qml.contains("routingController.streetLabels"));
         QVERIFY(qml.contains("map.zoomLevel >= 15"));
         QVERIFY(qml.contains("routingController.currentManeuverIndex"));
@@ -542,6 +609,15 @@ private slots:
         QVERIFY(qml.contains("&& !routingController.loading"));
         QVERIFY(qml.contains("navigationActive: navigationOverlay.guidanceVisible"));
         QVERIFY(qml.contains("shutdownCoordinator.requestQuit()"));
+        QVERIFY(mainQml.contains("normalTopMargin: demoTools.statusSafeTop"));
+        QVERIFY(toolsQml.contains("readonly property real statusSafeTop"));
+        QVERIFY(toolsQml.contains("id: layerMenu"));
+        QVERIFY(statusQml.contains("elide: Text.ElideRight"));
+        QVERIFY(statusQml.contains("width: Math.min(264"));
+        QVERIFY(mapQml.contains("property int activeGestureCount: 0"));
+        QVERIFY(
+            mapQml.contains("readonly property bool cameraGestureActive: activeGestureCount > 0"));
+        QVERIFY(mapQml.contains("if (canvas.cameraGestureActive)"));
     }
 };
 

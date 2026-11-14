@@ -85,6 +85,8 @@ target_include_directories(qtmaps_perf PUBLIC "${CMAKE_SOURCE_DIR}/src")
 target_link_libraries(qtmaps_perf PUBLIC Qt5::Core Qt5::Quick)
 
 add_library(qtmaps_map STATIC
+    src/map/BoundedCameraController.cpp
+    src/map/BoundedCameraController.h
     src/map/DirectoryTileSource.cpp
     src/map/DirectoryTileSource.h
     src/map/EncodedTileCache.cpp
@@ -236,7 +238,7 @@ if(BUILD_TESTING)
     add_test(NAME qtmaps_perf_tests COMMAND qtmaps_perf_tests)
 
     add_executable(qtmaps_diagnostics_tests tests/map/tst_CameraProbeController.cpp)
-    target_link_libraries(qtmaps_diagnostics_tests PRIVATE qtmaps_diagnostics Qt5::Test)
+    target_link_libraries(qtmaps_diagnostics_tests PRIVATE qtmaps_diagnostics qtmaps_map Qt5::Test)
     add_test(NAME qtmaps_diagnostics_tests COMMAND qtmaps_diagnostics_tests)
 
     add_executable(qtmaps_map_pipeline_tests tests/map/tst_MapPipeline.cpp)

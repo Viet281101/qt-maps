@@ -52,7 +52,7 @@ def main():
     qml_runtime, qt_plugin_root = selected_qt_runtime(os.environ)
     maplibre = Path(
         os.environ.get(
-            "QTMAPS_MAPLIBRE_INSTALL", root / "generated/unit-01b/maplibre-install"
+            "QTMAPS_MAPLIBRE_INSTALL", root / "generated/unit-01b/maplibre-install-qt51518"
         )
     ).expanduser().resolve()
     environment = os.environ.copy()

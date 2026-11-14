@@ -25,6 +25,7 @@
 #include "core/ApplicationShutdownCoordinator.h"
 #include "diagnostics/CameraProbeController.h"
 #include "diagnostics/SimulatedNavigationController.h"
+#include "map/BoundedCameraController.h"
 #include "map/DirectoryTileSource.h"
 #include "map/MapSourceController.h"
 #include "map/MbTilesTileSource.h"
@@ -213,6 +214,7 @@ int main(int argc, char *argv[])
     }
 
     qtmaps::diagnostics::CameraProbeController cameraProbeController;
+    qtmaps::map::BoundedCameraController boundedCameraController;
     qtmaps::map::MbTilesTileSource vectorTileSource;
     qtmaps::map::DirectoryTileSource diagnosticRasterSource;
     qtmaps::map::MapSourceController mapSourceController(&vectorTileSource,
@@ -262,6 +264,8 @@ int main(int argc, char *argv[])
                                              &performanceMonitor);
     engine.rootContext()->setContextProperty(QStringLiteral("cameraProbeController"),
                                              &cameraProbeController);
+    engine.rootContext()->setContextProperty(QStringLiteral("boundedCameraController"),
+                                             &boundedCameraController);
     engine.rootContext()->setContextProperty(QStringLiteral("navigationController"),
                                              &navigationController);
     engine.rootContext()->setContextProperty(QStringLiteral("routingController"),

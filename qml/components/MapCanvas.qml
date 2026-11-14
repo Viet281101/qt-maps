@@ -8,6 +8,8 @@ Item {
     property bool endpointSelectionEnabled: true
     property bool panelCollapsed: false
     property real panelWidth: 330
+    property int activeGestureCount: 0
+    readonly property bool cameraGestureActive: activeGestureCount > 0
     property string styleUrl: ""
     property var travelledRoutePath: []
     readonly property bool rasterMode: mapSourceController.layerMode === "raster"
@@ -17,15 +19,51 @@ Item {
                                                && routingController.routeAvailable)
     signal togglePerformanceOverlayRequested()
 
+    function applyCamera(state) {
+        if (!map || !state.valid)
+            return
+        map.center = QtPositioning.coordinate(state.latitude, state.longitude)
+        map.zoomLevel = state.zoom
+        map.bearing = state.bearing
+        map.tilt = state.tilt
+    }
+
+    function applyOverviewCamera() {
+        applyCamera(boundedCameraController.overviewCamera(map.width, map.height))
+    }
+
+    function settleUserCamera() {
+        if (!map || cameraGestureActive)
+            return
+        var state = boundedCameraController.normalizedCamera(
+                    map.center.latitude, map.center.longitude, map.zoomLevel,
+                    map.bearing, map.tilt, map.width, map.height)
+        if (Math.abs(state.latitude - map.center.latitude) > 0.0000001
+                || Math.abs(state.longitude - map.center.longitude) > 0.0000001
+                || Math.abs(state.zoom - map.zoomLevel) > 0.0001
+                || Math.abs(state.bearing - map.bearing) > 0.0001
+                || Math.abs(state.tilt - map.tilt) > 0.0001)
+            applyCamera(state)
+    }
+
+    function beginCameraGesture() {
+        activeGestureCount += 1
+    }
+
+    function endCameraGesture() {
+        activeGestureCount = Math.max(0, activeGestureCount - 1)
+        if (!cameraGestureActive)
+            cameraSettleTimer.restart()
+    }
+
     function recenterNavigation() {
         if (!map || !routeNavigationController.active
                 || !routeNavigationController.coordinate.isValid)
             return
-        map.center = routeNavigationController.coordinate
-        map.bearing = routeNavigationController.bearing
-        map.tilt = 45
-        if (map.zoomLevel < 16)
-            map.zoomLevel = 16
+        applyCamera(boundedCameraController.navigationCamera(
+                        routeNavigationController.coordinate.latitude,
+                        routeNavigationController.coordinate.longitude,
+                        routeNavigationController.bearing, map.zoomLevel, map.width, map.height))
     }
 
     function updateTravelledRoute() {
@@ -81,32 +119,10 @@ Item {
                                          : panelWidth + Theme.spaceLg * 2
         var rightPadding = Theme.spaceLg * 3
         var verticalPadding = Theme.spaceLg * 2
-        var usableWidth = Math.max(240, map.width - leftPadding - rightPadding)
-        var usableHeight = Math.max(240, map.height - verticalPadding * 2)
-        var longitudeSpan = Math.max(0.000001, maxLongitude - minLongitude)
-        function mercatorY(latitude) {
-            var radians = latitude * Math.PI / 180
-            return (1 - Math.log(Math.tan(radians) + 1 / Math.cos(radians))
-                    / Math.PI) / 2
-        }
-        function latitudeFromMercator(y) {
-            return Math.atan(Math.sinh(Math.PI * (1 - 2 * y))) * 180 / Math.PI
-        }
-        var northY = mercatorY(maxLatitude)
-        var southY = mercatorY(minLatitude)
-        var latitudeSpan = Math.max(0.000001, southY - northY)
-        var zoomX = Math.log(usableWidth * 360 / (256 * longitudeSpan)) / Math.LN2
-        var zoomY = Math.log(usableHeight / (256 * latitudeSpan)) / Math.LN2
-        var fittedZoom = Math.min(zoomX, zoomY, map.maximumZoomLevel)
-        var worldPixels = 256 * Math.pow(2, fittedZoom)
-        var routeCenterLongitude = (minLongitude + maxLongitude) / 2
-        var routeCenterLatitude = latitudeFromMercator((northY + southY) / 2)
-        var routeTargetX = leftPadding + usableWidth / 2
-        var centerShiftPixels = routeTargetX - map.width / 2
-        var mapCenterLongitude = routeCenterLongitude
-                - centerShiftPixels * 360 / worldPixels
-        map.zoomLevel = Math.max(map.minimumZoomLevel, fittedZoom)
-        map.center = QtPositioning.coordinate(routeCenterLatitude, mapCenterLongitude)
+        applyCamera(boundedCameraController.routeFitCamera(
+                        minLatitude, maxLatitude, minLongitude, maxLongitude,
+                        map.width, map.height, leftPadding, rightPadding,
+                        verticalPadding, verticalPadding, map.bearing, map.tilt))
     }
 
     Loader {
@@ -156,10 +172,23 @@ Item {
             }
         }
         center: QtPositioning.coordinate(21.0278, 105.8342)
-        minimumZoomLevel: canvas.rasterMode ? 12 : 0
-        maximumZoomLevel: canvas.rasterMode ? 18 : 20
+        // Local source tiles stop at z15/z16, but MapLibre deliberately overzooms them to
+        // the camera contract's z18 display ceiling. Keep the provider inside that contract
+        // even while a gesture is still in progress.
+        minimumZoomLevel: 12
+        maximumZoomLevel: 18
         zoomLevel: 14
         gesture.enabled: !routeNavigationController.running
+        gesture.onPanStarted: canvas.beginCameraGesture()
+        gesture.onPanFinished: canvas.endCameraGesture()
+        gesture.onFlickStarted: canvas.beginCameraGesture()
+        gesture.onFlickFinished: canvas.endCameraGesture()
+        gesture.onPinchStarted: canvas.beginCameraGesture()
+        gesture.onPinchFinished: canvas.endCameraGesture()
+        gesture.onRotationStarted: canvas.beginCameraGesture()
+        gesture.onRotationFinished: canvas.endCameraGesture()
+        gesture.onTiltStarted: canvas.beginCameraGesture()
+        gesture.onTiltFinished: canvas.endCameraGesture()
         focus: true
         onCenterChanged: rasterRouteOverlay.requestPaint()
         onZoomLevelChanged: rasterRouteOverlay.requestPaint()
@@ -180,6 +209,7 @@ Item {
                 } else {
                     activeMapType = supportedMapTypes[0]
                 }
+                canvas.applyOverviewCamera()
                 routeRefreshTimer.restart()
                 benchmarkScenarioController.notifyMapReady()
             }
@@ -240,7 +270,13 @@ Item {
                 color: Theme.markerOrigin
                 border.color: Theme.surfaceElevated
                 border.width: 5
-                Text { anchors.centerIn: parent; text: "A"; font.bold: true; color: "#102018" }
+                Text {
+                    anchors.centerIn: parent
+                    text: "A"
+                    font.family: Theme.fontFamily
+                    font.bold: true
+                    color: "#102018"
+                }
             }
         }
 
@@ -260,6 +296,7 @@ Item {
                     anchors.centerIn: parent
                     text: "▲"
                     color: "#10243a"
+                    font.family: Theme.fontFamily
                     font.bold: true
                     font.pixelSize: 13
                 }
@@ -278,7 +315,13 @@ Item {
                 color: Theme.markerDestination
                 border.color: Theme.surfaceElevated
                 border.width: 5
-                Text { anchors.centerIn: parent; text: "B"; font.bold: true; color: "#301010" }
+                Text {
+                    anchors.centerIn: parent
+                    text: "B"
+                    font.family: Theme.fontFamily
+                    font.bold: true
+                    color: "#301010"
+                }
             }
         }
 
@@ -301,6 +344,7 @@ Item {
                         anchors.centerIn: parent
                         text: modelData.streetName
                         color: "#10243a"
+                        font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSizeCaption
                         font.bold: true
                     }
@@ -328,6 +372,7 @@ Item {
             id: overzoomText
             anchors.centerIn: parent
             color: Theme.warning
+            font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSizeCaption
             font.bold: true
             text: qsTr("Nguồn chi tiết đến z15 · z16+ có độ phân giải thấp hơn")
@@ -410,9 +455,9 @@ Item {
         function onCameraCommand(coordinate, zoomLevel, bearing) {
             if (!canvas.map)
                 return
-            map.center = coordinate
-            map.zoomLevel = zoomLevel
-            map.bearing = bearing
+            canvas.applyCamera(boundedCameraController.normalizedCamera(
+                                 coordinate.latitude, coordinate.longitude,
+                                 zoomLevel, bearing, map.tilt, map.width, map.height))
         }
     }
 
@@ -430,8 +475,9 @@ Item {
         function onFocusCoordinateRequested(coordinate, zoomLevel) {
             if (!canvas.map)
                 return
-            map.center = coordinate
-            map.zoomLevel = zoomLevel
+            canvas.applyCamera(boundedCameraController.normalizedCamera(
+                                     coordinate.latitude, coordinate.longitude,
+                                     zoomLevel, map.bearing, map.tilt, map.width, map.height))
         }
     }
 
@@ -450,10 +496,21 @@ Item {
     }
 
     Timer {
+        id: cameraSettleTimer
+        interval: 0
+        repeat: false
+        onTriggered: canvas.settleUserCamera()
+    }
+
+    Timer {
         id: routeRefreshTimer
         interval: 100
         repeat: false
         onTriggered: {
+            if (canvas.cameraGestureActive) {
+                restart()
+                return
+            }
             if (canvas.map)
                 canvas.map.refreshRoute()
             rasterRouteOverlay.requestPaint()
