@@ -9,7 +9,7 @@ Rectangle {
     property color textColor: "#08243a"
     signal triggered()
 
-    height: 38
+    height: 36
     radius: Theme.radiusPanel
     color: buttonMouse.pressed ? pressedColor : normalColor
     opacity: enabled ? 1 : 0.55
@@ -24,6 +24,7 @@ Rectangle {
         elide: Text.ElideRight
         horizontalAlignment: Text.AlignHCenter
         font.bold: true
+        font.family: Theme.fontFamily
         font.pixelSize: parent.width < 132 ? Theme.fontSizeCaption : Theme.fontSizeBody
         text: root.text
     }

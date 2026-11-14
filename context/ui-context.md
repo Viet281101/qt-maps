@@ -19,7 +19,7 @@ Reusable visual tokens belong in a QML singleton, planned as `qml/theme/Theme.qm
 | Category | Planned semantic properties | Current value |
 | --- | --- | --- |
 | Color | `mapOverlay`, `surface`, `surfaceElevated`, `surfaceInput`, `textPrimary`, `textSecondary`, `accent`, `border`, `error`, `warning`, `success`, `route`, `routeOutline`, `routeTravelled`, `markerOrigin`, `markerDestination` | Unit 07B dark demo palette in `Theme.qml`; route starts at `#1A73E8` with white outline, travelled route is grey, and A/B markers use `#1E8E3E` / `#D93025` |
-| Typography | `fontFamily`, `fontSizeCaption`, `fontSizeBody`, `fontSizeTitle`, `fontSizeDisplay`, `fontWeightRegular`, `fontWeightEmphasis` | Available system sans-serif; no bundled font until the licensed cartography-font gate |
+| Typography | `fontFamily`, `fontSizeCaption`, `fontSizeBody`, `fontSizeTitle`, `fontSizeDisplay`, `fontWeightRegular`, `fontWeightEmphasis` | System Noto Sans; no bundled font until the licensed cartography-font gate |
 | Spacing | `spaceXs`, `spaceSm`, `spaceMd`, `spaceLg`, `spaceXl` | 4 / 8 / 12 / 16 / 24 px |
 | Radius | `radiusControl`, `radiusPanel`, `radiusPill` | 8 / 12 / 999 px |
 | Elevation | `shadowLow`, `shadowHigh` or equivalent Qt 5.15-compatible properties | TODO |

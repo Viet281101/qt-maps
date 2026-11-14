@@ -57,6 +57,8 @@ Rectangle {
             objectName: "maneuverInstruction"
             width: parent.width
             color: root.selected ? "#08243a" : Theme.textPrimary
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSizeBody
             font.bold: true
             wrapMode: Text.WordWrap
             maximumLineCount: 2
@@ -69,6 +71,7 @@ Rectangle {
             visible: root.maneuver && root.maneuver.streetName
                      && root.maneuver.streetName.length > 0
             color: root.selected ? "#12334a" : Theme.textSecondary
+            font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSizeCaption
             elide: Text.ElideRight
             text: root.maneuver ? root.maneuver.instruction : ""
@@ -82,6 +85,8 @@ Rectangle {
         width: 50
         horizontalAlignment: Text.AlignRight
         color: root.selected ? "#12334a" : Theme.textSecondary
+        font.family: Theme.fontFamily
+        font.pixelSize: Theme.fontSizeBody
         text: !root.maneuver ? ""
               : root.maneuver.distanceMeters >= 1000
                   ? (root.maneuver.distanceMeters / 1000).toFixed(1) + " km"

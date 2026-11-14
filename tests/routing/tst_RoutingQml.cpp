@@ -162,6 +162,8 @@ private slots:
         QQuickItem *searchIcon = root->findChild<QQuickItem *>(QStringLiteral("searchIcon"));
         QQuickItem *searchLabel =
             root->findChild<QQuickItem *>(QStringLiteral("searchPlaceholderLabel"));
+        QQuickItem *routePanel = root->findChild<QQuickItem *>(QStringLiteral("routePanel"));
+        QQuickItem *panelToggle = root->findChild<QQuickItem *>(QStringLiteral("panelToggle"));
         QVERIFY(maneuvers);
         QVERIFY(controls);
         QVERIFY(banner);
@@ -170,6 +172,8 @@ private slots:
         QVERIFY(attribution);
         QVERIFY(searchIcon);
         QVERIFY(searchLabel);
+        QVERIFY(routePanel);
+        QVERIFY(panelToggle);
         QTRY_VERIFY(maneuvers->height() >= 120.0);
         QVERIFY(maneuvers->property("contentHeight").toReal() > maneuvers->height());
         if (windowSize.height() == 580)
@@ -207,6 +211,10 @@ private slots:
         QCOMPARE(searchIcon->width(), 24.0);
         QVERIFY2(searchLabel->width() >= searchLabel->property("implicitWidth").toReal(),
                  "The compact search label must not be elided at the minimum viewport.");
+        const QRectF panelRect(routePanel->mapToScene(QPointF(0, 0)), routePanel->size());
+        const QRectF toggleRect(panelToggle->mapToScene(QPointF(0, 0)), panelToggle->size());
+        QVERIFY2(toggleRect.left() < panelRect.right() && toggleRect.right() > panelRect.right(),
+                 "The sidebar toggle must straddle the panel edge instead of floating by search.");
     }
 
     void mapClickDoesNotChangeRouteDuringReplay()

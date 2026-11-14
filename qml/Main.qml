@@ -106,12 +106,12 @@ Window {
         id: panelToggle
         objectName: "panelToggle"
         x: root.panelCollapsed ? Theme.spaceMd
-                               : routePanel.x + routePanel.width + Theme.spaceSm
-        y: Theme.spaceMd
+                               : routePanel.x + routePanel.width - width / 2
+        y: root.panelCollapsed ? Theme.spaceMd : routePanel.y + Theme.spaceLg
         width: 38
         z: 34
         text: root.panelCollapsed ? "›" : "‹"
-        normalColor: "#dd1b2530"
+        normalColor: Theme.surfaceElevated
         pressedColor: "#334352"
         textColor: Theme.textPrimary
         onTriggered: {

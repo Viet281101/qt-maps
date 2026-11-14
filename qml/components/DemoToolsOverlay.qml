@@ -20,7 +20,7 @@ Item {
            : toolsOverlay.panelWidth + Theme.spaceXl * 2
         y: Theme.spaceMd
         width: Math.max(0, Math.min(360, toolsOverlay.width - x - Theme.spaceMd))
-        height: 44
+        height: 40
         radius: Theme.radiusControl
         color: Theme.surfaceElevated
         border.color: Theme.border
@@ -68,6 +68,8 @@ Item {
             anchors.rightMargin: Theme.spaceLg
             anchors.verticalCenter: parent.verticalCenter
             color: Theme.textSecondary
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSizeBody
             text: qsTr("Tìm kiếm · sắp có")
             elide: Text.ElideRight
         }

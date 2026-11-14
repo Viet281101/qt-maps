@@ -80,6 +80,7 @@ Rectangle {
             Text {
                 text: qsTr("Lập tuyến Hà Nội")
                 color: Theme.textPrimary
+                font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSizeTitle
                 font.bold: true
             }
@@ -89,12 +90,14 @@ Rectangle {
                 text: qsTr("Bấm bản đồ để chọn %1, hoặc nhập tên mẫu / tọa độ")
                     .arg(routingController.nextMapSelection)
                 color: Theme.textSecondary
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSizeBody
                 wrapMode: Text.WordWrap
             }
 
             Rectangle {
                 width: parent.width
-                height: 42
+                height: 38
                 radius: Theme.radiusControl
                 color: Theme.surfaceInput
                 border.color: originField.activeFocus ? Theme.accent : Theme.border
@@ -107,7 +110,14 @@ Rectangle {
                     color: Theme.markerOrigin
                     border.color: Theme.routeOutline
                     border.width: 2
-                    Text { anchors.centerIn: parent; text: "A"; color: "#102018"; font.bold: true }
+                    Text {
+                        anchors.centerIn: parent
+                        text: "A"
+                        color: "#102018"
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSizeCaption
+                        font.bold: true
+                    }
                 }
                 TextInput {
                     id: originField
@@ -119,6 +129,8 @@ Rectangle {
                     anchors.leftMargin: Theme.spaceSm
                     anchors.rightMargin: Theme.spaceSm
                     color: Theme.textPrimary
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSizeBody
                     verticalAlignment: TextInput.AlignVCenter
                     selectByMouse: true
                     activeFocusOnTab: true
@@ -133,6 +145,7 @@ Rectangle {
                 width: parent.width
                 visible: routePanel.originError.length > 0
                 color: Theme.error
+                font.family: Theme.fontFamily
                 wrapMode: Text.WordWrap
                 font.pixelSize: Theme.fontSizeCaption
                 text: routePanel.originError
@@ -140,7 +153,7 @@ Rectangle {
 
             Rectangle {
                 width: parent.width
-                height: 42
+                height: 38
                 radius: Theme.radiusControl
                 color: Theme.surfaceInput
                 border.color: destinationField.activeFocus ? Theme.accent : Theme.border
@@ -153,7 +166,14 @@ Rectangle {
                     color: Theme.markerDestination
                     border.color: Theme.routeOutline
                     border.width: 2
-                    Text { anchors.centerIn: parent; text: "B"; color: "#301010"; font.bold: true }
+                    Text {
+                        anchors.centerIn: parent
+                        text: "B"
+                        color: "#301010"
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSizeCaption
+                        font.bold: true
+                    }
                 }
                 TextInput {
                     id: destinationField
@@ -165,6 +185,8 @@ Rectangle {
                     anchors.leftMargin: Theme.spaceSm
                     anchors.rightMargin: Theme.spaceSm
                     color: Theme.textPrimary
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSizeBody
                     verticalAlignment: TextInput.AlignVCenter
                     selectByMouse: true
                     activeFocusOnTab: true
@@ -179,6 +201,7 @@ Rectangle {
                 width: parent.width
                 visible: routePanel.destinationError.length > 0
                 color: Theme.error
+                font.family: Theme.fontFamily
                 wrapMode: Text.WordWrap
                 font.pixelSize: Theme.fontSizeCaption
                 text: routePanel.destinationError
@@ -224,7 +247,7 @@ Rectangle {
 
             Rectangle {
                 width: parent.width
-                height: routingController.routeAvailable ? 68 : 44
+                height: routingController.routeAvailable ? 60 : 40
                 radius: Theme.radiusControl
                 color: Theme.surfaceInput
                 border.color: Theme.border
@@ -234,6 +257,7 @@ Rectangle {
                     verticalAlignment: Text.AlignVCenter
                     elide: Text.ElideRight
                     color: routePanel.routeSummaryColor
+                    font.family: Theme.fontFamily
                     font.bold: true
                     font.pixelSize: routingController.routeAvailable
                                     ? Theme.fontSizeDisplay : Theme.fontSizeBody
@@ -280,6 +304,7 @@ Rectangle {
                 Text {
                     width: parent.width
                     color: Theme.textSecondary
+                    font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSizeCaption
                     text: qsTr("Tốc độ mô phỏng")
                 }
@@ -355,6 +380,8 @@ Rectangle {
                         : routingController.statusMessage
                 color: routeNavigationController.arrived || routingController.routeAvailable
                        ? Theme.success : Theme.textSecondary
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSizeBody
                 elide: Text.ElideRight
             }
 

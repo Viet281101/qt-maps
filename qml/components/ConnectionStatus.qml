@@ -9,7 +9,7 @@ Item {
     property real normalTopMargin: Theme.spaceMd
     property string connectionLabel: ""
     readonly property string statusText: friendlyConnectionLabel(connectionLabel)
-    readonly property real attributionHeight: attributionPill.height + Theme.spaceMd
+    readonly property real attributionHeight: attributionPill.height + Theme.spaceSm
 
     function friendlyConnectionLabel(label) {
         if (label === "Valhalla local — loopback")
@@ -31,7 +31,7 @@ Item {
                            ? statusOverlay.navigationBannerHeight + Theme.spaceMd * 2
                            : statusOverlay.normalTopMargin
         width: Math.min(264, parent.width - Theme.spaceMd * 2)
-        height: 34
+        height: 32
         radius: 17
         color: "#dd111820"
         border.color: Theme.border
@@ -53,6 +53,8 @@ Item {
             Text {
                 width: Math.max(0, parent.width - statusDot.width - parent.spacing)
                 color: Theme.textPrimary
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSizeBody
                 elide: Text.ElideRight
                 text: statusOverlay.statusText
             }
@@ -64,15 +66,17 @@ Item {
         objectName: "attributionPill"
         anchors.right: parent.right
         anchors.bottom: parent.bottom
-        anchors.margins: Theme.spaceMd
-        width: attribution.implicitWidth + 16
-        height: 28
+        anchors.margins: Theme.spaceSm
+        width: attribution.implicitWidth + Theme.spaceMd
+        height: 24
         color: "#cc111820"
         z: 20
         Text {
             id: attribution
             anchors.centerIn: parent
             color: Theme.textPrimary
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSizeCaption
             text: "© OpenStreetMap contributors, ODbL 1.0"
         }
     }
