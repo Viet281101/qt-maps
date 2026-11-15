@@ -53,6 +53,18 @@ benchmark artifacts remain ignored.
    navigation flow without changing GPU configuration or treating the run as a
    benchmark. Publish a successor weekly report only after the rehearsal
    evidence and revision are known.
+
+   The clean-start preflight and operator runbook are now
+   `tools/rehearse-demo.sh` and `docs/rehearsal/demo-handoff.md`. They validate
+   the provisioned release payload and preserve the existing runtime boundary;
+   the live UI rehearsal and its report remain the acceptance evidence.
+   On 2026-11-15, `--check` passed against `hanoi-20261114-v3-r3` and matching
+   `hanoi-raster-20261115-v3-r4`; `make QT_EXPECTED_VERSION=5.15.18 test`
+   passed 17/17. A non-benchmark launch reached `mapReady=true`, local Valhalla
+   readiness, and a 7.294 km/14-maneuver route, then left no child service.
+   The available automation surface could not perform the visible search/A-B/
+   navigation interactions, so #9 remains open pending that operator checklist
+   and its report.
 2. **Close #1 only from evidence.** After #9 passes, update the parent issue
    with the clean-start result, labels for simulated/fixture/degraded behavior,
    known risks, and its relationship to the existing benchmark evidence. Do
