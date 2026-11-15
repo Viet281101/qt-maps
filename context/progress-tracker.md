@@ -74,8 +74,10 @@ benchmark artifacts remain ignored.
 3. **FTS5 source decision before the next slice.** #58 is complete. Before a
    generator, package validation, or runtime switch, approve a licensed local
    source URL, attribution, coverage, storage budget, retrieval/checksum method,
-   and generator revision. The current fixture search remains the supported
-   product behavior; remote geocoding stays out of scope.
+   and generator revision. **#61 now approves** the existing local Geofabrik
+   Vietnam PBF lineage, current Hanoi bounds, ODbL attribution, and a 20 MiB
+   cap for a fixture-tested packager only. The current fixture search remains
+   the supported product behavior; remote geocoding stays out of scope.
 
 ## Risks and decisions requiring the owner
 
@@ -87,7 +89,8 @@ benchmark artifacts remain ignored.
    data remain outside Git.
 3. SQLite FTS5 target-runtime capability is proven, but its source dataset,
    coverage, storage budget, generator, and runtime package lifecycle remain
-   Proposed until the owner approves the next decision gate.
+   Proposed except for #61's local package-generator contract; extractor and
+   runtime work still require separate acceptance.
 
 ## Working rules
 
