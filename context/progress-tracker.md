@@ -10,14 +10,17 @@ preserved in Git history through `e0a8086` and the cited pull requests.
   only.
 - The active milestone is `Post-demo stabilization` with no due date.
 - Unit 08 was squash-merged as PR #49 (`2f28ed0`), closing #40. PR #51
-  (`3405d55`) closed #50; issue #39 is active in Project #6 (`In Progress` /
-  P1 / After Demo).
+  (`3405d55`) closed #50; PR #52 (`2c10875`) closed #39. Project #6 records
+  #39 as `Done`; #16 is the next `Todo` item.
 
 ## Current Goal
 
-Complete #39 before starting search or orthography work. Its non-GPU change
-replaces the raster-only Canvas redraw loop with retained route map items shared
-by vector and raster modes.
+Start #16 with a bounded, explicitly fixture-backed place-search vertical
+slice. The current shell only has a disabled search placeholder; routing already
+recognizes the three fixture locations Hoàn Kiếm, Thái Hà, and Ba Đình. The
+first increment must select one of those results into origin or destination,
+show empty/loading/failure state without blocking the UI, and label the source
+honestly. SQLite FTS5 remains proposed and is not implied by this increment.
 
 - On 2026-11-14, the follow-up UI-polish increment replaced the undersized
   search glyph with a centered QML magnifier, shortened the explicitly
@@ -54,6 +57,17 @@ by vector and raster modes.
   navigation puck, map, and warnings in every reviewed state. Raster's
   provider-owned duplicate OSM footer is disabled while the single app-owned
   attribution pill remains visible. The Qt 5.15.18 suite passed 16/16.
+
+- PR #52 was squash-merged on 2026-11-14 as `2c10875`; its direct-GPU visual
+  acceptance is complete, #39 is closed, and its Project item is `Done`.
+
+- On 2026-11-15, #16 began on `codex/bounded-place-search-16`. The first
+  local-only increment adds a debounced, bounded fixture catalogue for Hoàn
+  Kiếm, Thái Hà, and Ba Đình and exposes it in the existing map search control.
+  Each result has explicit A/B selection and the UI labels its limited demo
+  source. The controller's deterministic query/empty/stale-query tests pass;
+  the production-QML GPU capture at 900x580 shows the result popover clear of
+  the sidebar and layer controls. SQLite FTS5 remains deferred.
 
 ## Unit 08 Verification
 
@@ -156,10 +170,10 @@ artifacts remain ignored at
 
 ## Next Up
 
-1. Commit and push the completed #39 visual-review/pipeline repair, then review
-   the PR before merge. No desktop bridge, browser extension, network listener,
-   or benchmark is part of this work.
-2. Start #16 after #39 is merged.
+1. Implement #16's bounded fixture-backed search vertical slice: nonblocking
+   query state, visible results/empty/failure states, and origin/destination
+   selection. Document the deferred SQLite FTS5 path.
+2. Review and merge #16 before starting orthography work.
 
 ## Current Environment Evidence
 

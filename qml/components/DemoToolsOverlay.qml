@@ -7,6 +7,7 @@ Item {
     property bool panelCollapsed: false
     property real panelWidth: 330
     property bool layersOpen: false
+    property var searchController: null
     readonly property real statusSafeTop: layersOpen
                                        ? layerMenu.y + layerMenu.height + Theme.spaceMd
                                        : layerButton.y + layerButton.height + Theme.spaceMd
@@ -60,8 +61,9 @@ Item {
             }
         }
 
-        Text {
-            objectName: "searchPlaceholderLabel"
+        TextInput {
+            id: searchInput
+            objectName: "placeSearchInput"
             anchors.left: searchIcon.right
             anchors.right: parent.right
             anchors.leftMargin: Theme.spaceSm
@@ -70,8 +72,125 @@ Item {
             color: Theme.textSecondary
             font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSizeBody
-            text: qsTr("Tìm kiếm · sắp có")
-            elide: Text.ElideRight
+            clip: true
+            selectByMouse: true
+            activeFocusOnTab: true
+            text: ""
+            onTextChanged: {
+                if (toolsOverlay.searchController)
+                    toolsOverlay.searchController.setQuery(text)
+            }
+            Text {
+                anchors.fill: parent
+                verticalAlignment: Text.AlignVCenter
+                color: Theme.textSecondary
+                font: parent.font
+                text: qsTr("Tìm địa điểm demo")
+                visible: !parent.text && !parent.activeFocus
+            }
+        }
+    }
+
+    Rectangle {
+        id: searchResults
+        objectName: "placeSearchResults"
+        visible: !toolsOverlay.navigationActive && toolsOverlay.searchController
+                 && toolsOverlay.searchController.state !== "idle"
+        x: searchPlaceholder.x
+        y: searchPlaceholder.y + searchPlaceholder.height + Theme.spaceXs
+        width: searchPlaceholder.width
+        height: searchColumn.implicitHeight + Theme.spaceMd * 2
+        radius: Theme.radiusControl
+        color: Theme.surfaceElevated
+        border.color: Theme.border
+        z: 2
+
+        Column {
+            id: searchColumn
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.margins: Theme.spaceMd
+            spacing: Theme.spaceXs
+
+            Text {
+                width: parent.width
+                color: Theme.warning
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSizeCaption
+                text: qsTr("Dữ liệu demo cục bộ · chưa phải tìm kiếm địa chỉ đầy đủ")
+                wrapMode: Text.WordWrap
+            }
+            Text {
+                width: parent.width
+                color: Theme.textSecondary
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSizeBody
+                text: toolsOverlay.searchController ? toolsOverlay.searchController.message : ""
+                wrapMode: Text.WordWrap
+            }
+            Repeater {
+                model: toolsOverlay.searchController && toolsOverlay.searchController.state === "ready"
+                       ? toolsOverlay.searchController.results : []
+                delegate: Rectangle {
+                    width: parent.width
+                    height: 58
+                    radius: Theme.radiusControl
+                    color: Theme.surfaceInput
+                    border.color: Theme.border
+                    Row {
+                        anchors.fill: parent
+                        anchors.margins: Theme.spaceSm
+                        spacing: Theme.spaceSm
+                        Column {
+                            width: parent.width - originSelect.width - destinationSelect.width
+                                   - parent.spacing * 2
+                            anchors.verticalCenter: parent.verticalCenter
+                            Text {
+                                color: Theme.textPrimary
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSizeBody
+                                font.bold: true
+                                text: modelData.name
+                                elide: Text.ElideRight
+                                width: parent.width
+                            }
+                            Text {
+                                color: Theme.textSecondary
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSizeCaption
+                                text: modelData.detail
+                                elide: Text.ElideRight
+                                width: parent.width
+                            }
+                        }
+                        KeyboardActionButton {
+                            id: originSelect
+                            width: 36
+                            text: "A"
+                            normalColor: Theme.markerOrigin
+                            pressedColor: "#4fab70"
+                            textColor: "#102018"
+                            onTriggered: {
+                                routingController.setOriginInput(modelData.name)
+                                searchInput.text = ""
+                            }
+                        }
+                        KeyboardActionButton {
+                            id: destinationSelect
+                            width: 36
+                            text: "B"
+                            normalColor: Theme.markerDestination
+                            pressedColor: "#d95f5f"
+                            textColor: "#301010"
+                            onTriggered: {
+                                routingController.setDestinationInput(modelData.name)
+                                searchInput.text = ""
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 

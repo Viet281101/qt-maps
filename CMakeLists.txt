@@ -139,6 +139,13 @@ add_library(qtmaps_routing STATIC
 target_include_directories(qtmaps_routing PUBLIC "${CMAKE_SOURCE_DIR}/src")
 target_link_libraries(qtmaps_routing PUBLIC Qt5::Core Qt5::Network Qt5::Positioning)
 
+add_library(qtmaps_search STATIC
+    src/search/PlaceSearchController.cpp
+    src/search/PlaceSearchController.h
+)
+target_include_directories(qtmaps_search PUBLIC "${CMAKE_SOURCE_DIR}/src")
+target_link_libraries(qtmaps_search PUBLIC Qt5::Core)
+
 add_library(qtmaps_app_core STATIC
     src/core/ApplicationShutdownCoordinator.cpp
     src/core/ApplicationShutdownCoordinator.h
@@ -179,6 +186,7 @@ target_link_libraries(qtmaps PRIVATE
     qtmaps_map
     qtmaps_perf
     qtmaps_routing
+    qtmaps_search
     Qt5::Core
     Qt5::Gui
     Qt5::Location
@@ -214,6 +222,7 @@ target_link_libraries(qtmaps_visual_review PRIVATE
     qtmaps_map
     qtmaps_perf
     qtmaps_routing
+    qtmaps_search
     Qt5::Core
     Qt5::Gui
     Qt5::Location
@@ -291,6 +300,10 @@ if(BUILD_TESTING)
         QTMAPS_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
     target_link_libraries(qtmaps_routing_tests PRIVATE qtmaps_routing Qt5::Test)
     add_test(NAME qtmaps_routing_tests COMMAND qtmaps_routing_tests)
+
+    add_executable(qtmaps_search_tests tests/search/tst_PlaceSearchController.cpp)
+    target_link_libraries(qtmaps_search_tests PRIVATE qtmaps_search Qt5::Test)
+    add_test(NAME qtmaps_search_tests COMMAND qtmaps_search_tests)
 
     add_executable(qtmaps_route_navigation_tests
         tests/routing/tst_RouteNavigation.cpp

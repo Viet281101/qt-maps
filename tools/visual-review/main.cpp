@@ -19,6 +19,7 @@
 #include "perf/PerformanceMonitor.h"
 #include "routing/RouteNavigationController.h"
 #include "routing/RoutingController.h"
+#include "search/PlaceSearchController.h"
 
 namespace {
 
@@ -28,10 +29,11 @@ public:
     VisualReviewController(QQuickWindow *window, QObject *root,
                            qtmaps::map::MapSourceController *mapSource,
                            qtmaps::routing::RouteNavigationController *navigation,
+                           qtmaps::search::PlaceSearchController *search,
                            const QString &outputDirectory, int settleMilliseconds,
                            QObject *parent = nullptr) :
         QObject(parent), window_(window), root_(root), mapSource_(mapSource),
-        navigation_(navigation), outputDirectory_(outputDirectory),
+        navigation_(navigation), search_(search), outputDirectory_(outputDirectory),
         settleMilliseconds_(settleMilliseconds)
     {}
 
@@ -99,6 +101,17 @@ private:
     void captureVector(QObject *map)
     {
         resize(QSize(900, 580));
+        search_->setQuery(QStringLiteral("thái"));
+        QTimer::singleShot(250, this, [this, map]() {
+            capture(QStringLiteral("search-result-900x580"), [this, map]() {
+                search_->setQuery(QString());
+                captureVectorRoute(map);
+            });
+        });
+    }
+
+    void captureVectorRoute(QObject *map)
+    {
         capture(QStringLiteral("vector-route-900x580"), [this, map]() {
             resize(QSize(1366, 768));
             setCamera(map, QGeoCoordinate(21.0245, 105.8382), 15.0, 0.0);
@@ -177,6 +190,7 @@ private:
     QObject *root_ = nullptr;
     qtmaps::map::MapSourceController *mapSource_ = nullptr;
     qtmaps::routing::RouteNavigationController *navigation_ = nullptr;
+    qtmaps::search::PlaceSearchController *search_ = nullptr;
     QString outputDirectory_;
     int settleMilliseconds_ = 500;
     int mapReadyAttempts_ = 0;
@@ -223,6 +237,7 @@ int main(int argc, char *argv[])
     }
 
     qtmaps::routing::RoutingController routing;
+    qtmaps::search::PlaceSearchController placeSearch;
     qtmaps::routing::RouteNavigationController navigation;
     qtmaps::core::ApplicationShutdownCoordinator shutdown(&routing);
     qtmaps::perf::PerformanceMonitor performance;
@@ -248,6 +263,7 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty(QStringLiteral("boundedCameraController"),
                                              &boundedCamera);
     engine.rootContext()->setContextProperty(QStringLiteral("routingController"), &routing);
+    engine.rootContext()->setContextProperty(QStringLiteral("placeSearchController"), &placeSearch);
     engine.rootContext()->setContextProperty(QStringLiteral("mapSourceController"), &mapSource);
     engine.rootContext()->setContextProperty(QStringLiteral("routeNavigationController"),
                                              &navigation);
@@ -273,8 +289,8 @@ int main(int argc, char *argv[])
     }
 
     VisualReviewController review(window, engine.rootObjects().constFirst(), &mapSource,
-                                  &navigation, QDir::cleanPath(outputDirectory), settleMilliseconds,
-                                  &application);
+                                  &navigation, &placeSearch, QDir::cleanPath(outputDirectory),
+                                  settleMilliseconds, &application);
     QTimer::singleShot(0, &review, [&review]() { review.start(); });
     return application.exec();
 }

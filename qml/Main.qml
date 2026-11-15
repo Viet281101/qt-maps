@@ -15,6 +15,8 @@ Window {
     title: qsTr("QtMaps — Lập tuyến Hà Nội")
     property bool performanceOverlayVisible: false
     property bool panelCollapsed: false
+    property var searchController: typeof placeSearchController === "undefined"
+                               ? null : placeSearchController
     property string loadedMapStyleUrl: mapSourceController.activeStyleUrl
     readonly property bool endpointSelectionEnabled:
         !routeNavigationController.active
@@ -101,6 +103,7 @@ Window {
         navigationActive: navigationOverlay.guidanceVisible
         panelCollapsed: root.panelCollapsed
         panelWidth: routePanel.x + routePanel.width
+        searchController: root.searchController
         z: 22
     }
 

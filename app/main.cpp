@@ -32,6 +32,7 @@
 #include "perf/PerformanceMonitor.h"
 #include "routing/RouteNavigationController.h"
 #include "routing/RoutingController.h"
+#include "search/PlaceSearchController.h"
 
 #ifndef QTMAPS_BUILD_ID
 #define QTMAPS_BUILD_ID "unknown"
@@ -222,6 +223,7 @@ int main(int argc, char *argv[])
     mapSourceController.setRasterPackagePath(parser.value(QStringLiteral("raster-package")));
     qtmaps::diagnostics::SimulatedNavigationController navigationController;
     qtmaps::routing::RoutingController routingController;
+    qtmaps::search::PlaceSearchController placeSearchController;
     qtmaps::routing::RouteNavigationController routeNavigationController;
     qtmaps::core::ApplicationShutdownCoordinator shutdownCoordinator(&routingController);
     qtmaps::perf::PerformanceMonitor performanceMonitor;
@@ -270,6 +272,8 @@ int main(int argc, char *argv[])
                                              &navigationController);
     engine.rootContext()->setContextProperty(QStringLiteral("routingController"),
                                              &routingController);
+    engine.rootContext()->setContextProperty(QStringLiteral("placeSearchController"),
+                                             &placeSearchController);
     engine.rootContext()->setContextProperty(QStringLiteral("mapSourceController"),
                                              &mapSourceController);
     engine.rootContext()->setContextProperty(QStringLiteral("routeNavigationController"),

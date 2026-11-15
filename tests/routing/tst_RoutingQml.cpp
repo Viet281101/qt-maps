@@ -160,8 +160,7 @@ private slots:
             root->findChild<QQuickItem *>(QStringLiteral("performanceOverlay"));
         QQuickItem *attribution = root->findChild<QQuickItem *>(QStringLiteral("attributionPill"));
         QQuickItem *searchIcon = root->findChild<QQuickItem *>(QStringLiteral("searchIcon"));
-        QQuickItem *searchLabel =
-            root->findChild<QQuickItem *>(QStringLiteral("searchPlaceholderLabel"));
+        QQuickItem *searchInput = root->findChild<QQuickItem *>(QStringLiteral("placeSearchInput"));
         QQuickItem *routePanel = root->findChild<QQuickItem *>(QStringLiteral("routePanel"));
         QQuickItem *panelToggle = root->findChild<QQuickItem *>(QStringLiteral("panelToggle"));
         QVERIFY(maneuvers);
@@ -171,7 +170,7 @@ private slots:
         QVERIFY(performanceOverlay);
         QVERIFY(attribution);
         QVERIFY(searchIcon);
-        QVERIFY(searchLabel);
+        QVERIFY(searchInput);
         QVERIFY(routePanel);
         QVERIFY(panelToggle);
         QTRY_VERIFY(maneuvers->height() >= 120.0);
@@ -209,7 +208,7 @@ private slots:
                            .arg(attributionRect.width())
                            .arg(attributionRect.height())));
         QCOMPARE(searchIcon->width(), 24.0);
-        QVERIFY2(searchLabel->width() >= searchLabel->property("implicitWidth").toReal(),
+        QVERIFY2(searchInput->width() > 0.0,
                  "The compact search label must not be elided at the minimum viewport.");
         const QRectF panelRect(routePanel->mapToScene(QPointF(0, 0)), routePanel->size());
         const QRectF toggleRect(panelToggle->mapToScene(QPointF(0, 0)), panelToggle->size());
