@@ -19,6 +19,7 @@
 #include "perf/PerformanceMonitor.h"
 #include "routing/RouteNavigationController.h"
 #include "routing/RoutingController.h"
+#include "search/PlaceSearchController.h"
 
 namespace {
 
@@ -99,6 +100,28 @@ private:
     void captureVector(QObject *map)
     {
         resize(QSize(900, 580));
+        QObject *searchInput = root_->findChild<QObject *>(QStringLiteral("placeSearchInput"));
+        if (!searchInput) {
+            fail(QStringLiteral("Cannot find the production place-search input"));
+            return;
+        }
+        searchInput->setProperty("text", QStringLiteral("thái"));
+        QTimer::singleShot(250, this, [this, map]() {
+            capture(QStringLiteral("search-result-900x580"), [this, map]() {
+                QObject *searchInput =
+                    root_->findChild<QObject *>(QStringLiteral("placeSearchInput"));
+                if (!searchInput) {
+                    fail(QStringLiteral("Cannot clear the production place-search input"));
+                    return;
+                }
+                searchInput->setProperty("text", QString());
+                captureVectorRoute(map);
+            });
+        });
+    }
+
+    void captureVectorRoute(QObject *map)
+    {
         capture(QStringLiteral("vector-route-900x580"), [this, map]() {
             resize(QSize(1366, 768));
             setCamera(map, QGeoCoordinate(21.0245, 105.8382), 15.0, 0.0);
@@ -223,6 +246,7 @@ int main(int argc, char *argv[])
     }
 
     qtmaps::routing::RoutingController routing;
+    qtmaps::search::PlaceSearchController placeSearch;
     qtmaps::routing::RouteNavigationController navigation;
     qtmaps::core::ApplicationShutdownCoordinator shutdown(&routing);
     qtmaps::perf::PerformanceMonitor performance;
@@ -248,6 +272,7 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty(QStringLiteral("boundedCameraController"),
                                              &boundedCamera);
     engine.rootContext()->setContextProperty(QStringLiteral("routingController"), &routing);
+    engine.rootContext()->setContextProperty(QStringLiteral("placeSearchController"), &placeSearch);
     engine.rootContext()->setContextProperty(QStringLiteral("mapSourceController"), &mapSource);
     engine.rootContext()->setContextProperty(QStringLiteral("routeNavigationController"),
                                              &navigation);

@@ -12,17 +12,21 @@
 
 #include <cmath>
 
+#include "benchmark/BenchmarkScenarioController.h"
 #include "core/ApplicationShutdownCoordinator.h"
+#include "map/BoundedCameraController.h"
 #include "map/MapSourceController.h"
 #include "map/TileSource.h"
 #include "perf/PerformanceMonitor.h"
 #include "routing/RouteNavigationController.h"
 #include "routing/RoutingController.h"
+#include "search/PlaceSearchController.h"
 
 using qtmaps::core::ApplicationShutdownCoordinator;
 using qtmaps::perf::PerformanceMonitor;
 using qtmaps::routing::RouteNavigationController;
 using qtmaps::routing::RoutingController;
+using qtmaps::search::PlaceSearchController;
 
 namespace {
 
@@ -103,6 +107,59 @@ private slots:
         QCOMPARE(routing.destination(), QGeoCoordinate(21.021352, 105.834744));
     }
 
+    void searchResultCanPopulateRouteEndpoint()
+    {
+        RoutingController routing;
+        RouteNavigationController navigation;
+        PlaceSearchController search;
+        ApplicationShutdownCoordinator shutdown(&routing);
+        PerformanceMonitor performance;
+        qtmaps::map::BoundedCameraController boundedCamera;
+        qtmaps::benchmark::BenchmarkScenarioController benchmark(&performance, &routing,
+                                                                 &navigation, 0);
+        StaticTileSource mapTiles;
+        qtmaps::map::MapSourceController mapSource(&mapTiles, nullptr);
+        QVERIFY(mapSource.start(QString(), QString()));
+        QQmlEngine engine;
+        engine.rootContext()->setContextProperty(QStringLiteral("routingController"), &routing);
+        engine.rootContext()->setContextProperty(QStringLiteral("routeNavigationController"),
+                                                 &navigation);
+        engine.rootContext()->setContextProperty(QStringLiteral("placeSearchController"), &search);
+        engine.rootContext()->setContextProperty(QStringLiteral("boundedCameraController"),
+                                                 &boundedCamera);
+        engine.rootContext()->setContextProperty(QStringLiteral("benchmarkScenarioController"),
+                                                 &benchmark);
+        engine.rootContext()->setContextProperty(QStringLiteral("shutdownCoordinator"), &shutdown);
+        engine.rootContext()->setContextProperty(QStringLiteral("performanceMonitor"),
+                                                 &performance);
+        engine.rootContext()->setContextProperty(QStringLiteral("mapSourceController"), &mapSource);
+        engine.rootContext()->setContextProperty(QStringLiteral("routingFixtureOnly"), true);
+        engine.rootContext()->setContextProperty(QStringLiteral("instrumentationEnabled"), false);
+        engine.rootContext()->setContextProperty(QStringLiteral("vectorStyleUrl"), QString());
+
+        QQmlComponent component(&engine, QUrl(QStringLiteral("qrc:/qml/Main.qml")));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> root(component.create());
+        QVERIFY2(root, qPrintable(component.errorString()));
+        QQuickWindow *window = qobject_cast<QQuickWindow *>(root.data());
+        QVERIFY(window);
+        window->resize(900, 580);
+        window->show();
+        QVERIFY(QTest::qWaitForWindowExposed(window));
+        QObject *input = root->findChild<QObject *>(QStringLiteral("placeSearchInput"));
+        QVERIFY(input);
+        input->setProperty("text", QStringLiteral("ba đình"));
+
+        QTRY_COMPARE(search.state(), QStringLiteral("ready"));
+        QObject *toolsOverlay = root->findChild<QObject *>(QStringLiteral("demoToolsOverlay"));
+        QVERIFY(toolsOverlay);
+        QVERIFY(QMetaObject::invokeMethod(toolsOverlay, "selectSearchResult",
+                                          Q_ARG(QVariant, QVariant(QStringLiteral("Ba Đình"))),
+                                          Q_ARG(QVariant, QVariant(true))));
+        QCOMPARE(routing.originInput(), QStringLiteral("Ba Đình"));
+        QCOMPARE(input->property("text").toString(), QString());
+    }
+
     void maneuverListKeepsMinimumHeight_data()
     {
         QTest::addColumn<QSize>("windowSize");
@@ -160,8 +217,7 @@ private slots:
             root->findChild<QQuickItem *>(QStringLiteral("performanceOverlay"));
         QQuickItem *attribution = root->findChild<QQuickItem *>(QStringLiteral("attributionPill"));
         QQuickItem *searchIcon = root->findChild<QQuickItem *>(QStringLiteral("searchIcon"));
-        QQuickItem *searchLabel =
-            root->findChild<QQuickItem *>(QStringLiteral("searchPlaceholderLabel"));
+        QQuickItem *searchInput = root->findChild<QQuickItem *>(QStringLiteral("placeSearchInput"));
         QQuickItem *routePanel = root->findChild<QQuickItem *>(QStringLiteral("routePanel"));
         QQuickItem *panelToggle = root->findChild<QQuickItem *>(QStringLiteral("panelToggle"));
         QVERIFY(maneuvers);
@@ -171,7 +227,7 @@ private slots:
         QVERIFY(performanceOverlay);
         QVERIFY(attribution);
         QVERIFY(searchIcon);
-        QVERIFY(searchLabel);
+        QVERIFY(searchInput);
         QVERIFY(routePanel);
         QVERIFY(panelToggle);
         QTRY_VERIFY(maneuvers->height() >= 120.0);
@@ -209,7 +265,7 @@ private slots:
                            .arg(attributionRect.width())
                            .arg(attributionRect.height())));
         QCOMPARE(searchIcon->width(), 24.0);
-        QVERIFY2(searchLabel->width() >= searchLabel->property("implicitWidth").toReal(),
+        QVERIFY2(searchInput->width() > 0.0,
                  "The compact search label must not be elided at the minimum viewport.");
         const QRectF panelRect(routePanel->mapToScene(QPointF(0, 0)), routePanel->size());
         const QRectF toggleRect(panelToggle->mapToScene(QPointF(0, 0)), panelToggle->size());
@@ -517,7 +573,6 @@ private slots:
 
         banner->setProperty("instruction", QStringLiteral("Rẽ trái"));
         banner->setProperty("streetName", QStringLiteral("Phố Huế"));
-        banner->setProperty("sourceLabel", QStringLiteral("fixture/mô phỏng"));
         banner->setProperty("distanceToManeuverMeters", 850.0);
         banner->setProperty("remainingDistanceMeters", 1540.0);
         banner->setProperty("remainingDurationSeconds", 121.0);
@@ -529,8 +584,7 @@ private slots:
         QCOMPARE(banner->property("primaryText").toString(), QStringLiteral("Rẽ trái"));
         QCOMPARE(banner->property("maneuverDistanceText").toString(), QStringLiteral("850 m"));
         QCOMPARE(banner->property("remainingText").toString(), QStringLiteral("1,5 km · 3 phút"));
-        QCOMPARE(banner->property("sourceText").toString(),
-                 QStringLiteral("Nguồn: fixture/mô phỏng"));
+        QVERIFY(!banner->property("sourceLabel").isValid());
 
         banner->setProperty("rerouting", true);
         QCOMPARE(banner->property("primaryText").toString(), QStringLiteral("Đang tìm đường mới…"));
@@ -581,10 +635,13 @@ private slots:
         const QByteArray qml =
             mainQml + mapQml + navigationQml + bannerQml + panelQml + toolsQml + statusQml;
         QVERIFY(qml.contains("routingController.streetLabels"));
-        QVERIFY(qml.contains("map.zoomLevel >= 15"));
+        QVERIFY(qml.contains("!canvas.guidanceActive && map.zoomLevel >= 15"));
+        QVERIFY(qml.contains("width: 36; height: 36; radius: 18"));
         QVERIFY(qml.contains("routingController.currentManeuverIndex"));
         QVERIFY(qml.contains("routeNavigationController.currentManeuverIndex"));
         QVERIFY(qml.contains("NavigationBanner"));
+        QVERIFY(!bannerQml.contains("sourceText"));
+        QVERIFY(qml.contains("objectName: \"connectionStatusPill\""));
         QVERIFY(qml.contains("text: qsTr(\"Theo vị trí hiện tại\")"));
         QVERIFY(qml.contains("root.recenterNavigation()"));
         QVERIFY(qml.contains("routeNavigationController.simulateDeviation()"));
@@ -610,6 +667,8 @@ private slots:
             qml.contains("routingController.loading && routeNavigationController.routeAvailable"));
         QVERIFY(qml.contains("routeSummaryColor"));
         QVERIFY(qml.contains("&& !routingController.loading"));
+        QVERIFY(panelQml.contains("routingController.routeAvailable ? Theme.surfaceInput"));
+        QVERIFY(panelQml.contains("objectName: \"maneuverScrollThumb\""));
         QVERIFY(qml.contains("navigationActive: navigationOverlay.guidanceVisible"));
         QVERIFY(qml.contains("shutdownCoordinator.requestQuit()"));
         QVERIFY(mainQml.contains("normalTopMargin: demoTools.statusSafeTop"));

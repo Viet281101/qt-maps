@@ -34,6 +34,7 @@ public:
     static constexpr qreal kMinimumZoom = contract::kDisplayMinimumZoom;
     static constexpr qreal kMaximumZoom = contract::kDisplayMaximumZoom;
     static constexpr qreal kNavigationZoom = 16.0;
+    static constexpr qreal kNavigationPuckVerticalFraction = 0.68;
 
     static CameraState overview();
     static CameraState normalize(const CameraState &requested);

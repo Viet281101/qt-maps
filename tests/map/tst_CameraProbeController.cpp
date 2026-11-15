@@ -99,6 +99,59 @@ private slots:
         QCOMPARE(followed.tilt, 45.0);
     }
 
+    void navigationCameraLeavesRoadAheadOfThePuck()
+    {
+        BoundedCameraController controller;
+        const QGeoCoordinate puck(21.0300, 105.8300);
+        const CameraViewport viewport = {1000.0, 800.0};
+        const QVariantMap northbound = controller.navigationCamera(
+            puck.latitude(), puck.longitude(), 0.0, 16.0, viewport.width, viewport.height);
+        const QVariantMap eastbound = controller.navigationCamera(
+            puck.latitude(), puck.longitude(), 90.0, 16.0, viewport.width, viewport.height);
+
+        const auto screenY = [&](const QVariantMap &camera) {
+            constexpr qreal pi = 3.14159265358979323846;
+            const qreal zoom = camera.value(QStringLiteral("zoom")).toReal();
+            const qreal worldPixels = 256.0 * std::pow(2.0, zoom);
+            const auto mercatorY = [=](qreal latitude) {
+                const qreal radians = latitude * pi / 180.0;
+                return (1.0 - std::log(std::tan(radians) + 1.0 / std::cos(radians)) / pi) / 2.0;
+            };
+            const qreal x =
+                (puck.longitude() - camera.value(QStringLiteral("longitude")).toReal()) / 360.0 *
+                worldPixels;
+            const qreal y = (mercatorY(puck.latitude()) -
+                             mercatorY(camera.value(QStringLiteral("latitude")).toReal())) *
+                            worldPixels;
+            const qreal radians = camera.value(QStringLiteral("bearing")).toReal() * pi / 180.0;
+            return viewport.height / 2.0 - x * std::sin(radians) + y * std::cos(radians);
+        };
+
+        QVERIFY(northbound.value(QStringLiteral("valid")).toBool());
+        QVERIFY(eastbound.value(QStringLiteral("valid")).toBool());
+        QVERIFY(std::abs(screenY(northbound) -
+                         viewport.height *
+                             BoundedCameraController::kNavigationPuckVerticalFraction) < 0.01);
+        QVERIFY(std::abs(screenY(eastbound) -
+                         viewport.height *
+                             BoundedCameraController::kNavigationPuckVerticalFraction) < 0.01);
+        QCOMPARE(northbound.value(QStringLiteral("tilt")).toReal(), 45.0);
+        QCOMPARE(eastbound.value(QStringLiteral("zoom")).toReal(),
+                 BoundedCameraController::kNavigationZoom);
+    }
+
+    void navigationCameraKeepsInvalidOrOutsideInputSafe()
+    {
+        BoundedCameraController controller;
+        const QVariantMap camera =
+            controller.navigationCamera(20.0, 110.0, 0.0, 16.0, 1000.0, 800.0);
+        const QGeoCoordinate center(camera.value(QStringLiteral("latitude")).toReal(),
+                                    camera.value(QStringLiteral("longitude")).toReal());
+
+        QVERIFY(camera.value(QStringLiteral("valid")).toBool());
+        QVERIFY(BoundedCameraController::isWithinBounds(center));
+    }
+
     void fitsRouteWithPanelSafePadding()
     {
         const CameraViewport viewport = {1366.0, 768.0, 362.0, 48.0, 32.0, 32.0};

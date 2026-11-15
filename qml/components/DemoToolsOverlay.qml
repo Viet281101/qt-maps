@@ -3,17 +3,27 @@ import "../theme"
 
 Item {
     id: toolsOverlay
+    objectName: "demoToolsOverlay"
     property bool navigationActive: false
     property bool panelCollapsed: false
     property real panelWidth: 330
     property bool layersOpen: false
-    readonly property real statusSafeTop: layersOpen
-                                       ? layerMenu.y + layerMenu.height + Theme.spaceMd
-                                       : layerButton.y + layerButton.height + Theme.spaceMd
+    property var searchController: null
+    readonly property real layerControlsBottom: layersOpen
+                                               ? layerMenu.y + layerMenu.height
+                                               : layerButton.y + layerButton.height
+
+    function selectSearchResult(name, setOrigin) {
+        var accepted = setOrigin
+                       ? routingController.setOriginInput(name)
+                       : routingController.setDestinationInput(name)
+        if (accepted)
+            searchInput.text = ""
+    }
 
     Rectangle {
-        id: searchPlaceholder
-        objectName: "searchPlaceholder"
+        id: placeSearchControl
+        objectName: "placeSearchControl"
         visible: !toolsOverlay.navigationActive
         x: toolsOverlay.panelCollapsed
            ? Math.max(Theme.spaceXl, (toolsOverlay.width - 360) / 2)
@@ -60,20 +70,140 @@ Item {
             }
         }
 
-        Text {
-            objectName: "searchPlaceholderLabel"
+        TextInput {
+            id: searchInput
+            objectName: "placeSearchInput"
             anchors.left: searchIcon.right
             anchors.right: parent.right
             anchors.leftMargin: Theme.spaceSm
             anchors.rightMargin: Theme.spaceLg
             anchors.verticalCenter: parent.verticalCenter
-            color: Theme.textSecondary
+            color: text.length > 0 ? Theme.textPrimary : Theme.textSecondary
             font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSizeBody
-            text: qsTr("Tìm kiếm · sắp có")
-            elide: Text.ElideRight
+            clip: true
+            selectByMouse: true
+            activeFocusOnTab: true
+            text: ""
+            onTextChanged: {
+                if (toolsOverlay.searchController)
+                    toolsOverlay.searchController.setQuery(text)
+            }
+            Text {
+                anchors.fill: parent
+                verticalAlignment: Text.AlignVCenter
+                color: Theme.textSecondary
+                font: parent.font
+                text: qsTr("Tìm địa điểm demo")
+                visible: !parent.text && !parent.activeFocus
+            }
         }
     }
+
+    Rectangle {
+        id: searchResults
+        objectName: "placeSearchResults"
+        visible: !toolsOverlay.navigationActive && toolsOverlay.searchController
+                 && toolsOverlay.searchController.state !== "idle"
+        x: placeSearchControl.x
+        y: placeSearchControl.y + placeSearchControl.height + Theme.spaceXs
+        width: placeSearchControl.width
+        height: searchColumn.implicitHeight + Theme.spaceMd * 2
+        radius: Theme.radiusControl
+        color: Theme.surfaceElevated
+        border.color: Theme.border
+        z: 2
+
+        Column {
+            id: searchColumn
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.margins: Theme.spaceMd
+            spacing: Theme.spaceXs
+
+            Text {
+                width: parent.width
+                color: Theme.warning
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSizeCaption
+                text: qsTr("Dữ liệu demo cục bộ · chưa phải tìm kiếm địa chỉ đầy đủ")
+                wrapMode: Text.WordWrap
+            }
+            Text {
+                width: parent.width
+                color: Theme.textSecondary
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSizeBody
+                text: toolsOverlay.searchController ? toolsOverlay.searchController.message : ""
+                wrapMode: Text.WordWrap
+            }
+            Repeater {
+                model: toolsOverlay.searchController && toolsOverlay.searchController.state === "ready"
+                       ? toolsOverlay.searchController.results : []
+                delegate: Rectangle {
+                    width: parent.width
+                    height: 58
+                    radius: Theme.radiusControl
+                    color: Theme.surfaceInput
+                    border.color: Theme.border
+                    Row {
+                        anchors.fill: parent
+                        anchors.margins: Theme.spaceSm
+                        spacing: Theme.spaceSm
+                        Column {
+                            width: parent.width - originSelect.width - destinationSelect.width
+                                   - parent.spacing * 2
+                            anchors.verticalCenter: parent.verticalCenter
+                            Text {
+                                color: Theme.textPrimary
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSizeBody
+                                font.bold: true
+                                text: modelData.name
+                                elide: Text.ElideRight
+                                width: parent.width
+                            }
+                            Text {
+                                color: Theme.textSecondary
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSizeCaption
+                                text: modelData.detail
+                                elide: Text.ElideRight
+                                width: parent.width
+                            }
+                        }
+                        KeyboardActionButton {
+                            id: originSelect
+                            objectName: "searchResultOriginButton"
+                            width: 36
+                            text: "A"
+                            normalColor: Theme.markerOrigin
+                            pressedColor: "#4fab70"
+                            textColor: "#102018"
+                            onTriggered: toolsOverlay.selectSearchResult(modelData.name, true)
+                        }
+                        KeyboardActionButton {
+                            id: destinationSelect
+                            objectName: "searchResultDestinationButton"
+                            width: 36
+                            text: "B"
+                            normalColor: Theme.markerDestination
+                            pressedColor: "#d95f5f"
+                            textColor: "#301010"
+                            onTriggered: toolsOverlay.selectSearchResult(modelData.name, false)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    readonly property real statusSafeTop: Math.max(
+                                        layerControlsBottom,
+                                        searchResults.visible
+                                        ? searchResults.y + searchResults.height : 0)
+                                        + Theme.spaceMd
 
     KeyboardActionButton {
         id: layerButton
