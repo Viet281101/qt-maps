@@ -25,3 +25,10 @@ The package remains Hanoi-only, capped at 20 MiB, attributed to OpenStreetMap
 under ODbL, and offline-only. Never claim fixture or synthetic records are
 production coverage. Split into a new PR only for an owner decision, external
 access, dependency installation, benchmark/GPU work, or an unrelated boundary.
+
+## Approved extractor selection
+
+Index named OSM features in the Hanoi bounds from `place`, `amenity`,
+`tourism`, `shop`, and `public_transport`. Preserve `name`, `name:vi`, and
+`alt_name`; accept only a valid representative point. This decision was
+approved on 2026-11-15.
