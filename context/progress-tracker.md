@@ -93,6 +93,9 @@ benchmark artifacts remain ignored.
   attribution, limits the layer to z15, and reports missing/corrupt packages
   without a remote fallback. The visual-review harness captured the active
   layer at 900x580, 1366x768, and 1920x1080; this is functional evidence only.
+- [PR #63](https://github.com/Viet281101/qt-maps/pull/63) contains the Unit 10
+  integration and is ready for code review; raw imagery and generated artifacts
+  are intentionally absent from its diff.
 
 ## Next delivery plan
 
