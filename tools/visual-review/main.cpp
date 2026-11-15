@@ -220,6 +220,8 @@ int main(int argc, char *argv[])
                       QStringLiteral("path"), QStringLiteral("data/packages/current")});
     parser.addOption({QStringLiteral("raster-package"), QStringLiteral("Validated raster package"),
                       QStringLiteral("path"), QStringLiteral("data/raster-packages/current")});
+    parser.addOption({QStringLiteral("search-package"), QStringLiteral("Validated search package"),
+                      QStringLiteral("path"), QStringLiteral("data/search-packages/current")});
     parser.addOption({QStringLiteral("output"), QStringLiteral("Empty PNG output directory"),
                       QStringLiteral("path")});
     parser.addOption({QStringLiteral("settle-ms"),
@@ -246,7 +248,8 @@ int main(int argc, char *argv[])
     }
 
     qtmaps::routing::RoutingController routing;
-    qtmaps::search::PlaceSearchController placeSearch;
+    qtmaps::search::PlaceSearchController placeSearch(
+        parser.value(QStringLiteral("search-package")));
     qtmaps::routing::RouteNavigationController navigation;
     qtmaps::core::ApplicationShutdownCoordinator shutdown(&routing);
     qtmaps::perf::PerformanceMonitor performance;

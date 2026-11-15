@@ -153,10 +153,11 @@ private slots:
         QTRY_COMPARE(search.state(), QStringLiteral("ready"));
         QObject *toolsOverlay = root->findChild<QObject *>(QStringLiteral("demoToolsOverlay"));
         QVERIFY(toolsOverlay);
-        QVERIFY(QMetaObject::invokeMethod(toolsOverlay, "selectSearchResult",
-                                          Q_ARG(QVariant, QVariant(QStringLiteral("Ba Đình"))),
-                                          Q_ARG(QVariant, QVariant(true))));
-        QCOMPARE(routing.originInput(), QStringLiteral("Ba Đình"));
+        QVERIFY(QMetaObject::invokeMethod(
+            toolsOverlay, "selectSearchResult",
+            Q_ARG(QVariant, QVariant(QStringLiteral("21.028000, 105.852000"))),
+            Q_ARG(QVariant, QVariant(true))));
+        QCOMPARE(routing.origin(), QGeoCoordinate(21.028, 105.852));
         QCOMPARE(input->property("text").toString(), QString());
     }
 

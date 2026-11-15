@@ -8,6 +8,8 @@ benchmark artifacts remain ignored.
 
 - Units 03--08 are merged. Qt 5.15.18 is the production baseline; Qt 5.15.13
   is comparison-only.
+- Unit 09 is complete locally in PR #62. Unit 10 is planned as #15 licensed
+  orthography integration and remains blocked on authorized imagery provision.
 - The active GitHub milestone is `Post-demo stabilization` with no due date.
 - [PR #53](https://github.com/Viet281101/qt-maps/pull/53) merged as `15d198a`
   on 2026-11-15 and closed #16. Project #6 records both items as `Done`.
@@ -40,6 +42,9 @@ benchmark artifacts remain ignored.
 - PR #59 merged as `0c7964d` and closed #58: the QSQLITE FTS5 spike creates and
   queries an external-content Vietnamese fixture schema locally; Release tests
   passed 19/19.
+- The #61 fixture-only package builder validates Hanoi bounds and PBF provenance,
+  emits a checksummed FTS5 SQLite package under the 20 MiB cap, and passed the
+  isolated Release review with 20/20 tests.
 - `make QT_EXPECTED_VERSION=5.15.18 review` passed for PR #53: formatting,
   isolated Release build, and 17/17 tests.
 - Direct-GPU visual captures completed on the Intel HD 520 for the supported
@@ -51,6 +56,23 @@ benchmark artifacts remain ignored.
 - Environment documentation was synchronized on 2026-11-15: system Qt 5.15.18
   is the production baseline, while Qt 5.15.13 remains comparison-only. The
   checked `make QT_EXPECTED_VERSION=5.15.18 requirements` preflight passes.
+
+## Unit 09 — Offline search integration (completed locally 2026-11-15)
+
+- The approved local Geofabrik PBF was extracted offline into 9,094 named
+  Hanoi records and packaged as ignored `hanoi-search-20261115-v1-r1`.
+  `places.sqlite` is 1,060,864 bytes, under the 20 MiB cap; its manifest
+  records the 2026-10-23 source retrieval date, PBF SHA-256, ODbL attribution,
+  Hanoi bounds, and database checksum.
+- `PlaceSearchController` validates and opens the package on a worker thread,
+  queries bounded normalized FTS5 results there, labels the real OSM source in
+  the UI, and preserves visibly labelled fixture search if the package is
+  absent, corrupt, or incompatible. No remote geocoding path exists.
+- Automated Release evidence: search controller, FTS5 spike, package builder,
+  extractor, and QML routing suites passed. Direct-GPU visual review captured
+  vector and raster at 900x580, 1366x768, and 1920x1080 under
+  `generated/unit-09/visual-review-20261115-final-capped/`; it is visual evidence,
+  not a benchmark. Run the isolated `make ... review` gate before merging #62.
 
 ## Next delivery plan
 
@@ -71,11 +93,16 @@ benchmark artifacts remain ignored.
    imagery. PR #57 merged as `631d713`. Wait for an authorized Copernicus
    session/account or approved local L2A scene before querying, downloading, or
    processing real imagery.
+   Unit 10's ordered runtime/UI plan is in
+   `context/feature-specs/unit-10-orthography-integration-plan.md`; it is
+   planning-only and does not authorize provisioning.
 3. **FTS5 source decision before the next slice.** #58 is complete. Before a
    generator, package validation, or runtime switch, approve a licensed local
    source URL, attribution, coverage, storage budget, retrieval/checksum method,
-   and generator revision. The current fixture search remains the supported
-   product behavior; remote geocoding stays out of scope.
+   and generator revision. **#61 now approves** the existing local Geofabrik
+   Vietnam PBF lineage, current Hanoi bounds, ODbL attribution, and a 20 MiB
+   cap for a fixture-tested packager only. The current fixture search remains
+   the supported product behavior; remote geocoding stays out of scope.
 
 ## Risks and decisions requiring the owner
 
@@ -87,7 +114,8 @@ benchmark artifacts remain ignored.
    data remain outside Git.
 3. SQLite FTS5 target-runtime capability is proven, but its source dataset,
    coverage, storage budget, generator, and runtime package lifecycle remain
-   Proposed until the owner approves the next decision gate.
+   Proposed except for #61's local package-generator contract; extractor and
+   runtime work still require separate acceptance.
 
 ## Working rules
 

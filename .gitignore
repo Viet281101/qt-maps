@@ -61,6 +61,7 @@ aqtinstall.log
 /generated/
 /data/packages/
 /data/raster-packages/
+/data/search-packages/
 /data/orthography-packages/
 __pycache__/
 

@@ -114,6 +114,9 @@ int main(int argc, char *argv[])
         {QStringLiteral("raster-package"),
          QStringLiteral("Unit 07C offline raster package directory or current pointer"),
          QStringLiteral("path"), QStringLiteral("data/raster-packages/current")});
+    parser.addOption({QStringLiteral("search-package"),
+                      QStringLiteral("Unit 09 offline search package directory or current pointer"),
+                      QStringLiteral("path"), QStringLiteral("data/search-packages/current")});
     parser.addOption({QStringLiteral("diagnostic-raster-root"),
                       QStringLiteral("Local diagnostic raster fallback directory"),
                       QStringLiteral("path"), QStringLiteral("generated/diagnostic-tiles")});
@@ -223,7 +226,8 @@ int main(int argc, char *argv[])
     mapSourceController.setRasterPackagePath(parser.value(QStringLiteral("raster-package")));
     qtmaps::diagnostics::SimulatedNavigationController navigationController;
     qtmaps::routing::RoutingController routingController;
-    qtmaps::search::PlaceSearchController placeSearchController;
+    qtmaps::search::PlaceSearchController placeSearchController(
+        parser.value(QStringLiteral("search-package")));
     qtmaps::routing::RouteNavigationController routeNavigationController;
     qtmaps::core::ApplicationShutdownCoordinator shutdownCoordinator(&routingController);
     qtmaps::perf::PerformanceMonitor performanceMonitor;

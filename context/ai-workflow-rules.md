@@ -8,6 +8,10 @@ Until the first management demo on 2026-11-03, optimize the sequence for the sho
 
 ## Scoping Rules
 
+- An owner-approved feature spec may designate one integration PR for its
+  ordered slices. Keep per-slice commits and verification evidence locally,
+  but update the same PR until the unit completion gate is met.
+
 - Normally work on one feature unit at a time. Before the first management demo, a documented vertical-slice increment may cross unit boundaries when it directly improves the agreed demo flow.
 - Prefer increments that can be verified within one to three four-hour sessions.
 - Prioritize visible, stable, end-to-end demo behavior over nationwide coverage, packaging, exhaustive edge-case coverage, and production hardening until the first demo.

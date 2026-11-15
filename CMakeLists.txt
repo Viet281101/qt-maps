@@ -144,7 +144,7 @@ add_library(qtmaps_search STATIC
     src/search/PlaceSearchController.h
 )
 target_include_directories(qtmaps_search PUBLIC "${CMAKE_SOURCE_DIR}/src")
-target_link_libraries(qtmaps_search PUBLIC Qt5::Core)
+target_link_libraries(qtmaps_search PUBLIC Qt5::Core Qt5::Sql)
 
 add_library(qtmaps_app_core STATIC
     src/core/ApplicationShutdownCoordinator.cpp
@@ -311,6 +311,12 @@ if(BUILD_TESTING)
     add_executable(qtmaps_search_fts5_spike_tests tests/search/tst_SearchFts5Spike.cpp)
     target_link_libraries(qtmaps_search_fts5_spike_tests PRIVATE Qt5::Sql Qt5::Test)
     add_test(NAME qtmaps_search_fts5_spike_tests COMMAND qtmaps_search_fts5_spike_tests)
+    add_test(NAME qtmaps_search_package_tool_tests
+        COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_SOURCE_DIR}/tests/search/test_build_hanoi_search_package.py")
+    add_test(NAME qtmaps_search_extractor_tool_tests
+        COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_SOURCE_DIR}/tests/search/test_extract_hanoi_search_records.py")
 
     add_executable(qtmaps_route_navigation_tests
         tests/routing/tst_RouteNavigation.cpp
