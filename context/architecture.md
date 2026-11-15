@@ -149,12 +149,12 @@ Large generated datasets, caches, routing graphs, and third-party artifacts must
 - After installation, use `ldd` to identify missing system libraries rather than assuming the archive is self-contained.
 - Qt 5.13.2 compatibility with OpenSSL 1.1 versus the host's OpenSSL 3 remains a spike question for online HTTPS. Offline localhost HTTP does not require TLS, so this risk does not by itself block the offline path.
 - Ninja and ccache were installed manually by the owner. Later system-package changes require an explicit package list, dry-run impact review, and owner approval before authentication or installation.
-- The owner approved Qt 5.15.13 plus dynamically linked MapLibre Native Qt v3.0.0 as the application baseline on 2026-10-24. Ubuntu does not package Qt 5 Location private headers, so the successful v3.0.0 build used a verified Qt 5.15.13 source-header overlay under ignored `generated/`; it did not modify `/usr` beyond the approved apt packages.
+- Qt 5.15.13 plus dynamically linked MapLibre Native Qt v3.0.0 was an earlier application baseline approved on 2026-10-24. Qt 5.15.18 is now the production baseline and Qt 5.15.13 is comparison-only. Ubuntu does not package Qt 5 Location private headers, so the successful v3.0.0 build uses a verified Qt 5.15.18 source-header overlay under ignored `generated/`; it does not modify `/usr` beyond the approved apt packages.
 
 ## Current Environment Baseline
 
 - Linux development machine: Dell Latitude 5480, Intel Core i5-6300U, 16 GiB RAM, and 512 GB NVMe SSD.
 - GCC/G++ 13.3.0, CMake 3.28.3, and GNU Make 4.3 are available.
-- Package-managed `/usr/bin/qmake` currently selects Qt 5.15.13; the project still selects each Qt kit by absolute qmake path or `CMAKE_PREFIX_PATH` rather than relying on `PATH`. Clang is not required. Owner-installed Ninja 1.11.1 and ccache 4.9.1 are available on `PATH`.
+- Package-managed `/usr/bin/qmake` currently selects Qt 5.15.18; the project still selects each Qt kit by absolute qmake path or `CMAKE_PREFIX_PATH` rather than relying on `PATH`. Clang is not required. Owner-installed Ninja 1.11.1 and ccache 4.9.1 are available on `PATH`.
 - Intel HD Graphics 520 (Skylake GT2), Mesa 25.2.8, direct rendering enabled, and OpenGL up to 4.6.
-- System Qt 5.15.13 is the application baseline. Qt 5.13.2 under `/home/viet/Qt/5.13.2/gcc_64` remains usable for comparison; select either kit with an explicit `CMAKE_PREFIX_PATH` and never modify global `PATH`.
+- System Qt 5.15.18 is the production application baseline. Qt 5.15.13 is retained only for the explicit comparison configuration, and Qt 5.13.2 under `/home/viet/Qt/5.13.2/gcc_64` remains a historical comparison kit. Select every non-default kit with an explicit `CMAKE_PREFIX_PATH`, use an isolated build directory for it, and never modify global `PATH`.

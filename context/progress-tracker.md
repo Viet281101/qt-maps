@@ -44,6 +44,9 @@ benchmark artifacts remain ignored.
 - Current ignored compatible packages are `hanoi-20261114-v3-r3` and
   `hanoi-raster-20261115-v3-r4`; each has the v2 glyph revision and matching
   v3 manifests.
+- Environment documentation was synchronized on 2026-11-15: system Qt 5.15.18
+  is the production baseline, while Qt 5.15.13 remains comparison-only. The
+  checked `make QT_EXPECTED_VERSION=5.15.18 requirements` preflight passes.
 
 ## Next delivery plan
 
