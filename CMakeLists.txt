@@ -148,11 +148,13 @@ target_include_directories(qtmaps_search PUBLIC "${CMAKE_SOURCE_DIR}/src")
 target_link_libraries(qtmaps_search PUBLIC Qt5::Core Qt5::Sql)
 
 add_library(qtmaps_app_core STATIC
+    src/core/AppPreferences.cpp
+    src/core/AppPreferences.h
     src/core/ApplicationShutdownCoordinator.cpp
     src/core/ApplicationShutdownCoordinator.h
 )
 target_include_directories(qtmaps_app_core PUBLIC "${CMAKE_SOURCE_DIR}/src")
-target_link_libraries(qtmaps_app_core PUBLIC qtmaps_routing Qt5::Core)
+target_link_libraries(qtmaps_app_core PUBLIC qtmaps_routing Qt5::Core Qt5::Qml)
 
 add_library(qtmaps_benchmark STATIC
     src/benchmark/BenchmarkScenarioController.cpp

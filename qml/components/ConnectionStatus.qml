@@ -10,6 +10,7 @@ Item {
     property string connectionLabel: ""
     property string attributionText: "© OpenStreetMap contributors, ODbL 1.0"
     readonly property string statusText: friendlyConnectionLabel(connectionLabel)
+    readonly property bool requiresMapLevelStatus: connectionLabel !== "Valhalla local — loopback"
     readonly property real attributionHeight: attributionPill.height + Theme.spaceSm
 
     function friendlyConnectionLabel(label) {
@@ -25,6 +26,7 @@ Item {
     Rectangle {
         id: connectionStatusPill
         objectName: "connectionStatusPill"
+        visible: statusOverlay.requiresMapLevelStatus
         anchors.right: parent.right
         anchors.top: parent.top
         anchors.rightMargin: Theme.spaceMd

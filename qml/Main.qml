@@ -107,6 +107,11 @@ Window {
         z: 22
     }
 
+    SettingsOverlay {
+        anchors.fill: parent
+        z: 32
+    }
+
     KeyboardActionButton {
         id: panelToggle
         objectName: "panelToggle"

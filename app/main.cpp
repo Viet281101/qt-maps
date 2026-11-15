@@ -23,6 +23,7 @@
 
 #include "benchmark/BenchmarkScenarioController.h"
 #include "core/ApplicationShutdownCoordinator.h"
+#include "core/AppPreferences.h"
 #include "diagnostics/CameraProbeController.h"
 #include "diagnostics/SimulatedNavigationController.h"
 #include "map/BoundedCameraController.h"
@@ -241,6 +242,7 @@ int main(int argc, char *argv[])
         &performanceMonitor, &routingController, &routeNavigationController,
         launchTimer.msecsSinceReference());
     QQmlApplicationEngine engine;
+    qtmaps::core::AppPreferences appPreferences(&engine);
 
     if (useUnit03LocalMap &&
         !mapSourceController.start(parser.value(QStringLiteral("map-package")),
@@ -274,6 +276,8 @@ int main(int argc, char *argv[])
     performanceMonitor.setWarmupSeconds(parser.value(QStringLiteral("benchmark-warmup")).toInt());
     engine.rootContext()->setContextProperty(QStringLiteral("performanceMonitor"),
                                              &performanceMonitor);
+    engine.rootContext()->setContextProperty(QStringLiteral("appPreferences"),
+                                             &appPreferences);
     engine.rootContext()->setContextProperty(QStringLiteral("cameraProbeController"),
                                              &cameraProbeController);
     engine.rootContext()->setContextProperty(QStringLiteral("boundedCameraController"),
