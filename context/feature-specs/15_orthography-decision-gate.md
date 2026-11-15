@@ -2,9 +2,10 @@
 
 ## Status
 
-**Proposed; owner approval required.** This document selects no imagery for
-download or generation. It records one legally suitable offline candidate and
-the limits that must be accepted before implementation begins.
+**Approved on 2026-11-15; provisioning still blocked.** The owner approved the
+candidate and limits below. No imagery has been downloaded or generated: a
+registered Copernicus Data Space account or an approved local source scene is
+still required.
 
 ## Candidate and recommendation
 
@@ -20,10 +21,10 @@ outside Git. Sentinel-2 has 10 m RGB bands, so this layer is **regional
 orthography only**, not street-level satellite imagery. It must never be
 presented as more detailed than its source resolution.
 
-The owner must approve this candidate only if a 10 m product is acceptable. A
-street-detail requirement needs a separately licensed high-resolution provider
-and a new decision gate; do not substitute browser/consumer imagery or cache a
-public tile service.
+The owner accepted the 10 m limitation on 2026-11-15. A future street-detail
+requirement still needs a separately licensed high-resolution provider and a
+new decision gate; do not substitute browser/consumer imagery or cache a public
+tile service.
 
 ## Required attribution and provenance
 
@@ -41,7 +42,7 @@ public tile service.
 
 ## Bounded data contract
 
-| Property | Proposed limit |
+| Property | Approved limit |
 | --- | --- |
 | Coverage | Current Hanoi map package bounds only: `105.78,20.97,105.90,21.10` |
 | Product | Sentinel-2 Level-2A, visible RGB composite from the 10 m bands |
@@ -68,18 +69,18 @@ that the new package will meet the 100 MiB cap.
 - Vector remains the default. Local raster remains the existing recovery path,
   not an orthography substitute.
 
-## Approval gate
+## Provisioning gate
 
-Before any account registration, product query, download, processing, or code
-change, the owner must approve all of the following:
+Before a product query, download, processing, or code change, provide one of
+the following without committing credentials:
 
-1. Sentinel-2 Level-2A RGB at 10 m is visually adequate for the intended demo.
-2. The exact attribution text and acquisition-year provenance above.
-3. Hanoi-only bounds, z12–z15, and the 100 MiB generated-package cap.
-4. Offline-only runtime and the explicit unavailable/failure UX.
+1. An authorized Copernicus Data Space session/account for scene selection and
+   download; or
+2. A local, unmodified Sentinel-2 Level-2A scene path with its product ID and
+   checksum.
 
-After approval, implement as a separate vertical slice: deterministic generator
-and manifest contract first; then lazy local source, selector/UI states,
+Then implement as a separate vertical slice: deterministic generator and
+manifest contract first; then lazy local source, selector/UI states,
 attribution, and focused tests; finally an owner-authorized functional visual
 review. Do not run a new benchmark, soak, GPU/i915 investigation, or download
-data as part of this decision gate.
+data until authorized access is available.
