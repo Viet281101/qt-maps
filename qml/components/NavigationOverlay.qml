@@ -33,7 +33,6 @@ Item {
         instruction: routeNavigationController.maneuverInstruction
         nextInstruction: overlay.nextInstruction()
         streetName: routeNavigationController.maneuverStreetName
-        sourceLabel: routeNavigationController.sourceLabel
         distanceToManeuverMeters: routeNavigationController.distanceToManeuverMeters
         remainingDistanceMeters: routeNavigationController.remainingDistanceMeters
         remainingDurationSeconds: routeNavigationController.remainingDurationSeconds

@@ -7,7 +7,6 @@ Rectangle {
     property string instruction: ""
     property string nextInstruction: ""
     property string streetName: ""
-    property string sourceLabel: ""
     property real distanceToManeuverMeters: 0
     property real remainingDistanceMeters: 0
     property real remainingDurationSeconds: 0
@@ -32,7 +31,6 @@ Rectangle {
                                           Qt.formatTime(new Date(Date.now()
                                                                  + remainingDurationSeconds * 1000),
                                                         "HH:mm"))
-    readonly property string sourceText: qsTr("Nguồn: %1").arg(sourceLabel)
 
     function directionSymbol(text) {
         var normalized = text.toLowerCase()
@@ -151,13 +149,6 @@ Rectangle {
                 font.family: Theme.fontFamily
                 elide: Text.ElideRight
                 text: root.etaText
-            }
-            Text {
-                width: Math.max(0, parent.width * 0.28 - Theme.spaceLg * 2)
-                color: Theme.warning
-                font.family: Theme.fontFamily
-                elide: Text.ElideRight
-                text: root.sourceText
             }
         }
 

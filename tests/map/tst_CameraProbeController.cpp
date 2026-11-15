@@ -99,6 +99,23 @@ private slots:
         QCOMPARE(followed.tilt, 45.0);
     }
 
+    void navigationCameraLeavesRoadAheadOfThePuck()
+    {
+        BoundedCameraController controller;
+        const QVariantMap northbound =
+            controller.navigationCamera(21.0300, 105.8300, 0.0, 16.0, 1000.0, 800.0);
+        const QVariantMap eastbound =
+            controller.navigationCamera(21.0300, 105.8300, 90.0, 16.0, 1000.0, 800.0);
+
+        QVERIFY(northbound.value(QStringLiteral("valid")).toBool());
+        QVERIFY(eastbound.value(QStringLiteral("valid")).toBool());
+        QVERIFY(northbound.value(QStringLiteral("latitude")).toReal() > 21.0300);
+        QVERIFY(eastbound.value(QStringLiteral("longitude")).toReal() > 105.8300);
+        QCOMPARE(northbound.value(QStringLiteral("tilt")).toReal(), 45.0);
+        QCOMPARE(eastbound.value(QStringLiteral("zoom")).toReal(),
+                 BoundedCameraController::kNavigationZoom);
+    }
+
     void fitsRouteWithPanelSafePadding()
     {
         const CameraViewport viewport = {1366.0, 768.0, 362.0, 48.0, 32.0, 32.0};

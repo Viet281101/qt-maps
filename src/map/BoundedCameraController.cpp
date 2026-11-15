@@ -11,6 +11,7 @@ namespace map {
 constexpr qreal BoundedCameraController::kMinimumZoom;
 constexpr qreal BoundedCameraController::kMaximumZoom;
 constexpr qreal BoundedCameraController::kNavigationZoom;
+constexpr qreal BoundedCameraController::kNavigationPuckVerticalFraction;
 
 namespace {
 
@@ -166,8 +167,19 @@ QVariantMap BoundedCameraController::navigationCamera(qreal latitude, qreal long
 {
     CameraState current = overview();
     current.zoom = currentZoom;
-    const CameraState state = normalizeForViewport(
-        navigationFollow(QGeoCoordinate(latitude, longitude), bearing, current), {width, height});
+    CameraState state = navigationFollow(QGeoCoordinate(latitude, longitude), bearing, current);
+    if (hasValidViewport({width, height})) {
+        // Position the puck below the centre so the direction of travel has
+        // enough visible map ahead of it, including below the guidance banner.
+        const qreal worldPixels = 256.0 * std::pow(2.0, state.zoom);
+        const qreal forwardPixels =
+            (kNavigationPuckVerticalFraction - 0.5) * height;
+        const qreal radians = state.bearing * kPi / 180.0;
+        const qreal centerX = longitude / 360.0 + std::sin(radians) * forwardPixels / worldPixels;
+        const qreal centerY = mercatorY(latitude) - std::cos(radians) * forwardPixels / worldPixels;
+        state.center = QGeoCoordinate(latitudeFromMercator(centerY), centerX * 360.0);
+    }
+    state = normalizeForViewport(state, {width, height});
     return cameraMap(state);
 }
 

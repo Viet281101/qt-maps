@@ -75,6 +75,12 @@ honestly. SQLite FTS5 remains proposed and is not implied by this increment.
   keeps its route labels. QML contract coverage verifies the guidance condition
   and puck dimensions.
 
+- The same pass moves the navigation camera target to 68% of the viewport height
+  so more road remains visible ahead of the puck, removes the truncation-prone
+  source text from the banner while retaining the separate connection status,
+  demotes route recalculation after a route is ready, and exposes a maneuver-list
+  scroll thumb. Camera and QML contract tests cover those presentation rules.
+
 ## Unit 08 Verification
 
 - On 2026-11-12, the GUI-less `qtmaps_diagnostics_tests` passed after adding

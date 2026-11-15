@@ -516,7 +516,6 @@ private slots:
 
         banner->setProperty("instruction", QStringLiteral("Rẽ trái"));
         banner->setProperty("streetName", QStringLiteral("Phố Huế"));
-        banner->setProperty("sourceLabel", QStringLiteral("fixture/mô phỏng"));
         banner->setProperty("distanceToManeuverMeters", 850.0);
         banner->setProperty("remainingDistanceMeters", 1540.0);
         banner->setProperty("remainingDurationSeconds", 121.0);
@@ -528,8 +527,7 @@ private slots:
         QCOMPARE(banner->property("primaryText").toString(), QStringLiteral("Rẽ trái"));
         QCOMPARE(banner->property("maneuverDistanceText").toString(), QStringLiteral("850 m"));
         QCOMPARE(banner->property("remainingText").toString(), QStringLiteral("1,5 km · 3 phút"));
-        QCOMPARE(banner->property("sourceText").toString(),
-                 QStringLiteral("Nguồn: fixture/mô phỏng"));
+        QVERIFY(!banner->property("sourceLabel").isValid());
 
         banner->setProperty("rerouting", true);
         QCOMPARE(banner->property("primaryText").toString(), QStringLiteral("Đang tìm đường mới…"));
@@ -585,6 +583,8 @@ private slots:
         QVERIFY(qml.contains("routingController.currentManeuverIndex"));
         QVERIFY(qml.contains("routeNavigationController.currentManeuverIndex"));
         QVERIFY(qml.contains("NavigationBanner"));
+        QVERIFY(!bannerQml.contains("sourceText"));
+        QVERIFY(qml.contains("objectName: \"connectionStatusPill\""));
         QVERIFY(qml.contains("text: qsTr(\"Theo vị trí hiện tại\")"));
         QVERIFY(qml.contains("root.recenterNavigation()"));
         QVERIFY(qml.contains("routeNavigationController.simulateDeviation()"));
@@ -610,6 +610,8 @@ private slots:
             qml.contains("routingController.loading && routeNavigationController.routeAvailable"));
         QVERIFY(qml.contains("routeSummaryColor"));
         QVERIFY(qml.contains("&& !routingController.loading"));
+        QVERIFY(panelQml.contains("routingController.routeAvailable ? Theme.surfaceInput"));
+        QVERIFY(panelQml.contains("objectName: \"maneuverScrollThumb\""));
         QVERIFY(qml.contains("navigationActive: navigationOverlay.guidanceVisible"));
         QVERIFY(qml.contains("shutdownCoordinator.requestQuit()"));
         QVERIFY(mainQml.contains("normalTopMargin: demoTools.statusSafeTop"));

@@ -241,6 +241,9 @@ Rectangle {
                 width: parent.width
                 enabled: !routingController.loading
                 text: routingController.loading ? qsTr("Đang tìm đường…") : qsTr("Tìm đường")
+                normalColor: routingController.routeAvailable ? Theme.surfaceInput : Theme.accent
+                pressedColor: routingController.routeAvailable ? Theme.surfacePressed : "#2266aa"
+                textColor: routingController.routeAvailable ? Theme.textPrimary : "#08243a"
                 KeyNavigation.tab: startNavigationButton
                 KeyNavigation.backtab: clearButton
                 onTriggered: routePanel.calculateRequestedRoute()
@@ -447,5 +450,22 @@ Rectangle {
                 maneuverList.forceActiveFocus()
             }
         }
+    }
+
+    Rectangle {
+        id: maneuverScrollThumb
+        objectName: "maneuverScrollThumb"
+        readonly property real scrollableHeight: Math.max(1, maneuverList.contentHeight - maneuverList.height)
+        visible: maneuverList.visible && maneuverList.contentHeight > maneuverList.height
+        x: maneuverList.x + maneuverList.width - width - Theme.spaceXs
+        y: maneuverList.y + (maneuverList.height - height)
+           * Math.max(0, Math.min(1, maneuverList.contentY / scrollableHeight))
+        width: 4
+        height: Math.max(24, maneuverList.height * maneuverList.height
+                         / Math.max(1, maneuverList.contentHeight))
+        radius: width / 2
+        color: Theme.accent
+        opacity: 0.9
+        z: 2
     }
 }

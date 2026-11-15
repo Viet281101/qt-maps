@@ -74,7 +74,9 @@ the connection source.
 - During guidance, suppress route-derived street pills: the navigation banner owns
   the active instruction and keeping those pills off the puck preserves the road
   ahead. The simulated-position puck uses a high-contrast blue circle with a
-  white outline and stays above route labels and endpoints.
+  white outline and stays above route labels and endpoints. Camera follow places
+  the puck at 68% of the viewport height to preserve forward road context beneath
+  the top banner.
 - Camera following and map rotation must have an obvious exit/recenter action.
 - Re-routing must preserve the last valid route until a replacement succeeds or clearly report that no route is available.
 - During re-routing, keep the navigation camera, travelled segment, current-position puck, and last valid route. The destination marker remains part of the route even when camera-follow framing places it outside the viewport.
