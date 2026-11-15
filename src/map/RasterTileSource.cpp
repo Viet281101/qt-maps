@@ -258,7 +258,8 @@ private:
                     return;
                 }
             }
-            if (orthography_ && zoom >= 0 && zoom < 31 && x < (1 << zoom) && xyzY < (1 << zoom)) {
+            const qint64 worldTileCount = zoom >= 0 && zoom < 31 ? qint64(1) << zoom : 0;
+            if (orthography_ && worldTileCount > 0 && x < worldTileCount && xyzY < worldTileCount) {
                 writeResponse(socket, 200, QByteArrayLiteral("image/png"), missingTile_);
                 return;
             }

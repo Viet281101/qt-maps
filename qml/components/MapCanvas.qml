@@ -184,9 +184,9 @@ Item {
             }
         }
         center: QtPositioning.coordinate(21.0278, 105.8342)
-        // Local source tiles stop at z15/z16, but MapLibre deliberately overzooms them to
-        // the camera contract's z18 display ceiling. Keep the provider inside that contract
-        // even while a gesture is still in progress.
+        // Local sources have bounded source detail. Orthography also has a strict z15
+        // product ceiling, while the legacy raster layer may overzoom to the camera
+        // contract's z18 display ceiling.
         minimumZoomLevel: 12
         maximumZoomLevel: canvas.orthographyMode ? 15 : 18
         zoomLevel: 14

@@ -320,7 +320,7 @@ Item {
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSizeCaption
                 wrapMode: Text.WordWrap
-                text: qsTr("Nguồn Sentinel-2 10 m; ngoài phạm vi Hà Nội là nền trống, z16+ không có chi tiết nguồn mới.")
+                text: qsTr("Nguồn Sentinel-2 10 m; giới hạn ở z15, ngoài phạm vi Hà Nội là nền trống.")
             }
             Text {
                 color: Theme.warning
