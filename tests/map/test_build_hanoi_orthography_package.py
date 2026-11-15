@@ -109,6 +109,22 @@ class OrthographyPackageToolTest(unittest.TestCase):
         self.assertNotEqual(completed.returncode, 0)
         self.assertIn("coverage mismatch", completed.stderr)
 
+    def test_non_png_tile_is_rejected(self):
+        extra = self.tiles / "12" / "3251" / "1803.jpg"
+        extra.write_bytes(b"not-a-tile")
+        completed = subprocess.run(
+            self.command(self.root / "extra"), cwd=ROOT, capture_output=True, text=True
+        )
+        self.assertNotEqual(completed.returncode, 0)
+        self.assertIn("coverage mismatch", completed.stderr)
+
+    def test_package_name_components_are_restricted(self):
+        command = self.command(self.root / "bad-name")
+        command.extend(["--revision", "../escape"])
+        completed = subprocess.run(command, cwd=ROOT, capture_output=True, text=True)
+        self.assertNotEqual(completed.returncode, 0)
+        self.assertIn("Expected a revision such as v1", completed.stderr)
+
     def test_provenance_pairing_is_required(self):
         command = self.command(self.root / "bad-provenance")
         command.extend(["--source-product-id", "S2A_TEST_B"])

@@ -13,6 +13,7 @@ import json
 import math
 import os
 from pathlib import Path
+import re
 import shutil
 import sqlite3
 import struct
@@ -86,14 +87,28 @@ def percentage(value):
     return parsed
 
 
+def compact_date(value):
+    try:
+        return datetime.datetime.strptime(value, "%Y%m%d").strftime("%Y%m%d")
+    except ValueError as error:
+        raise argparse.ArgumentTypeError(f"Expected YYYYMMDD, got {value!r}") from error
+
+
+def revision(value):
+    if not re.fullmatch(r"v[1-9][0-9]*", value):
+        raise argparse.ArgumentTypeError("Expected a revision such as v1")
+    return value
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--tiles", type=Path, required=True,
                         help="Directory containing z/x/y.png")
     parser.add_argument("--output-root", type=Path,
                         default=Path("data/orthography-packages"))
-    parser.add_argument("--date", default=datetime.date.today().strftime("%Y%m%d"))
-    parser.add_argument("--revision", default="v1")
+    parser.add_argument("--date", type=compact_date,
+                        default=datetime.date.today().strftime("%Y%m%d"))
+    parser.add_argument("--revision", type=revision, default="v1")
     parser.add_argument("--source-product-id", action="append", required=True)
     parser.add_argument("--source-sha256", action="append", type=sha256_value, required=True)
     parser.add_argument("--acquisition-date", type=iso_date, required=True)
@@ -120,7 +135,11 @@ def main():
         raise SystemExit("Prepared RGB tiles are missing")
     expected = list(expected_tiles())
     expected_paths = {Path(str(z)) / str(x) / f"{y}.png" for z, x, y in expected}
-    actual_paths = {path.relative_to(tiles_root) for path in tiles_root.rglob("*.png")}
+    actual_paths = {
+        path.relative_to(tiles_root)
+        for path in tiles_root.rglob("*")
+        if path.is_file()
+    }
     missing = sorted(expected_paths - actual_paths)
     extra = sorted(actual_paths - expected_paths)
     if missing or extra:
