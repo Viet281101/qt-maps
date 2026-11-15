@@ -20,9 +20,11 @@ into the route origin or destination without blocking the Qt Quick UI.
 
 ## Deferred
 
-- SQLite FTS5 schema, generator, address/POI coverage beyond the three fixture
+- SQLite FTS5 generator, address/POI coverage beyond the three fixture
   locations, ranking from a geographic index, and a persisted geocoding
-  database. These remain proposed under the architecture's Search entry.
+  database. The contract/capability spike is tracked in
+  `context/feature-specs/58_offline-search-fts5-spike.md`; it remains Proposed
+  under the architecture's Search entry.
 - Remote geocoding, network calls, or new services.
 
 ## Acceptance

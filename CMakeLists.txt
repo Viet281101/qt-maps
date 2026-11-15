@@ -308,6 +308,10 @@ if(BUILD_TESTING)
     target_link_libraries(qtmaps_search_tests PRIVATE qtmaps_search Qt5::Test)
     add_test(NAME qtmaps_search_tests COMMAND qtmaps_search_tests)
 
+    add_executable(qtmaps_search_fts5_spike_tests tests/search/tst_SearchFts5Spike.cpp)
+    target_link_libraries(qtmaps_search_fts5_spike_tests PRIVATE Qt5::Sql Qt5::Test)
+    add_test(NAME qtmaps_search_fts5_spike_tests COMMAND qtmaps_search_fts5_spike_tests)
+
     add_executable(qtmaps_route_navigation_tests
         tests/routing/tst_RouteNavigation.cpp
     )

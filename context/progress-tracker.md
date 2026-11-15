@@ -12,8 +12,9 @@ benchmark artifacts remain ignored.
 - [PR #53](https://github.com/Viet281101/qt-maps/pull/53) merged as `15d198a`
   on 2026-11-15 and closed #16. Project #6 records both items as `Done`.
 - The management-demo vertical slice is accepted: #9 and #1 are closed and
-  `Done` on Project #6. #15 (licensed orthography, `In Progress`, P1) is the
-  active delivery item.
+  `Done` on Project #6. #15 (licensed orthography, `In Progress`, P1) awaits
+  authorized source imagery; #58 (offline SQLite FTS5 search spike, `In
+  Progress`, P1) is the active unblocked delivery item.
 
 ## Completed product baseline
 
@@ -36,6 +37,8 @@ benchmark artifacts remain ignored.
 
 ## Current verified evidence
 
+- The #58 QSQLITE FTS5 spike creates and queries an external-content Vietnamese
+  fixture schema locally; `make QT_EXPECTED_VERSION=5.15.18 test` passed 19/19.
 - `make QT_EXPECTED_VERSION=5.15.18 review` passed for PR #53: formatting,
   isolated Release build, and 17/17 tests.
 - Direct-GPU visual captures completed on the Intel HD 520 for the supported
@@ -64,12 +67,14 @@ benchmark artifacts remain ignored.
    `context/feature-specs/15_orthography-decision-gate.md`. The first offline
    package/manifest contract now has a compact synthetic fixture and focused
    tests; it records complete coverage and provenance but does not process real
-   imagery. Wait for an authorized Copernicus session/account or approved local
-   L2A scene before querying, downloading, or processing real imagery.
-3. **Deferred search expansion.** Specify and spike the SQLite FTS5 schema,
-   generator provenance, query normalization/ranking, and package lifecycle
-   after the demo-handoff work. It must remain offline-only and not imply
-   remote geocoding.
+   imagery. PR #57 merged as `631d713`. Wait for an authorized Copernicus
+   session/account or approved local L2A scene before querying, downloading, or
+   processing real imagery.
+3. **#58 — FTS5 search spike (P1).** Validate the Qt SQLite FTS5 capability
+   with a compact Vietnamese fixture and record the offline package contract;
+   do not replace the current fixture search, download a source dataset, or add
+   remote geocoding. The proposed schema and acceptance are in
+   `context/feature-specs/58_offline-search-fts5-spike.md`.
 
 ## Risks and decisions requiring the owner
 
@@ -79,7 +84,8 @@ benchmark artifacts remain ignored.
 2. Orthography provisioning needs an authorized Copernicus Data Space
    session/account or a local Sentinel-2 L2A scene; credentials and raw source
    data remain outside Git.
-3. SQLite FTS5 is still proposed architecture, not an implemented capability.
+3. SQLite FTS5 remains proposed until #58 records target-runtime capability
+   evidence and a later owner decision selects a licensed local source.
 
 ## Working rules
 
