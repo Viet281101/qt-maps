@@ -12,6 +12,7 @@ struct RasterPackageManifest
     QString styleContractVersion;
     QString styleRevision;
     QString sourcePbfSha256;
+    QString attribution;
     QString mbtilesRelativePath;
     qint64 mbtilesSizeBytes = 0;
     int layerSchemaVersion = 0;
@@ -22,6 +23,8 @@ struct RasterPackageManifest
     static bool loadAndValidate(const QString &packagePath, RasterPackageManifest *manifest,
                                 QString *errorMessage,
                                 const QString &expectedVectorPackagePath = QString());
+    static bool loadAndValidateOrthography(const QString &packagePath,
+                                           RasterPackageManifest *manifest, QString *errorMessage);
 };
 
 } // namespace map

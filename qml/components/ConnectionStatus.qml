@@ -8,6 +8,7 @@ Item {
     property real navigationBannerHeight: 0
     property real normalTopMargin: Theme.spaceMd
     property string connectionLabel: ""
+    property string attributionText: "© OpenStreetMap contributors, ODbL 1.0"
     readonly property string statusText: friendlyConnectionLabel(connectionLabel)
     readonly property real attributionHeight: attributionPill.height + Theme.spaceSm
 
@@ -77,7 +78,7 @@ Item {
             color: Theme.textPrimary
             font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSizeCaption
-            text: "© OpenStreetMap contributors, ODbL 1.0"
+            text: statusOverlay.attributionText
         }
     }
 }

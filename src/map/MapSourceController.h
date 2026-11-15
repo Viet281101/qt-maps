@@ -22,7 +22,9 @@ class MapSourceController final : public QObject
     Q_PROPERTY(QString mapStatusText READ mapStatusText NOTIFY stateChanged)
     Q_PROPERTY(bool loading READ loading NOTIFY stateChanged)
     Q_PROPERTY(bool rasterConfigured READ rasterConfigured NOTIFY stateChanged)
+    Q_PROPERTY(bool orthographyConfigured READ orthographyConfigured NOTIFY stateChanged)
     Q_PROPERTY(bool rasterResourcesAllocated READ rasterResourcesAllocated NOTIFY stateChanged)
+    Q_PROPERTY(QString mapAttribution READ mapAttribution NOTIFY stateChanged)
     Q_PROPERTY(bool automaticFallback READ automaticFallback NOTIFY stateChanged)
 
 public:
@@ -31,6 +33,7 @@ public:
     ~MapSourceController() override;
 
     void setRasterPackagePath(const QString &packagePath);
+    void setOrthographyPackagePath(const QString &packagePath);
     bool start(const QString &packagePath, const QString &diagnosticRasterPath,
                bool forceVectorFailure = false);
     void stop();
@@ -43,10 +46,13 @@ public:
     QString mapStatusText() const;
     bool loading() const;
     bool rasterConfigured() const;
+    bool orthographyConfigured() const;
     bool rasterResourcesAllocated() const;
     bool automaticFallback() const;
+    QString mapAttribution() const;
 
     Q_INVOKABLE void activateRaster();
+    Q_INVOKABLE void activateOrthography();
     Q_INVOKABLE void activateVector();
 
 signals:
@@ -54,15 +60,18 @@ signals:
 
 private:
     void activateRaster(bool automatic);
+    void activateOrthography(bool automatic);
 
     TileSource *vectorSource_ = nullptr;
     TileSource *rasterSource_ = nullptr;
     std::unique_ptr<RasterTileSource> productionRasterSource_;
+    std::unique_ptr<RasterTileSource> productionOrthographySource_;
     bool usingRasterFallback_ = false;
     bool loading_ = false;
     bool automaticFallback_ = false;
     QString fallbackReason_;
     QString rasterPackagePath_;
+    QString orthographyPackagePath_;
     QString vectorPackagePath_;
     QString activeStyleUrl_;
     QString layerMode_ = QStringLiteral("unavailable");

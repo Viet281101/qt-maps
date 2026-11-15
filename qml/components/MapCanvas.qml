@@ -13,6 +13,8 @@ Item {
     property string styleUrl: ""
     property var travelledRoutePath: []
     readonly property bool rasterMode: mapSourceController.layerMode === "raster"
+                                    || mapSourceController.layerMode === "orthography"
+    readonly property bool orthographyMode: mapSourceController.layerMode === "orthography"
     readonly property var map: mapLoader.item
     readonly property bool guidanceActive: routeNavigationController.active
                                            || (routingController.loading
@@ -23,15 +25,22 @@ Item {
         if (!map || !state.valid)
             return
         map.center = QtPositioning.coordinate(state.latitude, state.longitude)
-        map.zoomLevel = state.zoom
+        map.zoomLevel = canvas.orthographyMode ? Math.min(state.zoom, 15) : state.zoom
         map.bearing = state.bearing
-        map.tilt = state.tilt
+        map.tilt = mapSourceController.layerMode === "orthography" ? 0 : state.tilt
     }
 
     function applyOverviewCamera() {
         if (!map)
             return
         applyCamera(boundedCameraController.overviewCamera(map.width, map.height))
+    }
+
+    onOrthographyModeChanged: {
+        if (!orthographyMode || !map)
+            return
+        map.zoomLevel = Math.min(map.zoomLevel, 15)
+        map.tilt = 0
     }
 
     function settleUserCamera() {
@@ -148,6 +157,7 @@ Item {
         }
         objectName: "routingMap"
         anchors.fill: parent
+        color: canvas.rasterMode ? Theme.surfaceInput : "transparent"
         plugin: Plugin {
             name: canvas.rasterMode ? "osm" : "maplibre"
             allowExperimental: true
@@ -166,11 +176,11 @@ Item {
             PluginParameter { name: "osm.useragent"; value: "QtMaps-local-raster/0.2" }
             PluginParameter {
                 name: "osm.mapping.custom.mapcopyright"
-                value: "© OpenStreetMap contributors, ODbL"
+                value: mapSourceController.mapAttribution
             }
             PluginParameter {
                 name: "osm.mapping.custom.datacopyright"
-                value: "© OpenStreetMap contributors, ODbL"
+                value: mapSourceController.mapAttribution
             }
         }
         center: QtPositioning.coordinate(21.0278, 105.8342)
@@ -178,7 +188,7 @@ Item {
         // the camera contract's z18 display ceiling. Keep the provider inside that contract
         // even while a gesture is still in progress.
         minimumZoomLevel: 12
-        maximumZoomLevel: 18
+        maximumZoomLevel: canvas.orthographyMode ? 15 : 18
         zoomLevel: 14
         // ConnectionStatus owns the single persistent OSM attribution for both providers.
         copyrightsVisible: false
@@ -379,7 +389,9 @@ Item {
             font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSizeCaption
             font.bold: true
-            text: qsTr("Nguồn chi tiết đến z15 · z16+ có độ phân giải thấp hơn")
+            text: canvas.orthographyMode
+                  ? qsTr("Ảnh Sentinel-2 10 m · phạm vi Hà Nội")
+                  : qsTr("Nguồn chi tiết đến z15 · z16+ có độ phân giải thấp hơn")
         }
     }
 

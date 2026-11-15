@@ -180,11 +180,43 @@ private:
                         capture(QStringLiteral("raster-navigation-recenter-1366x768"), [this]() {
                             resize(QSize(1920, 1080));
                             capture(QStringLiteral("raster-route-1920x1080"), [this]() {
-                                qInfo() << "visual_review_result=captured";
-                                QCoreApplication::exit(0);
+                                mapReadyAttempts_ = 0;
+                                mapSource_->activateOrthography();
+                                waitForOrthography();
                             });
                         });
                     });
+                });
+            });
+        });
+    }
+
+    void waitForOrthography()
+    {
+        if (mapSource_->layerMode() == QLatin1String("orthography")) {
+            mapReadyAttempts_ = 0;
+            waitForMap([this](QObject *map) { captureOrthography(map); });
+            return;
+        }
+        if (mapSource_->layerMode() == QLatin1String("error") || ++mapReadyAttempts_ > 100) {
+            fail(QStringLiteral("Timed out switching to the validated orthography package"));
+            return;
+        }
+        QTimer::singleShot(50, this, [this]() { waitForOrthography(); });
+    }
+
+    void captureOrthography(QObject *map)
+    {
+        resize(QSize(900, 580));
+        QMetaObject::invokeMethod(root_, "fitRouteWithPanelPadding");
+        capture(QStringLiteral("orthography-route-900x580"), [this, map]() {
+            resize(QSize(1366, 768));
+            setCamera(map, QGeoCoordinate(21.0245, 105.8382), 15.0, 0.0);
+            capture(QStringLiteral("orthography-route-1366x768"), [this, map]() {
+                resize(QSize(1920, 1080));
+                capture(QStringLiteral("orthography-route-1920x1080"), []() {
+                    qInfo() << "visual_review_result=captured";
+                    QCoreApplication::exit(0);
                 });
             });
         });
@@ -222,6 +254,9 @@ int main(int argc, char *argv[])
                       QStringLiteral("path"), QStringLiteral("data/raster-packages/current")});
     parser.addOption({QStringLiteral("search-package"), QStringLiteral("Validated search package"),
                       QStringLiteral("path"), QStringLiteral("data/search-packages/current")});
+    parser.addOption({QStringLiteral("orthography-package"),
+                      QStringLiteral("Validated orthography package"), QStringLiteral("path"),
+                      QStringLiteral("data/orthography-packages/current")});
     parser.addOption({QStringLiteral("output"), QStringLiteral("Empty PNG output directory"),
                       QStringLiteral("path")});
     parser.addOption({QStringLiteral("settle-ms"),
@@ -242,6 +277,7 @@ int main(int argc, char *argv[])
     qtmaps::map::DirectoryTileSource diagnosticRasterSource;
     qtmaps::map::MapSourceController mapSource(&vectorTileSource, &diagnosticRasterSource);
     mapSource.setRasterPackagePath(parser.value(QStringLiteral("raster-package")));
+    mapSource.setOrthographyPackagePath(parser.value(QStringLiteral("orthography-package")));
     if (!mapSource.start(parser.value(QStringLiteral("map-package")), QString())) {
         qCritical().noquote() << mapSource.fallbackReason();
         return 3;

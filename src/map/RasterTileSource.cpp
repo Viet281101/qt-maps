@@ -4,8 +4,10 @@
 #include "MapPackageContract.h"
 #include "RasterPackageManifest.h"
 
+#include <QBuffer>
 #include <QDir>
 #include <QHostAddress>
+#include <QImage>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -31,19 +33,35 @@ class RasterTileSourceWorker final : public QObject
 
 public slots:
     void start(const QString &packagePath, const QString &expectedVectorPackagePath,
-               quint16 requestedPort)
+               bool orthography, quint16 requestedPort)
     {
         stopResources();
         QVariantMap result;
         RasterPackageManifest manifest;
         QString validationError;
-        if (!RasterPackageManifest::loadAndValidate(packagePath, &manifest, &validationError,
-                                                    expectedVectorPackagePath)) {
+        const bool valid =
+            orthography ? RasterPackageManifest::loadAndValidateOrthography(packagePath, &manifest,
+                                                                            &validationError)
+                        : RasterPackageManifest::loadAndValidate(
+                              packagePath, &manifest, &validationError, expectedVectorPackagePath);
+        if (!valid) {
             result.insert(QStringLiteral("error"), validationError);
             emit startFinished(result);
             return;
         }
         root_ = QDir(packagePath);
+        orthography_ = orthography;
+        minimumZoom_ = manifest.minimumZoom;
+        maximumZoom_ = manifest.maximumZoom;
+        tileCount_ = manifest.tileCount;
+        attribution_ = manifest.attribution;
+        if (orthography_) {
+            QImage missingTile(256, 256, QImage::Format_ARGB32_Premultiplied);
+            missingTile.fill(QColor(QStringLiteral("#2a3948")));
+            QBuffer buffer(&missingTile_);
+            buffer.open(QIODevice::WriteOnly);
+            missingTile.save(&buffer, "PNG");
+        }
         connectionName_ = QStringLiteral("qtmaps-raster-%1").arg(reinterpret_cast<quintptr>(this));
         database_ = QSqlDatabase::addDatabase(QStringLiteral("QSQLITE"), connectionName_);
         database_.setDatabaseName(root_.filePath(manifest.mbtilesRelativePath));
@@ -58,10 +76,10 @@ public slots:
         }
         QSqlQuery probe(database_);
         if (!probe.exec(QStringLiteral("SELECT COUNT(*) FROM tiles")) || !probe.next() ||
-            probe.value(0).toInt() != contract::kRasterTileCount) {
+            probe.value(0).toInt() != tileCount_) {
             result.insert(
                 QStringLiteral("error"),
-                QStringLiteral("Raster MBTiles does not contain the contracted 847 tiles"));
+                QStringLiteral("Local MBTiles tile count does not match its validated manifest"));
             stopResources();
             emit startFinished(result);
             return;
@@ -82,6 +100,7 @@ public slots:
         baseUrl_ = QStringLiteral("http://127.0.0.1:%1").arg(server_->serverPort());
         result.insert(QStringLiteral("running"), true);
         result.insert(QStringLiteral("base_url"), baseUrl_);
+        result.insert(QStringLiteral("attribution"), attribution_);
         emit startFinished(result);
     }
 
@@ -133,6 +152,12 @@ private:
         cache_.reset();
         root_ = QDir();
         baseUrl_.clear();
+        attribution_.clear();
+        minimumZoom_ = 0;
+        maximumZoom_ = 0;
+        tileCount_ = 0;
+        orthography_ = false;
+        missingTile_.clear();
     }
 
     void writeResponse(QTcpSocket *socket, int status, const QByteArray &contentType,
@@ -157,9 +182,9 @@ private:
         source.insert(QStringLiteral("tiles"),
                       QJsonArray{baseUrl_ + QStringLiteral("/tiles/{z}/{x}/{y}.png")});
         source.insert(QStringLiteral("tileSize"), 256);
-        source.insert(QStringLiteral("minzoom"), contract::kRasterMinimumZoom);
-        source.insert(QStringLiteral("maxzoom"), contract::kRasterMaximumZoom);
-        source.insert(QStringLiteral("attribution"), contract::attribution());
+        source.insert(QStringLiteral("minzoom"), minimumZoom_);
+        source.insert(QStringLiteral("maxzoom"), maximumZoom_);
+        source.insert(QStringLiteral("attribution"), attribution_);
         QJsonObject sources;
         sources.insert(QStringLiteral("qtmaps-raster"), source);
         QJsonObject layer;
@@ -168,7 +193,9 @@ private:
         layer.insert(QStringLiteral("source"), QStringLiteral("qtmaps-raster"));
         QJsonObject style;
         style.insert(QStringLiteral("version"), 8);
-        style.insert(QStringLiteral("name"), QStringLiteral("QtMaps raster ngoại tuyến"));
+        style.insert(QStringLiteral("name"), orthography_
+                                                 ? QStringLiteral("QtMaps ảnh trực giao")
+                                                 : QStringLiteral("QtMaps raster ngoại tuyến"));
         style.insert(QStringLiteral("sources"), sources);
         style.insert(QStringLiteral("layers"), QJsonArray{layer});
         return QJsonDocument(style).toJson(QJsonDocument::Compact);
@@ -214,7 +241,7 @@ private:
                 writeResponse(socket, 200, QByteArrayLiteral("image/png"), tile);
                 return;
             }
-            if (zoom >= contract::kRasterMinimumZoom && zoom <= contract::kRasterMaximumZoom) {
+            if (zoom >= minimumZoom_ && zoom <= maximumZoom_) {
                 const qint64 tmsY = (qint64(1) << zoom) - 1 - xyzY;
                 QSqlQuery query(database_);
                 query.prepare(QStringLiteral("SELECT tile_data FROM tiles WHERE zoom_level=? AND "
@@ -231,6 +258,10 @@ private:
                     return;
                 }
             }
+            if (orthography_ && zoom >= 0 && zoom < 31 && x < (1 << zoom) && xyzY < (1 << zoom)) {
+                writeResponse(socket, 200, QByteArrayLiteral("image/png"), missingTile_);
+                return;
+            }
         }
         writeResponse(socket, 404, QByteArrayLiteral("text/plain"),
                       QByteArrayLiteral("not found\n"));
@@ -241,6 +272,12 @@ private:
     QString connectionName_;
     QDir root_;
     QString baseUrl_;
+    QString attribution_;
+    int minimumZoom_ = 0;
+    int maximumZoom_ = 0;
+    int tileCount_ = 0;
+    bool orthography_ = false;
+    QByteArray missingTile_;
     std::unique_ptr<EncodedTileCache> cache_;
 };
 
@@ -258,7 +295,8 @@ RasterTileSource::~RasterTileSource()
 }
 
 void RasterTileSource::startAsync(const QString &packagePath,
-                                  const QString &expectedVectorPackagePath, quint16 requestedPort)
+                                  const QString &expectedVectorPackagePath, bool orthography,
+                                  quint16 requestedPort)
 {
     if (loading_ || running_) {
         return;
@@ -274,6 +312,7 @@ void RasterTileSource::startAsync(const QString &packagePath,
                     loading_ = false;
                     running_ = result.value(QStringLiteral("running")).toBool();
                     baseUrl_ = result.value(QStringLiteral("base_url")).toString();
+                    attribution_ = result.value(QStringLiteral("attribution")).toString();
                     errorMessage_ = result.value(QStringLiteral("error")).toString();
                     if (running_) {
                         emit started();
@@ -285,6 +324,7 @@ void RasterTileSource::startAsync(const QString &packagePath,
             running_ = false;
             loading_ = false;
             baseUrl_.clear();
+            attribution_.clear();
             finishThread();
         });
         workerThread_->start();
@@ -292,7 +332,7 @@ void RasterTileSource::startAsync(const QString &packagePath,
     loading_ = true;
     errorMessage_.clear();
     QMetaObject::invokeMethod(worker_, "start", Qt::QueuedConnection, Q_ARG(QString, packagePath),
-                              Q_ARG(QString, expectedVectorPackagePath),
+                              Q_ARG(QString, expectedVectorPackagePath), Q_ARG(bool, orthography),
                               Q_ARG(quint16, requestedPort));
 }
 
@@ -302,6 +342,7 @@ void RasterTileSource::stopAsync()
         running_ = false;
         loading_ = false;
         baseUrl_.clear();
+        attribution_.clear();
         emit stopped();
         return;
     }
@@ -333,6 +374,7 @@ QString RasterTileSource::styleUrl() const
     return running_ ? baseUrl_ + QStringLiteral("/style/style.json") : QString();
 }
 QString RasterTileSource::errorMessage() const { return errorMessage_; }
+QString RasterTileSource::attribution() const { return attribution_; }
 
 } // namespace map
 } // namespace qtmaps
