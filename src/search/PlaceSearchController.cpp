@@ -58,6 +58,15 @@ public:
         packagePath_(std::move(packagePath)), controller_(controller)
     {}
 
+    ~SearchPackageWorker() override
+    {
+        if (!database_.isValid())
+            return;
+        database_.close();
+        database_ = QSqlDatabase();
+        QSqlDatabase::removeDatabase(connectionName_);
+    }
+
     void initialize()
     {
         QString error;
