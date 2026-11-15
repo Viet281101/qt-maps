@@ -61,6 +61,7 @@ aqtinstall.log
 /generated/
 /data/packages/
 /data/raster-packages/
+/data/orthography-packages/
 __pycache__/
 
 # Generated/downloaded map and benchmark artifacts
