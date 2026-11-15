@@ -40,6 +40,9 @@ benchmark artifacts remain ignored.
 - PR #59 merged as `0c7964d` and closed #58: the QSQLITE FTS5 spike creates and
   queries an external-content Vietnamese fixture schema locally; Release tests
   passed 19/19.
+- The #61 fixture-only package builder validates Hanoi bounds and PBF provenance,
+  emits a checksummed FTS5 SQLite package under the 20 MiB cap, and passed the
+  isolated Release review with 20/20 tests.
 - `make QT_EXPECTED_VERSION=5.15.18 review` passed for PR #53: formatting,
   isolated Release build, and 17/17 tests.
 - Direct-GPU visual captures completed on the Intel HD 520 for the supported
