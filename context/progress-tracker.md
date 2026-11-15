@@ -11,9 +11,9 @@ benchmark artifacts remain ignored.
 - The active GitHub milestone is `Post-demo stabilization` with no due date.
 - [PR #53](https://github.com/Viet281101/qt-maps/pull/53) merged as `15d198a`
   on 2026-11-15 and closed #16. Project #6 records both items as `Done`.
-- The remaining open tracking issues are #1 (overall vertical slice, `In
-  Progress`), #9 (deterministic demo rehearsal, `Todo`, P0), and #15
-  (licensed orthography, `Todo`, P1).
+- The management-demo vertical slice is accepted: #9's clean-start rehearsal
+  passed and #1 is ready to close from its recorded evidence. #15 (licensed
+  orthography, `Todo`, P1) is the next open delivery item.
 
 ## Completed product baseline
 
@@ -47,34 +47,18 @@ benchmark artifacts remain ignored.
 
 ## Next delivery plan
 
-1. **#9 — deterministic rehearsal and handoff (P0).** Document a clean-start
-   script, required local packages/services, expected visible states, fallback
-   steps, and management-facing limits. Rehearse the full route/search/
-   navigation flow without changing GPU configuration or treating the run as a
-   benchmark. Publish a successor weekly report only after the rehearsal
-   evidence and revision are known.
-
-   The clean-start preflight and operator runbook are now
-   `tools/rehearse-demo.sh` and `docs/rehearsal/demo-handoff.md`. They validate
-   the provisioned release payload and preserve the existing runtime boundary;
-   the live UI rehearsal and its report remain the acceptance evidence.
-   On 2026-11-15, `--check` passed against `hanoi-20261114-v3-r3` and matching
-   `hanoi-raster-20261115-v3-r4`; `make QT_EXPECTED_VERSION=5.15.18 test`
-   passed 17/17. A non-benchmark launch reached `mapReady=true`, local Valhalla
-   readiness, and a 7.294 km/14-maneuver route, then left no child service.
-   The available automation surface could not perform the visible search/A-B/
-   navigation interactions, so #9 remains open pending that operator checklist
-   and its report.
-2. **Close #1 only from evidence.** After #9 passes, update the parent issue
-   with the clean-start result, labels for simulated/fixture/degraded behavior,
-   known risks, and its relationship to the existing benchmark evidence. Do
-   not close it while a P0 rehearsal acceptance criterion is open.
-3. **#15 — orthography decision gate (P1).** Before code or data work, record
+1. **#9 rehearsal and #1 handoff — accepted.** The clean-start preflight,
+   route/search/navigation operator checklist, and clean exit passed on
+   2026-11-15. The evidence and management-facing limits are in
+   `docs/rehearsal/demo-handoff.md` and
+   `docs/reports/weekly-report-2026-11-15.md`; no benchmark was added. #1 and
+   #9 can be closed after their live issue/project fields are updated.
+2. **#15 — orthography decision gate (P1).** Before code or data work, record
    a candidate source, license, attribution text, bounded Hanoi coverage,
    zoom range, storage estimate, offline behavior, and fallback UX. Obtain an
    owner decision before downloading/generating any imagery. Implement as a
    separate vertical slice only after that gate passes.
-4. **Deferred search expansion.** Specify and spike the SQLite FTS5 schema,
+3. **Deferred search expansion.** Specify and spike the SQLite FTS5 schema,
    generator provenance, query normalization/ranking, and package lifecycle
    after the demo-handoff work. It must remain offline-only and not imply
    remote geocoding.
