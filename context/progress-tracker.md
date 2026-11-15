@@ -8,8 +8,8 @@ benchmark artifacts remain ignored.
 
 - Units 03--08 are merged. Qt 5.15.18 is the production baseline; Qt 5.15.13
   is comparison-only.
-- Unit 09 is the active offline-search integration; PR #62 is its single
-  integration PR.
+- Unit 09 is complete locally in PR #62. Unit 10 is planned as #15 licensed
+  orthography integration and remains blocked on authorized imagery provision.
 - The active GitHub milestone is `Post-demo stabilization` with no due date.
 - [PR #53](https://github.com/Viet281101/qt-maps/pull/53) merged as `15d198a`
   on 2026-11-15 and closed #16. Project #6 records both items as `Done`.
@@ -93,6 +93,9 @@ benchmark artifacts remain ignored.
    imagery. PR #57 merged as `631d713`. Wait for an authorized Copernicus
    session/account or approved local L2A scene before querying, downloading, or
    processing real imagery.
+   Unit 10's ordered runtime/UI plan is in
+   `context/feature-specs/unit-10-orthography-integration-plan.md`; it is
+   planning-only and does not authorize provisioning.
 3. **FTS5 source decision before the next slice.** #58 is complete. Before a
    generator, package validation, or runtime switch, approve a licensed local
    source URL, attribution, coverage, storage budget, retrieval/checksum method,
