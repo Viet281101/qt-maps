@@ -13,8 +13,8 @@ benchmark artifacts remain ignored.
   Qt 5.15.18 test suite, and functional visual review are complete locally.
   [PR #63](https://github.com/Viet281101/qt-maps/pull/63) is ready to merge.
   #15 remains open only for its separately approved performance observation.
-- Unit 11 is planned as #64 offline package readiness preflight. It has no
-  runtime implementation and starts only after Unit 10 merges.
+- Unit 11 is planned as #64 offline readiness and application preferences. It
+  has no runtime implementation and starts only after Unit 10 merges.
 - The active GitHub milestone is `Post-demo stabilization` with no due date.
 - [PR #53](https://github.com/Viet281101/qt-maps/pull/53) merged as `15d198a`
   on 2026-11-15 and closed #16. Project #6 records both items as `Done`.
@@ -101,13 +101,15 @@ benchmark artifacts remain ignored.
   intentionally absent from its diff. It satisfies four #15 acceptance items;
   the short Release performance observation remains deferred by the i915 freeze.
 
-## Unit 11 — Offline package readiness preflight (planned)
+## Unit 11 — Offline readiness and application preferences (planned)
 
 - [Issue #64](https://github.com/Viet281101/qt-maps/issues/64) is P1, `Todo`,
   `After Demo` on Project #6, and scheduled after Unit 10 merges.
 - Its plan in `context/feature-specs/unit-11-offline-package-readiness-plan.md`
-  reuses current validators to report required/optional package readiness
-  without data downloads, new dependencies, benchmarks, or packaging work.
+  reuses current validators to report required/optional package readiness, adds
+  a Vietnamese/English translation base and persisted language setting, and
+  consolidates idle map status controls without data downloads, new
+  dependencies, benchmarks, or packaging work.
 
 ## Next delivery plan
 
@@ -129,10 +131,12 @@ benchmark artifacts remain ignored.
    PR #63, including review-gate and functional visual evidence; merge it by
    squash once its final review is accepted. Keep #15 open for the separately
    approved performance observation while the i915 freeze remains active.
-3. **#64 — package-readiness preflight (P1, planned).** After Unit 10 merges,
+3. **#64 — readiness and preferences (P1, planned).** After Unit 10 merges,
    reuse existing package validators to present required/optional readiness
-   before the demo starts. The Unit 11 plan fixes its no-download, no-new-
-   dependency, no-benchmark boundary; it does not authorize implementation yet.
+   before the demo starts; add only Vietnamese/English app translations and a
+   compact settings panel; consolidate the redundant idle service pill. The
+   Unit 11 plan fixes its no-download, no-new-dependency, no-benchmark boundary;
+   it does not authorize implementation yet.
 
 ## Risks and decisions requiring the owner
 
