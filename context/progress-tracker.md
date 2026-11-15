@@ -57,6 +57,23 @@ benchmark artifacts remain ignored.
   is the production baseline, while Qt 5.15.13 remains comparison-only. The
   checked `make QT_EXPECTED_VERSION=5.15.18 requirements` preflight passes.
 
+## Unit 09 — Offline search integration (completed locally 2026-11-15)
+
+- The approved local Geofabrik PBF was extracted offline into 9,094 named
+  Hanoi records and packaged as ignored `hanoi-search-20261115-v1-r1`.
+  `places.sqlite` is 1,060,864 bytes, under the 20 MiB cap; its manifest
+  records the 2026-10-23 source retrieval date, PBF SHA-256, ODbL attribution,
+  Hanoi bounds, and database checksum.
+- `PlaceSearchController` validates and opens the package on a worker thread,
+  queries bounded normalized FTS5 results there, labels the real OSM source in
+  the UI, and preserves visibly labelled fixture search if the package is
+  absent, corrupt, or incompatible. No remote geocoding path exists.
+- Automated Release evidence: search controller, FTS5 spike, package builder,
+  extractor, and QML routing suites passed. Direct-GPU visual review captured
+  vector and raster at 900x580, 1366x768, and 1920x1080 under
+  `generated/unit-09/visual-review-20261115-final-capped/`; it is visual evidence,
+  not a benchmark. Run the isolated `make ... review` gate before merging #62.
+
 ## Next delivery plan
 
 1. **#9 rehearsal and #1 handoff — completed.** PR #54 merged as `6e11910` on

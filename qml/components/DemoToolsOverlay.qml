@@ -13,10 +13,10 @@ Item {
                                                ? layerMenu.y + layerMenu.height
                                                : layerButton.y + layerButton.height
 
-    function selectSearchResult(name, setOrigin) {
+    function selectSearchResult(coordinate, setOrigin) {
         var accepted = setOrigin
-                       ? routingController.setOriginInput(name)
-                       : routingController.setDestinationInput(name)
+                       ? routingController.setOriginInput(coordinate)
+                       : routingController.setDestinationInput(coordinate)
         if (accepted)
             searchInput.text = ""
     }
@@ -94,7 +94,7 @@ Item {
                 verticalAlignment: Text.AlignVCenter
                 color: Theme.textSecondary
                 font: parent.font
-                text: qsTr("Tìm địa điểm demo")
+                text: qsTr("Tìm địa điểm Hà Nội")
                 visible: !parent.text && !parent.activeFocus
             }
         }
@@ -108,18 +108,27 @@ Item {
         x: placeSearchControl.x
         y: placeSearchControl.y + placeSearchControl.height + Theme.spaceXs
         width: placeSearchControl.width
-        height: searchColumn.implicitHeight + Theme.spaceMd * 2
+        height: Math.min(searchScroller.contentHeight + Theme.spaceMd * 2,
+                         Math.min(360, Math.max(0, toolsOverlay.height - y - Theme.spaceMd)))
         radius: Theme.radiusControl
         color: Theme.surfaceElevated
         border.color: Theme.border
         z: 2
 
-        Column {
-            id: searchColumn
+        Flickable {
+            id: searchScroller
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.top: parent.top
+            anchors.bottom: parent.bottom
             anchors.margins: Theme.spaceMd
+            contentWidth: width
+            contentHeight: searchColumn.implicitHeight
+            clip: true
+
+            Column {
+                id: searchColumn
+                width: searchScroller.width
             spacing: Theme.spaceXs
 
             Text {
@@ -127,7 +136,7 @@ Item {
                 color: Theme.warning
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSizeCaption
-                text: qsTr("Dữ liệu demo cục bộ · chưa phải tìm kiếm địa chỉ đầy đủ")
+                text: toolsOverlay.searchController ? toolsOverlay.searchController.sourceLabel : ""
                 wrapMode: Text.WordWrap
             }
             Text {
@@ -181,7 +190,7 @@ Item {
                             normalColor: Theme.markerOrigin
                             pressedColor: "#4fab70"
                             textColor: "#102018"
-                            onTriggered: toolsOverlay.selectSearchResult(modelData.name, true)
+                            onTriggered: toolsOverlay.selectSearchResult(modelData.coordinate, true)
                         }
                         KeyboardActionButton {
                             id: destinationSelect
@@ -191,10 +200,11 @@ Item {
                             normalColor: Theme.markerDestination
                             pressedColor: "#d95f5f"
                             textColor: "#301010"
-                            onTriggered: toolsOverlay.selectSearchResult(modelData.name, false)
+                            onTriggered: toolsOverlay.selectSearchResult(modelData.coordinate, false)
                         }
                     }
                 }
+            }
             }
         }
     }

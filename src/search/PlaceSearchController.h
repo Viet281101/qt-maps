@@ -1,6 +1,8 @@
 #pragma once
 
 #include <QObject>
+#include <QPointer>
+#include <QThread>
 #include <QTimer>
 #include <QVariantList>
 
@@ -14,28 +16,43 @@ class PlaceSearchController final : public QObject
     Q_PROPERTY(QVariantList results READ results NOTIFY stateChanged)
     Q_PROPERTY(QString state READ state NOTIFY stateChanged)
     Q_PROPERTY(QString message READ message NOTIFY stateChanged)
+    Q_PROPERTY(QString sourceLabel READ sourceLabel NOTIFY stateChanged)
 
 public:
-    explicit PlaceSearchController(QObject *parent = nullptr);
+    explicit PlaceSearchController(
+        const QString &packagePath = QStringLiteral("data/search-packages/current"),
+        QObject *parent = nullptr);
+    ~PlaceSearchController() override;
 
     QString query() const;
     QVariantList results() const;
     QString state() const;
     QString message() const;
+    QString sourceLabel() const;
 
     Q_INVOKABLE void setQuery(const QString &query);
+
+    // Called on the controller's thread by the private package worker.
+    void handlePackageStatus(bool available, const QString &message);
+    void handlePackageResults(quint64 requestId, const QVariantList &results, const QString &error);
 
 signals:
     void stateChanged();
 
 private:
     void applyQuery();
+    void applyFixtureQuery();
 
     QString query_;
     QVariantList results_;
     QString state_ = QStringLiteral("idle");
     QString message_ = QStringLiteral("Tìm trong dữ liệu demo cục bộ");
+    QString sourceLabel_ = QStringLiteral("Dữ liệu demo cục bộ");
+    bool packageAvailable_ = false;
+    quint64 requestId_ = 0;
     QTimer debounce_;
+    QThread workerThread_;
+    QObject *worker_ = nullptr;
 };
 
 } // namespace search
