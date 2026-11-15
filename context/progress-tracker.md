@@ -12,6 +12,7 @@ benchmark artifacts remain ignored.
   local Sentinel-2 L2A scene; deterministic processing, app integration, the
   Qt 5.15.18 test suite, and functional visual review are complete locally.
   [PR #63](https://github.com/Viet281101/qt-maps/pull/63) is ready to merge.
+  #15 remains open only for its separately approved performance observation.
 - Unit 11 is planned as #64 offline package readiness preflight. It has no
   runtime implementation and starts only after Unit 10 merges.
 - The active GitHub milestone is `Post-demo stabilization` with no due date.
@@ -96,8 +97,9 @@ benchmark artifacts remain ignored.
   without a remote fallback. The visual-review harness captured the active
   layer at 900x580, 1366x768, and 1920x1080; this is functional evidence only.
 - [PR #63](https://github.com/Viet281101/qt-maps/pull/63) contains the Unit 10
-  integration and is ready to merge; raw imagery and generated artifacts
-  are intentionally absent from its diff.
+  integration and is ready to merge; raw imagery and generated artifacts are
+  intentionally absent from its diff. It satisfies four #15 acceptance items;
+  the short Release performance observation remains deferred by the i915 freeze.
 
 ## Unit 11 — Offline package readiness preflight (planned)
 
@@ -125,7 +127,8 @@ benchmark artifacts remain ignored.
    tests; it records complete coverage and provenance but does not process real
    imagery. PR #57 merged as `631d713`. Unit 10's complete integration is in
    PR #63, including review-gate and functional visual evidence; merge it by
-   squash once its final review is accepted.
+   squash once its final review is accepted. Keep #15 open for the separately
+   approved performance observation while the i915 freeze remains active.
 3. **#64 — package-readiness preflight (P1, planned).** After Unit 10 merges,
    reuse existing package validators to present required/optional readiness
    before the demo starts. The Unit 11 plan fixes its no-download, no-new-

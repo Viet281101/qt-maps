@@ -2,10 +2,12 @@
 
 ## Status and tracking
 
-**Active; provisioned locally on 2026-11-15.** The owner supplied a local,
-unmodified Sentinel-2 Level-2A scene with product ID and checksum, satisfying
-the gate in `15_orthography-decision-gate.md`. Processing stays local; neither
-the generator nor the application queries or downloads imagery.
+**Integration complete locally; one issue acceptance item deferred.** The owner
+supplied a local, unmodified Sentinel-2 Level-2A scene with product ID and
+checksum, satisfying the gate in `15_orthography-decision-gate.md`. Processing
+stays local; neither the generator nor the application queries or downloads
+imagery. The short Release performance observation remains deferred by the
+active i915 benchmark freeze and is not claimed by functional visual review.
 
 ## Objective
 
@@ -41,11 +43,13 @@ authoritative in `15_orthography-decision-gate.md`.
 4. **Selector and presentation — implemented.** Add an `Orthography (10 m, local)` choice,
    unavailable reason, persistent source attribution, and readable route, A/B,
    navigation, and connection UI across the supported viewports.
-5. **Acceptance — complete locally.** Focused package/runtime/QML failure
-   tests pass, as does the Qt 5.15.18 Release test suite. Functional visual
-   review captured the active layer at 900x580, 1366x768, and 1920x1080 after
-   constraining navigation camera updates to the approved z15 ceiling. This
-   review is not a benchmark; feature-PR code review remains.
+5. **Acceptance — implementation evidence complete; performance deferred.**
+   Focused package/runtime/QML failure tests pass, as does the Qt 5.15.18
+   Release test suite. Functional visual review captured the active layer at
+   900x580, 1366x768, and 1920x1080 after constraining navigation camera
+   updates to the approved z15 ceiling. This review is not a benchmark. The
+   only remaining issue acceptance item is a separately approved short Release
+   performance observation after the i915 freeze is lifted.
 
 ## Acceptance criteria
 
