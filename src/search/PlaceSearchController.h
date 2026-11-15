@@ -24,7 +24,6 @@ public:
     QString message() const;
 
     Q_INVOKABLE void setQuery(const QString &query);
-    Q_INVOKABLE QVariantMap resultAt(int index) const;
 
 signals:
     void stateChanged();
@@ -35,7 +34,7 @@ private:
     QString query_;
     QVariantList results_;
     QString state_ = QStringLiteral("idle");
-    QString message_;
+    QString message_ = QStringLiteral("Tìm trong dữ liệu demo cục bộ");
     QTimer debounce_;
 };
 

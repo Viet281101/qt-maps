@@ -25,9 +25,13 @@ private slots:
         QCOMPARE(controller.state(), QStringLiteral("loading"));
         QTRY_COMPARE(controller.state(), QStringLiteral("ready"));
         QCOMPARE(controller.results().size(), 1);
-        QCOMPARE(controller.resultAt(0).value(QStringLiteral("name")).toString(),
+        QCOMPARE(controller.results().constFirst().toMap().value(QStringLiteral("name")).toString(),
                  QStringLiteral("Thái Hà"));
         QVERIFY(changed.count() >= 2);
+
+        const int completedChangeCount = changed.count();
+        controller.setQuery(QStringLiteral("  thái  "));
+        QCOMPARE(changed.count(), completedChangeCount);
     }
 
     void laterQuerySupersedesPendingQuery()
@@ -37,18 +41,17 @@ private slots:
         controller.setQuery(QStringLiteral("Ba"));
         QTRY_COMPARE(controller.state(), QStringLiteral("ready"));
         QCOMPARE(controller.results().size(), 1);
-        QCOMPARE(controller.resultAt(0).value(QStringLiteral("name")).toString(),
+        QCOMPARE(controller.results().constFirst().toMap().value(QStringLiteral("name")).toString(),
                  QStringLiteral("Ba Đình"));
     }
 
-    void noMatchAndInvalidResultAreSafe()
+    void noMatchIsExplicit()
     {
         qtmaps::search::PlaceSearchController controller;
         controller.setQuery(QStringLiteral("không tồn tại"));
         QTRY_COMPARE(controller.state(), QStringLiteral("empty"));
         QVERIFY(controller.results().isEmpty());
         QVERIFY(controller.message().contains(QStringLiteral("Không có")));
-        QVERIFY(controller.resultAt(0).isEmpty());
     }
 };
 

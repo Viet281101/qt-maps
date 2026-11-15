@@ -3,18 +3,27 @@ import "../theme"
 
 Item {
     id: toolsOverlay
+    objectName: "demoToolsOverlay"
     property bool navigationActive: false
     property bool panelCollapsed: false
     property real panelWidth: 330
     property bool layersOpen: false
     property var searchController: null
-    readonly property real statusSafeTop: layersOpen
-                                       ? layerMenu.y + layerMenu.height + Theme.spaceMd
-                                       : layerButton.y + layerButton.height + Theme.spaceMd
+    readonly property real layerControlsBottom: layersOpen
+                                               ? layerMenu.y + layerMenu.height
+                                               : layerButton.y + layerButton.height
+
+    function selectSearchResult(name, setOrigin) {
+        var accepted = setOrigin
+                       ? routingController.setOriginInput(name)
+                       : routingController.setDestinationInput(name)
+        if (accepted)
+            searchInput.text = ""
+    }
 
     Rectangle {
-        id: searchPlaceholder
-        objectName: "searchPlaceholder"
+        id: placeSearchControl
+        objectName: "placeSearchControl"
         visible: !toolsOverlay.navigationActive
         x: toolsOverlay.panelCollapsed
            ? Math.max(Theme.spaceXl, (toolsOverlay.width - 360) / 2)
@@ -69,7 +78,7 @@ Item {
             anchors.leftMargin: Theme.spaceSm
             anchors.rightMargin: Theme.spaceLg
             anchors.verticalCenter: parent.verticalCenter
-            color: Theme.textSecondary
+            color: text.length > 0 ? Theme.textPrimary : Theme.textSecondary
             font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSizeBody
             clip: true
@@ -96,9 +105,9 @@ Item {
         objectName: "placeSearchResults"
         visible: !toolsOverlay.navigationActive && toolsOverlay.searchController
                  && toolsOverlay.searchController.state !== "idle"
-        x: searchPlaceholder.x
-        y: searchPlaceholder.y + searchPlaceholder.height + Theme.spaceXs
-        width: searchPlaceholder.width
+        x: placeSearchControl.x
+        y: placeSearchControl.y + placeSearchControl.height + Theme.spaceXs
+        width: placeSearchControl.width
         height: searchColumn.implicitHeight + Theme.spaceMd * 2
         radius: Theme.radiusControl
         color: Theme.surfaceElevated
@@ -166,33 +175,35 @@ Item {
                         }
                         KeyboardActionButton {
                             id: originSelect
+                            objectName: "searchResultOriginButton"
                             width: 36
                             text: "A"
                             normalColor: Theme.markerOrigin
                             pressedColor: "#4fab70"
                             textColor: "#102018"
-                            onTriggered: {
-                                routingController.setOriginInput(modelData.name)
-                                searchInput.text = ""
-                            }
+                            onTriggered: toolsOverlay.selectSearchResult(modelData.name, true)
                         }
                         KeyboardActionButton {
                             id: destinationSelect
+                            objectName: "searchResultDestinationButton"
                             width: 36
                             text: "B"
                             normalColor: Theme.markerDestination
                             pressedColor: "#d95f5f"
                             textColor: "#301010"
-                            onTriggered: {
-                                routingController.setDestinationInput(modelData.name)
-                                searchInput.text = ""
-                            }
+                            onTriggered: toolsOverlay.selectSearchResult(modelData.name, false)
                         }
                     }
                 }
             }
         }
     }
+
+    readonly property real statusSafeTop: Math.max(
+                                        layerControlsBottom,
+                                        searchResults.visible
+                                        ? searchResults.y + searchResults.height : 0)
+                                        + Theme.spaceMd
 
     KeyboardActionButton {
         id: layerButton

@@ -335,9 +335,11 @@ if(BUILD_TESTING)
     )
     target_link_libraries(qtmaps_routing_qml_tests PRIVATE
         qtmaps_app_core
+        qtmaps_benchmark
         qtmaps_map
         qtmaps_perf
         qtmaps_routing
+        qtmaps_search
         Qt5::Gui
         Qt5::Qml
         Qt5::Quick

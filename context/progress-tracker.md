@@ -19,7 +19,7 @@ Start #16 with a bounded, explicitly fixture-backed place-search vertical
 slice. The current shell only has a disabled search placeholder; routing already
 recognizes the three fixture locations Hoàn Kiếm, Thái Hà, and Ba Đình. The
 first increment must select one of those results into origin or destination,
-show empty/loading/failure state without blocking the UI, and label the source
+show empty/loading/no-result state without blocking the UI, and label the source
 honestly. SQLite FTS5 remains proposed and is not implied by this increment.
 
 - On 2026-11-14, the follow-up UI-polish increment replaced the undersized
@@ -80,6 +80,13 @@ honestly. SQLite FTS5 remains proposed and is not implied by this increment.
   source text from the banner while retaining the separate connection status,
   demotes route recalculation after a route is ready, and exposes a maneuver-list
   scroll thumb. Camera and QML contract tests cover those presentation rules.
+
+- The subsequent PR #53 review keeps the bounded search contract honest: its
+  in-memory fixture exposes no fictional failure state, returns only fields the
+  QML consumes, and ignores repeated normalized queries. Navigation camera
+  framing now validates the coordinate and viewport before deriving the puck
+  offset; tests assert the requested screen-space puck position and the
+  out-of-bounds fallback.
 
 ## Unit 08 Verification
 

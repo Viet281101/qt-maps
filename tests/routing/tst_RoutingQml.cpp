@@ -12,17 +12,21 @@
 
 #include <cmath>
 
+#include "benchmark/BenchmarkScenarioController.h"
 #include "core/ApplicationShutdownCoordinator.h"
+#include "map/BoundedCameraController.h"
 #include "map/MapSourceController.h"
 #include "map/TileSource.h"
 #include "perf/PerformanceMonitor.h"
 #include "routing/RouteNavigationController.h"
 #include "routing/RoutingController.h"
+#include "search/PlaceSearchController.h"
 
 using qtmaps::core::ApplicationShutdownCoordinator;
 using qtmaps::perf::PerformanceMonitor;
 using qtmaps::routing::RouteNavigationController;
 using qtmaps::routing::RoutingController;
+using qtmaps::search::PlaceSearchController;
 
 namespace {
 
@@ -101,6 +105,59 @@ private slots:
         QVERIFY(QMetaObject::invokeMethod(root.data(), "applyEndpoints"));
         QCOMPARE(routing.origin(), QGeoCoordinate(21.021352, 105.832698));
         QCOMPARE(routing.destination(), QGeoCoordinate(21.021352, 105.834744));
+    }
+
+    void searchResultCanPopulateRouteEndpoint()
+    {
+        RoutingController routing;
+        RouteNavigationController navigation;
+        PlaceSearchController search;
+        ApplicationShutdownCoordinator shutdown(&routing);
+        PerformanceMonitor performance;
+        qtmaps::map::BoundedCameraController boundedCamera;
+        qtmaps::benchmark::BenchmarkScenarioController benchmark(&performance, &routing,
+                                                                 &navigation, 0);
+        StaticTileSource mapTiles;
+        qtmaps::map::MapSourceController mapSource(&mapTiles, nullptr);
+        QVERIFY(mapSource.start(QString(), QString()));
+        QQmlEngine engine;
+        engine.rootContext()->setContextProperty(QStringLiteral("routingController"), &routing);
+        engine.rootContext()->setContextProperty(QStringLiteral("routeNavigationController"),
+                                                 &navigation);
+        engine.rootContext()->setContextProperty(QStringLiteral("placeSearchController"), &search);
+        engine.rootContext()->setContextProperty(QStringLiteral("boundedCameraController"),
+                                                 &boundedCamera);
+        engine.rootContext()->setContextProperty(QStringLiteral("benchmarkScenarioController"),
+                                                 &benchmark);
+        engine.rootContext()->setContextProperty(QStringLiteral("shutdownCoordinator"), &shutdown);
+        engine.rootContext()->setContextProperty(QStringLiteral("performanceMonitor"),
+                                                 &performance);
+        engine.rootContext()->setContextProperty(QStringLiteral("mapSourceController"), &mapSource);
+        engine.rootContext()->setContextProperty(QStringLiteral("routingFixtureOnly"), true);
+        engine.rootContext()->setContextProperty(QStringLiteral("instrumentationEnabled"), false);
+        engine.rootContext()->setContextProperty(QStringLiteral("vectorStyleUrl"), QString());
+
+        QQmlComponent component(&engine, QUrl(QStringLiteral("qrc:/qml/Main.qml")));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> root(component.create());
+        QVERIFY2(root, qPrintable(component.errorString()));
+        QQuickWindow *window = qobject_cast<QQuickWindow *>(root.data());
+        QVERIFY(window);
+        window->resize(900, 580);
+        window->show();
+        QVERIFY(QTest::qWaitForWindowExposed(window));
+        QObject *input = root->findChild<QObject *>(QStringLiteral("placeSearchInput"));
+        QVERIFY(input);
+        input->setProperty("text", QStringLiteral("ba đình"));
+
+        QTRY_COMPARE(search.state(), QStringLiteral("ready"));
+        QObject *toolsOverlay = root->findChild<QObject *>(QStringLiteral("demoToolsOverlay"));
+        QVERIFY(toolsOverlay);
+        QVERIFY(QMetaObject::invokeMethod(toolsOverlay, "selectSearchResult",
+                                          Q_ARG(QVariant, QVariant(QStringLiteral("Ba Đình"))),
+                                          Q_ARG(QVariant, QVariant(true))));
+        QCOMPARE(routing.originInput(), QStringLiteral("Ba Đình"));
+        QCOMPARE(input->property("text").toString(), QString());
     }
 
     void maneuverListKeepsMinimumHeight_data()
