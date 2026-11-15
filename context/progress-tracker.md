@@ -11,10 +11,11 @@ benchmark artifacts remain ignored.
 - Unit 09 merged in PR #62. Unit 10 (#15) has an owner-supplied authorized
   local Sentinel-2 L2A scene; deterministic processing, app integration, the
   Qt 5.15.18 test suite, and functional visual review are complete locally.
-  [PR #63](https://github.com/Viet281101/qt-maps/pull/63) is ready to merge.
+  [PR #63](https://github.com/Viet281101/qt-maps/pull/63) merged as `71ee64e`
+  on 2026-11-15.
   #15 remains open only for its separately approved performance observation.
-- Unit 11 is planned as #64 offline readiness and application preferences. It
-  has no runtime implementation and starts only after Unit 10 merges.
+- Unit 11 (#64) is `In Progress`: offline readiness and application preferences.
+  No runtime implementation has landed yet.
 - The active GitHub milestone is `Post-demo stabilization` with no due date.
 - [PR #53](https://github.com/Viet281101/qt-maps/pull/53) merged as `15d198a`
   on 2026-11-15 and closed #16. Project #6 records both items as `Done`.
