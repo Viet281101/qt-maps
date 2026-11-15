@@ -135,6 +135,7 @@ Window {
         navigationBannerHeight: navigationOverlay.bannerHeight
         normalTopMargin: demoTools.statusSafeTop
         connectionLabel: routingController.connectionLabel
+        attributionText: mapSourceController.mapAttribution
         z: 20
     }
 

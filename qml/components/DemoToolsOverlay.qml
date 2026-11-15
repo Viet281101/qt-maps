@@ -228,6 +228,8 @@ Item {
               ? qsTr("Đóng lớp bản đồ")
               : mapSourceController.layerMode === "raster"
                 ? qsTr("Lớp: Raster ngoại tuyến")
+                : mapSourceController.layerMode === "orthography"
+                  ? qsTr("Lớp: Ảnh trực giao 10 m")
                 : qsTr("Lớp: Bản đồ vector")
         normalColor: Theme.surfaceElevated
         pressedColor: Theme.surfacePressed
@@ -274,6 +276,25 @@ Item {
                          && mapSourceController.layerMode !== "raster"
                 onTriggered: mapSourceController.activateRaster()
             }
+            KeyboardActionButton {
+                objectName: "orthographyLayerButton"
+                width: parent.width
+                text: mapSourceController.layerMode === "orthography"
+                      ? qsTr("✓ Ảnh trực giao 10 m") : qsTr("Ảnh trực giao 10 m")
+                enabled: mapSourceController.orthographyConfigured
+                         && !mapSourceController.loading
+                         && mapSourceController.layerMode !== "orthography"
+                onTriggered: mapSourceController.activateOrthography()
+            }
+            Text {
+                visible: !mapSourceController.orthographyConfigured
+                width: parent.width
+                color: Theme.warning
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSizeCaption
+                wrapMode: Text.WordWrap
+                text: qsTr("Chưa có gói ảnh trực giao được cấp phép.")
+            }
             Text {
                 width: parent.width
                 color: mapSourceController.layerMode === "error" ? Theme.error
@@ -291,6 +312,15 @@ Item {
                 font.pixelSize: Theme.fontSizeCaption
                 wrapMode: Text.WordWrap
                 text: qsTr("Nguồn chi tiết đến z15; từ z16, độ phân giải thấp hơn.")
+            }
+            Text {
+                visible: mapSourceController.layerMode === "orthography"
+                width: parent.width
+                color: Theme.warning
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSizeCaption
+                wrapMode: Text.WordWrap
+                text: qsTr("Nguồn Sentinel-2 10 m; giới hạn ở z15, ngoài phạm vi Hà Nội là nền trống.")
             }
             Text {
                 color: Theme.warning

@@ -114,6 +114,10 @@ int main(int argc, char *argv[])
         {QStringLiteral("raster-package"),
          QStringLiteral("Unit 07C offline raster package directory or current pointer"),
          QStringLiteral("path"), QStringLiteral("data/raster-packages/current")});
+    parser.addOption(
+        {QStringLiteral("orthography-package"),
+         QStringLiteral("Unit 10 local orthography package directory or current pointer"),
+         QStringLiteral("path"), QStringLiteral("data/orthography-packages/current")});
     parser.addOption({QStringLiteral("search-package"),
                       QStringLiteral("Unit 09 offline search package directory or current pointer"),
                       QStringLiteral("path"), QStringLiteral("data/search-packages/current")});
@@ -224,6 +228,8 @@ int main(int argc, char *argv[])
     qtmaps::map::MapSourceController mapSourceController(&vectorTileSource,
                                                          &diagnosticRasterSource);
     mapSourceController.setRasterPackagePath(parser.value(QStringLiteral("raster-package")));
+    mapSourceController.setOrthographyPackagePath(
+        parser.value(QStringLiteral("orthography-package")));
     qtmaps::diagnostics::SimulatedNavigationController navigationController;
     qtmaps::routing::RoutingController routingController;
     qtmaps::search::PlaceSearchController placeSearchController(

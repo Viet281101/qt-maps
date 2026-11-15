@@ -98,6 +98,7 @@ bool RasterPackageManifest::loadAndValidate(const QString &packagePath,
     parsed.tileCount = tiles.value(QStringLiteral("count")).toInt(-1);
     parsed.mbtilesRelativePath = tiles.value(QStringLiteral("path")).toString();
     parsed.mbtilesSizeBytes = tiles.value(QStringLiteral("size_bytes")).toVariant().toLongLong();
+    parsed.attribution = object.value(QStringLiteral("attribution")).toString();
 
     if (object.value(QStringLiteral("schema_version")).toString() !=
         QStringLiteral("qtmaps-raster-package-v1")) {
@@ -126,7 +127,7 @@ bool RasterPackageManifest::loadAndValidate(const QString &packagePath,
         return reject(errorMessage,
                       QStringLiteral("Raster coverage, zoom, or tile count mismatch"));
     }
-    if (object.value(QStringLiteral("attribution")).toString() != contract::attribution()) {
+    if (parsed.attribution != contract::attribution()) {
         return reject(errorMessage,
                       QStringLiteral("Raster attribution is missing or incompatible"));
     }
@@ -175,6 +176,89 @@ bool RasterPackageManifest::loadAndValidate(const QString &packagePath,
         }
     }
 
+    *manifest = parsed;
+    return true;
+}
+
+bool RasterPackageManifest::loadAndValidateOrthography(const QString &packagePath,
+                                                       RasterPackageManifest *manifest,
+                                                       QString *errorMessage)
+{
+    if (!manifest) {
+        return reject(errorMessage, QStringLiteral("Orthography manifest output pointer is null"));
+    }
+    const QFileInfo rootInfo(packagePath);
+    if (!rootInfo.exists() || !rootInfo.isDir()) {
+        return reject(errorMessage, QStringLiteral("Orthography package directory is missing"));
+    }
+    const QDir root(rootInfo.canonicalFilePath());
+    QFile file(root.filePath(QStringLiteral("manifest.json")));
+    if (!file.open(QIODevice::ReadOnly)) {
+        return reject(errorMessage, QStringLiteral("Orthography manifest is unreadable"));
+    }
+    QJsonParseError parseError;
+    const QJsonDocument document = QJsonDocument::fromJson(file.readAll(), &parseError);
+    if (!document.isObject()) {
+        return reject(
+            errorMessage,
+            QStringLiteral("Invalid orthography manifest JSON: %1").arg(parseError.errorString()));
+    }
+    const QJsonObject object = document.object();
+    const QJsonObject source = object.value(QStringLiteral("source")).toObject();
+    const QJsonObject tiles = object.value(QStringLiteral("tiles")).toObject();
+    const QJsonArray bounds = object.value(QStringLiteral("bounds")).toArray();
+    const QJsonArray bands = source.value(QStringLiteral("rgb_bands")).toArray();
+    const QRegularExpression digestPattern(QStringLiteral("^[0-9a-f]{64}$"));
+    RasterPackageManifest parsed;
+    parsed.packageId = object.value(QStringLiteral("package_id")).toString();
+    parsed.minimumZoom = object.value(QStringLiteral("min_zoom")).toInt(-1);
+    parsed.maximumZoom = object.value(QStringLiteral("max_zoom")).toInt(-1);
+    parsed.tileCount = tiles.value(QStringLiteral("count")).toInt(-1);
+    parsed.mbtilesRelativePath = tiles.value(QStringLiteral("path")).toString();
+    parsed.mbtilesSizeBytes = tiles.value(QStringLiteral("size_bytes")).toVariant().toLongLong();
+    parsed.attribution = object.value(QStringLiteral("attribution")).toString();
+    if (object.value(QStringLiteral("schema_version")).toString() !=
+            QStringLiteral("qtmaps-orthography-package-v1") ||
+        parsed.packageId.isEmpty() || bounds.size() != 4 ||
+        bounds.at(0).toDouble() != contract::kWest || bounds.at(1).toDouble() != contract::kSouth ||
+        bounds.at(2).toDouble() != contract::kEast || bounds.at(3).toDouble() != contract::kNorth ||
+        parsed.minimumZoom != 12 || parsed.maximumZoom != 15 || parsed.tileCount != 226 ||
+        source.value(QStringLiteral("mission")).toString() !=
+            QStringLiteral("Copernicus Sentinel-2") ||
+        source.value(QStringLiteral("product_level")).toString() != QStringLiteral("L2A") ||
+        bands != QJsonArray{QStringLiteral("B04"), QStringLiteral("B03"), QStringLiteral("B02")} ||
+        parsed.attribution.isEmpty() ||
+        !parsed.attribution.startsWith(
+            QStringLiteral("Contains modified Copernicus Sentinel data ")) ||
+        tiles.value(QStringLiteral("format")).toString() != QStringLiteral("png") ||
+        tiles.value(QStringLiteral("tile_size")).toInt(-1) != 256 ||
+        !isSafeRelativePath(parsed.mbtilesRelativePath) || parsed.mbtilesSizeBytes <= 0 ||
+        parsed.mbtilesSizeBytes > 100 * 1024 * 1024 ||
+        !digestPattern.match(tiles.value(QStringLiteral("sha256")).toString()).hasMatch()) {
+        return reject(errorMessage, QStringLiteral("Orthography package contract is incompatible"));
+    }
+    const QJsonArray scenes = source.value(QStringLiteral("scenes")).toArray();
+    if (scenes.isEmpty()) {
+        return reject(errorMessage, QStringLiteral("Orthography source provenance is missing"));
+    }
+    for (const QJsonValue &value : scenes) {
+        const QJsonObject scene = value.toObject();
+        if (scene.value(QStringLiteral("product_id")).toString().isEmpty() ||
+            !digestPattern.match(scene.value(QStringLiteral("sha256")).toString()).hasMatch()) {
+            return reject(errorMessage, QStringLiteral("Orthography source provenance is invalid"));
+        }
+    }
+    const QString mbtilesPath = root.filePath(parsed.mbtilesRelativePath);
+    const QFileInfo mbtilesInfo(mbtilesPath);
+    if (!mbtilesInfo.isFile() || mbtilesInfo.size() != parsed.mbtilesSizeBytes) {
+        return reject(errorMessage, QStringLiteral("Orthography MBTiles size mismatch"));
+    }
+    QString hashError;
+    if (sha256(mbtilesPath, &hashError) != tiles.value(QStringLiteral("sha256")).toString()) {
+        return reject(errorMessage, hashError.isEmpty()
+                                        ? QStringLiteral("Orthography checksum mismatch")
+                                        : hashError);
+    }
     *manifest = parsed;
     return true;
 }

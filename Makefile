@@ -21,6 +21,7 @@ PLANETILER_JAR ?= generated/unit-01b/tools/planetiler.jar
 MAP_PACKAGE ?= data/packages/current
 RASTER_PACKAGE ?= data/raster-packages/current
 SEARCH_PACKAGE ?= data/search-packages/current
+ORTHOGRAPHY_PACKAGE ?= data/orthography-packages/current
 VISUAL_REVIEW_SETTLE_MS ?= 2500
 MAPLIBRE_INSTALL ?= generated/unit-01b/maplibre-install-qt51518
 MAPLIBRE_SRC ?= generated/unit-01b/maplibre-native-qt
@@ -293,6 +294,7 @@ visual-review: build
 		--map-package "$(MAP_PACKAGE)" \
 		--raster-package "$(RASTER_PACKAGE)" \
 		--search-package "$(SEARCH_PACKAGE)" \
+		--orthography-package "$(ORTHOGRAPHY_PACKAGE)" \
 		--settle-ms "$(VISUAL_REVIEW_SETTLE_MS)" \
 		--output "$(VISUAL_REVIEW_OUTPUT)"
 

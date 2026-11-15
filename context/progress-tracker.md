@@ -8,15 +8,20 @@ benchmark artifacts remain ignored.
 
 - Units 03--08 are merged. Qt 5.15.18 is the production baseline; Qt 5.15.13
   is comparison-only.
-- Unit 09 is complete locally in PR #62. Unit 10 is planned as #15 licensed
-  orthography integration and remains blocked on authorized imagery provision.
+- Unit 09 merged in PR #62. Unit 10 (#15) has an owner-supplied authorized
+  local Sentinel-2 L2A scene; deterministic processing, app integration, the
+  Qt 5.15.18 test suite, and functional visual review are complete locally.
+  [PR #63](https://github.com/Viet281101/qt-maps/pull/63) is ready to merge.
+  #15 remains open only for its separately approved performance observation.
+- Unit 11 is planned as #64 offline readiness and application preferences. It
+  has no runtime implementation and starts only after Unit 10 merges.
 - The active GitHub milestone is `Post-demo stabilization` with no due date.
 - [PR #53](https://github.com/Viet281101/qt-maps/pull/53) merged as `15d198a`
   on 2026-11-15 and closed #16. Project #6 records both items as `Done`.
 - The management-demo vertical slice is accepted: #9 and #1 are closed and
-  `Done` on Project #6. #15 (licensed orthography, `In Progress`, P1) awaits
-  authorized source imagery. #58 (offline SQLite FTS5 search spike, P1) is
-  closed and `Done` on Project #6.
+  `Done` on Project #6. #15 (licensed orthography, `In Progress`, P1) is in
+  PR #63 review with an authorized local scene. #58 (offline SQLite FTS5 search
+  spike, P1) is closed and `Done` on Project #6.
 
 ## Completed product baseline
 
@@ -74,6 +79,38 @@ benchmark artifacts remain ignored.
   `generated/unit-09/visual-review-20261115-final-capped/`; it is visual evidence,
   not a benchmark. Run the isolated `make ... review` gate before merging #62.
 
+## Unit 10 — Licensed orthography integration (active 2026-11-15)
+- The owner supplied the ignored local Sentinel-2C L2A ZIP
+  `S2C_MSIL2A_20261014T032711_N0513_R018_T48QWJ_20261014T082606.SAFE.zip`.
+  Its SHA-256 is
+  `e2de4c393374dd82b059dd69be14cb16e696cc1ef7d59418bf19d5d896f75232`; metadata
+  confirms the 2026-10-14 acquisition, processing baseline 05.13, EPSG:32648,
+  B02/B03/B04 10 m inputs, and 12.59245% declared cloud cover.
+- The local-only preparation pipeline generated the complete Hanoi z12--z15
+  RGB tree (226 tiles). The offline package builder produced the ignored
+  `hanoi-orthography-20261115-s2-l2a-v2` package: 14,700,544 bytes, below the
+  100 MiB cap, with MBTiles SHA-256
+  `6286ce7d3956d83d324619f879d1b11d7a05f59cfc833c22319700da63370e70`.
+- The application validates the orthography manifest and MBTiles checksum on a
+  lazy worker, offers an explicit local 10 m layer, preserves Sentinel and OSM
+  attribution, limits the layer to z15, and reports missing/corrupt packages
+  without a remote fallback. The visual-review harness captured the active
+  layer at 900x580, 1366x768, and 1920x1080; this is functional evidence only.
+- [PR #63](https://github.com/Viet281101/qt-maps/pull/63) contains the Unit 10
+  integration and is ready to merge; raw imagery and generated artifacts are
+  intentionally absent from its diff. It satisfies four #15 acceptance items;
+  the short Release performance observation remains deferred by the i915 freeze.
+
+## Unit 11 — Offline readiness and application preferences (planned)
+
+- [Issue #64](https://github.com/Viet281101/qt-maps/issues/64) is P1, `Todo`,
+  `After Demo` on Project #6, and scheduled after Unit 10 merges.
+- Its plan in `context/feature-specs/unit-11-offline-package-readiness-plan.md`
+  reuses current validators to report required/optional package readiness, adds
+  a Vietnamese/English translation base and persisted language setting, and
+  consolidates idle map status controls without data downloads, new
+  dependencies, benchmarks, or packaging work.
+
 ## Next delivery plan
 
 1. **#9 rehearsal and #1 handoff — completed.** PR #54 merged as `6e11910` on
@@ -82,7 +119,7 @@ benchmark artifacts remain ignored.
    clean exit passed. Evidence and management-facing limits are in
    `docs/rehearsal/demo-handoff.md` and
    `docs/reports/weekly-report-2026-11-15.md`; no benchmark was added.
-2. **#15 — approved orthography contract (P1).** The owner approved the
+2. **#15 — licensed orthography integration (P1).** The owner approved the
    Sentinel-2 Level-2A 10 m regional RGB source, Hanoi-only bounds, z12–z15,
    100 MiB package cap, required attribution, offline-only runtime, and explicit
    unavailable/failure UX on 2026-11-15. PR #55 merged as `37534a7`. The exact
@@ -90,28 +127,25 @@ benchmark artifacts remain ignored.
    `context/feature-specs/15_orthography-decision-gate.md`. The first offline
    package/manifest contract now has a compact synthetic fixture and focused
    tests; it records complete coverage and provenance but does not process real
-   imagery. PR #57 merged as `631d713`. Wait for an authorized Copernicus
-   session/account or approved local L2A scene before querying, downloading, or
-   processing real imagery.
-   Unit 10's ordered runtime/UI plan is in
-   `context/feature-specs/unit-10-orthography-integration-plan.md`; it is
-   planning-only and does not authorize provisioning.
-3. **FTS5 source decision before the next slice.** #58 is complete. Before a
-   generator, package validation, or runtime switch, approve a licensed local
-   source URL, attribution, coverage, storage budget, retrieval/checksum method,
-   and generator revision. **#61 now approves** the existing local Geofabrik
-   Vietnam PBF lineage, current Hanoi bounds, ODbL attribution, and a 20 MiB
-   cap for a fixture-tested packager only. The current fixture search remains
-   the supported product behavior; remote geocoding stays out of scope.
+   imagery. PR #57 merged as `631d713`. Unit 10's complete integration is in
+   PR #63, including review-gate and functional visual evidence; merge it by
+   squash once its final review is accepted. Keep #15 open for the separately
+   approved performance observation while the i915 freeze remains active.
+3. **#64 — readiness and preferences (P1, planned).** After Unit 10 merges,
+   reuse existing package validators to present required/optional readiness
+   before the demo starts; add only Vietnamese/English app translations and a
+   compact settings panel; consolidate the redundant idle service pill. The
+   Unit 11 plan fixes its no-download, no-new-dependency, no-benchmark boundary;
+   it does not authorize implementation yet.
 
 ## Risks and decisions requiring the owner
 
 1. The i915 render-benchmark freeze remains in effect. The completed matrices
    and direct-GPU visual review do not authorize a new benchmark, soak,
    MapLibre/OpenGL investigation, or GPU configuration change.
-2. Orthography provisioning needs an authorized Copernicus Data Space
-   session/account or a local Sentinel-2 L2A scene; credentials and raw source
-   data remain outside Git.
+2. Orthography is now provisioned from an owner-supplied local Sentinel-2 L2A
+   scene. Credentials and raw source data remain outside Git; nationwide or
+   higher-resolution coverage still needs a separate decision.
 3. SQLite FTS5 target-runtime capability is proven, but its source dataset,
    coverage, storage budget, generator, and runtime package lifecycle remain
    Proposed except for #61's local package-generator contract; extractor and

@@ -21,13 +21,14 @@ public:
     ~RasterTileSource() override;
 
     void startAsync(const QString &packagePath, const QString &expectedVectorPackagePath,
-                    quint16 requestedPort = 0);
+                    bool orthography = false, quint16 requestedPort = 0);
     void stopAsync();
     bool running() const;
     bool loading() const;
     QString baseUrl() const;
     QString styleUrl() const;
     QString errorMessage() const;
+    QString attribution() const;
 
 signals:
     void started();
@@ -43,6 +44,7 @@ private:
     bool loading_ = false;
     QString baseUrl_;
     QString errorMessage_;
+    QString attribution_;
 };
 
 } // namespace map

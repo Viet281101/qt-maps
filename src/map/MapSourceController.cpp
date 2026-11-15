@@ -1,5 +1,6 @@
 #include "MapSourceController.h"
 
+#include "MapPackageContract.h"
 #include "RasterTileSource.h"
 #include "TileSource.h"
 
@@ -16,6 +17,12 @@ MapSourceController::~MapSourceController() { stop(); }
 void MapSourceController::setRasterPackagePath(const QString &packagePath)
 {
     rasterPackagePath_ = packagePath;
+    emit stateChanged();
+}
+
+void MapSourceController::setOrthographyPackagePath(const QString &packagePath)
+{
+    orthographyPackagePath_ = packagePath;
     emit stateChanged();
 }
 
@@ -70,6 +77,7 @@ void MapSourceController::stop()
         rasterSource_->stop();
     }
     productionRasterSource_.reset();
+    productionOrthographySource_.reset();
     usingRasterFallback_ = false;
     loading_ = false;
     automaticFallback_ = false;
@@ -93,6 +101,9 @@ QString MapSourceController::rasterBaseUrl() const
     if (productionRasterSource_ && productionRasterSource_->running()) {
         return productionRasterSource_->baseUrl() + QLatin1Char('/');
     }
+    if (productionOrthographySource_ && productionOrthographySource_->running()) {
+        return productionOrthographySource_->baseUrl() + QLatin1Char('/');
+    }
     return rasterSource_ && rasterSource_->isRunning() ? rasterSource_->baseUrl() + QLatin1Char('/')
                                                        : QString();
 }
@@ -102,12 +113,25 @@ QString MapSourceController::layerMode() const { return layerMode_; }
 QString MapSourceController::mapStatusText() const { return mapStatusText_; }
 bool MapSourceController::loading() const { return loading_; }
 bool MapSourceController::rasterConfigured() const { return !rasterPackagePath_.isEmpty(); }
+bool MapSourceController::orthographyConfigured() const
+{
+    return !orthographyPackagePath_.isEmpty();
+}
 bool MapSourceController::rasterResourcesAllocated() const
 {
-    return productionRasterSource_ &&
-           (productionRasterSource_->loading() || productionRasterSource_->running());
+    return (productionRasterSource_ &&
+            (productionRasterSource_->loading() || productionRasterSource_->running())) ||
+           (productionOrthographySource_ &&
+            (productionOrthographySource_->loading() || productionOrthographySource_->running()));
 }
 bool MapSourceController::automaticFallback() const { return automaticFallback_; }
+QString MapSourceController::mapAttribution() const
+{
+    return productionOrthographySource_ && productionOrthographySource_->running()
+               ? productionOrthographySource_->attribution() + QStringLiteral(" · ") +
+                     contract::attribution()
+               : contract::attribution();
+}
 
 void MapSourceController::activateRaster() { activateRaster(false); }
 
@@ -139,6 +163,9 @@ void MapSourceController::activateRaster(bool automatic)
             mapStatusText_ = automaticFallback_
                                  ? QStringLiteral("Raster ngoại tuyến · tự động dự phòng")
                                  : QStringLiteral("Raster ngoại tuyến · chọn thủ công");
+            if (productionOrthographySource_) {
+                productionOrthographySource_->stopAsync();
+            }
             emit stateChanged();
         });
         connect(productionRasterSource_.get(), &RasterTileSource::failed, this,
@@ -161,6 +188,54 @@ void MapSourceController::activateRaster(bool automatic)
     productionRasterSource_->startAsync(rasterPackagePath_, vectorPackagePath_);
 }
 
+void MapSourceController::activateOrthography() { activateOrthography(false); }
+
+void MapSourceController::activateOrthography(bool automatic)
+{
+    if (loading_ || layerMode_ == QStringLiteral("orthography")) {
+        return;
+    }
+    automaticFallback_ = automatic;
+    loading_ = true;
+    layerMode_ = QStringLiteral("orthography-loading");
+    mapStatusText_ = QStringLiteral("Đang mở ảnh trực giao cục bộ…");
+    emit stateChanged();
+    if (orthographyPackagePath_.isEmpty()) {
+        loading_ = false;
+        layerMode_ = QStringLiteral("vector");
+        activeStyleUrl_ = vectorStyleUrl();
+        mapStatusText_ = QStringLiteral("Chưa có gói ảnh trực giao được cấp phép");
+        emit stateChanged();
+        return;
+    }
+    if (!productionOrthographySource_) {
+        productionOrthographySource_.reset(new RasterTileSource);
+        connect(productionOrthographySource_.get(), &RasterTileSource::started, this, [this]() {
+            loading_ = false;
+            usingRasterFallback_ = false;
+            activeStyleUrl_ = productionOrthographySource_->styleUrl();
+            layerMode_ = QStringLiteral("orthography");
+            mapStatusText_ = QStringLiteral("Ảnh trực giao 10 m · cục bộ");
+            if (productionRasterSource_) {
+                productionRasterSource_->stopAsync();
+            }
+            emit stateChanged();
+        });
+        connect(productionOrthographySource_.get(), &RasterTileSource::failed, this,
+                [this](const QString &) {
+                    loading_ = false;
+                    layerMode_ = QStringLiteral("vector");
+                    activeStyleUrl_ = vectorStyleUrl();
+                    mapStatusText_ =
+                        QStringLiteral("Gói ảnh trực giao không hợp lệ hoặc không sẵn sàng");
+                    emit stateChanged();
+                });
+        connect(productionOrthographySource_.get(), &RasterTileSource::stopped, this,
+                [this]() { emit stateChanged(); });
+    }
+    productionOrthographySource_->startAsync(orthographyPackagePath_, QString(), true);
+}
+
 void MapSourceController::activateVector()
 {
     if (!vectorSource_ || !vectorSource_->isRunning()) {
@@ -177,6 +252,9 @@ void MapSourceController::activateVector()
     mapStatusText_ = QStringLiteral("Bản đồ vector · dữ liệu cục bộ");
     if (productionRasterSource_) {
         productionRasterSource_->stopAsync();
+    }
+    if (productionOrthographySource_) {
+        productionOrthographySource_->stopAsync();
     }
     emit stateChanged();
 }

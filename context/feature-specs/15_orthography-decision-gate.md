@@ -2,10 +2,15 @@
 
 ## Status
 
-**Approved on 2026-11-15; provisioning still blocked.** The owner approved the
-candidate and limits below. No imagery has been downloaded or generated: a
-registered Copernicus Data Space account or an approved local source scene is
-still required.
+**Provisioned locally on 2026-11-15; integration in progress.** The owner
+supplied an unmodified local Sentinel-2 Level-2A source scene, satisfying the
+approved provisioning gate without sharing credentials. The ignored source ZIP
+is `S2C_MSIL2A_20261014T032711_N0513_R018_T48QWJ_20261014T082606.SAFE.zip`
+(`e2de4c393374dd82b059dd69be14cb16e696cc1ef7d59418bf19d5d896f75232`).
+It is Sentinel-2C product
+`S2C_MSIL2A_20261014T032711_N0513_R018_T48QWJ_20261014T082606`, acquired on
+2026-10-14, processed at baseline 05.13, with 12.59245% declared cloud cover.
+Raw imagery, generated tiles, packages, and credentials remain outside Git.
 
 ## Candidate and recommendation
 
@@ -100,6 +105,9 @@ storage cap, required attribution, Sentinel-2 L2A RGB mapping (`B04`, `B03`,
 `B02`), acquisition date, processing baseline, cloud-cover criterion,
 resampling method, and one SHA-256 per product ID. Its compact test fixture is
 synthetic and exists only to verify packaging, coverage, provenance, and
-byte-stability; it is not imagery evidence. Runtime loading, the selector,
-and on-map attribution remain deliberately out of scope until a real licensed
-package is provisioned.
+byte-stability; it is not imagery evidence. The real local scene is processed
+only by `tools/data-pipeline/prepare_hanoi_sentinel_tiles.py`, which validates
+the scene metadata and RGB inputs before producing the complete tile tree.
+Runtime loading, the selector, and on-map attribution are implemented only for
+the generated, checksum-validated package; an absent or invalid package remains
+an explicit unavailable state.
