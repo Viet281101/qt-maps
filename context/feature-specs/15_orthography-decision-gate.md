@@ -85,3 +85,21 @@ attribution, and focused tests; finally an owner-authorized functional visual
 review. Do not run a new benchmark, soak, GPU/i915 investigation, or download
 data until authorized access is available. Compact synthetic fixtures may test
 the contract but must never be presented as orthography evidence.
+
+## Deterministic package contract
+
+`tools/data-pipeline/build_hanoi_orthography_package.py` is the first,
+offline-only increment. It accepts only a complete, already prepared z12–z15
+`z/x/y.png` RGB tile tree, rejects missing or extra tiles, then writes an
+ignored immutable `orthography.mbtiles` package and a checksummed
+`qtmaps-orthography-package-v1` manifest. It never queries Copernicus,
+downloads data, or processes a raw Sentinel scene.
+
+The manifest records the fixed bounds, zoom range, PNG tile format, 100 MiB
+storage cap, required attribution, Sentinel-2 L2A RGB mapping (`B04`, `B03`,
+`B02`), acquisition date, processing baseline, cloud-cover criterion,
+resampling method, and one SHA-256 per product ID. Its compact test fixture is
+synthetic and exists only to verify packaging, coverage, provenance, and
+byte-stability; it is not imagery evidence. Runtime loading, the selector,
+and on-map attribution remain deliberately out of scope until a real licensed
+package is provisioned.

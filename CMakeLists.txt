@@ -282,6 +282,9 @@ if(BUILD_TESTING)
     add_test(NAME qtmaps_raster_package_tool_tests
         COMMAND "${Python3_EXECUTABLE}"
             "${CMAKE_SOURCE_DIR}/tests/map/test_build_hanoi_raster_package.py")
+    add_test(NAME qtmaps_orthography_package_tool_tests
+        COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_SOURCE_DIR}/tests/map/test_build_hanoi_orthography_package.py")
     add_test(NAME qtmaps_hanoi_style_tests
         COMMAND "${Python3_EXECUTABLE}"
             "${CMAKE_SOURCE_DIR}/tests/map/test_build_hanoi_style.py")

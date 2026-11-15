@@ -44,6 +44,9 @@ benchmark artifacts remain ignored.
 - Current ignored compatible packages are `hanoi-20261114-v3-r3` and
   `hanoi-raster-20261115-v3-r4`; each has the v2 glyph revision and matching
   v3 manifests.
+- Environment documentation was synchronized on 2026-11-15: system Qt 5.15.18
+  is the production baseline, while Qt 5.15.13 remains comparison-only. The
+  checked `make QT_EXPECTED_VERSION=5.15.18 requirements` preflight passes.
 
 ## Next delivery plan
 
@@ -58,10 +61,11 @@ benchmark artifacts remain ignored.
    100 MiB package cap, required attribution, offline-only runtime, and explicit
    unavailable/failure UX on 2026-11-15. PR #55 merged as `37534a7`. The exact
    contract and provisioning gate are in
-   `context/feature-specs/15_orthography-decision-gate.md`. Start the
-   deterministic generator/manifest contract with compact fixtures; wait for an
-   authorized Copernicus session/account or approved local L2A scene before
-   querying, downloading, or processing real imagery.
+   `context/feature-specs/15_orthography-decision-gate.md`. The first offline
+   package/manifest contract now has a compact synthetic fixture and focused
+   tests; it records complete coverage and provenance but does not process real
+   imagery. Wait for an authorized Copernicus session/account or approved local
+   L2A scene before querying, downloading, or processing real imagery.
 3. **Deferred search expansion.** Specify and spike the SQLite FTS5 schema,
    generator provenance, query normalization/ranking, and package lifecycle
    after the demo-handoff work. It must remain offline-only and not imply
