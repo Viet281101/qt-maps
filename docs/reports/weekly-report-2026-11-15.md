@@ -1,7 +1,8 @@
 # QtMaps Weekly Report — 2026-11-15
 
-**Period:** 2026-11-09 to 2026-11-15  
-**Milestone/Project:** [Post-demo stabilization](https://github.com/Viet281101/qt-maps/milestone/2) · [Project #6](https://github.com/users/Viet281101/projects/6)  
+**Period:** 2026-11-09 to 2026-11-15
+
+**Milestone/Project:** [Post-demo stabilization](https://github.com/Viet281101/qt-maps/milestone/2) · [Project #6](https://github.com/users/Viet281101/projects/6)
 **Git revision demonstrated:** `14a44a8` (`docs: add deterministic demo rehearsal handoff`)
 
 ## Completed This Week
