@@ -187,6 +187,10 @@ run: build
 	QTMAPS_APP="$(abspath $(QTMAPS))" QTMAPS_QT_PREFIX="$(QT_PREFIX)" \
 		QTMAPS_MAPLIBRE_INSTALL="$(abspath $(MAPLIBRE_INSTALL))" ./tools/run-demo.sh $(DEMO_ARGS)
 
+rehearse: build
+	QTMAPS_APP="$(abspath $(QTMAPS))" QTMAPS_QT_PREFIX="$(QT_PREFIX)" \
+		QTMAPS_MAPLIBRE_INSTALL="$(abspath $(MAPLIBRE_INSTALL))" ./tools/rehearse-demo.sh
+
 run-app: build
 	"$(QTMAPS)" $(APP_ARGS)
 
