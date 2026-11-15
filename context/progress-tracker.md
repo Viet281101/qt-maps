@@ -69,6 +69,12 @@ honestly. SQLite FTS5 remains proposed and is not implied by this increment.
   the production-QML GPU capture at 900x580 shows the result popover clear of
   the sidebar and layer controls. SQLite FTS5 remains deferred.
 
+- On 2026-11-15, a navigation readability pass suppresses route-derived street
+  pills while replay is active and enlarges the high-contrast position puck.
+  The banner remains the single owner of the current instruction; planning mode
+  keeps its route labels. QML contract coverage verifies the guidance condition
+  and puck dimensions.
+
 ## Unit 08 Verification
 
 - On 2026-11-12, the GUI-less `qtmaps_diagnostics_tests` passed after adding

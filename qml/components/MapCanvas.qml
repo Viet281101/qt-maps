@@ -287,17 +287,18 @@ Item {
             z: 12
             sourceItem: Rectangle {
                 id: navigationMarker
-                width: 28; height: 28; radius: 14
+                // Keep the simulated position distinct above a dense light basemap.
+                width: 36; height: 36; radius: 18
                 color: Theme.accent
                 border.color: Theme.routeOutline
-                border.width: 4
+                border.width: 5
                 Text {
                     anchors.centerIn: parent
                     text: "▲"
                     color: "#10243a"
                     font.family: Theme.fontFamily
                     font.bold: true
-                    font.pixelSize: 13
+                    font.pixelSize: 16
                 }
             }
         }
@@ -325,7 +326,11 @@ Item {
         }
 
         MapItemView {
-            model: map.zoomLevel >= 15 ? routingController.streetLabels : []
+            // The banner already identifies the active maneuver.  Suppressing the
+            // route-derived labels during replay prevents them from obscuring the
+            // puck or competing with the road ahead.
+            model: !canvas.guidanceActive && map.zoomLevel >= 15
+                   ? routingController.streetLabels : []
             delegate: MapQuickItem {
                 coordinate: modelData.coordinate
                 anchorPoint.x: streetLabel.width / 2

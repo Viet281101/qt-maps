@@ -580,7 +580,8 @@ private slots:
         const QByteArray qml =
             mainQml + mapQml + navigationQml + bannerQml + panelQml + toolsQml + statusQml;
         QVERIFY(qml.contains("routingController.streetLabels"));
-        QVERIFY(qml.contains("map.zoomLevel >= 15"));
+        QVERIFY(qml.contains("!canvas.guidanceActive && map.zoomLevel >= 15"));
+        QVERIFY(qml.contains("width: 36; height: 36; radius: 18"));
         QVERIFY(qml.contains("routingController.currentManeuverIndex"));
         QVERIFY(qml.contains("routeNavigationController.currentManeuverIndex"));
         QVERIFY(qml.contains("NavigationBanner"));

@@ -71,6 +71,10 @@ the connection source.
   the acceptance check. The local-only visual-review harness may capture the
   production window to ignored PNGs for this check; it is not a benchmark.
 - Origin, destination, current simulated position, and selected search result use distinct semantic marker roles.
+- During guidance, suppress route-derived street pills: the navigation banner owns
+  the active instruction and keeping those pills off the puck preserves the road
+  ahead. The simulated-position puck uses a high-contrast blue circle with a
+  white outline and stays above route labels and endpoints.
 - Camera following and map rotation must have an obvious exit/recenter action.
 - Re-routing must preserve the last valid route until a replacement succeeds or clearly report that no route is available.
 - During re-routing, keep the navigation camera, travelled segment, current-position puck, and last valid route. The destination marker remains part of the route even when camera-follow framing places it outside the viewport.
