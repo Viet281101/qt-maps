@@ -58,9 +58,10 @@ benchmark artifacts remain ignored.
    100 MiB package cap, required attribution, offline-only runtime, and explicit
    unavailable/failure UX on 2026-11-15. PR #55 merged as `37534a7`. The exact
    contract and provisioning gate are in
-   `context/feature-specs/15_orthography-decision-gate.md`; wait for an
+   `context/feature-specs/15_orthography-decision-gate.md`. Start the
+   deterministic generator/manifest contract with compact fixtures; wait for an
    authorized Copernicus session/account or approved local L2A scene before
-   querying or downloading data.
+   querying, downloading, or processing real imagery.
 3. **Deferred search expansion.** Specify and spike the SQLite FTS5 schema,
    generator provenance, query normalization/ranking, and package lifecycle
    after the demo-handoff work. It must remain offline-only and not imply

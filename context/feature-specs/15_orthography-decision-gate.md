@@ -71,8 +71,8 @@ that the new package will meet the 100 MiB cap.
 
 ## Provisioning gate
 
-Before a product query, download, processing, or code change, provide one of
-the following without committing credentials:
+Before a product query, source-data download, or processing of real imagery,
+provide one of the following without committing credentials:
 
 1. An authorized Copernicus Data Space session/account for scene selection and
    download; or
@@ -83,4 +83,5 @@ Then implement as a separate vertical slice: deterministic generator and
 manifest contract first; then lazy local source, selector/UI states,
 attribution, and focused tests; finally an owner-authorized functional visual
 review. Do not run a new benchmark, soak, GPU/i915 investigation, or download
-data until authorized access is available.
+data until authorized access is available. Compact synthetic fixtures may test
+the contract but must never be presented as orthography evidence.
