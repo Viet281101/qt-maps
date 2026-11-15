@@ -47,17 +47,19 @@ benchmark artifacts remain ignored.
 
 ## Next delivery plan
 
-1. **#9 rehearsal and #1 handoff — accepted.** The clean-start preflight,
-   route/search/navigation operator checklist, and clean exit passed on
-   2026-11-15. The evidence and management-facing limits are in
+1. **#9 rehearsal and #1 handoff — completed.** PR #54 merged as `6e11910` on
+   2026-11-15; #9 and #1 are closed and their Project #6 items are `Done`.
+   The clean-start preflight, route/search/navigation operator checklist, and
+   clean exit passed. Evidence and management-facing limits are in
    `docs/rehearsal/demo-handoff.md` and
-   `docs/reports/weekly-report-2026-11-15.md`; no benchmark was added. #1 and
-   #9 can be closed after their live issue/project fields are updated.
+   `docs/reports/weekly-report-2026-11-15.md`; no benchmark was added.
 2. **#15 — orthography decision gate (P1).** Before code or data work, record
    a candidate source, license, attribution text, bounded Hanoi coverage,
    zoom range, storage estimate, offline behavior, and fallback UX. Obtain an
    owner decision before downloading/generating any imagery. Implement as a
-   separate vertical slice only after that gate passes.
+   separate vertical slice only after that gate passes. The proposed Sentinel-2
+   Level-2A candidate and its approval conditions are in
+   `context/feature-specs/15_orthography-decision-gate.md`.
 3. **Deferred search expansion.** Specify and spike the SQLite FTS5 schema,
    generator provenance, query normalization/ranking, and package lifecycle
    after the demo-handoff work. It must remain offline-only and not imply
