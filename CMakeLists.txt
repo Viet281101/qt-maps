@@ -107,6 +107,7 @@ add_library(qtmaps_map STATIC
 target_include_directories(qtmaps_map PUBLIC "${CMAKE_SOURCE_DIR}/src")
 target_link_libraries(qtmaps_map PUBLIC
     Qt5::Core
+    Qt5::Gui
     Qt5::Network
     Qt5::Positioning
     Qt5::Sql
@@ -285,6 +286,9 @@ if(BUILD_TESTING)
     add_test(NAME qtmaps_orthography_package_tool_tests
         COMMAND "${Python3_EXECUTABLE}"
             "${CMAKE_SOURCE_DIR}/tests/map/test_build_hanoi_orthography_package.py")
+    add_test(NAME qtmaps_sentinel_tile_preparation_tests
+        COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_SOURCE_DIR}/tests/map/test_prepare_hanoi_sentinel_tiles.py")
     add_test(NAME qtmaps_hanoi_style_tests
         COMMAND "${Python3_EXECUTABLE}"
             "${CMAKE_SOURCE_DIR}/tests/map/test_build_hanoi_style.py")

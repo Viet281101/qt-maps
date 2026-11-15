@@ -62,6 +62,9 @@ aqtinstall.log
 /data/packages/
 /data/raster-packages/
 /data/search-packages/
+/data/*.SAFE.zip
+/data/*.SAFE/
+/generated/unit-10/
 /data/orthography-packages/
 __pycache__/
 
