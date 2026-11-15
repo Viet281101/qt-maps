@@ -8,6 +8,8 @@ benchmark artifacts remain ignored.
 
 - Units 03--08 are merged. Qt 5.15.18 is the production baseline; Qt 5.15.13
   is comparison-only.
+- Unit 09 is the active offline-search integration; PR #62 is its single
+  integration PR.
 - The active GitHub milestone is `Post-demo stabilization` with no due date.
 - [PR #53](https://github.com/Viet281101/qt-maps/pull/53) merged as `15d198a`
   on 2026-11-15 and closed #16. Project #6 records both items as `Done`.
