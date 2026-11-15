@@ -13,8 +13,8 @@ benchmark artifacts remain ignored.
   on 2026-11-15 and closed #16. Project #6 records both items as `Done`.
 - The management-demo vertical slice is accepted: #9 and #1 are closed and
   `Done` on Project #6. #15 (licensed orthography, `In Progress`, P1) awaits
-  authorized source imagery; #58 (offline SQLite FTS5 search spike, `In
-  Progress`, P1) is the active unblocked delivery item.
+  authorized source imagery. #58 (offline SQLite FTS5 search spike, P1) is
+  closed and `Done` on Project #6.
 
 ## Completed product baseline
 
@@ -28,8 +28,8 @@ benchmark artifacts remain ignored.
   owner of the active instruction while replay is running.
 - Bounded local place search supplies Hoàn Kiếm, Thái Hà, and Ba Đình with
   debounced idle/loading/ready/empty states and explicit A/B endpoint actions.
-  It is visibly labelled as fixture data; SQLite FTS5, wider coverage, and all
-  remote geocoding remain deferred.
+  It is visibly labelled as fixture data. The SQLite FTS5 capability is proven,
+  but wider coverage and all remote geocoding remain deferred.
 - The local-only `qtmaps_visual_review` harness captures production QML in
   vector and forced-raster modes at 900x580, 1366x768, and 1920x1080. Its
   latest #53 review drives the actual search input and verifies the popover,
@@ -37,8 +37,9 @@ benchmark artifacts remain ignored.
 
 ## Current verified evidence
 
-- The #58 QSQLITE FTS5 spike creates and queries an external-content Vietnamese
-  fixture schema locally; `make QT_EXPECTED_VERSION=5.15.18 test` passed 19/19.
+- PR #59 merged as `0c7964d` and closed #58: the QSQLITE FTS5 spike creates and
+  queries an external-content Vietnamese fixture schema locally; Release tests
+  passed 19/19.
 - `make QT_EXPECTED_VERSION=5.15.18 review` passed for PR #53: formatting,
   isolated Release build, and 17/17 tests.
 - Direct-GPU visual captures completed on the Intel HD 520 for the supported
@@ -70,11 +71,11 @@ benchmark artifacts remain ignored.
    imagery. PR #57 merged as `631d713`. Wait for an authorized Copernicus
    session/account or approved local L2A scene before querying, downloading, or
    processing real imagery.
-3. **#58 — FTS5 search spike (P1).** Validate the Qt SQLite FTS5 capability
-   with a compact Vietnamese fixture and record the offline package contract;
-   do not replace the current fixture search, download a source dataset, or add
-   remote geocoding. The proposed schema and acceptance are in
-   `context/feature-specs/58_offline-search-fts5-spike.md`.
+3. **FTS5 source decision before the next slice.** #58 is complete. Before a
+   generator, package validation, or runtime switch, approve a licensed local
+   source URL, attribution, coverage, storage budget, retrieval/checksum method,
+   and generator revision. The current fixture search remains the supported
+   product behavior; remote geocoding stays out of scope.
 
 ## Risks and decisions requiring the owner
 
@@ -84,8 +85,9 @@ benchmark artifacts remain ignored.
 2. Orthography provisioning needs an authorized Copernicus Data Space
    session/account or a local Sentinel-2 L2A scene; credentials and raw source
    data remain outside Git.
-3. SQLite FTS5 remains proposed until #58 records target-runtime capability
-   evidence and a later owner decision selects a licensed local source.
+3. SQLite FTS5 target-runtime capability is proven, but its source dataset,
+   coverage, storage budget, generator, and runtime package lifecycle remain
+   Proposed until the owner approves the next decision gate.
 
 ## Working rules
 

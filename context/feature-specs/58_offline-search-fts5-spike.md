@@ -2,10 +2,11 @@
 
 ## Status
 
-**Proposed; capability spike in progress.** This work proves only that the
-Qt 5.15.18 `QSQLITE` driver can create and query the bounded fixture schema.
-It does not replace the existing three-place fixture search or claim broader
-offline place coverage.
+**Completed on 2026-11-15.** [PR #59](https://github.com/Viet281101/qt-maps/pull/59)
+merged as `0c7964d`: the Qt 5.15.18 `QSQLITE` driver creates and queries the
+bounded fixture schema, including Vietnamese diacritic-insensitive matching and
+stable ordering. This does not replace the existing three-place fixture search
+or claim broader offline place coverage.
 
 ## Goal and boundaries
 
