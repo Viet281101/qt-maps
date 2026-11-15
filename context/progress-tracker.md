@@ -8,8 +8,10 @@ benchmark artifacts remain ignored.
 
 - Units 03--08 are merged. Qt 5.15.18 is the production baseline; Qt 5.15.13
   is comparison-only.
-- Unit 09 is complete locally in PR #62. Unit 10 is planned as #15 licensed
-  orthography integration and remains blocked on authorized imagery provision.
+- Unit 09 merged in PR #62. Unit 10 (#15) has an owner-supplied authorized
+  local Sentinel-2 L2A scene; deterministic processing, app integration, the
+  Qt 5.15.18 test suite, and functional visual review are complete locally.
+  It is ready for feature-PR code review.
 - The active GitHub milestone is `Post-demo stabilization` with no due date.
 - [PR #53](https://github.com/Viet281101/qt-maps/pull/53) merged as `15d198a`
   on 2026-11-15 and closed #16. Project #6 records both items as `Done`.
@@ -74,6 +76,24 @@ benchmark artifacts remain ignored.
   `generated/unit-09/visual-review-20261115-final-capped/`; it is visual evidence,
   not a benchmark. Run the isolated `make ... review` gate before merging #62.
 
+## Unit 10 — Licensed orthography integration (active 2026-11-15)
+- The owner supplied the ignored local Sentinel-2C L2A ZIP
+  `S2C_MSIL2A_20261014T032711_N0513_R018_T48QWJ_20261014T082606.SAFE.zip`.
+  Its SHA-256 is
+  `e2de4c393374dd82b059dd69be14cb16e696cc1ef7d59418bf19d5d896f75232`; metadata
+  confirms the 2026-10-14 acquisition, processing baseline 05.13, EPSG:32648,
+  B02/B03/B04 10 m inputs, and 12.59245% declared cloud cover.
+- The local-only preparation pipeline generated the complete Hanoi z12--z15
+  RGB tree (226 tiles). The offline package builder produced the ignored
+  `hanoi-orthography-20261115-s2-l2a-v2` package: 14,700,544 bytes, below the
+  100 MiB cap, with MBTiles SHA-256
+  `6286ce7d3956d83d324619f879d1b11d7a05f59cfc833c22319700da63370e70`.
+- The application validates the orthography manifest and MBTiles checksum on a
+  lazy worker, offers an explicit local 10 m layer, preserves Sentinel and OSM
+  attribution, limits the layer to z15, and reports missing/corrupt packages
+  without a remote fallback. The visual-review harness captured the active
+  layer at 900x580, 1366x768, and 1920x1080; this is functional evidence only.
+
 ## Next delivery plan
 
 1. **#9 rehearsal and #1 handoff — completed.** PR #54 merged as `6e11910` on
@@ -90,12 +110,9 @@ benchmark artifacts remain ignored.
    `context/feature-specs/15_orthography-decision-gate.md`. The first offline
    package/manifest contract now has a compact synthetic fixture and focused
    tests; it records complete coverage and provenance but does not process real
-   imagery. PR #57 merged as `631d713`. Wait for an authorized Copernicus
-   session/account or approved local L2A scene before querying, downloading, or
-   processing real imagery.
-   Unit 10's ordered runtime/UI plan is in
-   `context/feature-specs/unit-10-orthography-integration-plan.md`; it is
-   planning-only and does not authorize provisioning.
+   imagery. PR #57 merged as `631d713`. The owner has now supplied an approved
+   local L2A scene, so Unit 10 processing and integration are active locally;
+   finish the Release review gate and code review before opening its feature PR.
 3. **FTS5 source decision before the next slice.** #58 is complete. Before a
    generator, package validation, or runtime switch, approve a licensed local
    source URL, attribution, coverage, storage budget, retrieval/checksum method,
@@ -109,9 +126,9 @@ benchmark artifacts remain ignored.
 1. The i915 render-benchmark freeze remains in effect. The completed matrices
    and direct-GPU visual review do not authorize a new benchmark, soak,
    MapLibre/OpenGL investigation, or GPU configuration change.
-2. Orthography provisioning needs an authorized Copernicus Data Space
-   session/account or a local Sentinel-2 L2A scene; credentials and raw source
-   data remain outside Git.
+2. Orthography is now provisioned from an owner-supplied local Sentinel-2 L2A
+   scene. Credentials and raw source data remain outside Git; nationwide or
+   higher-resolution coverage still needs a separate decision.
 3. SQLite FTS5 target-runtime capability is proven, but its source dataset,
    coverage, storage budget, generator, and runtime package lifecycle remain
    Proposed except for #61's local package-generator contract; extractor and

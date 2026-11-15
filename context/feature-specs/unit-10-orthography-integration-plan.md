@@ -2,10 +2,10 @@
 
 ## Status and tracking
 
-**Planned; blocked on provisioning.** This unit delivers issue #15 after the
-owner provides either an authorized Copernicus Data Space session or a local,
-unmodified Sentinel-2 Level-2A scene with product ID and checksum. It must not
-query, download, or process imagery before that gate is satisfied.
+**Active; provisioned locally on 2026-11-15.** The owner supplied a local,
+unmodified Sentinel-2 Level-2A scene with product ID and checksum, satisfying
+the gate in `15_orthography-decision-gate.md`. Processing stays local; neither
+the generator nor the application queries or downloads imagery.
 
 ## Objective
 
@@ -26,24 +26,26 @@ authoritative in `15_orthography-decision-gate.md`.
 
 ## Ordered slices
 
-1. **Provisioning evidence.** Record the authorized local scene/product ID,
-   SHA-256, acquisition date, processing baseline, cloud criterion, and RGB
-   preparation command outside Git. Abort if the selected scene or preliminary
-   package exceeds the approved coverage or storage limit.
-2. **Deterministic generation.** Use the existing offline packager on the
-   prepared complete z12--z15 tile tree. Validate its manifest, package hash,
-   PNG coverage, provenance, attribution, and cap; generated imagery remains
-   ignored.
-3. **Runtime boundary.** Add a lazy worker-thread package validator/source that
+1. **Provisioning evidence — complete.** The supplied 2026-10-14 Sentinel-2C
+   Level-2A scene is recorded in the ignored package manifest with its SHA-256,
+   baseline 05.13, declared 12.59245% cloud cover, and RGB inputs.
+2. **Deterministic generation — complete locally.** The local preparation
+   script produced all 226 z12--z15 PNG tiles, then the offline packager wrote
+   a 14,700,544-byte MBTiles package (below the 100 MiB cap) with checksum
+   `6286ce7d3956d83d324619f879d1b11d7a05f59cfc833c22319700da63370e70`.
+   Scenes, tiles, manifests, and packages remain ignored.
+3. **Runtime boundary — implemented.** Add a lazy worker-thread package validator/source that
    never blocks the UI. Missing, corrupt, or incompatible data is a visible
    unavailable/error state; retain the current vector or recovery-raster layer
    and never relabel it as orthography.
-4. **Selector and presentation.** Add an `Orthography (10 m, local)` choice,
+4. **Selector and presentation — implemented.** Add an `Orthography (10 m, local)` choice,
    unavailable reason, persistent source attribution, and readable route, A/B,
    navigation, and connection UI across the supported viewports.
-5. **Acceptance.** Add focused package/runtime/QML failure tests, run the
-   Release review gate, and perform an owner-authorized functional visual review
-   at 900x580, 1366x768, and 1920x1080. This review is not a benchmark.
+5. **Acceptance — complete locally.** Focused package/runtime/QML failure
+   tests pass, as does the Qt 5.15.18 Release test suite. Functional visual
+   review captured the active layer at 900x580, 1366x768, and 1920x1080 after
+   constraining navigation camera updates to the approved z15 ceiling. This
+   review is not a benchmark; feature-PR code review remains.
 
 ## Acceptance criteria
 
