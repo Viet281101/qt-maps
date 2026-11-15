@@ -311,6 +311,9 @@ if(BUILD_TESTING)
     add_executable(qtmaps_search_fts5_spike_tests tests/search/tst_SearchFts5Spike.cpp)
     target_link_libraries(qtmaps_search_fts5_spike_tests PRIVATE Qt5::Sql Qt5::Test)
     add_test(NAME qtmaps_search_fts5_spike_tests COMMAND qtmaps_search_fts5_spike_tests)
+    add_test(NAME qtmaps_search_package_tool_tests
+        COMMAND "${Python3_EXECUTABLE}"
+            "${CMAKE_SOURCE_DIR}/tests/search/test_build_hanoi_search_package.py")
 
     add_executable(qtmaps_route_navigation_tests
         tests/routing/tst_RouteNavigation.cpp
