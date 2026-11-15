@@ -11,14 +11,16 @@ benchmark artifacts remain ignored.
 - Unit 09 merged in PR #62. Unit 10 (#15) has an owner-supplied authorized
   local Sentinel-2 L2A scene; deterministic processing, app integration, the
   Qt 5.15.18 test suite, and functional visual review are complete locally.
-  It is ready for feature-PR code review.
+  [PR #63](https://github.com/Viet281101/qt-maps/pull/63) is ready to merge.
+- Unit 11 is planned as #64 offline package readiness preflight. It has no
+  runtime implementation and starts only after Unit 10 merges.
 - The active GitHub milestone is `Post-demo stabilization` with no due date.
 - [PR #53](https://github.com/Viet281101/qt-maps/pull/53) merged as `15d198a`
   on 2026-11-15 and closed #16. Project #6 records both items as `Done`.
 - The management-demo vertical slice is accepted: #9 and #1 are closed and
-  `Done` on Project #6. #15 (licensed orthography, `In Progress`, P1) awaits
-  authorized source imagery. #58 (offline SQLite FTS5 search spike, P1) is
-  closed and `Done` on Project #6.
+  `Done` on Project #6. #15 (licensed orthography, `In Progress`, P1) is in
+  PR #63 review with an authorized local scene. #58 (offline SQLite FTS5 search
+  spike, P1) is closed and `Done` on Project #6.
 
 ## Completed product baseline
 
@@ -94,8 +96,16 @@ benchmark artifacts remain ignored.
   without a remote fallback. The visual-review harness captured the active
   layer at 900x580, 1366x768, and 1920x1080; this is functional evidence only.
 - [PR #63](https://github.com/Viet281101/qt-maps/pull/63) contains the Unit 10
-  integration and is ready for code review; raw imagery and generated artifacts
+  integration and is ready to merge; raw imagery and generated artifacts
   are intentionally absent from its diff.
+
+## Unit 11 — Offline package readiness preflight (planned)
+
+- [Issue #64](https://github.com/Viet281101/qt-maps/issues/64) is P1, `Todo`,
+  `After Demo` on Project #6, and scheduled after Unit 10 merges.
+- Its plan in `context/feature-specs/unit-11-offline-package-readiness-plan.md`
+  reuses current validators to report required/optional package readiness
+  without data downloads, new dependencies, benchmarks, or packaging work.
 
 ## Next delivery plan
 
@@ -105,7 +115,7 @@ benchmark artifacts remain ignored.
    clean exit passed. Evidence and management-facing limits are in
    `docs/rehearsal/demo-handoff.md` and
    `docs/reports/weekly-report-2026-11-15.md`; no benchmark was added.
-2. **#15 — approved orthography contract (P1).** The owner approved the
+2. **#15 — licensed orthography integration (P1).** The owner approved the
    Sentinel-2 Level-2A 10 m regional RGB source, Hanoi-only bounds, z12–z15,
    100 MiB package cap, required attribution, offline-only runtime, and explicit
    unavailable/failure UX on 2026-11-15. PR #55 merged as `37534a7`. The exact
@@ -113,16 +123,13 @@ benchmark artifacts remain ignored.
    `context/feature-specs/15_orthography-decision-gate.md`. The first offline
    package/manifest contract now has a compact synthetic fixture and focused
    tests; it records complete coverage and provenance but does not process real
-   imagery. PR #57 merged as `631d713`. The owner has now supplied an approved
-   local L2A scene, so Unit 10 processing and integration are active locally;
-   finish the Release review gate and code review before opening its feature PR.
-3. **FTS5 source decision before the next slice.** #58 is complete. Before a
-   generator, package validation, or runtime switch, approve a licensed local
-   source URL, attribution, coverage, storage budget, retrieval/checksum method,
-   and generator revision. **#61 now approves** the existing local Geofabrik
-   Vietnam PBF lineage, current Hanoi bounds, ODbL attribution, and a 20 MiB
-   cap for a fixture-tested packager only. The current fixture search remains
-   the supported product behavior; remote geocoding stays out of scope.
+   imagery. PR #57 merged as `631d713`. Unit 10's complete integration is in
+   PR #63, including review-gate and functional visual evidence; merge it by
+   squash once its final review is accepted.
+3. **#64 — package-readiness preflight (P1, planned).** After Unit 10 merges,
+   reuse existing package validators to present required/optional readiness
+   before the demo starts. The Unit 11 plan fixes its no-download, no-new-
+   dependency, no-benchmark boundary; it does not authorize implementation yet.
 
 ## Risks and decisions requiring the owner
 
