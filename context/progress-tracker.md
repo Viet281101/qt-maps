@@ -11,9 +11,9 @@ benchmark artifacts remain ignored.
 - The active GitHub milestone is `Post-demo stabilization` with no due date.
 - [PR #53](https://github.com/Viet281101/qt-maps/pull/53) merged as `15d198a`
   on 2026-11-15 and closed #16. Project #6 records both items as `Done`.
-- The management-demo vertical slice is accepted: #9's clean-start rehearsal
-  passed and #1 is ready to close from its recorded evidence. #15 (licensed
-  orthography, `Todo`, P1) is the next open delivery item.
+- The management-demo vertical slice is accepted: #9 and #1 are closed and
+  `Done` on Project #6. #15 (licensed orthography, `In Progress`, P1) is the
+  active delivery item.
 
 ## Completed product baseline
 
@@ -53,13 +53,15 @@ benchmark artifacts remain ignored.
    clean exit passed. Evidence and management-facing limits are in
    `docs/rehearsal/demo-handoff.md` and
    `docs/reports/weekly-report-2026-11-15.md`; no benchmark was added.
-2. **#15 — orthography decision gate (P1).** Before code or data work, record
-   a candidate source, license, attribution text, bounded Hanoi coverage,
-   zoom range, storage estimate, offline behavior, and fallback UX. Obtain an
-   owner decision before downloading/generating any imagery. Implement as a
-   separate vertical slice only after that gate passes. The proposed Sentinel-2
-   Level-2A candidate and its approval conditions are in
-   `context/feature-specs/15_orthography-decision-gate.md`.
+2. **#15 — approved orthography contract (P1).** The owner approved the
+   Sentinel-2 Level-2A 10 m regional RGB source, Hanoi-only bounds, z12–z15,
+   100 MiB package cap, required attribution, offline-only runtime, and explicit
+   unavailable/failure UX on 2026-11-15. PR #55 merged as `37534a7`. The exact
+   contract and provisioning gate are in
+   `context/feature-specs/15_orthography-decision-gate.md`. Start the
+   deterministic generator/manifest contract with compact fixtures; wait for an
+   authorized Copernicus session/account or approved local L2A scene before
+   querying, downloading, or processing real imagery.
 3. **Deferred search expansion.** Specify and spike the SQLite FTS5 schema,
    generator provenance, query normalization/ranking, and package lifecycle
    after the demo-handoff work. It must remain offline-only and not imply
@@ -70,8 +72,9 @@ benchmark artifacts remain ignored.
 1. The i915 render-benchmark freeze remains in effect. The completed matrices
    and direct-GPU visual review do not authorize a new benchmark, soak,
    MapLibre/OpenGL investigation, or GPU configuration change.
-2. Orthography has no approved source, license, or storage budget. #15 cannot
-   proceed beyond planning without an explicit source decision.
+2. Orthography provisioning needs an authorized Copernicus Data Space
+   session/account or a local Sentinel-2 L2A scene; credentials and raw source
+   data remain outside Git.
 3. SQLite FTS5 is still proposed architecture, not an implemented capability.
 
 ## Working rules
