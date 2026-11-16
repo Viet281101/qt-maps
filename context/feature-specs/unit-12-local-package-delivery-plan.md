@@ -2,7 +2,8 @@
 
 ## Status
 
-Proposed planning unit, after Unit 11 review and merge. This document does not
+Proposed planning unit tracked by [#65](https://github.com/Viet281101/qt-maps/issues/65),
+after Unit 11 review and merge. This document does not
 authorize distribution, download, package regeneration, or installation work.
 
 ## Objective

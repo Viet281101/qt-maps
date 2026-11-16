@@ -171,10 +171,11 @@ benchmark artifacts remain ignored.
 3. **#64 — readiness and preferences (P1, completed locally).** Prepare the
    issue/PR handoff after the isolated Release review gate. The Unit 11
    plan retains its no-download, no-new-dependency, no-benchmark boundary.
-4. **Unit 12 — local package delivery (proposed).** The decision-first plan in
+4. **Unit 12 — local package delivery (proposed, [#65](https://github.com/Viet281101/qt-maps/issues/65)).** The decision-first plan in
    `context/feature-specs/unit-12-local-package-delivery-plan.md` awaits the
    owner's choice of distribution, licensing, storage, and update policy.
-   Implementation is not authorized by this planning document.
+   The issue is `Todo`, P2, `After Demo` in Project #6. Implementation is not
+   authorized by this planning document.
 
 ## Risks and decisions requiring the owner
 
