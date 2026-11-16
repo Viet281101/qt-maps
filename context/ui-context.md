@@ -15,6 +15,8 @@ Unit 02 may introduce a minimal `qml/theme/Theme.qml` singleton so the performan
 ## QML Theme Singleton
 
 Reusable visual tokens belong in a QML singleton, planned as `qml/theme/Theme.qml`. Components consume semantic properties rather than duplicating literals.
+The Settings panel uses the opaque `surfaceOpaque` token so the layer label
+underneath cannot show through its foreground text.
 
 | Category | Planned semantic properties | Current value |
 | --- | --- | --- |
@@ -46,10 +48,10 @@ The supported maximum is 1920x1080 so the bounded raster visible-texture
 working-set calculation remains valid on the reference configuration.
 
 At widths through 960 px, the route panel uses a 300 px compact width. Search
-text clips/elides inside its surface; connection status occupies the next
-available top-right row beneath the layer control, and moves below the expanded
-layer menu. This prevents status/search and status/menu overlap without hiding
-the connection source.
+text clips/elides inside its surface. The interactive layer selector remains at
+the top-right; a degraded/error connection status is anchored at the bottom-right
+immediately above the OSM attribution pill. This keeps status/search and
+status/menu clear without hiding the connection source or attribution.
 
 ## Component Conventions
 

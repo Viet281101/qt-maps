@@ -495,6 +495,8 @@ private slots:
         status->setProperty("connectionLabel", QStringLiteral("offline — fixture"));
         QCOMPARE(status->property("statusText").toString(),
                  QStringLiteral("Ngoại tuyến · tuyến mô phỏng"));
+        QVERIFY(status->property("statusBottomMargin").toReal() >
+                status->property("attributionHeight").toReal());
     }
 
     void navigationStartCollapsesPanelAndHidesStartAction()
@@ -672,8 +674,8 @@ private slots:
         QVERIFY(panelQml.contains("objectName: \"maneuverScrollThumb\""));
         QVERIFY(qml.contains("navigationActive: navigationOverlay.guidanceVisible"));
         QVERIFY(qml.contains("shutdownCoordinator.requestQuit()"));
-        QVERIFY(mainQml.contains("normalTopMargin: demoTools.statusSafeTop"));
-        QVERIFY(toolsQml.contains("readonly property real statusSafeTop"));
+        QVERIFY(statusQml.contains("anchors.bottom: parent.bottom"));
+        QVERIFY(statusQml.contains("anchors.bottomMargin: statusOverlay.statusBottomMargin"));
         QVERIFY(toolsQml.contains("id: layerMenu"));
         QVERIFY(statusQml.contains("elide: Text.ElideRight"));
         QVERIFY(statusQml.contains("width: Math.min(264"));

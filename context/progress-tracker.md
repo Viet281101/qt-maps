@@ -14,8 +14,10 @@ benchmark artifacts remain ignored.
   [PR #63](https://github.com/Viet281101/qt-maps/pull/63) merged as `71ee64e`
   on 2026-11-15.
   #15 remains open only for its separately approved performance observation.
-- Unit 11 (#64) is `In Progress`: offline readiness and application preferences.
-  No runtime implementation has landed yet.
+- Unit 11 (#64) is implemented and verified locally: its readiness controller validates vector,
+  raster, search, and orthography packages off the UI thread; shows a compact
+  settings/readiness panel; and persists the Vietnamese/English preference.
+  The issue/PR handoff remains pending.
 - The active GitHub milestone is `Post-demo stabilization` with no due date.
 - [PR #53](https://github.com/Viet281101/qt-maps/pull/53) merged as `15d198a`
   on 2026-11-15 and closed #16. Project #6 records both items as `Done`.
@@ -102,15 +104,49 @@ benchmark artifacts remain ignored.
   intentionally absent from its diff. It satisfies four #15 acceptance items;
   the short Release performance observation remains deferred by the i915 freeze.
 
-## Unit 11 — Offline readiness and application preferences (planned)
+## Unit 11 — Offline readiness and application preferences (completed locally)
 
-- [Issue #64](https://github.com/Viet281101/qt-maps/issues/64) is P1, `Todo`,
+- [Issue #64](https://github.com/Viet281101/qt-maps/issues/64) is P1, `In Progress`,
   `After Demo` on Project #6, and scheduled after Unit 10 merges.
 - Its plan in `context/feature-specs/unit-11-offline-package-readiness-plan.md`
   reuses current validators to report required/optional package readiness, adds
   a Vietnamese/English translation base and persisted language setting, and
   consolidates idle map status controls without data downloads, new
   dependencies, benchmarks, or packaging work.
+- The current branch adds a bounded asynchronous readiness controller using the
+  existing package validators, including the search-package contract, with
+  normalized ready/missing/invalid results. Focused tests cover missing,
+  valid, and corrupt search packages; the Qt 5.15.18 Release suite passed
+  23/23 on 2026-11-15. Production-QML visual review also captured all vector,
+  raster, and orthography flows at 900x580, 1366x768, and 1920x1080.
+- Degraded/error routing status now sits above the OSM attribution at the
+  bottom-right. The top-right is reserved for the interactive layer control
+  and settings action; normal loopback routing still shows no map-level pill.
+- `qtmaps_app_preferences_tests` now verifies the default Vietnamese choice,
+  persisted English choice, signal emission, and invalid-language fallback in
+  an isolated settings scope.
+- The English QML catalog now has 110/110 finished entries. The Release build
+  compiles its ignored `.qm` from the source-controlled `.ts` using the
+  available Qt `lrelease` tool. A translation regression test caught and fixed
+  the English-to-Vietnamese switch retaining the old translator.
+  `QQmlApplicationEngine::retranslate()` is verified in both directions by a
+  live QML binding test.
+- The Settings UI test opens with the keyboard action, dismisses on Escape,
+  and verifies that the panel remains within the 900x580 window. Missing and
+  invalid packages receive concise recovery guidance. The readiness timeout
+  test verifies that a late result cannot replace the timeout state.
+- The worker has a bounded 500 ms shutdown wait and independent lifetime when
+  validation stalls. A production-QML capture of the open Settings panel at
+  900x580 exposed a translucent layer label behind it; the panel now uses an
+  opaque theme surface.
+- **BUILD PASS** on Qt 5.15.18 Release (2026-11-16): `make BUILD_DIR=build-qt515
+  check` passed 24/24 tests and `git diff --check`. The production QML visual
+  review captured 17 frames including Settings at 900x580, vector/raster, and
+  orthography at supported viewports. The open Settings panel is opaque, fully
+  inside the window, and leaves attribution readable. This is functional
+  evidence; no new FPS/RAM/CPU measurement was run under the active i915 freeze.
+- The isolated `make REVIEW_BUILD_DIR=build-review-qt515 review` gate passed
+  24/24 tests with a clean worktree on 2026-11-16.
 
 ## Next delivery plan
 
@@ -132,12 +168,9 @@ benchmark artifacts remain ignored.
    PR #63, including review-gate and functional visual evidence; merge it by
    squash once its final review is accepted. Keep #15 open for the separately
    approved performance observation while the i915 freeze remains active.
-3. **#64 — readiness and preferences (P1, planned).** After Unit 10 merges,
-   reuse existing package validators to present required/optional readiness
-   before the demo starts; add only Vietnamese/English app translations and a
-   compact settings panel; consolidate the redundant idle service pill. The
-   Unit 11 plan fixes its no-download, no-new-dependency, no-benchmark boundary;
-   it does not authorize implementation yet.
+3. **#64 — readiness and preferences (P1, completed locally).** Prepare the
+   issue/PR handoff after the isolated Release review gate. The Unit 11
+   plan retains its no-download, no-new-dependency, no-benchmark boundary.
 
 ## Risks and decisions requiring the owner
 

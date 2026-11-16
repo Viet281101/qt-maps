@@ -18,4 +18,7 @@
         <file alias="theme/qmldir">theme/qmldir</file>
         <file alias="theme/Theme.qml">theme/Theme.qml</file>
     </qresource>
+    <qresource prefix="/i18n">
+        <file alias="qtmaps_en.qm">../i18n/qtmaps_en.qm</file>
+    </qresource>
 </RCC>

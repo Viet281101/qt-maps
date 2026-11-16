@@ -9,6 +9,7 @@ Rectangle {
     property color textColor: "#08243a"
     property int labelPixelSize: width < 132 ? Theme.fontSizeCaption : Theme.fontSizeBody
     property int horizontalPadding: Theme.spaceMd
+    property bool hovered: buttonMouse.containsMouse
     signal triggered()
 
     height: 36
@@ -34,6 +35,7 @@ Rectangle {
         id: buttonMouse
         anchors.fill: parent
         enabled: root.enabled
+        hoverEnabled: true
         onClicked: {
             root.forceActiveFocus()
             root.triggered()

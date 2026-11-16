@@ -2,7 +2,7 @@
 
 ## Status and tracking
 
-**Planned; no runtime work started.** This unit delivers
+**Implemented and verified locally on 2026-11-16; PR handoff pending.** This unit delivers
 [issue #64](https://github.com/Viet281101/qt-maps/issues/64) after Unit 10 is
 merged. It has three independently testable slices: package readiness,
 Vietnamese/English application preferences, and consolidation of the idle map

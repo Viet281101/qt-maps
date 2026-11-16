@@ -5,8 +5,10 @@
 class QTranslator;
 class QQmlApplicationEngine;
 
-namespace qtmaps { namespace core {
-class AppPreferences final : public QObject {
+namespace qtmaps {
+namespace core {
+class AppPreferences final : public QObject
+{
     Q_OBJECT
     Q_PROPERTY(QString language READ language NOTIFY languageChanged)
 public:
@@ -15,10 +17,12 @@ public:
     Q_INVOKABLE void setLanguage(const QString &language);
 signals:
     void languageChanged();
+
 private:
     void applyLanguage();
     QQmlApplicationEngine *engine_ = nullptr;
     QTranslator *translator_ = nullptr;
     QString language_;
 };
-} }
+} // namespace core
+} // namespace qtmaps

@@ -51,6 +51,48 @@ QString ftsPrefixQuery(const QString &input)
     return quoted.join(QStringLiteral(" AND "));
 }
 
+bool validateSearchPackage(const QString &packagePath, QString *errorMessage)
+{
+    QString error;
+    QFileInfo packageInfo(packagePath);
+    const QString packageDirectory = packageInfo.canonicalFilePath();
+    const QString manifestPath = QDir(packageDirectory).filePath(QStringLiteral("manifest.json"));
+    const QString databasePath = QDir(packageDirectory).filePath(QStringLiteral("places.sqlite"));
+    QFile manifestFile(manifestPath);
+    if (!manifestFile.open(QIODevice::ReadOnly)) {
+        error = QStringLiteral("Không tìm thấy gói tìm kiếm ngoại tuyến");
+    } else {
+        const QJsonObject manifest = QJsonDocument::fromJson(manifestFile.readAll()).object();
+        const QJsonObject places = manifest.value(QStringLiteral("places")).toObject();
+        const QJsonObject source = manifest.value(QStringLiteral("source")).toObject();
+        const QJsonArray bounds = manifest.value(QStringLiteral("bounds")).toArray();
+        const bool contractMatches =
+            manifest.value(QStringLiteral("schema_version")).toString() ==
+                QStringLiteral("qtmaps-search-package-v1") &&
+            manifest.value(QStringLiteral("attribution")).toString() ==
+                QStringLiteral("© OpenStreetMap contributors, ODbL 1.0") &&
+            places.value(QStringLiteral("path")).toString() == QStringLiteral("places.sqlite") &&
+            places.value(QStringLiteral("count")).toInt() > 0 &&
+            source.value(QStringLiteral("url")).toString() ==
+                QStringLiteral("https://download.geofabrik.de/asia/vietnam-latest.osm.pbf") &&
+            !source.value(QStringLiteral("pbf_sha256")).toString().isEmpty() &&
+            !source.value(QStringLiteral("retrieved_on")).toString().isEmpty() &&
+            bounds.size() == 4 && bounds.at(0).toDouble() == 105.78 &&
+            bounds.at(1).toDouble() == 20.97 && bounds.at(2).toDouble() == 105.90 &&
+            bounds.at(3).toDouble() == 21.10;
+        if (!contractMatches || !QFileInfo::exists(databasePath) ||
+            QFileInfo(databasePath).size() > 20 * 1024 * 1024 ||
+            QFileInfo(databasePath).size() !=
+                places.value(QStringLiteral("size_bytes")).toVariant().toLongLong() ||
+            fileDigest(databasePath) != places.value(QStringLiteral("sha256")).toString()) {
+            error = QStringLiteral("Gói tìm kiếm ngoại tuyến không hợp lệ");
+        }
+    }
+    if (errorMessage)
+        *errorMessage = error;
+    return error.isEmpty();
+}
+
 class SearchPackageWorker final : public QObject
 {
 public:
@@ -70,45 +112,9 @@ public:
     void initialize()
     {
         QString error;
-        QFileInfo packageInfo(packagePath_);
-        const QString packageDirectory = packageInfo.canonicalFilePath();
-        const QString manifestPath =
-            QDir(packageDirectory).filePath(QStringLiteral("manifest.json"));
-        const QString databasePath =
-            QDir(packageDirectory).filePath(QStringLiteral("places.sqlite"));
-        QFile manifestFile(manifestPath);
-        QJsonObject manifest;
-        if (!manifestFile.open(QIODevice::ReadOnly)) {
-            error = QStringLiteral("Không tìm thấy gói tìm kiếm ngoại tuyến");
-        } else {
-            const QJsonDocument document = QJsonDocument::fromJson(manifestFile.readAll());
-            manifest = document.object();
-            const QJsonObject places = manifest.value(QStringLiteral("places")).toObject();
-            const QJsonObject source = manifest.value(QStringLiteral("source")).toObject();
-            const QJsonArray bounds = manifest.value(QStringLiteral("bounds")).toArray();
-            const bool contractMatches =
-                manifest.value(QStringLiteral("schema_version")).toString() ==
-                    QStringLiteral("qtmaps-search-package-v1") &&
-                manifest.value(QStringLiteral("attribution")).toString() ==
-                    QStringLiteral("© OpenStreetMap contributors, ODbL 1.0") &&
-                places.value(QStringLiteral("path")).toString() ==
-                    QStringLiteral("places.sqlite") &&
-                places.value(QStringLiteral("count")).toInt() > 0 &&
-                source.value(QStringLiteral("url")).toString() ==
-                    QStringLiteral("https://download.geofabrik.de/asia/vietnam-latest.osm.pbf") &&
-                !source.value(QStringLiteral("pbf_sha256")).toString().isEmpty() &&
-                !source.value(QStringLiteral("retrieved_on")).toString().isEmpty() &&
-                bounds.size() == 4 && bounds.at(0).toDouble() == 105.78 &&
-                bounds.at(1).toDouble() == 20.97 && bounds.at(2).toDouble() == 105.90 &&
-                bounds.at(3).toDouble() == 21.10;
-            if (!contractMatches || !QFileInfo::exists(databasePath) ||
-                QFileInfo(databasePath).size() > 20 * 1024 * 1024 ||
-                QFileInfo(databasePath).size() !=
-                    places.value(QStringLiteral("size_bytes")).toVariant().toLongLong() ||
-                fileDigest(databasePath) != places.value(QStringLiteral("sha256")).toString()) {
-                error = QStringLiteral("Gói tìm kiếm ngoại tuyến không hợp lệ");
-            }
-        }
+        const QString databasePath = QDir(QFileInfo(packagePath_).canonicalFilePath())
+                                         .filePath(QStringLiteral("places.sqlite"));
+        validateSearchPackage(packagePath_, &error);
         if (error.isEmpty()) {
             connectionName_ = QStringLiteral("qtmaps-search-%1")
                                   .arg(reinterpret_cast<quintptr>(QThread::currentThreadId()));
@@ -189,6 +195,11 @@ private:
 };
 
 } // namespace
+
+bool PlaceSearchController::validatePackage(const QString &packagePath, QString *errorMessage)
+{
+    return validateSearchPackage(packagePath, errorMessage);
+}
 
 PlaceSearchController::PlaceSearchController(const QString &packagePath, QObject *parent) :
     QObject(parent)

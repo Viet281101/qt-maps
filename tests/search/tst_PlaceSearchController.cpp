@@ -158,6 +158,28 @@ private slots:
         QCOMPARE(controller.results().constFirst().toMap().value(QStringLiteral("name")).toString(),
                  QStringLiteral("Hoàn Kiếm"));
     }
+
+    void packageValidationReportsValidMissingAndCorruptPackages()
+    {
+        QTemporaryDir temporary;
+        QVERIFY(temporary.isValid());
+        const QString package = createSearchPackage(&temporary);
+        QVERIFY(!package.isEmpty());
+        QString error;
+        QVERIFY(qtmaps::search::PlaceSearchController::validatePackage(package, &error));
+        QVERIFY(error.isEmpty());
+
+        QVERIFY(!qtmaps::search::PlaceSearchController::validatePackage(
+            temporary.filePath(QStringLiteral("missing")), &error));
+        QVERIFY(!error.isEmpty());
+
+        QFile database(package + QStringLiteral("/places.sqlite"));
+        QVERIFY(database.open(QIODevice::Append));
+        database.write("corrupt");
+        database.close();
+        QVERIFY(!qtmaps::search::PlaceSearchController::validatePackage(package, &error));
+        QVERIFY(!error.isEmpty());
+    }
 };
 
 QTEST_MAIN(PlaceSearchControllerTest)

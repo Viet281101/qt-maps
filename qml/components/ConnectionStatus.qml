@@ -4,14 +4,12 @@ import "../theme"
 Item {
     id: statusOverlay
     property color statusColor: Theme.warning
-    property bool navigationActive: false
-    property real navigationBannerHeight: 0
-    property real normalTopMargin: Theme.spaceMd
     property string connectionLabel: ""
     property string attributionText: "© OpenStreetMap contributors, ODbL 1.0"
     readonly property string statusText: friendlyConnectionLabel(connectionLabel)
     readonly property bool requiresMapLevelStatus: connectionLabel !== "Valhalla local — loopback"
     readonly property real attributionHeight: attributionPill.height + Theme.spaceSm
+    readonly property real statusBottomMargin: attributionPill.height + Theme.spaceMd
 
     function friendlyConnectionLabel(label) {
         if (label === "Valhalla local — loopback")
@@ -28,11 +26,9 @@ Item {
         objectName: "connectionStatusPill"
         visible: statusOverlay.requiresMapLevelStatus
         anchors.right: parent.right
-        anchors.top: parent.top
+        anchors.bottom: parent.bottom
         anchors.rightMargin: Theme.spaceMd
-        anchors.topMargin: statusOverlay.navigationActive
-                           ? statusOverlay.navigationBannerHeight + Theme.spaceMd * 2
-                           : statusOverlay.normalTopMargin
+        anchors.bottomMargin: statusOverlay.statusBottomMargin
         width: Math.min(264, parent.width - Theme.spaceMd * 2)
         height: 32
         radius: 17

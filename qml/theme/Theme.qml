@@ -5,6 +5,7 @@ QtObject {
     readonly property color mapOverlay: "#e61b2530"
     readonly property color surface: "#f21b2530"
     readonly property color surfaceElevated: "#fa202c38"
+    readonly property color surfaceOpaque: "#202c38"
     readonly property color surfaceInput: "#ff2a3948"
     readonly property color surfacePressed: "#ff3a4d60"
     readonly property color textPrimary: "#fff7f9fb"

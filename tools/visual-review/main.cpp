@@ -11,7 +11,9 @@
 #include <functional>
 
 #include "benchmark/BenchmarkScenarioController.h"
+#include "core/AppPreferences.h"
 #include "core/ApplicationShutdownCoordinator.h"
+#include "core/PackageReadinessController.h"
 #include "map/BoundedCameraController.h"
 #include "map/DirectoryTileSource.h"
 #include "map/MapSourceController.h"
@@ -123,23 +125,37 @@ private:
     void captureVectorRoute(QObject *map)
     {
         capture(QStringLiteral("vector-route-900x580"), [this, map]() {
-            resize(QSize(1366, 768));
-            setCamera(map, QGeoCoordinate(21.0245, 105.8382), 15.0, 0.0);
-            capture(QStringLiteral("vector-pan-zoom-1366x768"), [this, map]() {
-                setCamera(map, QGeoCoordinate(21.0245, 105.8382), 15.0, 42.0);
-                capture(QStringLiteral("vector-rotation-1366x768"), [this, map]() {
-                    QMetaObject::invokeMethod(root_, "fitRouteWithPanelPadding");
-                    capture(QStringLiteral("vector-route-fit-1366x768"), [this]() {
-                        navigation_->start();
-                        navigation_->advanceBySeconds(75.0);
-                        QMetaObject::invokeMethod(root_, "recenterNavigation");
-                        capture(QStringLiteral("vector-navigation-recenter-1366x768"), [this]() {
-                            resize(QSize(1920, 1080));
-                            capture(QStringLiteral("vector-route-1920x1080"), [this]() {
-                                mapReadyAttempts_ = 0;
-                                mapSource_->activateRaster();
-                                waitForRaster();
-                            });
+            QObject *settings = root_->findChild<QObject *>(QStringLiteral("settingsOverlay"));
+            if (!settings) {
+                fail(QStringLiteral("Cannot find production settings panel"));
+                return;
+            }
+            settings->setProperty("open", true);
+            capture(QStringLiteral("settings-900x580"), [this, map, settings]() {
+                settings->setProperty("open", false);
+                captureRemainingVectorRoute(map);
+            });
+        });
+    }
+
+    void captureRemainingVectorRoute(QObject *map)
+    {
+        resize(QSize(1366, 768));
+        setCamera(map, QGeoCoordinate(21.0245, 105.8382), 15.0, 0.0);
+        capture(QStringLiteral("vector-pan-zoom-1366x768"), [this, map]() {
+            setCamera(map, QGeoCoordinate(21.0245, 105.8382), 15.0, 42.0);
+            capture(QStringLiteral("vector-rotation-1366x768"), [this, map]() {
+                QMetaObject::invokeMethod(root_, "fitRouteWithPanelPadding");
+                capture(QStringLiteral("vector-route-fit-1366x768"), [this]() {
+                    navigation_->start();
+                    navigation_->advanceBySeconds(75.0);
+                    QMetaObject::invokeMethod(root_, "recenterNavigation");
+                    capture(QStringLiteral("vector-navigation-recenter-1366x768"), [this]() {
+                        resize(QSize(1920, 1080));
+                        capture(QStringLiteral("vector-route-1920x1080"), [this]() {
+                            mapReadyAttempts_ = 0;
+                            mapSource_->activateRaster();
+                            waitForRaster();
                         });
                     });
                 });
@@ -307,7 +323,14 @@ int main(int argc, char *argv[])
                      });
 
     QQmlApplicationEngine engine;
+    qtmaps::core::AppPreferences appPreferences(&engine);
+    qtmaps::core::PackageReadinessController packageReadiness(
+        parser.value(QStringLiteral("map-package")), parser.value(QStringLiteral("raster-package")),
+        parser.value(QStringLiteral("search-package")),
+        parser.value(QStringLiteral("orthography-package")));
     engine.rootContext()->setContextProperty(QStringLiteral("performanceMonitor"), &performance);
+    engine.rootContext()->setContextProperty(QStringLiteral("appPreferences"), &appPreferences);
+    engine.rootContext()->setContextProperty(QStringLiteral("packageReadiness"), &packageReadiness);
     engine.rootContext()->setContextProperty(QStringLiteral("boundedCameraController"),
                                              &boundedCamera);
     engine.rootContext()->setContextProperty(QStringLiteral("routingController"), &routing);

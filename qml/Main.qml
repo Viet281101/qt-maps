@@ -108,6 +108,7 @@ Window {
     }
 
     SettingsOverlay {
+        objectName: "settingsOverlay"
         anchors.fill: parent
         z: 32
     }
@@ -136,9 +137,6 @@ Window {
         id: connectionStatus
         anchors.fill: parent
         statusColor: root.routeSummaryColor
-        navigationActive: navigationOverlay.guidanceVisible
-        navigationBannerHeight: navigationOverlay.bannerHeight
-        normalTopMargin: demoTools.statusSafeTop
         connectionLabel: routingController.connectionLabel
         attributionText: mapSourceController.mapAttribution
         z: 20
