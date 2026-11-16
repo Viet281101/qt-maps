@@ -14,16 +14,17 @@ benchmark artifacts remain ignored.
   [PR #63](https://github.com/Viet281101/qt-maps/pull/63) merged as `71ee64e`
   on 2026-11-15.
   #15 remains open only for its separately approved performance observation.
-- Unit 11 (#64) is implemented and verified locally: its readiness controller validates vector,
+- Unit 11 (#64) is implemented and in [PR #66](https://github.com/Viet281101/qt-maps/pull/66): its readiness controller validates vector,
   raster, search, and orthography packages off the UI thread; shows a compact
   settings/readiness panel; and persists the Vietnamese/English preference.
-  The issue/PR handoff remains pending.
+  The PR is review-ready and unmerged; Issue #64 and the PR remain `In Progress`
+  on Project #6 until the owner accepts the squash merge.
 - The active GitHub milestone is `Post-demo stabilization` with no due date.
 - [PR #53](https://github.com/Viet281101/qt-maps/pull/53) merged as `15d198a`
   on 2026-11-15 and closed #16. Project #6 records both items as `Done`.
 - The management-demo vertical slice is accepted: #9 and #1 are closed and
-  `Done` on Project #6. #15 (licensed orthography, `In Progress`, P1) is in
-  PR #63 review with an authorized local scene. #58 (offline SQLite FTS5 search
+  `Done` on Project #6. #15 (licensed orthography, `In Progress`, P1) has its
+  integration merged in PR #63. #58 (offline SQLite FTS5 search
   spike, P1) is closed and `Done` on Project #6.
 
 ## Completed product baseline
@@ -99,15 +100,17 @@ benchmark artifacts remain ignored.
   attribution, limits the layer to z15, and reports missing/corrupt packages
   without a remote fallback. The visual-review harness captured the active
   layer at 900x580, 1366x768, and 1920x1080; this is functional evidence only.
-- [PR #63](https://github.com/Viet281101/qt-maps/pull/63) contains the Unit 10
-  integration and is ready to merge; raw imagery and generated artifacts are
+- [PR #63](https://github.com/Viet281101/qt-maps/pull/63) merged the Unit 10
+  integration as `71ee64e`; raw imagery and generated artifacts are
   intentionally absent from its diff. It satisfies four #15 acceptance items;
   the short Release performance observation remains deferred by the i915 freeze.
 
 ## Unit 11 — Offline readiness and application preferences (completed locally)
 
-- [Issue #64](https://github.com/Viet281101/qt-maps/issues/64) is P1, `In Progress`,
-  `After Demo` on Project #6, and scheduled after Unit 10 merges.
+- [Issue #64](https://github.com/Viet281101/qt-maps/issues/64) and
+  [PR #66](https://github.com/Viet281101/qt-maps/pull/66) are P1, `In Progress`,
+  `After Demo` on Project #6. The PR is open and review-ready, with no owner
+  review or merge yet.
 - Its plan in `context/feature-specs/unit-11-offline-package-readiness-plan.md`
   reuses current validators to report required/optional package readiness, adds
   a Vietnamese/English translation base and persisted language setting, and
@@ -164,13 +167,13 @@ benchmark artifacts remain ignored.
    `context/feature-specs/15_orthography-decision-gate.md`. The first offline
    package/manifest contract now has a compact synthetic fixture and focused
    tests; it records complete coverage and provenance but does not process real
-   imagery. PR #57 merged as `631d713`. Unit 10's complete integration is in
-   PR #63, including review-gate and functional visual evidence; merge it by
-   squash once its final review is accepted. Keep #15 open for the separately
+   imagery. PR #57 merged as `631d713`. Unit 10's complete integration merged
+   in PR #63, including review-gate and functional visual evidence. Keep #15 open for the separately
    approved performance observation while the i915 freeze remains active.
-3. **#64 — readiness and preferences (P1, completed locally).** Prepare the
-   issue/PR handoff after the isolated Release review gate. The Unit 11
-   plan retains its no-download, no-new-dependency, no-benchmark boundary.
+3. **#64 — readiness and preferences (P1, review-ready).** PR #66 is open for
+   owner review. Keep Issue #64 and the Project items `In Progress` until
+   squash merge. The Unit 11 plan retains its no-download, no-new-dependency,
+   no-benchmark boundary.
 4. **Unit 12 — local package delivery (proposed, [#65](https://github.com/Viet281101/qt-maps/issues/65)).** The decision-first plan in
    `context/feature-specs/unit-12-local-package-delivery-plan.md` awaits the
    owner's choice of distribution, licensing, storage, and update policy.
