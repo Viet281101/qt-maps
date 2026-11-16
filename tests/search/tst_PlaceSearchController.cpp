@@ -180,6 +180,40 @@ private slots:
         QVERIFY(!qtmaps::search::PlaceSearchController::validatePackage(package, &error));
         QVERIFY(!error.isEmpty());
     }
+
+    void packageValidationRejectsValidChecksumWithoutFtsSchema()
+    {
+        QTemporaryDir temporary;
+        QVERIFY(temporary.isValid());
+        const QString package = createSearchPackage(&temporary);
+        QVERIFY(!package.isEmpty());
+        const QString databasePath = package + QStringLiteral("/places.sqlite");
+        const QString connection = QStringLiteral("search-test-missing-fts");
+        {
+            QSqlDatabase database =
+                QSqlDatabase::addDatabase(QStringLiteral("QSQLITE"), connection);
+            database.setDatabaseName(databasePath);
+            QVERIFY(database.open());
+            QSqlQuery query(database);
+            QVERIFY(query.exec(QStringLiteral("DROP TABLE places_fts")));
+            database.close();
+        }
+        QSqlDatabase::removeDatabase(connection);
+        QFile manifestFile(package + QStringLiteral("/manifest.json"));
+        QVERIFY(manifestFile.open(QIODevice::ReadOnly));
+        QJsonObject manifest = QJsonDocument::fromJson(manifestFile.readAll()).object();
+        manifestFile.close();
+        QJsonObject places = manifest.value(QStringLiteral("places")).toObject();
+        places.insert(QStringLiteral("size_bytes"), QFileInfo(databasePath).size());
+        places.insert(QStringLiteral("sha256"), sha256(databasePath));
+        manifest.insert(QStringLiteral("places"), places);
+        QVERIFY(manifestFile.open(QIODevice::WriteOnly | QIODevice::Truncate));
+        manifestFile.write(QJsonDocument(manifest).toJson());
+        manifestFile.close();
+        QString error;
+        QVERIFY(!qtmaps::search::PlaceSearchController::validatePackage(package, &error));
+        QVERIFY(!error.isEmpty());
+    }
 };
 
 QTEST_MAIN(PlaceSearchControllerTest)

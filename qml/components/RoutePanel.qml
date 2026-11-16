@@ -1,5 +1,6 @@
 import QtQuick 2.13
 import "../theme"
+import "RuntimeStatus.js" as RuntimeStatus
 
 Rectangle {
     id: routePanel
@@ -378,10 +379,12 @@ Rectangle {
             Text {
                 width: parent.width
                 text: routeNavigationController.active
-                      ? routeNavigationController.statusMessage
+                      ? RuntimeStatus.text(routeNavigationController.statusMessage,
+                                           appPreferences ? appPreferences.language : "vi")
                       : routingController.routeAvailable
                         ? qsTr("Sẵn sàng · %1").arg(routePanel.compactSource)
-                        : routingController.statusMessage
+                        : RuntimeStatus.text(routingController.statusMessage,
+                                             appPreferences ? appPreferences.language : "vi")
                 color: routeNavigationController.arrived || routingController.routeAvailable
                        ? Theme.success : Theme.textSecondary
                 font.family: Theme.fontFamily

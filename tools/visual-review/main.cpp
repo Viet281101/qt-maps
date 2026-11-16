@@ -125,16 +125,30 @@ private:
     void captureVectorRoute(QObject *map)
     {
         capture(QStringLiteral("vector-route-900x580"), [this, map]() {
-            QObject *settings = root_->findChild<QObject *>(QStringLiteral("settingsOverlay"));
-            if (!settings) {
-                fail(QStringLiteral("Cannot find production settings panel"));
+            QObject *tools = root_->findChild<QObject *>(QStringLiteral("demoToolsOverlay"));
+            if (!tools) {
+                fail(QStringLiteral("Cannot find production layer controls"));
                 return;
             }
-            settings->setProperty("open", true);
-            capture(QStringLiteral("settings-900x580"), [this, map, settings]() {
-                settings->setProperty("open", false);
-                captureRemainingVectorRoute(map);
+            tools->setProperty("layersOpen", true);
+            capture(QStringLiteral("layers-open-900x580"), [this, map, tools]() {
+                tools->setProperty("layersOpen", false);
+                captureSettings(map);
             });
+        });
+    }
+
+    void captureSettings(QObject *map)
+    {
+        QObject *settings = root_->findChild<QObject *>(QStringLiteral("settingsOverlay"));
+        if (!settings) {
+            fail(QStringLiteral("Cannot find production settings panel"));
+            return;
+        }
+        settings->setProperty("open", true);
+        capture(QStringLiteral("settings-900x580"), [this, map, settings]() {
+            settings->setProperty("open", false);
+            captureRemainingVectorRoute(map);
         });
     }
 

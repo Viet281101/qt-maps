@@ -70,6 +70,30 @@ private slots:
         QTRY_COMPARE(item->property("label").toString(), QStringLiteral("Ngôn ngữ"));
     }
 
+    void runtimeStatusRetranslatesImmediately()
+    {
+        QQmlApplicationEngine engine;
+        qtmaps::core::AppPreferences preferences(&engine);
+        preferences.setLanguage(QStringLiteral("vi"));
+        engine.rootContext()->setContextProperty(QStringLiteral("appPreferences"), &preferences);
+        QQmlComponent component(&engine);
+        component.setData("import QtQuick 2.13\n"
+                          "import \"qrc:/qml/components/RuntimeStatus.js\" as RuntimeStatus\n"
+                          "Item { property string label: RuntimeStatus.text("
+                          "'Bản đồ vector · dữ liệu cục bộ', appPreferences.language) }",
+                          QUrl());
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> item(component.create());
+        QVERIFY(item);
+        QCOMPARE(item->property("label").toString(),
+                 QStringLiteral("Bản đồ vector · dữ liệu cục bộ"));
+        preferences.setLanguage(QStringLiteral("en"));
+        QTRY_COMPARE(item->property("label").toString(), QStringLiteral("Vector map · local data"));
+        preferences.setLanguage(QStringLiteral("vi"));
+        QTRY_COMPARE(item->property("label").toString(),
+                     QStringLiteral("Bản đồ vector · dữ liệu cục bộ"));
+    }
+
     void settingsButtonOpensAndEscapeDismissesPanel()
     {
         QQmlApplicationEngine engine;

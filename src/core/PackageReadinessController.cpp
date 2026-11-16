@@ -131,7 +131,6 @@ PackageReadinessController::~PackageReadinessController()
     if (thread_) {
         thread_->requestInterruption();
         thread_->quit();
-        thread_->wait(500);
     }
 }
 

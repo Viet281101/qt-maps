@@ -110,7 +110,7 @@ benchmark artifacts remain ignored.
 - [Issue #64](https://github.com/Viet281101/qt-maps/issues/64) and
   [PR #66](https://github.com/Viet281101/qt-maps/pull/66) are P1, `In Progress`,
   `After Demo` on Project #6. The PR is open and review-ready, with no owner
-  review or merge yet.
+  review or merge yet. The follow-up review fixes are verified locally on the branch.
 - Its plan in `context/feature-specs/unit-11-offline-package-readiness-plan.md`
   reuses current validators to report required/optional package readiness, adds
   a Vietnamese/English translation base and persisted language setting, and
@@ -122,13 +122,16 @@ benchmark artifacts remain ignored.
   valid, and corrupt search packages; the Qt 5.15.18 Release suite passed
   23/23 on 2026-11-15. Production-QML visual review also captured all vector,
   raster, and orthography flows at 900x580, 1366x768, and 1920x1080.
-- Degraded/error routing status now sits above the OSM attribution at the
-  bottom-right. The top-right is reserved for the interactive layer control
-  and settings action; normal loopback routing still shows no map-level pill.
+- The settings action remains at the top-right with a hint only on pointer
+  hover. The layer selector now sits at the bottom-right directly above OSM
+  attribution and opens upward; degraded/error status stacks above the closed
+  selector or open menu. Search results yield while the menu is open. Normal
+  loopback routing still shows no map-level pill.
 - `qtmaps_app_preferences_tests` now verifies the default Vietnamese choice,
   persisted English choice, signal emission, and invalid-language fallback in
   an isolated settings scope.
-- The English QML catalog now has 110/110 finished entries. The Release build
+- The English catalog now includes controller-origin status text at the QML
+  boundary and currently has 178/178 finished entries. The Release build
   compiles its ignored `.qm` from the source-controlled `.ts` using the
   available Qt `lrelease` tool. A translation regression test caught and fixed
   the English-to-Vietnamese switch retaining the old translator.
@@ -138,8 +141,11 @@ benchmark artifacts remain ignored.
   and verifies that the panel remains within the 900x580 window. Missing and
   invalid packages receive concise recovery guidance. The readiness timeout
   test verifies that a late result cannot replace the timeout state.
-- The worker has a bounded 500 ms shutdown wait and independent lifetime when
-  validation stalls. A production-QML capture of the open Settings panel at
+- The worker has an independent lifetime and no UI-thread shutdown wait when
+  validation stalls. Search readiness now opens the SQLite database read-only
+  and probes its FTS schema after validating the manifest/checksum, matching
+  the runtime open path. Recovery text distinguishes search fixture fallback,
+  unavailable orthography, and missing raster. A production-QML capture of the open Settings panel at
   900x580 exposed a translucent layer label behind it; the panel now uses an
   opaque theme surface.
 - **BUILD PASS** on Qt 5.15.18 Release (2026-11-16): `make BUILD_DIR=build-qt515
@@ -148,6 +154,13 @@ benchmark artifacts remain ignored.
   orthography at supported viewports. The open Settings panel is opaque, fully
   inside the window, and leaves attribution readable. This is functional
   evidence; no new FPS/RAM/CPU measurement was run under the active i915 freeze.
+- Follow-up review fix verification (2026-11-16): Qt 5.15.18 Release
+  `make check` passed 24/24 tests including schema-corruption and live
+  runtime-status retranslation coverage. The 900x580 production QML capture
+  confirms the icon-only Settings control and the layer selector above
+  attribution. The new open-layer capture confirms its upward menu and visible
+  status pill have no overlap at the minimum viewport. The 18-frame visual
+  review also passed at the larger supported viewports.
 - The isolated `make REVIEW_BUILD_DIR=build-review-qt515 review` gate passed
   24/24 tests with a clean worktree on 2026-11-16.
 

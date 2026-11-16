@@ -1,5 +1,6 @@
 import QtQuick 2.13
 import "../theme"
+import "RuntimeStatus.js" as RuntimeStatus
 
 Item {
     id: toolsOverlay
@@ -8,10 +9,9 @@ Item {
     property bool panelCollapsed: false
     property real panelWidth: 330
     property bool layersOpen: false
+    property real attributionHeight: 32
+    readonly property real layerMenuHeight: layerMenu.height
     property var searchController: null
-    readonly property real layerControlsBottom: layersOpen
-                                               ? layerMenu.y + layerMenu.height
-                                               : layerButton.y + layerButton.height
 
     function selectSearchResult(coordinate, setOrigin) {
         var accepted = setOrigin
@@ -103,7 +103,8 @@ Item {
     Rectangle {
         id: searchResults
         objectName: "placeSearchResults"
-        visible: !toolsOverlay.navigationActive && toolsOverlay.searchController
+        visible: !toolsOverlay.navigationActive && !toolsOverlay.layersOpen
+                 && toolsOverlay.searchController
                  && toolsOverlay.searchController.state !== "idle"
         x: placeSearchControl.x
         y: placeSearchControl.y + placeSearchControl.height + Theme.spaceXs
@@ -136,7 +137,9 @@ Item {
                 color: Theme.warning
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSizeCaption
-                text: toolsOverlay.searchController ? toolsOverlay.searchController.sourceLabel : ""
+                text: toolsOverlay.searchController
+                      ? RuntimeStatus.text(toolsOverlay.searchController.sourceLabel,
+                                           appPreferences ? appPreferences.language : "vi") : ""
                 wrapMode: Text.WordWrap
             }
             Text {
@@ -144,7 +147,9 @@ Item {
                 color: Theme.textSecondary
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSizeBody
-                text: toolsOverlay.searchController ? toolsOverlay.searchController.message : ""
+                text: toolsOverlay.searchController
+                      ? RuntimeStatus.text(toolsOverlay.searchController.message,
+                                           appPreferences ? appPreferences.language : "vi") : ""
                 wrapMode: Text.WordWrap
             }
             Repeater {
@@ -209,20 +214,14 @@ Item {
         }
     }
 
-    readonly property real statusSafeTop: Math.max(
-                                        layerControlsBottom,
-                                        searchResults.visible
-                                        ? searchResults.y + searchResults.height : 0)
-                                        + Theme.spaceMd
-
     KeyboardActionButton {
         id: layerButton
         objectName: "layerButton"
         visible: !toolsOverlay.navigationActive
         anchors.right: parent.right
-        anchors.top: parent.top
+        anchors.bottom: parent.bottom
         anchors.rightMargin: Theme.spaceMd
-        anchors.topMargin: 58
+        anchors.bottomMargin: toolsOverlay.attributionHeight + Theme.spaceXs
         width: 176
         text: toolsOverlay.layersOpen
               ? qsTr("Đóng lớp bản đồ")
@@ -241,8 +240,8 @@ Item {
         id: layerMenu
         visible: toolsOverlay.layersOpen && !toolsOverlay.navigationActive
         anchors.right: layerButton.right
-        anchors.top: layerButton.bottom
-        anchors.topMargin: Theme.spaceXs
+        anchors.bottom: layerButton.top
+        anchors.bottomMargin: Theme.spaceXs
         width: 220
         height: layerColumn.implicitHeight + Theme.spaceLg * 2
         radius: Theme.radiusPanel
@@ -302,7 +301,8 @@ Item {
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSizeBody
                 wrapMode: Text.WordWrap
-                text: mapSourceController.mapStatusText
+                text: RuntimeStatus.text(mapSourceController.mapStatusText,
+                                         appPreferences ? appPreferences.language : "vi")
             }
             Text {
                 visible: mapSourceController.layerMode === "raster"

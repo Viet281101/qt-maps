@@ -15,8 +15,12 @@ Item {
         if (item.available) return ""
         if (item.required)
             return qsTr("Cần khôi phục gói bản đồ vector để khởi động bản đồ cục bộ.")
+        if (item.role === "search")
+            return qsTr("Tìm kiếm đang dùng dữ liệu demo cục bộ; kiểm tra hoặc cài lại gói tìm kiếm ngoại tuyến.")
+        if (item.role === "orthography")
+            return qsTr("Ảnh trực giao chưa khả dụng; cần gói dữ liệu được cấp phép và hợp lệ.")
         if (item.reason === "missing")
-            return qsTr("Chưa cài gói tùy chọn; tính năng tương ứng dùng chế độ dự phòng.")
+            return qsTr("Chưa cài gói raster ngoại tuyến; bản đồ vector vẫn khả dụng.")
         return qsTr("Gói không hợp lệ; kiểm tra lại dữ liệu cục bộ.")
     }
     KeyboardActionButton {
@@ -41,7 +45,7 @@ Item {
         }
     }
     Rectangle {
-        visible: button.hovered || button.activeFocus
+        visible: button.hovered && !settings.open
         anchors.right: button.left
         anchors.rightMargin: Theme.spaceXs
         anchors.verticalCenter: button.verticalCenter
@@ -81,19 +85,29 @@ Item {
             anchors.fill: parent; anchors.margins: Theme.spaceLg
             spacing: Theme.spaceSm
             Text { color: Theme.textPrimary; font.family: Theme.fontFamily; font.bold: true; text: qsTr("Ngôn ngữ") }
-            KeyboardActionButton { width: parent.width; text: appPreferences.language === "vi" ? qsTr("✓ Tiếng Việt") : qsTr("Tiếng Việt"); onTriggered: appPreferences.setLanguage("vi") }
-            KeyboardActionButton { width: parent.width; text: appPreferences.language === "en" ? qsTr("✓ English") : qsTr("English"); onTriggered: appPreferences.setLanguage("en") }
+            KeyboardActionButton {
+                width: parent.width
+                text: appPreferences && appPreferences.language === "vi"
+                      ? qsTr("✓ Tiếng Việt") : qsTr("Tiếng Việt")
+                onTriggered: appPreferences.setLanguage("vi")
+            }
+            KeyboardActionButton {
+                width: parent.width
+                text: appPreferences && appPreferences.language === "en"
+                      ? qsTr("✓ English") : qsTr("English")
+                onTriggered: appPreferences.setLanguage("en")
+            }
             Text { width: parent.width; color: Theme.textSecondary; font.family: Theme.fontFamily; text: qsTr("Dữ liệu cục bộ") }
             Text {
                 width: parent.width
                 color: Theme.textSecondary
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSizeCaption
-                visible: packageReadiness.state === "loading" || packageReadiness.state === "timed-out"
-                text: packageReadiness.state === "timed-out" ? qsTr("Kiểm tra dữ liệu đã quá thời gian") : qsTr("Đang kiểm tra dữ liệu cục bộ…")
+                visible: packageReadiness && (packageReadiness.state === "loading" || packageReadiness.state === "timed-out")
+                text: packageReadiness && packageReadiness.state === "timed-out" ? qsTr("Kiểm tra dữ liệu đã quá thời gian") : qsTr("Đang kiểm tra dữ liệu cục bộ…")
             }
             Repeater {
-                model: packageReadiness.items
+                model: packageReadiness ? packageReadiness.items : []
                 delegate: Column {
                     width: parent.width
                     Text {

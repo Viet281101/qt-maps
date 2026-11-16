@@ -7,6 +7,7 @@
         <file alias="probes/NavigationProbe.qml">probes/NavigationProbe.qml</file>
         <file alias="components/ConnectionStatus.qml">components/ConnectionStatus.qml</file>
         <file alias="components/SettingsOverlay.qml">components/SettingsOverlay.qml</file>
+        <file alias="components/RuntimeStatus.js">components/RuntimeStatus.js</file>
         <file alias="components/DemoToolsOverlay.qml">components/DemoToolsOverlay.qml</file>
         <file alias="components/MapCanvas.qml">components/MapCanvas.qml</file>
         <file alias="components/NavigationOverlay.qml">components/NavigationOverlay.qml</file>
@@ -17,8 +18,5 @@
         <file alias="components/KeyboardActionButton.qml">components/KeyboardActionButton.qml</file>
         <file alias="theme/qmldir">theme/qmldir</file>
         <file alias="theme/Theme.qml">theme/Theme.qml</file>
-    </qresource>
-    <qresource prefix="/i18n">
-        <file alias="qtmaps_en.qm">../i18n/qtmaps_en.qm</file>
     </qresource>
 </RCC>

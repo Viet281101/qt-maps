@@ -1,15 +1,21 @@
 import QtQuick 2.13
 import "../theme"
+import "RuntimeStatus.js" as RuntimeStatus
 
 Item {
     id: statusOverlay
     property color statusColor: Theme.warning
     property string connectionLabel: ""
     property string attributionText: "© OpenStreetMap contributors, ODbL 1.0"
+    property bool layerControlVisible: true
+    property bool layerMenuOpen: false
+    property real layerMenuHeight: 0
     readonly property string statusText: friendlyConnectionLabel(connectionLabel)
     readonly property bool requiresMapLevelStatus: connectionLabel !== "Valhalla local — loopback"
     readonly property real attributionHeight: attributionPill.height + Theme.spaceSm
-    readonly property real statusBottomMargin: attributionPill.height + Theme.spaceMd
+    readonly property real statusBottomMargin: attributionHeight + Theme.spaceXs
+                                               + (layerControlVisible ? 36 + Theme.spaceSm : 0)
+                                               + (layerMenuOpen ? layerMenuHeight + Theme.spaceXs : 0)
 
     function friendlyConnectionLabel(label) {
         if (label === "Valhalla local — loopback")
@@ -18,7 +24,8 @@ Item {
             return qsTr("Ngoại tuyến · tuyến dự phòng")
         if (label === "offline — fixture")
             return qsTr("Ngoại tuyến · tuyến mô phỏng")
-        return label.replace("Valhalla local", qsTr("Valhalla cục bộ"))
+        return RuntimeStatus.text(label, appPreferences ? appPreferences.language : "vi")
+                            .replace("Valhalla local", qsTr("Valhalla cục bộ"))
     }
 
     Rectangle {

@@ -180,17 +180,20 @@ if(NOT QTMAPS_LRELEASE_EXECUTABLE)
     message(FATAL_ERROR "Qt lrelease is required to compile the English catalog")
 endif()
 add_custom_command(
-    OUTPUT "${CMAKE_SOURCE_DIR}/i18n/qtmaps_en.qm"
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/qtmaps_en.qm"
     COMMAND "${QTMAPS_LRELEASE_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/i18n/qtmaps_en.ts"
-            -qm "${CMAKE_SOURCE_DIR}/i18n/qtmaps_en.qm"
+            -qm "${CMAKE_CURRENT_BINARY_DIR}/qtmaps_en.qm"
     DEPENDS "${CMAKE_SOURCE_DIR}/i18n/qtmaps_en.ts"
     VERBATIM
 )
+configure_file(i18n/resources.qrc.in "${CMAKE_CURRENT_BINARY_DIR}/qtmaps_i18n.qrc" @ONLY)
 qt5_add_resources(QTMAPS_QML_RESOURCES qml/resources.qrc)
+qt5_add_resources(QTMAPS_I18N_RESOURCES "${CMAKE_CURRENT_BINARY_DIR}/qtmaps_i18n.qrc")
 qt5_add_resources(QTMAPS_ROUTING_RESOURCES resources/routing.qrc)
 qt5_add_resources(QTMAPS_RASTER_RENDERER_RESOURCES tools/raster-renderer/raster_renderer.qrc)
 set(QTMAPS_RESOURCES
     ${QTMAPS_QML_RESOURCES}
+    ${QTMAPS_I18N_RESOURCES}
     ${QTMAPS_ROUTING_RESOURCES}
 )
 

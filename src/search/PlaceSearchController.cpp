@@ -13,6 +13,7 @@
 #include <QSqlError>
 #include <QSqlQuery>
 #include <QThread>
+#include <QUuid>
 #include <QVariantMap>
 
 namespace qtmaps {
@@ -87,6 +88,25 @@ bool validateSearchPackage(const QString &packagePath, QString *errorMessage)
             fileDigest(databasePath) != places.value(QStringLiteral("sha256")).toString()) {
             error = QStringLiteral("Gói tìm kiếm ngoại tuyến không hợp lệ");
         }
+    }
+    if (error.isEmpty()) {
+        const QString connection = QStringLiteral("qtmaps-search-validation-%1")
+                                       .arg(QUuid::createUuid().toString(QUuid::WithoutBraces));
+        {
+            QSqlDatabase database =
+                QSqlDatabase::addDatabase(QStringLiteral("QSQLITE"), connection);
+            database.setConnectOptions(QStringLiteral("QSQLITE_OPEN_READONLY=1"));
+            database.setDatabaseName(databasePath);
+            if (!database.open()) {
+                error = QStringLiteral("Gói tìm kiếm ngoại tuyến không hợp lệ");
+            } else {
+                QSqlQuery schema(database);
+                if (!schema.exec(QStringLiteral("SELECT 1 FROM places_fts LIMIT 1")))
+                    error = QStringLiteral("Gói tìm kiếm ngoại tuyến không hợp lệ");
+            }
+            database.close();
+        }
+        QSqlDatabase::removeDatabase(connection);
     }
     if (errorMessage)
         *errorMessage = error;
