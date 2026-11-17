@@ -178,7 +178,8 @@ benchmark artifacts remain ignored.
   Valhalla starts produced the same blue route footprint. The 19-frame visual
   review passed across vector, raster, and orthography; the blue route remains
   clear on both light maps and the licensed imagery. The English production UI
-  shows "choose origin". Isolated review verification remains pending.
+  shows "choose origin". The isolated Release review gate passed 24/24 tests
+  with a clean worktree.
 - The isolated `make REVIEW_BUILD_DIR=build-review-qt515 review` gate passed
   24/24 tests with a clean worktree on 2026-11-16.
 
