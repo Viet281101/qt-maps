@@ -17,6 +17,11 @@ Rectangle {
     readonly property real reservedManeuverHeight: maneuversCollapsed ? 0 : maneuverListMinimumHeight
     signal recenterRequested()
 
+    function localizedNextMapSelection() {
+        return routingController.nextMapSelection === "điểm đi"
+               ? qsTr("điểm đi") : qsTr("điểm đến")
+    }
+
     function applyEndpoints() {
         var requestedOrigin = originField.text
         var requestedDestination = destinationField.text
@@ -90,7 +95,7 @@ Rectangle {
             Text {
                 width: parent.width
                 text: qsTr("Bấm bản đồ để chọn %1, hoặc nhập tên mẫu / tọa độ")
-                    .arg(routingController.nextMapSelection)
+                    .arg(routePanel.localizedNextMapSelection())
                 color: Theme.textSecondary
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSizeBody

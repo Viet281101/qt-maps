@@ -174,12 +174,12 @@
 <context>
     <name>MapCanvas</name>
     <message>
-        <location filename="../qml/components/MapCanvas.qml" line="393"/>
+        <location filename="../qml/components/MapCanvas.qml" line="394"/>
         <source>Ảnh Sentinel-2 10 m · phạm vi Hà Nội</source>
         <translation>Sentinel-2 10 m imagery · Hanoi coverage</translation>
     </message>
     <message>
-        <location filename="../qml/components/MapCanvas.qml" line="394"/>
+        <location filename="../qml/components/MapCanvas.qml" line="395"/>
         <source>Nguồn chi tiết đến z15 · z16+ có độ phân giải thấp hơn</source>
         <translation>Detailed source through z15 · lower resolution at z16+</translation>
     </message>
@@ -379,122 +379,132 @@ Continuous camera follow</translation>
         <translation>Demo fixture</translation>
     </message>
     <message>
-        <location filename="../qml/components/RoutePanel.qml" line="25"/>
+        <location filename="../qml/components/RoutePanel.qml" line="22"/>
+        <source>điểm đi</source>
+        <translation>origin</translation>
+    </message>
+    <message>
+        <location filename="../qml/components/RoutePanel.qml" line="22"/>
+        <source>điểm đến</source>
+        <translation>destination</translation>
+    </message>
+    <message>
+        <location filename="../qml/components/RoutePanel.qml" line="30"/>
         <source>Điểm đi không hợp lệ. Dùng tên mẫu hoặc vĩ độ, kinh độ.</source>
         <translation>Invalid origin. Use a sample name or latitude, longitude.</translation>
     </message>
     <message>
-        <location filename="../qml/components/RoutePanel.qml" line="26"/>
+        <location filename="../qml/components/RoutePanel.qml" line="31"/>
         <source>Điểm đến không hợp lệ. Dùng tên mẫu hoặc vĩ độ, kinh độ.</source>
         <translation>Invalid destination. Use a sample name or latitude, longitude.</translation>
     </message>
     <message>
-        <location filename="../qml/components/RoutePanel.qml" line="50"/>
+        <location filename="../qml/components/RoutePanel.qml" line="55"/>
         <source>Nhập điểm đi để tìm đường.</source>
         <translation>Enter an origin to find a route.</translation>
     </message>
     <message>
-        <location filename="../qml/components/RoutePanel.qml" line="51"/>
+        <location filename="../qml/components/RoutePanel.qml" line="56"/>
         <source>Nhập điểm đến để tìm đường.</source>
         <translation>Enter a destination to find a route.</translation>
     </message>
     <message>
-        <location filename="../qml/components/RoutePanel.qml" line="83"/>
+        <location filename="../qml/components/RoutePanel.qml" line="88"/>
         <source>Lập tuyến Hà Nội</source>
         <translation>Hanoi route planning</translation>
     </message>
     <message>
-        <location filename="../qml/components/RoutePanel.qml" line="92"/>
+        <location filename="../qml/components/RoutePanel.qml" line="97"/>
         <source>Bấm bản đồ để chọn %1, hoặc nhập tên mẫu / tọa độ</source>
         <translation>Click the map to choose %1, or enter a sample name / coordinates</translation>
     </message>
     <message>
-        <location filename="../qml/components/RoutePanel.qml" line="218"/>
+        <location filename="../qml/components/RoutePanel.qml" line="223"/>
         <source>⇅  Đổi chiều</source>
         <translation>⇅  Swap</translation>
     </message>
     <message>
-        <location filename="../qml/components/RoutePanel.qml" line="229"/>
+        <location filename="../qml/components/RoutePanel.qml" line="234"/>
         <source>×  Xóa</source>
         <translation>×  Clear</translation>
     </message>
     <message>
-        <location filename="../qml/components/RoutePanel.qml" line="244"/>
+        <location filename="../qml/components/RoutePanel.qml" line="249"/>
         <source>Đang tìm đường…</source>
         <translation>Finding route…</translation>
     </message>
     <message>
-        <location filename="../qml/components/RoutePanel.qml" line="244"/>
+        <location filename="../qml/components/RoutePanel.qml" line="249"/>
         <source>Tìm đường</source>
         <translation>Find route</translation>
     </message>
     <message>
-        <location filename="../qml/components/RoutePanel.qml" line="270"/>
+        <location filename="../qml/components/RoutePanel.qml" line="275"/>
         <source>%1 km · %2 phút</source>
         <translation>%1 km · %2 min</translation>
     </message>
     <message>
-        <location filename="../qml/components/RoutePanel.qml" line="273"/>
+        <location filename="../qml/components/RoutePanel.qml" line="278"/>
         <source>Đang tính tuyến…</source>
         <translation>Calculating route…</translation>
     </message>
     <message>
-        <location filename="../qml/components/RoutePanel.qml" line="274"/>
+        <location filename="../qml/components/RoutePanel.qml" line="279"/>
         <source>Không có tuyến</source>
         <translation>No route</translation>
     </message>
     <message>
-        <location filename="../qml/components/RoutePanel.qml" line="281"/>
+        <location filename="../qml/components/RoutePanel.qml" line="286"/>
         <source>Theo vị trí hiện tại</source>
         <translation>Follow current position</translation>
     </message>
     <message>
-        <location filename="../qml/components/RoutePanel.qml" line="296"/>
+        <location filename="../qml/components/RoutePanel.qml" line="301"/>
         <source>Bắt đầu chỉ đường</source>
         <translation>Start guidance</translation>
     </message>
     <message>
-        <location filename="../qml/components/RoutePanel.qml" line="314"/>
+        <location filename="../qml/components/RoutePanel.qml" line="319"/>
         <source>Tốc độ mô phỏng</source>
         <translation>Simulation speed</translation>
     </message>
     <message>
-        <location filename="../qml/components/RoutePanel.qml" line="345"/>
+        <location filename="../qml/components/RoutePanel.qml" line="350"/>
         <source>Đi lại từ đầu</source>
         <translation>Restart route</translation>
     </message>
     <message>
-        <location filename="../qml/components/RoutePanel.qml" line="346"/>
+        <location filename="../qml/components/RoutePanel.qml" line="351"/>
         <source>Tiếp tục</source>
         <translation>Resume</translation>
     </message>
     <message>
-        <location filename="../qml/components/RoutePanel.qml" line="347"/>
+        <location filename="../qml/components/RoutePanel.qml" line="352"/>
         <source>Tạm dừng</source>
         <translation>Pause</translation>
     </message>
     <message>
-        <location filename="../qml/components/RoutePanel.qml" line="361"/>
+        <location filename="../qml/components/RoutePanel.qml" line="366"/>
         <source>Dừng</source>
         <translation>Stop</translation>
     </message>
     <message>
-        <location filename="../qml/components/RoutePanel.qml" line="372"/>
+        <location filename="../qml/components/RoutePanel.qml" line="377"/>
         <source>Mô phỏng đi lệch (&gt;40 m)</source>
         <translation>Simulate deviation (&gt;40 m)</translation>
     </message>
     <message>
-        <location filename="../qml/components/RoutePanel.qml" line="385"/>
+        <location filename="../qml/components/RoutePanel.qml" line="390"/>
         <source>Sẵn sàng · %1</source>
         <translation>Ready · %1</translation>
     </message>
     <message>
-        <location filename="../qml/components/RoutePanel.qml" line="399"/>
+        <location filename="../qml/components/RoutePanel.qml" line="404"/>
         <source>Hiện các bước chỉ đường</source>
         <translation>Show directions</translation>
     </message>
     <message>
-        <location filename="../qml/components/RoutePanel.qml" line="400"/>
+        <location filename="../qml/components/RoutePanel.qml" line="405"/>
         <source>Thu gọn các bước chỉ đường</source>
         <translation>Collapse directions</translation>
     </message>

@@ -169,6 +169,15 @@ benchmark artifacts remain ignored.
   after recalculation. Qt 5.15.18 Release tests passed 24/24, and 19 functional
   captures passed across vector, raster, and orthography on 2026-11-17. The
   isolated Release review gate also passed 24/24 tests with a clean worktree.
+- Second review follow-up (2026-11-17): repeated production starts showed the
+  Valhalla route could still appear white, so declaration order alone was not
+  reliable. The route now uses a dark-blue edge around the bright-blue stroke;
+  either paint order remains blue. The English route prompt now translates its
+  origin/destination value too. Qt 5.15.18 Release tests passed 24/24; five
+  consecutive real-Valhalla starts retained a blue 7.3 km route. English UI
+  capture shows "choose origin", and 19 functional vector/raster/orthography
+  captures passed. The isolated Release review gate passed 24/24 tests with a
+  clean worktree.
 - The isolated `make REVIEW_BUILD_DIR=build-review-qt515 review` gate passed
   24/24 tests with a clean worktree on 2026-11-16.
 

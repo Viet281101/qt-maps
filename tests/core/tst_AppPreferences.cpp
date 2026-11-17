@@ -38,6 +38,10 @@ private slots:
                      QStringLiteral("Language"));
             QCOMPARE(QCoreApplication::translate("SettingsOverlay", "Dữ liệu cục bộ"),
                      QStringLiteral("Local data"));
+            QCOMPARE(QCoreApplication::translate("RoutePanel", "điểm đi"),
+                     QStringLiteral("origin"));
+            QCOMPARE(QCoreApplication::translate("RoutePanel", "điểm đến"),
+                     QStringLiteral("destination"));
             QCOMPARE(changed.count(), 1);
         }
 
