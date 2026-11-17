@@ -208,8 +208,9 @@ fixture-backed or simulated presentation.
    `docs/rehearsal/unit-12-offline-walkthrough-20261117.md`; it is functional
    evidence, not a benchmark or clean-target transfer test. Full Qt 5.15.18
    Release tests passed 25/25 on 2026-11-17. Unit 12 is complete locally and
-   ready for its canonical implementation PR; a clean-target repeat remains
-   deployment evidence after merge.
+   in [PR #67](https://github.com/Viet281101/qt-maps/pull/67), linked to #65.
+   Both Project #6 items are `In Progress` with P2 / After Demo; a clean-target
+   repeat remains deployment evidence after merge.
 
 ## Risks and decisions requiring the owner
 

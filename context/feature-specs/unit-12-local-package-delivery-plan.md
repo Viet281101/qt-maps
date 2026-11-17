@@ -40,7 +40,9 @@ Unit 12 is complete locally: its versioned contracts, explicit activation CLI,
 integrity checks, insufficient-storage rejection, independent map/search and
 routing rollback pointers, readiness UI, operator checklist, focused tests,
 and local-only walkthrough are complete. A repeat on a separate clean Linux
-target remains deployment evidence, not outstanding implementation work.
+target remains deployment evidence, not outstanding implementation work. Its
+canonical implementation PR is [#67](https://github.com/Viet281101/qt-maps/pull/67),
+linked to #65 and marked `In Progress` on Project #6.
 
 ## Objective
 
