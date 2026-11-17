@@ -125,16 +125,26 @@ private:
     void captureVectorRoute(QObject *map)
     {
         capture(QStringLiteral("vector-route-900x580"), [this, map]() {
-            QObject *tools = root_->findChild<QObject *>(QStringLiteral("demoToolsOverlay"));
-            if (!tools) {
-                fail(QStringLiteral("Cannot find production layer controls"));
+            if (!QMetaObject::invokeMethod(root_, "calculateRequestedRoute")) {
+                fail(QStringLiteral("Cannot recalculate the production route"));
                 return;
             }
-            tools->setProperty("layersOpen", true);
-            capture(QStringLiteral("layers-open-900x580"), [this, map, tools]() {
-                tools->setProperty("layersOpen", false);
-                captureSettings(map);
-            });
+            capture(QStringLiteral("vector-route-recalculated-900x580"),
+                    [this, map]() { captureLayerMenu(map); });
+        });
+    }
+
+    void captureLayerMenu(QObject *map)
+    {
+        QObject *tools = root_->findChild<QObject *>(QStringLiteral("demoToolsOverlay"));
+        if (!tools) {
+            fail(QStringLiteral("Cannot find production layer controls"));
+            return;
+        }
+        tools->setProperty("layersOpen", true);
+        capture(QStringLiteral("layers-open-900x580"), [this, map, tools]() {
+            tools->setProperty("layersOpen", false);
+            captureSettings(map);
         });
     }
 

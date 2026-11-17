@@ -161,6 +161,14 @@ benchmark artifacts remain ignored.
   attribution. The new open-layer capture confirms its upward menu and visible
   status pill have no overlap at the minimum viewport. The 18-frame visual
   review also passed at the larger supported viewports.
+- Route-contrast follow-up (2026-11-17): a production Valhalla route exposed
+  that MapLibre painted the white outline over the blue route despite their
+  QML `z` values. Hiding the outline revealed the intact blue route; reversing
+  the two polyline declarations restored the blue stroke with its white edge
+  on the real 7.3 km route. The visual-review flow now also captures a route
+  after recalculation. Qt 5.15.18 Release tests passed 24/24, and 19 functional
+  captures passed across vector, raster, and orthography on 2026-11-17. The
+  isolated Release review gate also passed 24/24 tests with a clean worktree.
 - The isolated `make REVIEW_BUILD_DIR=build-review-qt515 review` gate passed
   24/24 tests with a clean worktree on 2026-11-16.
 

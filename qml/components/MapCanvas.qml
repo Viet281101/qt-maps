@@ -238,6 +238,17 @@ Item {
             onTapped: routingController.selectMapPoint(map.toCoordinate(point.position))
         }
 
+        // MapLibre's polyline layer order does not follow z here. Keep the blue
+        // line before its white outline so the blue stroke remains visible.
+        MapPolyline {
+            id: routeLine
+            visible: routingController.routePath.length > 1
+            path: routingController.routePath
+            line.width: 7
+            line.color: Theme.route
+            z: 6
+        }
+
         MapPolyline {
             id: routeOutline
             visible: routingController.routePath.length > 1
@@ -246,15 +257,6 @@ Item {
             line.color: Theme.routeOutline
             opacity: 0.92
             z: 5
-        }
-
-        MapPolyline {
-            id: routeLine
-            visible: routingController.routePath.length > 1
-            path: routingController.routePath
-            line.width: 7
-            line.color: Theme.route
-            z: 6
         }
 
         MapPolyline {
