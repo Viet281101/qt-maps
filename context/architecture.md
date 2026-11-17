@@ -62,6 +62,15 @@ These directories describe intended ownership. Application-code directories are 
 - **Routing graph**: generated Valhalla graph tiles, versioned by source extract and build configuration outside Git.
 - **Geocoding database**: proposed SQLite database with FTS5 tables generated from selected source data.
 - **Orthography files or tiles**: bounded by the agreed region, zoom range, license, and attribution requirements.
+- **Local package delivery**: an operator-provisioned, versioned bundle outside
+  Git contains the compatible vector/raster pair, search package, and any
+  permitted orthography package. The application imports it explicitly through
+  a staged integrity check and atomically activates it while retaining one
+  previous valid bundle for rollback. The routing graph is a separately
+  provisioned and activated artifact because its coverage, size, and lifecycle
+  differ. There is no runtime downloader, automatic update, or public hosting
+  path; each import records source/provenance, license/attribution, checksums,
+  required disk space, and compatibility metadata.
 - **Disk cache**: bounded cache for fetched or decoded tiles; limits and invalidation policy must be measured and documented before commitment.
 - **Configuration and logs**: user-writable configuration, operational logs, and benchmark CSV files stored outside packaged read-only assets.
 

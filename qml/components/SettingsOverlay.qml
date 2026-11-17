@@ -9,6 +9,7 @@ Item {
         if (role === "vector") return qsTr("Bản đồ vector")
         if (role === "raster") return qsTr("Raster ngoại tuyến")
         if (role === "search") return qsTr("Tìm kiếm ngoại tuyến")
+        if (role === "routing") return qsTr("Gói graph định tuyến")
         return qsTr("Ảnh trực giao")
     }
     function recoveryText(item) {
@@ -19,6 +20,8 @@ Item {
             return qsTr("Tìm kiếm đang dùng dữ liệu demo cục bộ; kiểm tra hoặc cài lại gói tìm kiếm ngoại tuyến.")
         if (item.role === "orthography")
             return qsTr("Ảnh trực giao chưa khả dụng; cần gói dữ liệu được cấp phép và hợp lệ.")
+        if (item.role === "routing")
+            return qsTr("Chưa có graph định tuyến hợp lệ; Valhalla cục bộ có thể chưa sẵn sàng.")
         if (item.reason === "missing")
             return qsTr("Chưa cài gói raster ngoại tuyến; bản đồ vector vẫn khả dụng.")
         return qsTr("Gói không hợp lệ; kiểm tra lại dữ liệu cục bộ.")

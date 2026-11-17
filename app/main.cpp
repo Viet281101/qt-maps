@@ -24,6 +24,7 @@
 #include "benchmark/BenchmarkScenarioController.h"
 #include "core/AppPreferences.h"
 #include "core/ApplicationShutdownCoordinator.h"
+#include "core/OfflinePackageInstaller.h"
 #include "core/PackageReadinessController.h"
 #include "diagnostics/CameraProbeController.h"
 #include "diagnostics/SimulatedNavigationController.h"
@@ -123,6 +124,20 @@ int main(int argc, char *argv[])
     parser.addOption({QStringLiteral("search-package"),
                       QStringLiteral("Unit 09 offline search package directory or current pointer"),
                       QStringLiteral("path"), QStringLiteral("data/search-packages/current")});
+    parser.addOption({QStringLiteral("routing-activation-root"),
+                      QStringLiteral("Unit 12 local routing graph activation directory"),
+                      QStringLiteral("path"), QStringLiteral("data/routing-activation")});
+    parser.addOption({QStringLiteral("bundle-activation-root"),
+                      QStringLiteral("Unit 12 local map/search bundle activation directory"),
+                      QStringLiteral("path"), QStringLiteral("data/package-activation")});
+    parser.addOption(
+        {QStringLiteral("install-local-bundle"),
+         QStringLiteral("Validate and atomically activate an owner-provided local bundle"),
+         QStringLiteral("path")});
+    parser.addOption(
+        {QStringLiteral("activate-routing-graph"),
+         QStringLiteral("Validate and atomically activate a local routing graph contract"),
+         QStringLiteral("path")});
     parser.addOption({QStringLiteral("diagnostic-raster-root"),
                       QStringLiteral("Local diagnostic raster fallback directory"),
                       QStringLiteral("path"), QStringLiteral("generated/diagnostic-tiles")});
@@ -192,6 +207,33 @@ int main(int argc, char *argv[])
                       QStringLiteral("non-geographic Hanoi XYZ grid z10-z14")});
     parser.process(application);
 
+    if (parser.isSet(QStringLiteral("install-local-bundle"))) {
+        qtmaps::core::MapSearchBundleContract contract;
+        QString error;
+        const QString path = parser.value(QStringLiteral("install-local-bundle"));
+        if (!qtmaps::core::OfflinePackageInstaller::validateCandidate(path, &contract, &error) ||
+            !qtmaps::core::OfflinePackageInstaller::activateValidatedBundle(
+                path, contract, parser.value(QStringLiteral("bundle-activation-root")), &error)) {
+            qCritical().noquote() << "Unit 12 bundle activation failed:" << error;
+            return 4;
+        }
+        qInfo().noquote() << "Unit 12 bundle activated:" << contract.bundleId;
+        return 0;
+    }
+    if (parser.isSet(QStringLiteral("activate-routing-graph"))) {
+        qtmaps::core::RoutingGraphActivationContract contract;
+        QString error;
+        const QString path = parser.value(QStringLiteral("activate-routing-graph"));
+        if (!qtmaps::core::OfflinePackageInstaller::validateRoutingGraph(path, &contract, &error) ||
+            !qtmaps::core::OfflinePackageInstaller::activateValidatedRoutingGraph(
+                path, contract, parser.value(QStringLiteral("routing-activation-root")), &error)) {
+            qCritical().noquote() << "Unit 12 routing graph activation failed:" << error;
+            return 4;
+        }
+        qInfo().noquote() << "Unit 12 routing graph activated:" << contract.graphId;
+        return 0;
+    }
+
     const bool useMapboxGlProbe = parser.isSet(QStringLiteral("mapboxgl-probe"));
     const bool useMapLibreProbe = parser.isSet(QStringLiteral("maplibre-probe"));
     const bool useVectorProbe = useMapboxGlProbe || useMapLibreProbe;
@@ -247,7 +289,8 @@ int main(int argc, char *argv[])
     qtmaps::core::PackageReadinessController packageReadiness(
         parser.value(QStringLiteral("map-package")), parser.value(QStringLiteral("raster-package")),
         parser.value(QStringLiteral("search-package")),
-        parser.value(QStringLiteral("orthography-package")));
+        parser.value(QStringLiteral("orthography-package")), nullptr,
+        parser.value(QStringLiteral("routing-activation-root")));
 
     if (useUnit03LocalMap &&
         !mapSourceController.start(parser.value(QStringLiteral("map-package")),
