@@ -149,9 +149,7 @@ Item {
         id: mapSurface
         function refreshRoute() {
             var currentPath = routingController.routePath
-            routeEdge.path = []
             routeLine.path = []
-            routeEdge.path = currentPath
             routeLine.path = currentPath
             canvas.fitRouteWithPanelPadding()
         }
@@ -238,24 +236,14 @@ Item {
             onTapped: routingController.selectMapPoint(map.toCoordinate(point.position))
         }
 
-        // MapLibre's two polyline layers can paint in either order. Both
-        // strokes must remain blue so either one is readable on a light map.
+        // A single route stroke avoids nondeterministic MapLibre polyline order.
         MapPolyline {
             id: routeLine
             visible: routingController.routePath.length > 1
             path: routingController.routePath
-            line.width: 7
+            line.width: 9
             line.color: Theme.route
             z: 6
-        }
-
-        MapPolyline {
-            id: routeEdge
-            visible: routingController.routePath.length > 1
-            path: routingController.routePath
-            line.width: 12
-            line.color: Theme.routeEdge
-            z: 5
         }
 
         MapPolyline {

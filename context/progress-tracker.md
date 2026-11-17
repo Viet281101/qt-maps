@@ -171,13 +171,14 @@ benchmark artifacts remain ignored.
   isolated Release review gate also passed 24/24 tests with a clean worktree.
 - Second review follow-up (2026-11-17): repeated production starts showed the
   Valhalla route could still appear white, so declaration order alone was not
-  reliable. The route now uses a dark-blue edge around the bright-blue stroke;
-  either paint order remains blue. The English route prompt now translates its
-  origin/destination value too. Qt 5.15.18 Release tests passed 24/24; five
-  consecutive real-Valhalla starts retained a blue 7.3 km route. English UI
-  capture shows "choose origin", and 19 functional vector/raster/orthography
-  captures passed. The isolated Release review gate passed 24/24 tests with a
-  clean worktree.
+  reliable. A two-blue-stroke mitigation stayed readable but varied in width
+  and shade; the final route now uses one blue stroke to remove the ordering
+  dependency. The English prompt also translates origin/destination values.
+  The final Qt 5.15.18 Release suite passed 24/24; five consecutive real
+  Valhalla starts produced the same blue route footprint. The 19-frame visual
+  review passed across vector, raster, and orthography; the blue route remains
+  clear on both light maps and the licensed imagery. The English production UI
+  shows "choose origin". Isolated review verification remains pending.
 - The isolated `make REVIEW_BUILD_DIR=build-review-qt515 review` gate passed
   24/24 tests with a clean worktree on 2026-11-16.
 

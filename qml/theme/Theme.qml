@@ -15,7 +15,6 @@ QtObject {
     readonly property color error: "#ffff8585"
     readonly property color border: "#ff6f8294"
     readonly property color route: "#ff1a73e8"
-    readonly property color routeEdge: "#ff0c4a9e"
     readonly property color routeOutline: "#ffffff"
     readonly property color routeTravelled: "#ff7b8794"
     readonly property color markerOrigin: "#ff1e8e3e"

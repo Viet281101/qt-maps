@@ -174,12 +174,12 @@
 <context>
     <name>MapCanvas</name>
     <message>
-        <location filename="../qml/components/MapCanvas.qml" line="394"/>
+        <location filename="../qml/components/MapCanvas.qml" line="382"/>
         <source>Ảnh Sentinel-2 10 m · phạm vi Hà Nội</source>
         <translation>Sentinel-2 10 m imagery · Hanoi coverage</translation>
     </message>
     <message>
-        <location filename="../qml/components/MapCanvas.qml" line="395"/>
+        <location filename="../qml/components/MapCanvas.qml" line="383"/>
         <source>Nguồn chi tiết đến z15 · z16+ có độ phân giải thấp hơn</source>
         <translation>Detailed source through z15 · lower resolution at z16+</translation>
     </message>
