@@ -1,6 +1,7 @@
 import QtQuick 2.13
 import QtQuick.Window 2.13
 import "components"
+import "components/RuntimeStatus.js" as RuntimeStatus
 import "theme"
 
 Window {
@@ -54,7 +55,8 @@ Window {
             color: "#243447"
             font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSizeBody
-            text: mapSourceController.mapStatusText
+            text: RuntimeStatus.text(mapSourceController.mapStatusText,
+                                     appPreferences ? appPreferences.language : "vi")
         }
     }
 
@@ -104,7 +106,14 @@ Window {
         panelCollapsed: root.panelCollapsed
         panelWidth: routePanel.x + routePanel.width
         searchController: root.searchController
+        attributionHeight: connectionStatus.attributionHeight
         z: 22
+    }
+
+    SettingsOverlay {
+        objectName: "settingsOverlay"
+        anchors.fill: parent
+        z: 32
     }
 
     KeyboardActionButton {
@@ -131,9 +140,9 @@ Window {
         id: connectionStatus
         anchors.fill: parent
         statusColor: root.routeSummaryColor
-        navigationActive: navigationOverlay.guidanceVisible
-        navigationBannerHeight: navigationOverlay.bannerHeight
-        normalTopMargin: demoTools.statusSafeTop
+        layerControlVisible: !navigationOverlay.guidanceVisible
+        layerMenuOpen: demoTools.layersOpen
+        layerMenuHeight: demoTools.layerMenuHeight
         connectionLabel: routingController.connectionLabel
         attributionText: mapSourceController.mapAttribution
         z: 20

@@ -1,5 +1,6 @@
 import QtQuick 2.13
 import "../theme"
+import "RuntimeStatus.js" as RuntimeStatus
 
 Rectangle {
     id: routePanel
@@ -15,6 +16,11 @@ Rectangle {
     readonly property real maneuverListMinimumHeight: 120
     readonly property real reservedManeuverHeight: maneuversCollapsed ? 0 : maneuverListMinimumHeight
     signal recenterRequested()
+
+    function localizedNextMapSelection() {
+        return routingController.nextMapSelection === "điểm đi"
+               ? qsTr("điểm đi") : qsTr("điểm đến")
+    }
 
     function applyEndpoints() {
         var requestedOrigin = originField.text
@@ -89,7 +95,7 @@ Rectangle {
             Text {
                 width: parent.width
                 text: qsTr("Bấm bản đồ để chọn %1, hoặc nhập tên mẫu / tọa độ")
-                    .arg(routingController.nextMapSelection)
+                    .arg(routePanel.localizedNextMapSelection())
                 color: Theme.textSecondary
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSizeBody
@@ -378,10 +384,12 @@ Rectangle {
             Text {
                 width: parent.width
                 text: routeNavigationController.active
-                      ? routeNavigationController.statusMessage
+                      ? RuntimeStatus.text(routeNavigationController.statusMessage,
+                                           appPreferences ? appPreferences.language : "vi")
                       : routingController.routeAvailable
                         ? qsTr("Sẵn sàng · %1").arg(routePanel.compactSource)
-                        : routingController.statusMessage
+                        : RuntimeStatus.text(routingController.statusMessage,
+                                             appPreferences ? appPreferences.language : "vi")
                 color: routeNavigationController.arrived || routingController.routeAvailable
                        ? Theme.success : Theme.textSecondary
                 font.family: Theme.fontFamily

@@ -15,10 +15,12 @@ Unit 02 may introduce a minimal `qml/theme/Theme.qml` singleton so the performan
 ## QML Theme Singleton
 
 Reusable visual tokens belong in a QML singleton, planned as `qml/theme/Theme.qml`. Components consume semantic properties rather than duplicating literals.
+The Settings panel uses the opaque `surfaceOpaque` token so the layer label
+underneath cannot show through its foreground text.
 
 | Category | Planned semantic properties | Current value |
 | --- | --- | --- |
-| Color | `mapOverlay`, `surface`, `surfaceElevated`, `surfaceInput`, `textPrimary`, `textSecondary`, `accent`, `border`, `error`, `warning`, `success`, `route`, `routeOutline`, `routeTravelled`, `markerOrigin`, `markerDestination` | Unit 07B dark demo palette in `Theme.qml`; route starts at `#1A73E8` with white outline, travelled route is grey, and A/B markers use `#1E8E3E` / `#D93025` |
+| Color | `mapOverlay`, `surface`, `surfaceElevated`, `surfaceInput`, `textPrimary`, `textSecondary`, `accent`, `border`, `error`, `warning`, `success`, `route`, `routeOutline`, `routeTravelled`, `markerOrigin`, `markerDestination` | Unit 07B dark demo palette in `Theme.qml`; the planned route uses one `#1A73E8` blue stroke to avoid nondeterministic MapLibre polyline ordering, travelled route is grey, white `routeOutline` remains for marker and puck borders, and A/B markers use `#1E8E3E` / `#D93025` |
 | Typography | `fontFamily`, `fontSizeCaption`, `fontSizeBody`, `fontSizeTitle`, `fontSizeDisplay`, `fontWeightRegular`, `fontWeightEmphasis` | System Noto Sans; no bundled font until the licensed cartography-font gate |
 | Spacing | `spaceXs`, `spaceSm`, `spaceMd`, `spaceLg`, `spaceXl` | 4 / 8 / 12 / 16 / 24 px |
 | Radius | `radiusControl`, `radiusPanel`, `radiusPill` | 8 / 12 / 999 px |
@@ -46,10 +48,13 @@ The supported maximum is 1920x1080 so the bounded raster visible-texture
 working-set calculation remains valid on the reference configuration.
 
 At widths through 960 px, the route panel uses a 300 px compact width. Search
-text clips/elides inside its surface; connection status occupies the next
-available top-right row beneath the layer control, and moves below the expanded
-layer menu. This prevents status/search and status/menu overlap without hiding
-the connection source.
+text clips/elides inside its surface. The settings icon remains at the top-right;
+its text hint appears only on pointer hover. The interactive layer selector sits
+at the bottom-right immediately above OSM attribution, with its menu expanding
+upward. A degraded/error connection status stacks above the layer selector.
+When the menu opens, the status moves above its top edge and search results
+yield to the menu. This keeps status/search and status/menu clear without hiding the source or
+attribution.
 
 ## Component Conventions
 

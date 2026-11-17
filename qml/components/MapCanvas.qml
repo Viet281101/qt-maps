@@ -149,9 +149,7 @@ Item {
         id: mapSurface
         function refreshRoute() {
             var currentPath = routingController.routePath
-            routeOutline.path = []
             routeLine.path = []
-            routeOutline.path = currentPath
             routeLine.path = currentPath
             canvas.fitRouteWithPanelPadding()
         }
@@ -238,21 +236,12 @@ Item {
             onTapped: routingController.selectMapPoint(map.toCoordinate(point.position))
         }
 
-        MapPolyline {
-            id: routeOutline
-            visible: routingController.routePath.length > 1
-            path: routingController.routePath
-            line.width: 12
-            line.color: Theme.routeOutline
-            opacity: 0.92
-            z: 5
-        }
-
+        // A single route stroke avoids nondeterministic MapLibre polyline order.
         MapPolyline {
             id: routeLine
             visible: routingController.routePath.length > 1
             path: routingController.routePath
-            line.width: 7
+            line.width: 9
             line.color: Theme.route
             z: 6
         }

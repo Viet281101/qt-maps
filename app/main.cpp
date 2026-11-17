@@ -22,7 +22,9 @@
 #endif
 
 #include "benchmark/BenchmarkScenarioController.h"
+#include "core/AppPreferences.h"
 #include "core/ApplicationShutdownCoordinator.h"
+#include "core/PackageReadinessController.h"
 #include "diagnostics/CameraProbeController.h"
 #include "diagnostics/SimulatedNavigationController.h"
 #include "map/BoundedCameraController.h"
@@ -241,6 +243,11 @@ int main(int argc, char *argv[])
         &performanceMonitor, &routingController, &routeNavigationController,
         launchTimer.msecsSinceReference());
     QQmlApplicationEngine engine;
+    qtmaps::core::AppPreferences appPreferences(&engine);
+    qtmaps::core::PackageReadinessController packageReadiness(
+        parser.value(QStringLiteral("map-package")), parser.value(QStringLiteral("raster-package")),
+        parser.value(QStringLiteral("search-package")),
+        parser.value(QStringLiteral("orthography-package")));
 
     if (useUnit03LocalMap &&
         !mapSourceController.start(parser.value(QStringLiteral("map-package")),
@@ -274,6 +281,8 @@ int main(int argc, char *argv[])
     performanceMonitor.setWarmupSeconds(parser.value(QStringLiteral("benchmark-warmup")).toInt());
     engine.rootContext()->setContextProperty(QStringLiteral("performanceMonitor"),
                                              &performanceMonitor);
+    engine.rootContext()->setContextProperty(QStringLiteral("appPreferences"), &appPreferences);
+    engine.rootContext()->setContextProperty(QStringLiteral("packageReadiness"), &packageReadiness);
     engine.rootContext()->setContextProperty(QStringLiteral("cameraProbeController"),
                                              &cameraProbeController);
     engine.rootContext()->setContextProperty(QStringLiteral("boundedCameraController"),

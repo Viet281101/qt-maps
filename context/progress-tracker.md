@@ -11,16 +11,20 @@ benchmark artifacts remain ignored.
 - Unit 09 merged in PR #62. Unit 10 (#15) has an owner-supplied authorized
   local Sentinel-2 L2A scene; deterministic processing, app integration, the
   Qt 5.15.18 test suite, and functional visual review are complete locally.
-  [PR #63](https://github.com/Viet281101/qt-maps/pull/63) is ready to merge.
+  [PR #63](https://github.com/Viet281101/qt-maps/pull/63) merged as `71ee64e`
+  on 2026-11-15.
   #15 remains open only for its separately approved performance observation.
-- Unit 11 is planned as #64 offline readiness and application preferences. It
-  has no runtime implementation and starts only after Unit 10 merges.
+- Unit 11 (#64) is implemented and in [PR #66](https://github.com/Viet281101/qt-maps/pull/66): its readiness controller validates vector,
+  raster, search, and orthography packages off the UI thread; shows a compact
+  settings/readiness panel; and persists the Vietnamese/English preference.
+  The PR is review-ready and unmerged; Issue #64 and the PR remain `In Progress`
+  on Project #6 until the owner accepts the squash merge.
 - The active GitHub milestone is `Post-demo stabilization` with no due date.
 - [PR #53](https://github.com/Viet281101/qt-maps/pull/53) merged as `15d198a`
   on 2026-11-15 and closed #16. Project #6 records both items as `Done`.
 - The management-demo vertical slice is accepted: #9 and #1 are closed and
-  `Done` on Project #6. #15 (licensed orthography, `In Progress`, P1) is in
-  PR #63 review with an authorized local scene. #58 (offline SQLite FTS5 search
+  `Done` on Project #6. #15 (licensed orthography, `In Progress`, P1) has its
+  integration merged in PR #63. #58 (offline SQLite FTS5 search
   spike, P1) is closed and `Done` on Project #6.
 
 ## Completed product baseline
@@ -96,20 +100,88 @@ benchmark artifacts remain ignored.
   attribution, limits the layer to z15, and reports missing/corrupt packages
   without a remote fallback. The visual-review harness captured the active
   layer at 900x580, 1366x768, and 1920x1080; this is functional evidence only.
-- [PR #63](https://github.com/Viet281101/qt-maps/pull/63) contains the Unit 10
-  integration and is ready to merge; raw imagery and generated artifacts are
+- [PR #63](https://github.com/Viet281101/qt-maps/pull/63) merged the Unit 10
+  integration as `71ee64e`; raw imagery and generated artifacts are
   intentionally absent from its diff. It satisfies four #15 acceptance items;
   the short Release performance observation remains deferred by the i915 freeze.
 
-## Unit 11 — Offline readiness and application preferences (planned)
+## Unit 11 — Offline readiness and application preferences (completed locally)
 
-- [Issue #64](https://github.com/Viet281101/qt-maps/issues/64) is P1, `Todo`,
-  `After Demo` on Project #6, and scheduled after Unit 10 merges.
+- [Issue #64](https://github.com/Viet281101/qt-maps/issues/64) and
+  [PR #66](https://github.com/Viet281101/qt-maps/pull/66) are P1, `In Progress`,
+  `After Demo` on Project #6. The PR is open and review-ready, with no owner
+  review or merge yet. The follow-up review fixes are verified locally on the branch.
 - Its plan in `context/feature-specs/unit-11-offline-package-readiness-plan.md`
   reuses current validators to report required/optional package readiness, adds
   a Vietnamese/English translation base and persisted language setting, and
   consolidates idle map status controls without data downloads, new
   dependencies, benchmarks, or packaging work.
+- The current branch adds a bounded asynchronous readiness controller using the
+  existing package validators, including the search-package contract, with
+  normalized ready/missing/invalid results. Focused tests cover missing,
+  valid, and corrupt search packages; the Qt 5.15.18 Release suite passed
+  23/23 on 2026-11-15. Production-QML visual review also captured all vector,
+  raster, and orthography flows at 900x580, 1366x768, and 1920x1080.
+- The settings action remains at the top-right with a hint only on pointer
+  hover. The layer selector now sits at the bottom-right directly above OSM
+  attribution and opens upward; degraded/error status stacks above the closed
+  selector or open menu. Search results yield while the menu is open. Normal
+  loopback routing still shows no map-level pill.
+- `qtmaps_app_preferences_tests` now verifies the default Vietnamese choice,
+  persisted English choice, signal emission, and invalid-language fallback in
+  an isolated settings scope.
+- The English catalog now includes controller-origin status text at the QML
+  boundary and currently has 178/178 finished entries. The Release build
+  compiles its ignored `.qm` from the source-controlled `.ts` using the
+  available Qt `lrelease` tool. A translation regression test caught and fixed
+  the English-to-Vietnamese switch retaining the old translator.
+  `QQmlApplicationEngine::retranslate()` is verified in both directions by a
+  live QML binding test.
+- The Settings UI test opens with the keyboard action, dismisses on Escape,
+  and verifies that the panel remains within the 900x580 window. Missing and
+  invalid packages receive concise recovery guidance. The readiness timeout
+  test verifies that a late result cannot replace the timeout state.
+- The worker has an independent lifetime and no UI-thread shutdown wait when
+  validation stalls. Search readiness now opens the SQLite database read-only
+  and probes its FTS schema after validating the manifest/checksum, matching
+  the runtime open path. Recovery text distinguishes search fixture fallback,
+  unavailable orthography, and missing raster. A production-QML capture of the open Settings panel at
+  900x580 exposed a translucent layer label behind it; the panel now uses an
+  opaque theme surface.
+- **BUILD PASS** on Qt 5.15.18 Release (2026-11-16): `make BUILD_DIR=build-qt515
+  check` passed 24/24 tests and `git diff --check`. The production QML visual
+  review captured 17 frames including Settings at 900x580, vector/raster, and
+  orthography at supported viewports. The open Settings panel is opaque, fully
+  inside the window, and leaves attribution readable. This is functional
+  evidence; no new FPS/RAM/CPU measurement was run under the active i915 freeze.
+- Follow-up review fix verification (2026-11-16): Qt 5.15.18 Release
+  `make check` passed 24/24 tests including schema-corruption and live
+  runtime-status retranslation coverage. The 900x580 production QML capture
+  confirms the icon-only Settings control and the layer selector above
+  attribution. The new open-layer capture confirms its upward menu and visible
+  status pill have no overlap at the minimum viewport. The 18-frame visual
+  review also passed at the larger supported viewports.
+- Route-contrast follow-up (2026-11-17): a production Valhalla route exposed
+  that MapLibre painted the white outline over the blue route despite their
+  QML `z` values. Hiding the outline revealed the intact blue route; reversing
+  the two polyline declarations restored the blue stroke with its white edge
+  on the real 7.3 km route. The visual-review flow now also captures a route
+  after recalculation. Qt 5.15.18 Release tests passed 24/24, and 19 functional
+  captures passed across vector, raster, and orthography on 2026-11-17. The
+  isolated Release review gate also passed 24/24 tests with a clean worktree.
+- Second review follow-up (2026-11-17): repeated production starts showed the
+  Valhalla route could still appear white, so declaration order alone was not
+  reliable. A two-blue-stroke mitigation stayed readable but varied in width
+  and shade; the final route now uses one blue stroke to remove the ordering
+  dependency. The English prompt also translates origin/destination values.
+  The final Qt 5.15.18 Release suite passed 24/24; five consecutive real
+  Valhalla starts produced the same blue route footprint. The 19-frame visual
+  review passed across vector, raster, and orthography; the blue route remains
+  clear on both light maps and the licensed imagery. The English production UI
+  shows "choose origin". The isolated Release review gate passed 24/24 tests
+  with a clean worktree.
+- The isolated `make REVIEW_BUILD_DIR=build-review-qt515 review` gate passed
+  24/24 tests with a clean worktree on 2026-11-16.
 
 ## Next delivery plan
 
@@ -127,16 +199,18 @@ benchmark artifacts remain ignored.
    `context/feature-specs/15_orthography-decision-gate.md`. The first offline
    package/manifest contract now has a compact synthetic fixture and focused
    tests; it records complete coverage and provenance but does not process real
-   imagery. PR #57 merged as `631d713`. Unit 10's complete integration is in
-   PR #63, including review-gate and functional visual evidence; merge it by
-   squash once its final review is accepted. Keep #15 open for the separately
+   imagery. PR #57 merged as `631d713`. Unit 10's complete integration merged
+   in PR #63, including review-gate and functional visual evidence. Keep #15 open for the separately
    approved performance observation while the i915 freeze remains active.
-3. **#64 — readiness and preferences (P1, planned).** After Unit 10 merges,
-   reuse existing package validators to present required/optional readiness
-   before the demo starts; add only Vietnamese/English app translations and a
-   compact settings panel; consolidate the redundant idle service pill. The
-   Unit 11 plan fixes its no-download, no-new-dependency, no-benchmark boundary;
-   it does not authorize implementation yet.
+3. **#64 — readiness and preferences (P1, review-ready).** PR #66 is open for
+   owner review. Keep Issue #64 and the Project items `In Progress` until
+   squash merge. The Unit 11 plan retains its no-download, no-new-dependency,
+   no-benchmark boundary.
+4. **Unit 12 — local package delivery (proposed, [#65](https://github.com/Viet281101/qt-maps/issues/65)).** The decision-first plan in
+   `context/feature-specs/unit-12-local-package-delivery-plan.md` awaits the
+   owner's choice of distribution, licensing, storage, and update policy.
+   The issue is `Todo`, P2, `After Demo` in Project #6. Implementation is not
+   authorized by this planning document.
 
 ## Risks and decisions requiring the owner
 

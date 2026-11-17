@@ -148,11 +148,15 @@ target_include_directories(qtmaps_search PUBLIC "${CMAKE_SOURCE_DIR}/src")
 target_link_libraries(qtmaps_search PUBLIC Qt5::Core Qt5::Sql)
 
 add_library(qtmaps_app_core STATIC
+    src/core/AppPreferences.cpp
+    src/core/AppPreferences.h
+    src/core/PackageReadinessController.cpp
+    src/core/PackageReadinessController.h
     src/core/ApplicationShutdownCoordinator.cpp
     src/core/ApplicationShutdownCoordinator.h
 )
 target_include_directories(qtmaps_app_core PUBLIC "${CMAKE_SOURCE_DIR}/src")
-target_link_libraries(qtmaps_app_core PUBLIC qtmaps_routing Qt5::Core)
+target_link_libraries(qtmaps_app_core PUBLIC qtmaps_map qtmaps_routing qtmaps_search Qt5::Core Qt5::Qml)
 
 add_library(qtmaps_benchmark STATIC
     src/benchmark/BenchmarkScenarioController.cpp
@@ -167,11 +171,29 @@ target_link_libraries(qtmaps_benchmark PUBLIC
     Qt5::Quick
 )
 
+find_program(QTMAPS_LRELEASE_EXECUTABLE NAMES lrelease
+    PATHS /usr/lib/qt5/bin /usr/lib/qt6/bin NO_DEFAULT_PATH)
+if(NOT QTMAPS_LRELEASE_EXECUTABLE)
+    find_program(QTMAPS_LRELEASE_EXECUTABLE NAMES lrelease)
+endif()
+if(NOT QTMAPS_LRELEASE_EXECUTABLE)
+    message(FATAL_ERROR "Qt lrelease is required to compile the English catalog")
+endif()
+add_custom_command(
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/qtmaps_en.qm"
+    COMMAND "${QTMAPS_LRELEASE_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/i18n/qtmaps_en.ts"
+            -qm "${CMAKE_CURRENT_BINARY_DIR}/qtmaps_en.qm"
+    DEPENDS "${CMAKE_SOURCE_DIR}/i18n/qtmaps_en.ts"
+    VERBATIM
+)
+configure_file(i18n/resources.qrc.in "${CMAKE_CURRENT_BINARY_DIR}/qtmaps_i18n.qrc" @ONLY)
 qt5_add_resources(QTMAPS_QML_RESOURCES qml/resources.qrc)
+qt5_add_resources(QTMAPS_I18N_RESOURCES "${CMAKE_CURRENT_BINARY_DIR}/qtmaps_i18n.qrc")
 qt5_add_resources(QTMAPS_ROUTING_RESOURCES resources/routing.qrc)
 qt5_add_resources(QTMAPS_RASTER_RENDERER_RESOURCES tools/raster-renderer/raster_renderer.qrc)
 set(QTMAPS_RESOURCES
     ${QTMAPS_QML_RESOURCES}
+    ${QTMAPS_I18N_RESOURCES}
     ${QTMAPS_ROUTING_RESOURCES}
 )
 
@@ -311,6 +333,16 @@ if(BUILD_TESTING)
     add_executable(qtmaps_search_tests tests/search/tst_PlaceSearchController.cpp)
     target_link_libraries(qtmaps_search_tests PRIVATE qtmaps_search Qt5::Test)
     add_test(NAME qtmaps_search_tests COMMAND qtmaps_search_tests)
+
+    add_executable(qtmaps_package_readiness_tests tests/core/tst_PackageReadinessController.cpp)
+    target_link_libraries(qtmaps_package_readiness_tests PRIVATE qtmaps_app_core Qt5::Test)
+    add_test(NAME qtmaps_package_readiness_tests COMMAND qtmaps_package_readiness_tests)
+
+    add_executable(qtmaps_app_preferences_tests tests/core/tst_AppPreferences.cpp ${QTMAPS_RESOURCES})
+    target_link_libraries(qtmaps_app_preferences_tests PRIVATE qtmaps_app_core Qt5::Quick Qt5::Test)
+    add_test(NAME qtmaps_app_preferences_tests COMMAND qtmaps_app_preferences_tests)
+    set_tests_properties(qtmaps_app_preferences_tests PROPERTIES
+        ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QML2_IMPORT_PATH=${QTMAPS_QT_ARCHDATA}/qml;QT_QUICK_BACKEND=software")
 
     add_executable(qtmaps_search_fts5_spike_tests tests/search/tst_SearchFts5Spike.cpp)
     target_link_libraries(qtmaps_search_fts5_spike_tests PRIVATE Qt5::Sql Qt5::Test)

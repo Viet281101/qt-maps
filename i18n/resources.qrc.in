@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/i18n">
+        <file alias="qtmaps_en.qm">@CMAKE_CURRENT_BINARY_DIR@/qtmaps_en.qm</file>
+    </qresource>
+</RCC>

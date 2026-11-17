@@ -24,6 +24,11 @@ public:
         QObject *parent = nullptr);
     ~PlaceSearchController() override;
 
+    // Performs the same local contract checks used before the worker opens a
+    // search database.  The readiness surface uses this narrow entry point;
+    // it never opens a network connection or issues a query.
+    static bool validatePackage(const QString &packagePath, QString *errorMessage);
+
     QString query() const;
     QVariantList results() const;
     QString state() const;

@@ -2,7 +2,7 @@
 
 ## Status and tracking
 
-**Planned; no runtime work started.** This unit delivers
+**Implemented and verified locally on 2026-11-16; PR handoff pending.** This unit delivers
 [issue #64](https://github.com/Viet281101/qt-maps/issues/64) after Unit 10 is
 merged. It has three independently testable slices: package readiness,
 Vietnamese/English application preferences, and consolidation of the idle map
@@ -32,6 +32,9 @@ status labels.
 - Introduce only Vietnamese and English application translations. Use Qt 5's
   translation runtime and source-controlled translation catalogs; do not add a
   third-party localization dependency or promise further languages.
+- Translate controller-origin status messages at the QML presentation boundary
+  so the selected language applies immediately to search, map, route, and
+  navigation status without changing the controller's existing API values.
 - Store the selected language in the existing application configuration scope.
   The implementation must verify the Qt 5.15 retranslation path before claiming
   an immediate language switch; if a restart is needed, state that explicitly
@@ -40,6 +43,8 @@ status labels.
   edge. It opens a compact, keyboard-accessible settings panel whose first
   control is the language choice (`Tiếng Việt` / `English`). It uses an existing
   licensed/textual treatment; no new icon asset is implied.
+- Show the Settings explanation on pointer hover while preserving its accessible
+  name for keyboard and assistive technology users.
 - No source download, dataset regeneration, runtime networking, new dependency,
   benchmark, soak, GPU/i915 work, or broad application packaging is in scope.
 
@@ -61,9 +66,10 @@ status labels.
    layer-selector control, not a duplicate passive label. In the normal ready
    state, move the duplicate `Valhalla (cục bộ)` floating pill to the route
    panel's existing readiness wording; show a map-level service status only for
-   loading, degraded, or error recovery. Place the settings button above this
-   compact action cluster without overlapping search, route, navigation, or
-   attribution at 900x580.
+   loading, degraded, or error recovery. The settings button stays at the
+   upper-right; place the layer control immediately above attribution and stack
+   degraded status above it without overlapping search, route, or navigation at
+   900x580.
 5. **Verification.** Add focused valid/missing/corrupt/incompatible tests and
    one cancellation/timeout test. Test the two language choices, persistence,
    translation fallback, keyboard focus, and settings-panel dismissal. Run the
