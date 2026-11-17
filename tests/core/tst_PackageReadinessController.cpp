@@ -28,6 +28,23 @@ private slots:
         QVERIFY(!routingItem.value(QStringLiteral("available")).toBool());
     }
 
+    void routingSelectionStateIsNotOverwrittenByWorker()
+    {
+        qtmaps::core::PackageReadinessController controller(
+            QStringLiteral("/definitely-missing/vector"), QString(), QString(), QString());
+        controller.setRoutingState(QStringLiteral("installed"));
+        QTRY_COMPARE(controller.state(), QStringLiteral("error"));
+        QCOMPARE(controller.items().at(4).toMap().value(QStringLiteral("reason")).toString(),
+                 QStringLiteral("installed"));
+        QVERIFY(!controller.items().at(4).toMap().value(QStringLiteral("available")).toBool());
+        controller.setRoutingState(QStringLiteral("selected"));
+        QCOMPARE(controller.items().at(4).toMap().value(QStringLiteral("reason")).toString(),
+                 QStringLiteral("selected"));
+        QVERIFY(controller.items().at(4).toMap().value(QStringLiteral("available")).toBool());
+        controller.setRoutingState(QStringLiteral("unavailable"));
+        QVERIFY(!controller.items().at(4).toMap().value(QStringLiteral("available")).toBool());
+    }
+
     void timeoutIgnoresLateValidationResult()
     {
         qtmaps::core::PackageReadinessController controller(

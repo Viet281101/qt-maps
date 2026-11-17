@@ -68,7 +68,11 @@ These directories describe intended ownership. Application-code directories are 
   a staged integrity check and atomically activates it while retaining one
   previous valid bundle for rollback. The routing graph is a separately
   provisioned and activated artifact because its coverage, size, and lifecycle
-  differ. There is no runtime downloader, automatic update, or public hosting
+  differ. The approved Unit 13 target resolves activated runtime paths with
+  CLI overrides and selects the graph using an ignored app-owned copy of the
+  approved loopback-only Valhalla configuration; its source stays untouched.
+  The handoff is implemented locally for Unit 13. There is no runtime downloader,
+  automatic update, or public hosting
   path; each import records source/provenance, license/attribution, checksums,
   required disk space, and compatibility metadata.
 - **Disk cache**: bounded cache for fetched or decoded tiles; limits and invalidation policy must be measured and documented before commitment.

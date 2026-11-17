@@ -20,8 +20,12 @@ Item {
             return qsTr("Tìm kiếm đang dùng dữ liệu demo cục bộ; kiểm tra hoặc cài lại gói tìm kiếm ngoại tuyến.")
         if (item.role === "orthography")
             return qsTr("Ảnh trực giao chưa khả dụng; cần gói dữ liệu được cấp phép và hợp lệ.")
-        if (item.role === "routing")
+        if (item.role === "routing") {
+            if (item.reason === "installed") return qsTr("Graph đã cài nhưng chưa được cấu hình chọn.")
+            if (item.reason === "unavailable") return qsTr("Graph đã chọn nhưng Valhalla chưa sẵn sàng.")
+            if (item.reason === "invalid") return qsTr("Graph định tuyến đã cài không hợp lệ.")
             return qsTr("Chưa có graph định tuyến hợp lệ; Valhalla cục bộ có thể chưa sẵn sàng.")
+        }
         if (item.reason === "missing")
             return qsTr("Chưa cài gói raster ngoại tuyến; bản đồ vector vẫn khả dụng.")
         return qsTr("Gói không hợp lệ; kiểm tra lại dữ liệu cục bộ.")
@@ -116,6 +120,7 @@ Item {
                     Text {
                         width: parent.width
                         color: modelData.available ? Theme.success : (modelData.required ? Theme.error : Theme.warning)
+                        wrapMode: Text.WordWrap
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSizeCaption
                         text: (modelData.available ? "● " : "○ ") + settings.packageName(modelData.role)

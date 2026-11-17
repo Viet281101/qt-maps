@@ -204,6 +204,7 @@ void RoutingController::forceStopBackend()
 }
 
 bool RoutingController::backendRunning() const { return service_.isRunning(); }
+ValhallaServiceManager::State RoutingController::backendState() const { return service_.state(); }
 qint64 RoutingController::backendProcessId() const { return service_.processId(); }
 
 bool RoutingController::loadFixtureRoute(const QString &reason)

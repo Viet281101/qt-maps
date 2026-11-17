@@ -5,6 +5,7 @@
 #include "map/RasterPackageManifest.h"
 #include "search/PlaceSearchController.h"
 
+#include <QDir>
 #include <QFileInfo>
 #include <QThread>
 #include <QTimer>
@@ -100,9 +101,15 @@ public slots:
             !routingActivationRoot_.isEmpty() &&
             !OfflinePackageInstaller::activeRoutingGraphPath(routingActivationRoot_, &error)
                  .isEmpty();
+        const QString routingPointer =
+            QDir(routingActivationRoot_).filePath(QStringLiteral("routing-current.json"));
+        const QFileInfo pointer(routingPointer);
+        const QString reason = routingOk ? QStringLiteral("installed")
+                               : (pointer.exists() || pointer.isSymLink())
+                                   ? QStringLiteral("invalid")
+                                   : QStringLiteral("missing");
         items.append(readinessItem(QStringLiteral("routing"),
-                                   QStringLiteral("Định tuyến ngoại tuyến"), false, routingOk,
-                                   normalizedReason(routingActivationRoot_)));
+                                   QStringLiteral("Định tuyến ngoại tuyến"), false, false, reason));
         finish(items);
     }
 
@@ -158,6 +165,17 @@ void PackageReadinessController::applyResult(const QVariantList &items)
         return;
     timeout_->stop();
     items_ = items;
+    if (!routingState_.isEmpty()) {
+        for (QVariant &item : items_) {
+            QVariantMap map = item.toMap();
+            if (map.value(QStringLiteral("role")) == QStringLiteral("routing")) {
+                map.insert(QStringLiteral("reason"), routingState_);
+                map.insert(QStringLiteral("available"),
+                           routingState_ == QStringLiteral("selected"));
+                item = map;
+            }
+        }
+    }
     bool vectorAvailable = false;
     bool optionalUnavailable = false;
     for (const QVariant &item : items_) {
@@ -171,6 +189,13 @@ void PackageReadinessController::applyResult(const QVariantList &items)
              : optionalUnavailable ? QStringLiteral("degraded")
                                    : QStringLiteral("ready");
     emit changed();
+}
+
+void PackageReadinessController::setRoutingState(const QString &state)
+{
+    routingState_ = state;
+    if (!items_.isEmpty() && !timedOut_)
+        applyResult(items_);
 }
 
 void PackageReadinessController::markTimedOut()

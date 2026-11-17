@@ -76,6 +76,59 @@ private slots:
                  root.path() + QStringLiteral("/first"));
     }
 
+    void resolvesAndRollsBackProvisionedBundles()
+    {
+        const QString fixtureRoot = qEnvironmentVariable("QTMAPS_UNIT13_FIXTURE_ROOT");
+        if (fixtureRoot.isEmpty())
+            QSKIP("Set QTMAPS_UNIT13_FIXTURE_ROOT for local provisioned-data verification");
+        QTemporaryDir activation;
+        QVERIFY(activation.isValid());
+        QString error;
+        qtmaps::core::MapSearchBundleContract contract;
+        const QString first = fixtureRoot + QStringLiteral("/bundle-one");
+        const QString second = fixtureRoot + QStringLiteral("/bundle-two");
+        QVERIFY2(qtmaps::core::OfflinePackageInstaller::validateCandidate(first, &contract, &error),
+                 qPrintable(error));
+        QVERIFY(qtmaps::core::OfflinePackageInstaller::activateValidatedBundle(
+            first, contract, activation.path(), &error));
+        QVERIFY2(
+            qtmaps::core::OfflinePackageInstaller::validateCandidate(second, &contract, &error),
+            qPrintable(error));
+        QVERIFY(qtmaps::core::OfflinePackageInstaller::activateValidatedBundle(
+            second, contract, activation.path(), &error));
+        qtmaps::core::ActiveBundlePaths paths;
+        QVERIFY2(qtmaps::core::OfflinePackageInstaller::resolveActiveBundle(activation.path(),
+                                                                            &paths, &error),
+                 qPrintable(error));
+        QCOMPARE(paths.vector, second + QStringLiteral("/vector"));
+        QVERIFY(paths.orthography.isEmpty());
+        QVERIFY(qtmaps::core::OfflinePackageInstaller::rollback(activation.path(), &error));
+        QVERIFY2(qtmaps::core::OfflinePackageInstaller::resolveActiveBundle(activation.path(),
+                                                                            &paths, &error),
+                 qPrintable(error));
+        QCOMPARE(paths.vector, first + QStringLiteral("/vector"));
+        QCOMPARE(paths.search, first + QStringLiteral("/search"));
+    }
+
+    void rejectsMissingAndCorruptActiveBundle()
+    {
+        QTemporaryDir root;
+        QVERIFY(root.isValid());
+        qtmaps::core::ActiveBundlePaths paths;
+        paths.vector = QStringLiteral("stale");
+        QString error;
+        QVERIFY(!qtmaps::core::OfflinePackageInstaller::resolveActiveBundle(root.path(), &paths,
+                                                                            &error));
+        QVERIFY(paths.vector.isEmpty());
+        QVERIFY(!error.isEmpty());
+        QVERIFY(QDir(root.path()).mkdir(QStringLiteral("current")));
+        QVERIFY(writeJson(root.path() + QStringLiteral("/current/bundle.json"),
+                          {{"schema_version", "bad"}}));
+        QVERIFY(!qtmaps::core::OfflinePackageInstaller::resolveActiveBundle(root.path(), &paths,
+                                                                            &error));
+        QVERIFY(paths.vector.isEmpty());
+    }
+
     void rejectsBundleWhenDeclaredStorageCannotFit()
     {
         QTemporaryDir root;
@@ -89,6 +142,48 @@ private slots:
             root.path() + QStringLiteral("/bundle"), contract,
             root.path() + QStringLiteral("/activation"), &error));
         QVERIFY(error.contains(QStringLiteral("Insufficient storage")));
+    }
+
+    void runtimeConfigSelectsGraphWithoutChangingSource()
+    {
+        QTemporaryDir root;
+        QVERIFY(root.isValid());
+        QVERIFY(QDir(root.path()).mkdir(QStringLiteral("tiles")));
+        const QString source = root.path() + QStringLiteral("/source.json");
+        const QString destination = root.path() + QStringLiteral("/runtime.json");
+        const QJsonObject original{
+            {"mjolnir", QJsonObject{{"tile_dir", "old"}, {"other", 7}}},
+            {"httpd", QJsonObject{{"service", QJsonObject{{"listen", "tcp://127.0.0.1:18002"}}}}}};
+        QVERIFY(writeJson(source, original));
+        QString error;
+        QVERIFY2(qtmaps::core::OfflinePackageInstaller::writeRoutingRuntimeConfig(
+                     source, destination, root.path() + "/tiles", 18002, &error),
+                 qPrintable(error));
+        QVERIFY(qtmaps::core::OfflinePackageInstaller::routingConfigSelectsGraph(
+            destination, root.path() + "/tiles", &error));
+        QVERIFY(!qtmaps::core::OfflinePackageInstaller::routingConfigSelectsGraph(
+            source, root.path() + "/tiles", &error));
+        QFile file(source);
+        QVERIFY(file.open(QIODevice::ReadOnly));
+        QCOMPARE(QJsonDocument::fromJson(file.readAll()).object(), original);
+        QFile runtime(destination);
+        QVERIFY(runtime.open(QIODevice::ReadOnly));
+        QJsonObject expected = original;
+        QJsonObject selectedMjolnir = expected.value("mjolnir").toObject();
+        selectedMjolnir.insert("tile_dir", QFileInfo(root.path() + "/tiles").canonicalFilePath());
+        expected.insert("mjolnir", selectedMjolnir);
+        QCOMPARE(QJsonDocument::fromJson(runtime.readAll()).object(), expected);
+        QVERIFY(!qtmaps::core::OfflinePackageInstaller::writeRoutingRuntimeConfig(
+            source, source, root.path() + "/tiles", 18002, &error));
+        QVERIFY(!qtmaps::core::OfflinePackageInstaller::writeRoutingRuntimeConfig(
+            source, destination, root.path() + "/tiles", 18003, &error));
+        QJsonObject withExtract = original;
+        QJsonObject mjolnir = withExtract.value("mjolnir").toObject();
+        mjolnir.insert("tile_extract", "other.tar");
+        withExtract.insert("mjolnir", mjolnir);
+        QVERIFY(writeJson(source, withExtract));
+        QVERIFY(!qtmaps::core::OfflinePackageInstaller::writeRoutingRuntimeConfig(
+            source, destination, root.path() + "/tiles", 18002, &error));
     }
 
     void activatesAndReportsSeparateRoutingGraph()

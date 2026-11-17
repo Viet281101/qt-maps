@@ -3,13 +3,17 @@
 #include <QDebug>
 #include <QDir>
 #include <QElapsedTimer>
+#include <QEventLoop>
 #include <QFile>
+#include <QFileInfo>
 #include <QGeoServiceProvider>
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QQuickWindow>
 #include <QStringList>
+#include <QTemporaryDir>
+#include <QThread>
 #include <QTimer>
 #include <QVariantMap>
 
@@ -265,19 +269,66 @@ int main(int argc, char *argv[])
         probeProvider(QStringLiteral("mapboxgl"));
     }
 
+    // Bundle checks include checksums and must run outside the GUI thread. The
+    // startup event loop stays responsive while the worker resolves paths.
+    qtmaps::core::ActiveBundlePaths activeBundle;
+    QString bundleError;
+    QString activeGraph;
+    QString graphError;
+    const QString bundleRoot = parser.value(QStringLiteral("bundle-activation-root"));
+    const QString graphRoot = parser.value(QStringLiteral("routing-activation-root"));
+    const QFileInfo bundlePointer(QDir(bundleRoot).filePath(QStringLiteral("current")));
+    const QFileInfo graphPointer(QDir(graphRoot).filePath(QStringLiteral("routing-current.json")));
+    const bool hasBundle = bundlePointer.exists() || bundlePointer.isSymLink();
+    const bool hasGraph = graphPointer.exists() || graphPointer.isSymLink();
+    bool bundleValid = false;
+    QEventLoop resolutionLoop;
+    QThread *resolutionThread = QThread::create([&]() {
+        if (hasBundle)
+            bundleValid = qtmaps::core::OfflinePackageInstaller::resolveActiveBundle(
+                bundleRoot, &activeBundle, &bundleError);
+        if (hasGraph)
+            activeGraph = qtmaps::core::OfflinePackageInstaller::activeRoutingGraphPath(
+                graphRoot, &graphError);
+    });
+    QObject::connect(resolutionThread, &QThread::finished, &resolutionLoop, &QEventLoop::quit);
+    resolutionThread->start();
+    resolutionLoop.exec();
+    resolutionThread->wait();
+    delete resolutionThread;
+    if (hasBundle && !bundleValid)
+        qWarning().noquote() << "Active bundle is invalid:" << bundleError;
+    if (hasGraph && activeGraph.isEmpty())
+        qWarning().noquote() << "Active routing graph is invalid:" << graphError;
+    const auto packagePath = [&](const QString &option, const QString &resolved) {
+        if (parser.isSet(option) || !hasBundle)
+            return parser.value(option);
+        // A corrupt active bundle must not silently select an unrelated legacy package.
+        return bundleValid ? resolved : bundlePointer.absoluteFilePath();
+    };
+    const QString vectorPackage = packagePath(QStringLiteral("map-package"), activeBundle.vector);
+    const QString rasterPackage =
+        packagePath(QStringLiteral("raster-package"), activeBundle.raster);
+    const QString searchPackage =
+        packagePath(QStringLiteral("search-package"), activeBundle.search);
+    const QString orthographyPackage =
+        packagePath(QStringLiteral("orthography-package"), activeBundle.orthography);
+    if (hasBundle)
+        qInfo().noquote() << "Runtime packages: vector=" << vectorPackage
+                          << "raster=" << rasterPackage << "search=" << searchPackage
+                          << "orthography="
+                          << (orthographyPackage.isEmpty() ? "<none>" : orthographyPackage);
     qtmaps::diagnostics::CameraProbeController cameraProbeController;
     qtmaps::map::BoundedCameraController boundedCameraController;
     qtmaps::map::MbTilesTileSource vectorTileSource;
     qtmaps::map::DirectoryTileSource diagnosticRasterSource;
     qtmaps::map::MapSourceController mapSourceController(&vectorTileSource,
                                                          &diagnosticRasterSource);
-    mapSourceController.setRasterPackagePath(parser.value(QStringLiteral("raster-package")));
-    mapSourceController.setOrthographyPackagePath(
-        parser.value(QStringLiteral("orthography-package")));
+    mapSourceController.setRasterPackagePath(rasterPackage);
+    mapSourceController.setOrthographyPackagePath(orthographyPackage);
     qtmaps::diagnostics::SimulatedNavigationController navigationController;
     qtmaps::routing::RoutingController routingController;
-    qtmaps::search::PlaceSearchController placeSearchController(
-        parser.value(QStringLiteral("search-package")));
+    qtmaps::search::PlaceSearchController placeSearchController(searchPackage);
     qtmaps::routing::RouteNavigationController routeNavigationController;
     qtmaps::core::ApplicationShutdownCoordinator shutdownCoordinator(&routingController);
     qtmaps::perf::PerformanceMonitor performanceMonitor;
@@ -287,13 +338,11 @@ int main(int argc, char *argv[])
     QQmlApplicationEngine engine;
     qtmaps::core::AppPreferences appPreferences(&engine);
     qtmaps::core::PackageReadinessController packageReadiness(
-        parser.value(QStringLiteral("map-package")), parser.value(QStringLiteral("raster-package")),
-        parser.value(QStringLiteral("search-package")),
-        parser.value(QStringLiteral("orthography-package")), nullptr,
+        vectorPackage, rasterPackage, searchPackage, orthographyPackage, nullptr,
         parser.value(QStringLiteral("routing-activation-root")));
 
     if (useUnit03LocalMap &&
-        !mapSourceController.start(parser.value(QStringLiteral("map-package")),
+        !mapSourceController.start(vectorPackage,
                                    parser.value(QStringLiteral("diagnostic-raster-root")),
                                    parser.isSet(QStringLiteral("force-vector-failure")))) {
         qCritical().noquote() << "Unit 03 map startup failed:"
@@ -439,13 +488,57 @@ int main(int argc, char *argv[])
         qCritical() << "Failed to load" << qmlUrl;
         return 1;
     }
-    if (unit03ProductMap && useRoutingDemo &&
-        !parser.isSet(QStringLiteral("routing-fixture-only"))) {
+    QTemporaryDir runtimeRoutingDirectory;
+    const QString originalConfig =
+        QDir::current().absoluteFilePath(parser.value(QStringLiteral("valhalla-config")));
+    QString selectedConfig = originalConfig;
+    bool graphSelected = false;
+    QString routingState = !hasGraph               ? QStringLiteral("missing")
+                           : activeGraph.isEmpty() ? QStringLiteral("invalid")
+                                                   : QStringLiteral("installed");
+    const bool launchValhalla =
+        unit03ProductMap && useRoutingDemo && !parser.isSet(QStringLiteral("routing-fixture-only"));
+    bool canLaunch = launchValhalla;
+    if (launchValhalla && !activeGraph.isEmpty()) {
+        if (parser.isSet(QStringLiteral("valhalla-config"))) {
+            graphSelected = qtmaps::core::OfflinePackageInstaller::routingConfigSelectsGraph(
+                originalConfig, activeGraph, &graphError);
+        } else if (runtimeRoutingDirectory.isValid()) {
+            selectedConfig = runtimeRoutingDirectory.filePath(QStringLiteral("valhalla.json"));
+            graphSelected = qtmaps::core::OfflinePackageInstaller::writeRoutingRuntimeConfig(
+                originalConfig, selectedConfig, activeGraph, static_cast<quint16>(valhallaPort),
+                &graphError);
+            canLaunch = graphSelected;
+        } else {
+            graphError = QStringLiteral("Cannot create private runtime configuration directory");
+            canLaunch = false;
+        }
+        if (!graphSelected)
+            qWarning().noquote() << "Routing graph installed but not selected:" << graphError;
+        else
+            routingState = QStringLiteral("unavailable");
+    } else if (launchValhalla && hasGraph && activeGraph.isEmpty() &&
+               !parser.isSet(QStringLiteral("valhalla-config"))) {
+        canLaunch = false;
+    }
+    packageReadiness.setRoutingState(routingState);
+    QObject::connect(&routingController, &qtmaps::routing::RoutingController::stateChanged,
+                     &packageReadiness, [&]() {
+                         if (!graphSelected)
+                             return;
+                         const bool ready = routingController.backendState() ==
+                                            qtmaps::routing::ValhallaServiceManager::State::Ready;
+                         packageReadiness.setRoutingState(ready ? QStringLiteral("selected")
+                                                                : QStringLiteral("unavailable"));
+                     });
+    if (canLaunch) {
         const QDir workingDirectory = QDir::current();
+        qInfo().noquote() << "Routing runtime config:" << selectedConfig
+                          << "active graph:" << (activeGraph.isEmpty() ? "<none>" : activeGraph)
+                          << "selected:" << graphSelected;
         routingController.startBackend(
             workingDirectory.absoluteFilePath(parser.value(QStringLiteral("valhalla-service"))),
-            workingDirectory.absoluteFilePath(parser.value(QStringLiteral("valhalla-config"))),
-            static_cast<quint16>(valhallaPort));
+            selectedConfig, static_cast<quint16>(valhallaPort));
     }
     QObject::connect(&application, &QGuiApplication::lastWindowClosed, &shutdownCoordinator,
                      &qtmaps::core::ApplicationShutdownCoordinator::requestQuit);

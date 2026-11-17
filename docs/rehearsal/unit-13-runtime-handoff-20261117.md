@@ -1,0 +1,46 @@
+# Unit 13 local runtime handoff — 2026-11-17
+
+## Scope and preparation
+
+Functional verification used the existing owner-provisioned Hanoi vector,
+raster, search packages and existing Valhalla tiles on the development machine.
+Temporary bundle contracts, component links and activation roots were created
+under ignored `generated/unit-13-functional-yb8b6ucb/`. The two test bundles
+intentionally omitted optional orthography. No data was downloaded or generated,
+and no routing graph, source dataset or source Valhalla configuration was changed.
+
+## Operator workflow
+
+1. Prepare a local bundle and independent graph contract using the Unit 12
+   operator checklist; activate them with `--install-local-bundle` and
+   `--activate-routing-graph`, specifying activation roots as needed.
+2. Start `tools/run-demo.sh` with `--bundle-activation-root` and
+   `--routing-activation-root` when using non-default roots. The default roots
+   are `data/package-activation` and `data/routing-activation`, relative to the
+   process working directory. No per-component path is required.
+3. Check Settings: absent or invalid graph data is reported separately from an
+   installed but unselected graph, a selected graph whose service is not ready,
+   and a selected, available graph. Orthography is optional.
+4. Explicit component CLI paths take precedence. An explicit `--valhalla-config`
+   is passed through unchanged; a mismatch with the active graph is reported as
+   installed but not selected. Without that override, the app creates a private,
+   temporary loopback configuration with only `mjolnir.tile_dir` changed.
+
+## Evidence and limits
+
+The local provisioned-data test validated both bundles, activated them, resolved
+component paths and explicitly rolled back to the first; it confirmed that no
+orthography is required. An override run confirmed explicit map, search and
+Valhalla paths win and that a graph mismatch is reported.
+
+The offline headless run started the app from fresh activation roots. Inspection
+of the actual Valhalla child process and its config showed that `tile_dir` was
+the canonical activated graph and `tile_extract` was empty; the source config
+SHA-256 was unchanged. Valhalla returned a 7,294 m route with 14 maneuvers and
+HTTP 200. The temporary runtime config was removed when the application exited.
+Valhalla logged warnings for absent optional tile/traffic extracts. The headless
+software backend had no OpenGL context, so that run is not visual map evidence.
+A separate direct-GPU functional review captured map and Settings frames at the
+supported sizes; the 900x580 Settings label was fixed and visually rechecked in
+`generated/unit-13-visual-final-20261117/`. This is not a benchmark and does not
+replace a separate clean-target transfer test.
