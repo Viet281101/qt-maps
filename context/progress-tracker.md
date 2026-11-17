@@ -211,6 +211,12 @@ fixture-backed or simulated presentation.
    in [PR #67](https://github.com/Viet281101/qt-maps/pull/67), linked to #65.
    Both Project #6 items are `In Progress` with P2 / After Demo; a clean-target
    repeat remains deployment evidence after merge.
+5. **Unit 13 — runtime package handoff (proposed).**
+   `context/feature-specs/unit-13-runtime-package-handoff-plan.md` records the
+   next genuine gap: Unit 12 validates/activates local artifact pointers, but
+   map/search defaults and `valhalla.json` do not yet consume them together.
+   It requires an owner choice for the routing-config strategy and does not
+   authorize data generation, a Valhalla rebuild, downloads, or benchmarks.
 
 ## Risks and decisions requiring the owner
 

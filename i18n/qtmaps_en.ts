@@ -861,8 +861,8 @@ Continuous camera follow</translation>
     </message>
     <message>
         <location filename="../qml/components/SettingsOverlay.qml" line="12"/>
-        <source>Định tuyến ngoại tuyến</source>
-        <translation>Offline routing</translation>
+        <source>Gói graph định tuyến</source>
+        <translation>Routing graph package</translation>
     </message>
     <message>
         <location filename="../qml/components/SettingsOverlay.qml" line="12"/>
@@ -890,8 +890,8 @@ Continuous camera follow</translation>
     </message>
     <message>
         <location filename="../qml/components/SettingsOverlay.qml" line="23"/>
-        <source>Chưa có graph định tuyến hợp lệ; tuyến thật dùng Valhalla cục bộ chưa sẵn sàng.</source>
-        <translation>No valid routing graph is installed; real local Valhalla routes are unavailable.</translation>
+        <source>Chưa có graph định tuyến hợp lệ; Valhalla cục bộ có thể chưa sẵn sàng.</source>
+        <translation>No valid routing graph is installed; local Valhalla may be unavailable.</translation>
     </message>
     <message>
         <location filename="../qml/components/SettingsOverlay.qml" line="23"/>
