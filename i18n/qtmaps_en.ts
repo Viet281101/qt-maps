@@ -861,6 +861,11 @@ Continuous camera follow</translation>
     </message>
     <message>
         <location filename="../qml/components/SettingsOverlay.qml" line="12"/>
+        <source>Định tuyến ngoại tuyến</source>
+        <translation>Offline routing</translation>
+    </message>
+    <message>
+        <location filename="../qml/components/SettingsOverlay.qml" line="12"/>
         <source>Ảnh trực giao</source>
         <translation>Orthophoto</translation>
     </message>
@@ -882,6 +887,11 @@ Continuous camera follow</translation>
         <location filename="../qml/components/SettingsOverlay.qml" line="21"/>
         <source>Ảnh trực giao chưa khả dụng; cần gói dữ liệu được cấp phép và hợp lệ.</source>
         <translation>Orthophoto imagery is unavailable; a valid, licensed data package is required.</translation>
+    </message>
+    <message>
+        <location filename="../qml/components/SettingsOverlay.qml" line="23"/>
+        <source>Chưa có graph định tuyến hợp lệ; tuyến thật dùng Valhalla cục bộ chưa sẵn sàng.</source>
+        <translation>No valid routing graph is installed; real local Valhalla routes are unavailable.</translation>
     </message>
     <message>
         <location filename="../qml/components/SettingsOverlay.qml" line="23"/>

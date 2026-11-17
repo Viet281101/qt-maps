@@ -14,11 +14,12 @@ benchmark artifacts remain ignored.
   [PR #63](https://github.com/Viet281101/qt-maps/pull/63) merged as `71ee64e`
   on 2026-11-15.
   #15 remains open only for its separately approved performance observation.
-- Unit 11 (#64) is implemented and in [PR #66](https://github.com/Viet281101/qt-maps/pull/66): its readiness controller validates vector,
-  raster, search, and orthography packages off the UI thread; shows a compact
-  settings/readiness panel; and persists the Vietnamese/English preference.
-  The PR is review-ready and unmerged; Issue #64 and the PR remain `In Progress`
-  on Project #6 until the owner accepts the squash merge.
+- Unit 11 (#64) is merged on the current `main` as `5436b2d` (PR #66): its
+  readiness controller validates vector, raster, search, and orthography
+  packages off the UI thread; shows a compact settings/readiness panel; and
+  persists the Vietnamese/English preference. Local Release tests passed
+  24/24 on 2026-11-17. The live Issue/Project fields still require a separate
+  GitHub-state check before this file treats them as closed or `Done`.
 - The active GitHub milestone is `Post-demo stabilization` with no due date.
 - [PR #53](https://github.com/Viet281101/qt-maps/pull/53) merged as `15d198a`
   on 2026-11-15 and closed #16. Project #6 records both items as `Done`.
@@ -45,6 +46,42 @@ benchmark artifacts remain ignored.
   vector and forced-raster modes at 900x580, 1366x768, and 1920x1080. Its
   latest #53 review drives the actual search input and verifies the popover,
   connection pill, route, and navigation framing do not overlap.
+
+## Original baseline requirements: remaining acceptance work
+
+The first management-demo slice is complete, but the following work remains
+before the original product requirements can be described as complete. These
+items deliberately distinguish real local data and routing from the existing
+fixture-backed or simulated presentation.
+
+1. **Local map delivery and offline proof.** Make the approved raster, vector,
+   orthography, and search packages reproducibly available on a clean target
+   machine without a network connection. Record package versions, manifests,
+   checksums, attribution, setup steps, and the supported coverage/zoom bounds.
+   Demonstrate selecting each installed layer with networking disabled. The
+   current app validates developer-provisioned local packages. Unit 12 now
+   uses owner-provisioned explicit local imports, manual updates, one retained
+   rollback bundle, and no runtime downloader; routing graphs remain separate
+   artifacts.
+2. **Real nationwide car routing.** Build and retain evidence for a Valhalla
+   graph from the approved uncropped Geofabrik Vietnam PBF, including input
+   hash, tool/version configuration, graph-build duration, and peak RAM. Wire
+   arbitrary two-point requests in the application to that graph and verify
+   routes that exercise national and provincial roads. The acceptance evidence
+   must show route geometry and maneuvers from the routing engine, explicit
+   failure/degraded states, and must not rely on a route fixture.
+3. **Navigation from a real route.** Feed a successful real routing response
+   into the existing selected-route replay so the guidance view, camera follow,
+   rotation, maneuver progression, and re-route presentation are validated
+   end to end. Keep the position source explicitly labelled as simulated until
+   real GNSS/GPS support is separately approved; it must not be represented as
+   live turn-by-turn navigation.
+4. **Reference-laptop performance evidence.** After the i915 benchmark freeze
+   is lifted, run the locked Release scenarios against the real local packages
+   and nationwide routing graph. Publish FPS/frame-time, process-tree PSS/RSS,
+   CPU, duration, viewport, data package, and network mode; compare them with
+   the approved thresholds. Functional visual review is not a substitute for
+   this benchmark.
 
 ## Current verified evidence
 
@@ -107,81 +144,19 @@ benchmark artifacts remain ignored.
 
 ## Unit 11 — Offline readiness and application preferences (completed locally)
 
-- [Issue #64](https://github.com/Viet281101/qt-maps/issues/64) and
-  [PR #66](https://github.com/Viet281101/qt-maps/pull/66) are P1, `In Progress`,
-  `After Demo` on Project #6. The PR is open and review-ready, with no owner
-  review or merge yet. The follow-up review fixes are verified locally on the branch.
-- Its plan in `context/feature-specs/unit-11-offline-package-readiness-plan.md`
-  reuses current validators to report required/optional package readiness, adds
-  a Vietnamese/English translation base and persisted language setting, and
-  consolidates idle map status controls without data downloads, new
-  dependencies, benchmarks, or packaging work.
-- The current branch adds a bounded asynchronous readiness controller using the
-  existing package validators, including the search-package contract, with
-  normalized ready/missing/invalid results. Focused tests cover missing,
-  valid, and corrupt search packages; the Qt 5.15.18 Release suite passed
-  23/23 on 2026-11-15. Production-QML visual review also captured all vector,
-  raster, and orthography flows at 900x580, 1366x768, and 1920x1080.
-- The settings action remains at the top-right with a hint only on pointer
-  hover. The layer selector now sits at the bottom-right directly above OSM
-  attribution and opens upward; degraded/error status stacks above the closed
-  selector or open menu. Search results yield while the menu is open. Normal
-  loopback routing still shows no map-level pill.
-- `qtmaps_app_preferences_tests` now verifies the default Vietnamese choice,
-  persisted English choice, signal emission, and invalid-language fallback in
-  an isolated settings scope.
-- The English catalog now includes controller-origin status text at the QML
-  boundary and currently has 178/178 finished entries. The Release build
-  compiles its ignored `.qm` from the source-controlled `.ts` using the
-  available Qt `lrelease` tool. A translation regression test caught and fixed
-  the English-to-Vietnamese switch retaining the old translator.
-  `QQmlApplicationEngine::retranslate()` is verified in both directions by a
-  live QML binding test.
-- The Settings UI test opens with the keyboard action, dismisses on Escape,
-  and verifies that the panel remains within the 900x580 window. Missing and
-  invalid packages receive concise recovery guidance. The readiness timeout
-  test verifies that a late result cannot replace the timeout state.
-- The worker has an independent lifetime and no UI-thread shutdown wait when
-  validation stalls. Search readiness now opens the SQLite database read-only
-  and probes its FTS schema after validating the manifest/checksum, matching
-  the runtime open path. Recovery text distinguishes search fixture fallback,
-  unavailable orthography, and missing raster. A production-QML capture of the open Settings panel at
-  900x580 exposed a translucent layer label behind it; the panel now uses an
-  opaque theme surface.
-- **BUILD PASS** on Qt 5.15.18 Release (2026-11-16): `make BUILD_DIR=build-qt515
-  check` passed 24/24 tests and `git diff --check`. The production QML visual
-  review captured 17 frames including Settings at 900x580, vector/raster, and
-  orthography at supported viewports. The open Settings panel is opaque, fully
-  inside the window, and leaves attribution readable. This is functional
-  evidence; no new FPS/RAM/CPU measurement was run under the active i915 freeze.
-- Follow-up review fix verification (2026-11-16): Qt 5.15.18 Release
-  `make check` passed 24/24 tests including schema-corruption and live
-  runtime-status retranslation coverage. The 900x580 production QML capture
-  confirms the icon-only Settings control and the layer selector above
-  attribution. The new open-layer capture confirms its upward menu and visible
-  status pill have no overlap at the minimum viewport. The 18-frame visual
-  review also passed at the larger supported viewports.
-- Route-contrast follow-up (2026-11-17): a production Valhalla route exposed
-  that MapLibre painted the white outline over the blue route despite their
-  QML `z` values. Hiding the outline revealed the intact blue route; reversing
-  the two polyline declarations restored the blue stroke with its white edge
-  on the real 7.3 km route. The visual-review flow now also captures a route
-  after recalculation. Qt 5.15.18 Release tests passed 24/24, and 19 functional
-  captures passed across vector, raster, and orthography on 2026-11-17. The
-  isolated Release review gate also passed 24/24 tests with a clean worktree.
-- Second review follow-up (2026-11-17): repeated production starts showed the
-  Valhalla route could still appear white, so declaration order alone was not
-  reliable. A two-blue-stroke mitigation stayed readable but varied in width
-  and shade; the final route now uses one blue stroke to remove the ordering
-  dependency. The English prompt also translates origin/destination values.
-  The final Qt 5.15.18 Release suite passed 24/24; five consecutive real
-  Valhalla starts produced the same blue route footprint. The 19-frame visual
-  review passed across vector, raster, and orthography; the blue route remains
-  clear on both light maps and the licensed imagery. The English production UI
-  shows "choose origin". The isolated Release review gate passed 24/24 tests
-  with a clean worktree.
-- The isolated `make REVIEW_BUILD_DIR=build-review-qt515 review` gate passed
-  24/24 tests with a clean worktree on 2026-11-16.
+- PR #66 is represented by `5436b2d` on the local `main`; the controller
+  validates required and optional packages asynchronously, reports actionable
+  readiness, and persists Vietnamese/English preferences.
+- The controller maintains timeout-safe worker ownership, probes SQLite FTS5
+  read-only after manifest validation, and distinguishes fixture fallback,
+  unavailable orthography, and missing raster.
+- Release tests passed 24/24 on 2026-11-17. The functional QML review captured
+  vector, raster, orthography, and route/navigation states at all supported
+  viewports; the final single-blue route remained readable over both light maps
+  and imagery. This is functional evidence, not a performance benchmark.
+- Detailed implementation and review evidence remains in PR #66 and
+  `context/feature-specs/unit-11-offline-package-readiness-plan.md`; confirm
+  the live Issue/Project state separately before marking external tracking done.
 
 ## Next delivery plan
 
@@ -202,15 +177,39 @@ benchmark artifacts remain ignored.
    imagery. PR #57 merged as `631d713`. Unit 10's complete integration merged
    in PR #63, including review-gate and functional visual evidence. Keep #15 open for the separately
    approved performance observation while the i915 freeze remains active.
-3. **#64 — readiness and preferences (P1, review-ready).** PR #66 is open for
-   owner review. Keep Issue #64 and the Project items `In Progress` until
-   squash merge. The Unit 11 plan retains its no-download, no-new-dependency,
-   no-benchmark boundary.
-4. **Unit 12 — local package delivery (proposed, [#65](https://github.com/Viet281101/qt-maps/issues/65)).** The decision-first plan in
-   `context/feature-specs/unit-12-local-package-delivery-plan.md` awaits the
-   owner's choice of distribution, licensing, storage, and update policy.
-   The issue is `Todo`, P2, `After Demo` in Project #6. Implementation is not
-   authorized by this planning document.
+3. **#64 — readiness and preferences (P1, merged locally).** PR #66 is
+   represented by `5436b2d` on the current local `main`; the 2026-11-17
+   Release test gate passed 24/24. Check the live GitHub Issue and Project
+   state before closing or moving its external tracking items to `Done`.
+4. **Unit 12 — local package delivery ([#65](https://github.com/Viet281101/qt-maps/issues/65)).** The owner approved local-file provisioning:
+   map/search bundles are explicitly imported and manually updated; the
+   compatible vector/raster pair and search package activate together; permitted
+   orthography remains optional; routing graphs are separate local artifacts;
+   and QtMaps has no runtime downloader. Slice 1 is implemented locally as
+   `OfflinePackageContract`: it validates safe, complete map/search bundle and
+   routing-graph activation metadata without replacing existing package
+   validators; its focused Qt 5.15.18 Release test passed on 2026-11-17.
+   Slice 2 is also implemented locally: `OfflinePackageInstaller` validates
+   the candidate with those validators, atomically switches local `current`
+   and `previous` pointers, and supports explicit rollback without copying or
+   downloading owner-provided data. Focused activation/rollback tests passed
+   on 2026-11-17. Slice 3 is also implemented locally: a separate routing
+   graph contract validates non-empty graph storage, activates
+   `routing-current.json`, and reports the graph path without modifying
+   Valhalla runtime configuration. Focused tests passed on 2026-11-17. Slice 4
+   is implemented locally: the existing off-UI-thread readiness worker reports
+   routing activation as an optional Offline routing item in Settings with
+   recovery guidance, and `--routing-activation-root` supplies the local
+   pointer directory. The Unit 12 spec now includes the clean offline operator
+   checklist. Its explicit activation CLI validated and activated the local
+   owner-provisioned map/search bundle and routing graph on 2026-11-17; the
+   headless local-only walkthrough returned a Valhalla route of 7,294 m with
+   14 maneuvers. Evidence is in
+   `docs/rehearsal/unit-12-offline-walkthrough-20261117.md`; it is functional
+   evidence, not a benchmark or clean-target transfer test. Full Qt 5.15.18
+   Release tests passed 25/25 on 2026-11-17. Unit 12 is complete locally and
+   ready for its canonical implementation PR; a clean-target repeat remains
+   deployment evidence after merge.
 
 ## Risks and decisions requiring the owner
 

@@ -150,6 +150,10 @@ target_link_libraries(qtmaps_search PUBLIC Qt5::Core Qt5::Sql)
 add_library(qtmaps_app_core STATIC
     src/core/AppPreferences.cpp
     src/core/AppPreferences.h
+    src/core/OfflinePackageContract.cpp
+    src/core/OfflinePackageContract.h
+    src/core/OfflinePackageInstaller.cpp
+    src/core/OfflinePackageInstaller.h
     src/core/PackageReadinessController.cpp
     src/core/PackageReadinessController.h
     src/core/ApplicationShutdownCoordinator.cpp
@@ -341,6 +345,9 @@ if(BUILD_TESTING)
     add_executable(qtmaps_app_preferences_tests tests/core/tst_AppPreferences.cpp ${QTMAPS_RESOURCES})
     target_link_libraries(qtmaps_app_preferences_tests PRIVATE qtmaps_app_core Qt5::Quick Qt5::Test)
     add_test(NAME qtmaps_app_preferences_tests COMMAND qtmaps_app_preferences_tests)
+    add_executable(qtmaps_offline_package_contract_tests tests/core/tst_OfflinePackageContract.cpp)
+    target_link_libraries(qtmaps_offline_package_contract_tests PRIVATE qtmaps_app_core Qt5::Test)
+    add_test(NAME qtmaps_offline_package_contract_tests COMMAND qtmaps_offline_package_contract_tests)
     set_tests_properties(qtmaps_app_preferences_tests PROPERTIES
         ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QML2_IMPORT_PATH=${QTMAPS_QT_ARCHDATA}/qml;QT_QUICK_BACKEND=software")
 

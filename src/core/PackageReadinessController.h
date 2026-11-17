@@ -19,7 +19,8 @@ class PackageReadinessController final : public QObject
 public:
     PackageReadinessController(const QString &vectorPath, const QString &rasterPath,
                                const QString &searchPath, const QString &orthographyPath,
-                               QObject *parent = nullptr);
+                               QObject *parent = nullptr,
+                               const QString &routingActivationRoot = QString());
     ~PackageReadinessController() override;
 
     QVariantList items() const;

@@ -6,7 +6,9 @@ QtMaps is a Linux desktop mapping exercise for Vietnam, built by one developer w
 
 ## Goals
 
-1. Render Vietnam map data with raster tiles, vector data, and a legally sourced orthography layer, with automatic offline fallback where an online source is supported.
+1. Render Vietnam map data with locally provisioned raster tiles, vector data,
+   and a legally sourced orthography layer; no runtime map-data download is
+   part of the product path.
 2. Calculate a car route between two points, display the route and maneuver list, and simulate navigation with camera following, map rotation, GPS replay, and re-routing.
 3. Run the agreed demo flows on the reference laptop and publish reproducible Release-build FPS, total RAM, and total CPU measurements for the application and its child services.
 4. Maintain a weekly progress record that can be summarized for management without reconstructing work from commit history.
@@ -46,7 +48,8 @@ For this milestone, breadth, nationwide high-detail coverage, a complete data-ge
 
 ### Map Layers
 
-- Raster tile rendering with local/offline operation and an online fallback only when configured and available.
+- Raster tile rendering with local/offline operation from an explicitly
+  provisioned package; no runtime public-tile or data-download fallback.
 - Vector map rendering with dynamically linked MapLibre Native Qt v3.0.0 on Qt 5.15.18; localhost raster remains the fallback.
 - Orthography rendering for a bounded demo area and zoom range from a source whose license permits the intended use.
 
@@ -83,7 +86,9 @@ For this milestone, breadth, nationwide high-detail coverage, a complete data-ge
 - A reproducible local data pipeline for the bounded datasets selected for the demo.
 - National raster/vector coverage at zoom 0-10, detailed Hanoi/Red River Delta coverage initially up to zoom 16, and nationwide routing coverage from one uncropped Geofabrik Vietnam extract. The routing scope remains subject to measured graph-build time and peak RAM.
 - Performance instrumentation and benchmark reports on the reference laptop.
-- Packaging only if the packaging requirement is confirmed in `context/progress-tracker.md`.
+- Owner-provisioned local package delivery: an operator explicitly imports
+  versioned map/search bundles from local storage; routing graphs are delivered
+  and activated separately. The application performs no runtime data download.
 
 ### Out of Scope
 

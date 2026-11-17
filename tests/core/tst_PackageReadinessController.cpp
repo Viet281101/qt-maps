@@ -16,12 +16,16 @@ private slots:
             QStringLiteral("/definitely-missing/orthography"));
 
         QTRY_COMPARE(controller.state(), QStringLiteral("error"));
-        QCOMPARE(controller.items().size(), 4);
+        QCOMPARE(controller.items().size(), 5);
         const QVariantMap vectorItem = controller.items().at(0).toMap();
         QCOMPARE(vectorItem.value(QStringLiteral("role")).toString(), QStringLiteral("vector"));
         QVERIFY(vectorItem.value(QStringLiteral("required")).toBool());
         QVERIFY(!vectorItem.value(QStringLiteral("available")).toBool());
         QCOMPARE(vectorItem.value(QStringLiteral("reason")).toString(), QStringLiteral("missing"));
+        const QVariantMap routingItem = controller.items().at(4).toMap();
+        QCOMPARE(routingItem.value(QStringLiteral("role")).toString(), QStringLiteral("routing"));
+        QVERIFY(!routingItem.value(QStringLiteral("required")).toBool());
+        QVERIFY(!routingItem.value(QStringLiteral("available")).toBool());
     }
 
     void timeoutIgnoresLateValidationResult()

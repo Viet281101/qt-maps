@@ -1,5 +1,6 @@
 #include "PackageReadinessController.h"
 
+#include "OfflinePackageInstaller.h"
 #include "map/MapPackageManifest.h"
 #include "map/RasterPackageManifest.h"
 #include "search/PlaceSearchController.h"
@@ -34,9 +35,10 @@ class ReadinessWorker final : public QObject
     Q_OBJECT
 public:
     ReadinessWorker(QString vectorPath, QString rasterPath, QString searchPath,
-                    QString orthographyPath) :
+                    QString orthographyPath, QString routingActivationRoot) :
         vectorPath_(std::move(vectorPath)), rasterPath_(std::move(rasterPath)),
-        searchPath_(std::move(searchPath)), orthographyPath_(std::move(orthographyPath))
+        searchPath_(std::move(searchPath)), orthographyPath_(std::move(orthographyPath)),
+        routingActivationRoot_(std::move(routingActivationRoot))
     {}
 
 signals:
@@ -88,6 +90,19 @@ public slots:
                                        orthographyPath_, &orthographyManifest, &error);
         items.append(readinessItem(QStringLiteral("orthography"), QStringLiteral("Ảnh trực giao"),
                                    false, orthographyOk, normalizedReason(orthographyPath_)));
+        if (QThread::currentThread()->isInterruptionRequested()) {
+            finish(items);
+            return;
+        }
+
+        error.clear();
+        const bool routingOk =
+            !routingActivationRoot_.isEmpty() &&
+            !OfflinePackageInstaller::activeRoutingGraphPath(routingActivationRoot_, &error)
+                 .isEmpty();
+        items.append(readinessItem(QStringLiteral("routing"),
+                                   QStringLiteral("Định tuyến ngoại tuyến"), false, routingOk,
+                                   normalizedReason(routingActivationRoot_)));
         finish(items);
     }
 
@@ -102,20 +117,20 @@ private:
     QString rasterPath_;
     QString searchPath_;
     QString orthographyPath_;
+    QString routingActivationRoot_;
 };
 
 } // namespace
 
-PackageReadinessController::PackageReadinessController(const QString &vectorPath,
-                                                       const QString &rasterPath,
-                                                       const QString &searchPath,
-                                                       const QString &orthographyPath,
-                                                       QObject *parent) :
+PackageReadinessController::PackageReadinessController(
+    const QString &vectorPath, const QString &rasterPath, const QString &searchPath,
+    const QString &orthographyPath, QObject *parent, const QString &routingActivationRoot) :
     QObject(parent), thread_(new QThread), timeout_(new QTimer(this))
 {
     timeout_->setSingleShot(true);
     connect(timeout_, &QTimer::timeout, this, &PackageReadinessController::markTimedOut);
-    auto *worker = new ReadinessWorker(vectorPath, rasterPath, searchPath, orthographyPath);
+    auto *worker = new ReadinessWorker(vectorPath, rasterPath, searchPath, orthographyPath,
+                                       routingActivationRoot);
     worker->moveToThread(thread_);
     connect(thread_, &QThread::started, worker, &ReadinessWorker::run);
     connect(worker, &ReadinessWorker::completed, this, &PackageReadinessController::applyResult);
