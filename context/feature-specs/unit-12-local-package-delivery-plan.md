@@ -42,7 +42,8 @@ routing rollback pointers, readiness UI, operator checklist, focused tests,
 and local-only walkthrough are complete. A repeat on a separate clean Linux
 target remains deployment evidence, not outstanding implementation work. Its
 canonical implementation PR is [#67](https://github.com/Viet281101/qt-maps/pull/67),
-linked to #65 and marked `In Progress` on Project #6.
+merged as `ed78ed0` on 2026-11-17. Issue #65 is closed and both Project #6
+items are `Done`.
 
 ## Objective
 
@@ -99,8 +100,8 @@ repeatable, documented provisioning path without hiding data provenance.
   datasets or edit third-party artifacts by hand.
 - Keep the active i915 benchmark freeze. A performance measurement requires
   separate approval and a documented scope.
-- Do not change #65's live GitHub status until its canonical implementation PR
-  is created and linked; verify the resulting live state after that mutation.
+- #65 closed automatically when PR #67 merged. Verify live Project fields
+  after any later tracking mutation instead of assuming they changed.
 
 ## Completion criteria
 
