@@ -35,6 +35,9 @@ activation roots `data/package-activation` and `data/routing-activation`, with
 CLI overrides; relative paths resolve from the process working directory. A
 bundle without orthography is valid and starts with that layer unavailable.
 The demo launcher must not inject component overrides that mask activation.
+Explicit vector paths are validated independently and remain usable if bundle
+metadata stalls; the separately activated graph is also checked independently.
+A bundle is skipped when all component paths are overridden.
 An explicit `--valhalla-config` remains untouched and is passed through as-is;
 if it does not name the active graph, readiness reports installed but unselected.
 

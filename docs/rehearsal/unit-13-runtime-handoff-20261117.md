@@ -62,3 +62,10 @@ that raster fallback must not reread a vector package that timed out. Qt 5.15.18
 Release tests passed 25/25, and the direct-GPU functional visual review captured
 vector, raster, orthography and Settings frames in
 `generated/unit-13-review-fixes-final-20261118/`; this is not a benchmark.
+
+## Follow-up review checks
+
+Synthetic integration tests verify that a valid explicit vector remains usable
+when bundle metadata blocks, that the separately activated graph remains
+selected, and that all four explicit component paths skip the unused bundle. A repeated vector-start timeout now clears the prior running
+state and URL. Both tests exercise the real affected startup boundaries.

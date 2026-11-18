@@ -276,6 +276,8 @@ bool MbTilesTileSource::start(const QString &packagePath, quint16 requestedPort)
         // A blocked I/O operation cannot be interrupted safely in a thread. Detach
         // its ownership; it is cleaned up if it returns, without blocking the UI.
         startupTimedOut_ = true;
+        running_ = false;
+        baseUrl_.clear();
         workerThread_->quit();
         workerThread_ = nullptr;
         worker_ = nullptr;

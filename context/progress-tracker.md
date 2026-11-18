@@ -219,8 +219,8 @@ fixture-backed or simulated presentation.
    checks passed. GPU visual review fixed and rechecked the Settings label. See
    `docs/rehearsal/unit-13-runtime-handoff-20261117.md`. PR #70 and #69 are
    In Progress, P1 / After Demo. Pointer snapshots, degraded mode and synthetic
-   Release tests pass 25/25; validation is cancellable and vector startup has
-   a bounded event loop that avoids rereading a timed-out vector through raster.
+   CLI vector overrides and separate graph selection survive a blocked bundle;
+   repeated vector-start timeouts clear stale status and URL; tests pass.
 6. **Unit 14 — clean-target offline delivery (proposed).** See
    `context/feature-specs/unit-14-clean-offline-target-plan.md`; target selection,
    transfers and network changes require the owner’s approval.

@@ -465,10 +465,13 @@ private slots:
         QVERIFY(temporary.isValid());
         const QString root = createPackage(temporary);
         QVERIFY(!root.isEmpty());
+        qtmaps::map::MbTilesTileSource source;
+        QVERIFY2(source.start(root), qPrintable(source.errorMessage()));
+        QVERIFY(source.isRunning());
+        QVERIFY(!source.baseUrl().isEmpty());
         const QString glyph = root + QStringLiteral("/glyphs/Noto Sans Regular/0-255.pbf");
         QVERIFY(QFile::remove(glyph));
         QCOMPARE(::mkfifo(QFile::encodeName(glyph).constData(), 0600), 0);
-        qtmaps::map::MbTilesTileSource source;
         bool timerFired = false;
         QTimer::singleShot(100, &source, [&]() { timerFired = true; });
         QElapsedTimer elapsed;
@@ -483,6 +486,8 @@ private slots:
             ::close(writer);
         }
         QVERIFY(!started);
+        QVERIFY(!source.isRunning());
+        QVERIFY(source.baseUrl().isEmpty());
         QVERIFY(timerFired);
         QVERIFY2(elapsedMs < 13000, "Vector startup did not respect its timeout");
         QVERIFY(source.errorMessage().contains(QStringLiteral("timed out")));

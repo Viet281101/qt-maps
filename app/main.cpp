@@ -121,7 +121,7 @@ struct StartupResolution
 
 StartupResolution resolveStartup(const QString &bundleRoot, const QString &graphRoot,
                                  const QString &explicitVector, bool vectorProvided,
-                                 int exitAfterSeconds)
+                                 bool skipBundle, int exitAfterSeconds)
 {
     StartupResolution result;
     auto &activeBundle = result.bundle;
@@ -141,6 +141,9 @@ StartupResolution resolveStartup(const QString &bundleRoot, const QString &graph
     if (vectorProvided)
         resolver.setArguments(resolver.arguments() +
                               QStringList{QStringLiteral("--map-package"), explicitVector});
+    if (skipBundle)
+        resolver.setArguments(resolver.arguments() +
+                              QStringList{QStringLiteral("--internal-skip-bundle")});
     QEventLoop resolutionLoop;
     QTimer timeout;
     timeout.setSingleShot(true);
@@ -186,18 +189,41 @@ StartupResolution resolveStartup(const QString &bundleRoot, const QString &graph
         result.cancelled = true;
         return result;
     }
-    QJsonParseError parseError;
-    const QJsonDocument document =
-        QJsonDocument::fromJson(resolver.readAllStandardOutput(), &parseError);
+    // The helper reports an explicit vector separately before reading bundle
+    // metadata, so an unrelated stuck bundle cannot discard a valid override.
+    QJsonObject object;
+    QJsonObject explicitVectorResult;
+    QJsonObject routingResult;
+    for (const QByteArray &line : resolver.readAllStandardOutput().split('\n')) {
+        const QJsonDocument document = QJsonDocument::fromJson(line);
+        if (!document.isObject())
+            continue;
+        const QJsonObject message = document.object();
+        if (message.value(QStringLiteral("phase")) == QStringLiteral("explicit-vector"))
+            explicitVectorResult = message;
+        else if (message.value(QStringLiteral("phase")) == QStringLiteral("routing"))
+            routingResult = message;
+        else
+            object = message;
+    }
     if (timedOut || resolver.exitStatus() != QProcess::NormalExit || resolver.exitCode() != 0 ||
-        parseError.error != QJsonParseError::NoError || !document.isObject()) {
-        // Fail closed instead of selecting unrelated legacy paths after a failed lookup.
+        object.isEmpty()) {
+        // Fail closed for unknown components, while preserving a verified override.
         result.startupFailed = true;
         hasBundle = hasGraph = true;
         bundleError = graphError = timedOut ? QStringLiteral("Startup data check timed out")
                                             : QStringLiteral("Startup data check failed");
+        if (vectorProvided && !explicitVectorResult.isEmpty()) {
+            result.vectorChecked = explicitVectorResult.value("vectorChecked").toBool();
+            result.vectorOk = explicitVectorResult.value("vectorOk").toBool();
+            result.vectorError = explicitVectorResult.value("vectorError").toString();
+        }
+        if (!routingResult.isEmpty()) {
+            hasGraph = routingResult.value("hasGraph").toBool();
+            activeGraph = routingResult.value("graph").toString();
+            graphError = routingResult.value("graphError").toString();
+        }
     } else {
-        const QJsonObject object = document.object();
         hasBundle = object.value("hasBundle").toBool();
         bundleValid = object.value("bundleValid").toBool();
         bundleError = object.value("bundleError").toString();
@@ -232,6 +258,9 @@ int main(int argc, char *argv[])
     QCommandLineOption resolveStartupOption(QStringLiteral("internal-resolve-startup"));
     resolveStartupOption.setFlags(QCommandLineOption::HiddenFromHelp);
     parser.addOption(resolveStartupOption);
+    QCommandLineOption skipBundleOption(QStringLiteral("internal-skip-bundle"));
+    skipBundleOption.setFlags(QCommandLineOption::HiddenFromHelp);
+    parser.addOption(skipBundleOption);
     parser.addHelpOption();
     parser.addVersionOption();
     parser.addOption({QStringLiteral("mapboxgl-probe"),
@@ -346,26 +375,59 @@ int main(int argc, char *argv[])
     if (parser.isSet(QStringLiteral("internal-resolve-startup"))) {
         const QString bundleRoot = parser.value(QStringLiteral("bundle-activation-root"));
         const QString graphRoot = parser.value(QStringLiteral("routing-activation-root"));
-        const QFileInfo bundlePointer(QDir(bundleRoot).filePath(QStringLiteral("current")));
+        const bool vectorProvided = parser.isSet(QStringLiteral("map-package"));
+        QString vectorPath = parser.value(QStringLiteral("map-package"));
+        QString vectorError;
+        bool vectorChecked = false;
+        bool vectorOk = false;
+        if (vectorProvided) {
+            vectorChecked = !vectorPath.isEmpty();
+            qtmaps::map::MapPackageManifest vectorManifest;
+            vectorOk = vectorChecked && qtmaps::map::MapPackageManifest::loadAndValidate(
+                                            vectorPath, &vectorManifest, &vectorError);
+            const QJsonObject progress{{"phase", "explicit-vector"},
+                                       {"vectorChecked", vectorChecked},
+                                       {"vectorOk", vectorOk},
+                                       {"vectorError", vectorError}};
+            const QByteArray progressBytes =
+                QJsonDocument(progress).toJson(QJsonDocument::Compact) + '\n';
+            if (std::fwrite(progressBytes.constData(), 1, static_cast<size_t>(progressBytes.size()),
+                            stdout) != static_cast<size_t>(progressBytes.size()) ||
+                std::fflush(stdout) != 0)
+                return 4;
+        }
         const QFileInfo graphPointer(
             QDir(graphRoot).filePath(QStringLiteral("routing-current.json")));
-        const bool hasBundle = bundlePointer.exists() || bundlePointer.isSymLink();
         const bool hasGraph = graphPointer.exists() || graphPointer.isSymLink();
-        qtmaps::core::ActiveBundlePaths paths;
-        QString bundleError, graphError, graph;
-        const bool valid = hasBundle && qtmaps::core::OfflinePackageInstaller::resolveActiveBundle(
-                                            bundleRoot, &paths, &bundleError);
-        QString vectorError;
-        QString vectorPath = parser.value(QStringLiteral("map-package"));
-        if (hasBundle && !parser.isSet(QStringLiteral("map-package")))
-            vectorPath = valid ? paths.vector : QString();
-        const bool vectorChecked = !vectorPath.isEmpty();
-        qtmaps::map::MapPackageManifest vectorManifest;
-        const bool vectorOk = vectorChecked && qtmaps::map::MapPackageManifest::loadAndValidate(
-                                                   vectorPath, &vectorManifest, &vectorError);
+        QString graphError, graph;
         if (hasGraph)
             graph = qtmaps::core::OfflinePackageInstaller::activeRoutingGraphPath(graphRoot,
                                                                                   &graphError);
+        const QJsonObject routingProgress{{"phase", "routing"},
+                                          {"hasGraph", hasGraph},
+                                          {"graph", graph},
+                                          {"graphError", graphError}};
+        const QByteArray routingBytes =
+            QJsonDocument(routingProgress).toJson(QJsonDocument::Compact) + '\n';
+        if (std::fwrite(routingBytes.constData(), 1, static_cast<size_t>(routingBytes.size()),
+                        stdout) != static_cast<size_t>(routingBytes.size()) ||
+            std::fflush(stdout) != 0)
+            return 4;
+        const QFileInfo bundlePointer(QDir(bundleRoot).filePath(QStringLiteral("current")));
+        const bool hasBundle = !parser.isSet(QStringLiteral("internal-skip-bundle")) &&
+                               (bundlePointer.exists() || bundlePointer.isSymLink());
+        qtmaps::core::ActiveBundlePaths paths;
+        QString bundleError;
+        const bool valid = hasBundle && qtmaps::core::OfflinePackageInstaller::resolveActiveBundle(
+                                            bundleRoot, &paths, &bundleError);
+        if (!vectorProvided) {
+            if (hasBundle)
+                vectorPath = valid ? paths.vector : QString();
+            vectorChecked = !vectorPath.isEmpty();
+            qtmaps::map::MapPackageManifest vectorManifest;
+            vectorOk = vectorChecked && qtmaps::map::MapPackageManifest::loadAndValidate(
+                                            vectorPath, &vectorManifest, &vectorError);
+        }
         const QJsonObject result{{"hasBundle", hasBundle},
                                  {"bundleValid", valid},
                                  {"bundleError", bundleError},
@@ -455,9 +517,13 @@ int main(int argc, char *argv[])
         const int exitAfter = parser.isSet(QStringLiteral("exit-after"))
                                   ? std::max(1, parser.value(QStringLiteral("exit-after")).toInt())
                                   : 0;
-        const StartupResolution resolved =
-            resolveStartup(bundleRoot, graphRoot, parser.value(QStringLiteral("map-package")),
-                           parser.isSet(QStringLiteral("map-package")), exitAfter);
+        const bool allComponentsProvided = parser.isSet(QStringLiteral("map-package")) &&
+                                           parser.isSet(QStringLiteral("raster-package")) &&
+                                           parser.isSet(QStringLiteral("search-package")) &&
+                                           parser.isSet(QStringLiteral("orthography-package"));
+        const StartupResolution resolved = resolveStartup(
+            bundleRoot, graphRoot, parser.value(QStringLiteral("map-package")),
+            parser.isSet(QStringLiteral("map-package")), allComponentsProvided, exitAfter);
         if (resolved.cancelled)
             return 0;
         activeBundle = resolved.bundle;
@@ -523,8 +589,10 @@ int main(int argc, char *argv[])
         vectorPackage, rasterPackage, searchPackage, orthographyPackage, nullptr,
         parser.value(QStringLiteral("routing-activation-root")));
 
+    const bool verifiedVectorOverride =
+        parser.isSet(QStringLiteral("map-package")) && vectorChecked && vectorOk;
     const QString vectorStartupPackage =
-        (startupFailed || (vectorChecked && !vectorOk))
+        ((startupFailed && !verifiedVectorOverride) || (vectorChecked && !vectorOk))
             ? (unavailableBundle && unavailableBundle->isValid() ? unavailableBundle->path()
                                                                  : QString())
             : vectorPackage;

@@ -4,9 +4,11 @@
 #include "map/RasterPackageManifest.h"
 #include "search/PlaceSearchController.h"
 #include <QCryptographicHash>
+#include <QElapsedTimer>
 #include <QFile>
 #include <QJsonArray>
 #include <QJsonDocument>
+#include <QLibraryInfo>
 #include <QProcess>
 #include <QProcessEnvironment>
 #include <QSqlDatabase>
@@ -219,6 +221,109 @@ private slots:
         }
         QCOMPARE(process.exitStatus(), QProcess::NormalExit);
         QCOMPARE(process.exitCode(), 0);
+    }
+
+    void explicitVectorSurvivesStalledBundleMetadata()
+    {
+        QTemporaryDir root;
+        QVERIFY(root.isValid());
+        const QString vector = createPackage(root);
+        QVERIFY(!vector.isEmpty());
+        const QString bundle = root.path() + QStringLiteral("/blocked-bundle");
+        const QString activation = root.path() + QStringLiteral("/activation");
+        QVERIFY(QDir().mkpath(bundle));
+        QVERIFY(QDir().mkpath(activation));
+        QCOMPARE(::mkfifo(QFile::encodeName(bundle + "/bundle.json").constData(), 0600), 0);
+        QVERIFY(QFile::link(bundle, activation + "/current"));
+        const QString tiles = root.path() + QStringLiteral("/graph-tiles");
+        const QString graphActivation = root.path() + QStringLiteral("/graph-activation");
+        QVERIFY(QDir().mkpath(tiles));
+        QVERIFY(QDir().mkpath(graphActivation));
+        QFile tile(tiles + "/0.gph");
+        QVERIFY(tile.open(QIODevice::WriteOnly));
+        QCOMPARE(tile.write("graph"), qint64(5));
+        tile.close();
+        const QString graphContract = root.path() + QStringLiteral("/routing.json");
+        QVERIFY(writeJson(graphContract, {{"schema_version", "qtmaps-routing-graph-activation-v1"},
+                                          {"graph_id", "fixture"},
+                                          {"graph_path", "graph-tiles"},
+                                          {"source_pbf_sha256", QString(64, QLatin1Char('a'))},
+                                          {"attribution", "OpenStreetMap"},
+                                          {"installed_size_bytes", 5}}));
+        QVERIFY(QFile::link(graphContract, graphActivation + "/routing-current.json"));
+        const QString config = root.path() + QStringLiteral("/valhalla.json");
+        QVERIFY(writeJson(
+            config, {{"mjolnir", QJsonObject{{"tile_dir", tiles}}},
+                     {"httpd", QJsonObject{{"service",
+                                            QJsonObject{{"listen", "tcp://127.0.0.1:18002"}}}}}}));
+        QProcessEnvironment environment = QProcessEnvironment::systemEnvironment();
+        environment.insert("QT_QPA_PLATFORM", "offscreen");
+        environment.insert("QT_QUICK_BACKEND", "software");
+        QString maplibre = qEnvironmentVariable("QTMAPS_MAPLIBRE_INSTALL");
+        if (maplibre.isEmpty())
+            maplibre = QDir(QCoreApplication::applicationDirPath())
+                           .absoluteFilePath("../generated/unit-01b/maplibre-install-qt51518");
+        environment.insert("LD_LIBRARY_PATH",
+                           maplibre + "/lib:" + environment.value("LD_LIBRARY_PATH"));
+        environment.insert("QT_PLUGIN_PATH", maplibre + "/plugins:" +
+                                                 QLibraryInfo::location(QLibraryInfo::PluginsPath));
+        environment.insert("QML2_IMPORT_PATH",
+                           maplibre +
+                               "/qml:" + QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath));
+        auto check = [&](bool allOverrides) {
+            QProcess process;
+            process.setProcessEnvironment(environment);
+            process.setProcessChannelMode(QProcess::MergedChannels);
+            QStringList args{"--unit03-local-map",
+                             "--routing-demo",
+                             "--bundle-activation-root",
+                             activation,
+                             "--routing-activation-root",
+                             graphActivation,
+                             "--map-package",
+                             vector,
+                             "--valhalla-config",
+                             config,
+                             "--valhalla-service",
+                             root.path() + "/missing-service",
+                             "--disable-instrumentation"};
+            if (allOverrides)
+                args << "--raster-package" << (root.path() + "/raster") << "--search-package"
+                     << (root.path() + "/search") << "--orthography-package"
+                     << (root.path() + "/orthography");
+            process.start(QCoreApplication::applicationDirPath() + "/qtmaps", args);
+            QVERIFY(process.waitForStarted(3000));
+            QElapsedTimer elapsed;
+            elapsed.start();
+            QByteArray output;
+            while (elapsed.elapsed() < 17000 && process.state() != QProcess::NotRunning) {
+                process.waitForReadyRead(200);
+                output += process.readAll();
+                if (output.contains("probeMode= unit04-routing-valhalla"))
+                    break;
+            }
+            const qint64 totalMs = elapsed.elapsed();
+            if (process.state() != QProcess::NotRunning) {
+                process.terminate();
+                if (!process.waitForFinished(3000)) {
+                    process.kill();
+                    process.waitForFinished();
+                }
+            }
+            output += process.readAll();
+            QVERIFY2(output.contains("probeMode= unit04-routing-valhalla"), output.constData());
+            QVERIFY2(output.contains("selected: true"), output.constData());
+            QVERIFY(!output.contains("Active routing graph is invalid"));
+            if (allOverrides) {
+                QVERIFY2(totalMs < 7000,
+                         "Fully overridden components should skip the blocked bundle");
+                QVERIFY(!output.contains("Startup data check timed out"));
+            } else {
+                QVERIFY(output.contains("Startup data check timed out"));
+            }
+        };
+        check(true);
+        check(false);
     }
 
     void pointerSwitchNeverMixesBundleAndMetadata()
