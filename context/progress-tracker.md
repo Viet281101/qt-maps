@@ -214,15 +214,15 @@ fixture-backed or simulated presentation.
    routing, preserving CLI overrides and error states. BUILD PASS: Qt 5.15.18
    Release tests passed 25/25 on merged `main` on 2026-11-18; prior isolated
    review also passed. See `docs/rehearsal/unit-13-runtime-handoff-20261117.md`.
-6. **Unit 14 — delivery and Windows 11 feasibility ([#71](https://github.com/Viet281101/qt-maps/issues/71), proposed).** Project #6: Todo, P1, After Demo; milestone Post-demo stabilization.
-   14A plans one-script clean Linux VM/container offline proof; a second physical
-   machine is optional. 14B assesses native Windows 11, exact Qt/MapLibre and
-   Valhalla compatibility, and a portable ZIP. 14C reuses 14A smoke assertions
-   in Linux CI and adds Windows software-only build/bundle checks. Reviewer mode,
-   Windows acceptance status, test access, format and deadline need owner decisions.
-   Planning PR #72 and issue #71 are `In Progress` in Project #6 with P1 and
-   After Demo; PR uses the Post-demo stabilization milestone. No implementation
-   or benchmark is claimed. See
+6. **Unit 14 — Linux offline delivery and CI ([#71](https://github.com/Viet281101/qt-maps/issues/71), proposed).**
+   Do 14A clean Linux target first, then mandatory 14C Linux CI. 14B is light
+   Windows readiness outside the v1.0 critical path; native Windows is optional.
+   The owner will test a company Windows 11 laptop only after completion with a
+   CI-produced v1.0+ Windows artifact, if one exists. The v1.0 gate also needs
+   nationwide real routing, real-route replay and reference-laptop Release/soak
+   evidence after the i915 freeze lifts. Planning PR #72 and issue #71 are
+   `In Progress`, P1, After Demo in Project #6, with Post-demo stabilization
+   milestone. No implementation or benchmark is claimed. See
    `context/feature-specs/unit-14-clean-offline-target-plan.md`.
 
 ## Risks and decisions requiring the owner
