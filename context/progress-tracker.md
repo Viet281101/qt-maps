@@ -217,8 +217,9 @@ fixture-backed or simulated presentation.
    BUILD PASS: Qt 5.15.18 Release tests and isolated review both passed 25/25.
    Valid/rollback, CLI override, child-config and 7,294 m / 14-maneuver route
    checks passed. GPU visual review fixed and rechecked the Settings label. See
-   `docs/rehearsal/unit-13-runtime-handoff-20261117.md`. Next: owner-approved
-   push and review handoff; #69 remains P1 / After Demo / In Progress.
+   `docs/rehearsal/unit-13-runtime-handoff-20261117.md`. [PR #70](https://github.com/Viet281101/qt-maps/pull/70)
+   targets `main` and closes #69 on merge; both are P1 / After Demo / In
+   Progress in Project #6, milestone Post-demo stabilization. Next: review.
 
 ## Risks and decisions requiring the owner
 
