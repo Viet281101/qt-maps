@@ -142,8 +142,7 @@ fixture-backed or simulated presentation.
   intentionally absent from its diff. It satisfies four #15 acceptance items;
   the short Release performance observation remains deferred by the i915 freeze.
 
-## Unit 11 — Offline readiness and application preferences (completed locally)
-
+## Unit 11 — Offline readiness and application preferences (completed)
 - PR #66 is represented by `5436b2d` on the local `main`; the controller
   validates required and optional packages asynchronously, reports actionable
   readiness, and persists Vietnamese/English preferences.
@@ -155,11 +154,11 @@ fixture-backed or simulated presentation.
   viewports; the final single-blue route remained readable over both light maps
   and imagery. This is functional evidence, not a performance benchmark.
 - Detailed implementation and review evidence remains in PR #66 and
-  `context/feature-specs/unit-11-offline-package-readiness-plan.md`; confirm
-  the live Issue/Project state separately before marking external tracking done.
+  `context/feature-specs/unit-11-offline-package-readiness-plan.md`; issue #64
+  and PR #66 are closed/merged and both are `Done` in Project #6, verified
+  on 2026-11-17.
 
 ## Next delivery plan
-
 1. **#9 rehearsal and #1 handoff — completed.** PR #54 merged as `6e11910` on
    2026-11-15; #9 and #1 are closed and their Project #6 items are `Done`.
    The clean-start preflight, route/search/navigation operator checklist, and
@@ -177,10 +176,10 @@ fixture-backed or simulated presentation.
    imagery. PR #57 merged as `631d713`. Unit 10's complete integration merged
    in PR #63, including review-gate and functional visual evidence. Keep #15 open for the separately
    approved performance observation while the i915 freeze remains active.
-3. **#64 — readiness and preferences (P1, merged locally).** PR #66 is
-   represented by `5436b2d` on the current local `main`; the 2026-11-17
-   Release test gate passed 24/24. Check the live GitHub Issue and Project
-   state before closing or moving its external tracking items to `Done`.
+3. **#64 — readiness and preferences (P1, completed).** PR #66 merged as
+   `5436b2d`; the 2026-11-17 Release test gate passed 24/24. Issue #64 is
+   closed and both the issue and PR are `Done` in Project #6, verified on
+   2026-11-17.
 4. **Unit 12 — local package delivery ([#65](https://github.com/Viet281101/qt-maps/issues/65)).** The owner approved local-file provisioning:
    map/search bundles are explicitly imported and manually updated; the
    compatible vector/raster pair and search package activate together; permitted
@@ -211,12 +210,20 @@ fixture-backed or simulated presentation.
    merged as `ed78ed0` on 2026-11-17 and automatically closed #65. Both
    Project #6 items are `Done`; a clean-target repeat remains deployment
    evidence, not pending Unit 12 implementation work.
-5. **Unit 13 — runtime package handoff (proposed).**
-   `context/feature-specs/unit-13-runtime-package-handoff-plan.md` records the
-   next genuine gap: Unit 12 validates/activates local artifact pointers, but
-   map/search defaults and `valhalla.json` do not yet consume them together.
-   It requires an owner choice for the routing-config strategy and does not
-   authorize data generation, a Valhalla rebuild, downloads, or benchmarks.
+5. **Unit 13 — runtime handoff ([#69](https://github.com/Viet281101/qt-maps/issues/69), implemented locally).**
+   Activated bundle paths feed the runtime; explicit CLI paths win and
+   orthography is optional. A private Valhalla config selects the validated
+   graph; an explicit config is preserved and mismatches remain visible.
+   BUILD PASS: Qt 5.15.18 Release tests and isolated review both passed 25/25.
+   Valid/rollback, CLI override, child-config and 7,294 m / 14-maneuver route
+   checks passed. GPU visual review fixed and rechecked the Settings label. See
+   `docs/rehearsal/unit-13-runtime-handoff-20261117.md`. PR #70 and #69 are
+   In Progress, P1 / After Demo. Pointer snapshots, degraded mode and synthetic
+   Independent checks preserve healthy data on timeout; fixture mode skips graph
+   I/O. Release and isolated review passed 25/25; next: independent PR review.
+6. **Unit 14 — clean-target offline delivery (proposed).** See
+   `context/feature-specs/unit-14-clean-offline-target-plan.md`; target selection,
+   transfers and network changes require the owner’s approval.
 
 ## Risks and decisions requiring the owner
 
@@ -226,10 +233,8 @@ fixture-backed or simulated presentation.
 2. Orthography is now provisioned from an owner-supplied local Sentinel-2 L2A
    scene. Credentials and raw source data remain outside Git; nationwide or
    higher-resolution coverage still needs a separate decision.
-3. SQLite FTS5 target-runtime capability is proven, but its source dataset,
-   coverage, storage budget, generator, and runtime package lifecycle remain
-   Proposed except for #61's local package-generator contract; extractor and
-   runtime work still require separate acceptance.
+3. Offline Hanoi search is integrated with bounded coverage; any broader data
+   coverage or package expansion requires a separate decision.
 
 ## Working rules
 

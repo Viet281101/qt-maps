@@ -25,6 +25,7 @@ public:
 
     QVariantList items() const;
     QString state() const;
+    void setRoutingState(const QString &state);
 
 signals:
     void changed();
@@ -39,6 +40,7 @@ private:
     QPointer<QThread> thread_;
     QTimer *timeout_ = nullptr;
     bool timedOut_ = false;
+    QString routingState_;
 };
 
 } // namespace core

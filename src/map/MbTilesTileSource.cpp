@@ -3,6 +3,7 @@
 #include "MapPackageManifest.h"
 
 #include <QDir>
+#include <QEventLoop>
 #include <QFile>
 #include <QFileInfo>
 #include <QHostAddress>
@@ -13,6 +14,7 @@
 #include <QSqlQuery>
 #include <QTcpServer>
 #include <QTcpSocket>
+#include <QTimer>
 #include <QUrl>
 #include <QVariantMap>
 
@@ -23,7 +25,15 @@ class MbTilesTileSourceWorker final : public QObject
 {
     Q_OBJECT
 
+signals:
+    void startCompleted(const QVariantMap &result);
+
 public slots:
+    void startAsync(const QString &packagePath, quint16 requestedPort)
+    {
+        emit startCompleted(start(packagePath, requestedPort));
+    }
+
     QVariantMap start(const QString &packagePath, quint16 requestedPort)
     {
         stop();
@@ -221,54 +231,84 @@ private:
 };
 
 MbTilesTileSource::MbTilesTileSource(QObject *parent) :
-    TileSource(parent), worker_(new MbTilesTileSourceWorker)
+    TileSource(parent), workerThread_(new QThread), worker_(new MbTilesTileSourceWorker)
 {
-    workerThread_.setObjectName(QStringLiteral("qtmaps-mbtiles-tile-source"));
-    worker_->moveToThread(&workerThread_);
-    connect(&workerThread_, &QThread::finished, worker_, &QObject::deleteLater);
-    workerThread_.start();
+    workerThread_->setObjectName(QStringLiteral("qtmaps-mbtiles-tile-source"));
+    worker_->moveToThread(workerThread_);
+    connect(workerThread_, &QThread::finished, worker_, &QObject::deleteLater);
+    connect(workerThread_, &QThread::finished, workerThread_, &QObject::deleteLater);
+    workerThread_->start();
 }
 
 MbTilesTileSource::~MbTilesTileSource()
 {
     stop();
-    workerThread_.quit();
-    workerThread_.wait(3000);
+    if (workerThread_) {
+        workerThread_->quit();
+        workerThread_->wait(3000);
+    }
 }
 
 bool MbTilesTileSource::start(const QString &packagePath, quint16 requestedPort)
 {
-    QVariantMap result;
-    QMetaObject::invokeMethod(worker_, "start", Qt::BlockingQueuedConnection,
-                              Q_RETURN_ARG(QVariantMap, result), Q_ARG(QString, packagePath),
-                              Q_ARG(quint16, requestedPort));
-    running_ = result.value(QStringLiteral("running")).toBool();
-    baseUrl_ = result.value(QStringLiteral("base_url")).toString();
-    errorMessage_ = result.value(QStringLiteral("error")).toString();
-    emit runningChanged();
-    if (!errorMessage_.isEmpty()) {
-        emit errorOccurred(errorMessage_);
+    if (!workerThread_ || !worker_) {
+        errorMessage_ = QStringLiteral("Vector tile source is unavailable after a timeout");
+        return false;
     }
+    startupTimedOut_ = false;
+    QVariantMap result;
+    bool completed = false;
+    QEventLoop loop;
+    QTimer timer;
+    timer.setSingleShot(true);
+    connect(&timer, &QTimer::timeout, &loop, &QEventLoop::quit);
+    connect(worker_, &MbTilesTileSourceWorker::startCompleted, &loop,
+            [&](const QVariantMap &value) {
+                result = value;
+                completed = true;
+                loop.quit();
+            });
+    QMetaObject::invokeMethod(worker_, "startAsync", Qt::QueuedConnection,
+                              Q_ARG(QString, packagePath), Q_ARG(quint16, requestedPort));
+    timer.start(10000);
+    loop.exec();
+    if (!completed) {
+        // A blocked I/O operation cannot be interrupted safely in a thread. Detach
+        // its ownership; it is cleaned up if it returns, without blocking the UI.
+        startupTimedOut_ = true;
+        running_ = false;
+        baseUrl_.clear();
+        workerThread_->quit();
+        workerThread_ = nullptr;
+        worker_ = nullptr;
+        errorMessage_ = QStringLiteral("Vector package startup timed out");
+    } else {
+        running_ = result.value(QStringLiteral("running")).toBool();
+        baseUrl_ = result.value(QStringLiteral("base_url")).toString();
+        errorMessage_ = result.value(QStringLiteral("error")).toString();
+    }
+    emit runningChanged();
+    if (!errorMessage_.isEmpty())
+        emit errorOccurred(errorMessage_);
     return running_;
 }
 
 void MbTilesTileSource::stop()
 {
-    if (!workerThread_.isRunning()) {
+    if (!workerThread_ || !workerThread_->isRunning() || !worker_)
         return;
-    }
     QMetaObject::invokeMethod(worker_, "stop", Qt::BlockingQueuedConnection);
     const bool changed = running_;
     running_ = false;
     baseUrl_.clear();
-    if (changed) {
+    if (changed)
         emit runningChanged();
-    }
 }
 
 bool MbTilesTileSource::isRunning() const { return running_; }
 QString MbTilesTileSource::baseUrl() const { return baseUrl_; }
 QString MbTilesTileSource::errorMessage() const { return errorMessage_; }
+bool MbTilesTileSource::startupTimedOut() const { return startupTimedOut_; }
 
 } // namespace map
 } // namespace qtmaps

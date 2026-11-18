@@ -10,7 +10,6 @@ expected_qt_version="${QTMAPS_QT_EXPECTED_VERSION:-5.15.18}"
 maplibre_install="${QTMAPS_MAPLIBRE_INSTALL:-$repository_root/generated/unit-01b/maplibre-install-qt51518}"
 app="${QTMAPS_APP:-$repository_root/build-qt515/qtmaps}"
 service="$repository_root/generated/unit-04/valhalla-venv/lib/python3.12/site-packages/valhalla/bin/valhalla_service"
-config="$repository_root/generated/unit-04/valhalla/valhalla.json"
 
 fail() {
     printf 'QtMaps runtime error: %s\n' "$1" >&2
@@ -52,9 +51,7 @@ command=(
     "$app"
     --unit03-local-map
     --routing-demo
-    --map-package "$repository_root/data/packages/current"
     --valhalla-service "$service"
-    --valhalla-config "$config"
     "$@"
 )
 

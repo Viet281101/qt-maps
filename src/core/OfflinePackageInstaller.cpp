@@ -7,6 +7,9 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QSaveFile>
 #include <QStorageInfo>
 #include <QUuid>
 
@@ -55,6 +58,33 @@ bool OfflinePackageInstaller::validateCandidate(const QString &bundlePath,
         return false;
     }
     *contract = parsed;
+    return true;
+}
+
+bool OfflinePackageInstaller::resolveActiveBundle(const QString &activationRoot,
+                                                  ActiveBundlePaths *paths, QString *errorMessage)
+{
+    if (!paths) {
+        if (errorMessage)
+            *errorMessage = QStringLiteral("Missing bundle paths output");
+        return false;
+    }
+    *paths = ActiveBundlePaths{};
+    const QString current = linkPath(activationRoot, QStringLiteral("current"));
+    const QString snapshot = QFileInfo(current).canonicalFilePath();
+    MapSearchBundleContract contract;
+    if (snapshot.isEmpty() ||
+        !MapSearchBundleContract::loadAndValidate(snapshot, &contract, errorMessage)) {
+        if (snapshot.isEmpty() && errorMessage)
+            *errorMessage = QStringLiteral("Active bundle is missing or unreadable");
+        return false;
+    }
+    const QDir root(snapshot);
+    paths->vector = root.filePath(contract.vectorPath);
+    paths->raster = root.filePath(contract.rasterPath);
+    paths->search = root.filePath(contract.searchPath);
+    if (!contract.orthographyPath.isEmpty())
+        paths->orthography = root.filePath(contract.orthographyPath);
     return true;
 }
 
@@ -233,11 +263,100 @@ bool OfflinePackageInstaller::rollbackRoutingGraph(const QString &activationRoot
 QString OfflinePackageInstaller::activeRoutingGraphPath(const QString &activationRoot,
                                                         QString *errorMessage)
 {
-    const QString contractPath = linkPath(activationRoot, QStringLiteral("routing-current.json"));
+    const QString current = linkPath(activationRoot, QStringLiteral("routing-current.json"));
+    const QString snapshot = QFileInfo(current).canonicalFilePath();
     RoutingGraphActivationContract contract;
-    if (!validateRoutingGraph(contractPath, &contract, errorMessage))
+    if (snapshot.isEmpty() || !validateRoutingGraph(snapshot, &contract, errorMessage)) {
+        if (snapshot.isEmpty() && errorMessage)
+            *errorMessage = QStringLiteral("Active routing contract is missing or unreadable");
         return QString();
-    return QDir(QFileInfo(contractPath).canonicalPath()).filePath(contract.graphPath);
+    }
+    return QDir(QFileInfo(snapshot).canonicalPath()).filePath(contract.graphPath);
+}
+
+namespace {
+bool readRoutingConfig(const QString &path, QJsonObject *config, QString *error)
+{
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly)) {
+        if (error)
+            *error = QStringLiteral("Cannot read routing configuration");
+        return false;
+    }
+    QJsonParseError parseError;
+    const auto document = QJsonDocument::fromJson(file.readAll(), &parseError);
+    if (parseError.error != QJsonParseError::NoError || !document.isObject() ||
+        !document.object().value(QStringLiteral("mjolnir")).isObject()) {
+        if (error)
+            *error = QStringLiteral("Invalid routing configuration");
+        return false;
+    }
+    *config = document.object();
+    return true;
+}
+} // namespace
+
+bool OfflinePackageInstaller::routingConfigSelectsGraph(const QString &configPath,
+                                                        const QString &graphPath, QString *error)
+{
+    QJsonObject config;
+    if (!readRoutingConfig(configPath, &config, error))
+        return false;
+    const QString tileDir = config.value(QStringLiteral("mjolnir"))
+                                .toObject()
+                                .value(QStringLiteral("tile_dir"))
+                                .toString();
+    const QString extract = config.value(QStringLiteral("mjolnir"))
+                                .toObject()
+                                .value(QStringLiteral("tile_extract"))
+                                .toString();
+    const QString selected = QFileInfo(tileDir).canonicalFilePath();
+    const QString expected = QFileInfo(graphPath).canonicalFilePath();
+    if (!extract.isEmpty() || selected.isEmpty() || expected.isEmpty() || selected != expected) {
+        if (error)
+            *error = QStringLiteral("Routing configuration does not select active graph");
+        return false;
+    }
+    return true;
+}
+
+bool OfflinePackageInstaller::writeRoutingRuntimeConfig(const QString &source,
+                                                        const QString &destination,
+                                                        const QString &graphPath, quint16 port,
+                                                        QString *error)
+{
+    QJsonObject config;
+    if (!readRoutingConfig(source, &config, error))
+        return false;
+    const QString listen = config.value(QStringLiteral("httpd"))
+                               .toObject()
+                               .value(QStringLiteral("service"))
+                               .toObject()
+                               .value(QStringLiteral("listen"))
+                               .toString();
+    const QString graph = QFileInfo(graphPath).canonicalFilePath();
+    const QString extract = config.value(QStringLiteral("mjolnir"))
+                                .toObject()
+                                .value(QStringLiteral("tile_extract"))
+                                .toString();
+    if (!extract.isEmpty() || listen != QStringLiteral("tcp://127.0.0.1:%1").arg(port) ||
+        graph.isEmpty() || !QFileInfo(graph).isDir() ||
+        QFileInfo(source).absoluteFilePath() == QFileInfo(destination).absoluteFilePath()) {
+        if (error)
+            *error = QStringLiteral("Unsafe routing configuration or graph path");
+        return false;
+    }
+    QJsonObject mjolnir = config.value(QStringLiteral("mjolnir")).toObject();
+    mjolnir.insert(QStringLiteral("tile_dir"), graph);
+    config.insert(QStringLiteral("mjolnir"), mjolnir);
+    QSaveFile file(destination);
+    const QByteArray bytes = QJsonDocument(config).toJson();
+    if (!file.open(QIODevice::WriteOnly) || file.write(bytes) != bytes.size() || !file.commit()) {
+        if (error)
+            *error = QStringLiteral("Cannot write runtime routing configuration");
+        return false;
+    }
+    return routingConfigSelectsGraph(destination, graph, error);
 }
 
 } // namespace core

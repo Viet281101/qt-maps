@@ -844,6 +844,11 @@ Continuous camera follow</translation>
 </context>
 <context>
     <name>SettingsOverlay</name>
+    <message><source>Graph chưa được kiểm tra trong chế độ này.</source><translation>The graph is not checked in this mode.</translation></message>
+    <message><source>Không thể kiểm tra graph; hãy kiểm tra dữ liệu cục bộ.</source><translation>Cannot check the graph; inspect the local data.</translation></message>
+    <message><source>Graph đã cài nhưng chưa được cấu hình chọn.</source><translation>Graph is installed but not selected by the configuration.</translation></message>
+    <message><source>Graph đã chọn nhưng Valhalla chưa sẵn sàng.</source><translation>Graph is selected but Valhalla is not ready.</translation></message>
+    <message><source>Graph định tuyến đã cài không hợp lệ.</source><translation>The installed routing graph is invalid.</translation></message>
     <message>
         <location filename="../qml/components/SettingsOverlay.qml" line="9"/>
         <source>Bản đồ vector</source>

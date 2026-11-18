@@ -2,9 +2,14 @@
 
 ## Status
 
-Proposed follow-up to Unit 12. It is planning-only: no data generation,
-download, benchmark, Valhalla rebuild, or production configuration rewrite is
-authorized by this document.
+Owner approved implementation on 2026-11-17; implemented locally and isolated
+review found startup, pointer-race and degraded-mode defects. Local fixes and
+self-contained tests are in [PR #70](https://github.com/Viet281101/qt-maps/pull/70).
+Initial validation is cancellable, and vector tile-source startup has a bounded,
+responsive event loop with timeout-safe worker ownership. Independent review
+remains necessary before merge. Evidence is in `docs/rehearsal/unit-13-runtime-handoff-20261117.md`.
+No data generation, download, benchmark, Valhalla rebuild, or source
+configuration rewrite is authorized.
 
 ## Objective
 
@@ -22,24 +27,28 @@ own paths. A routing graph package can therefore be valid without being the
 graph used by a route request. Unit 13 closes this handoff gap; it must not
 describe metadata activation as live routing activation before that happens.
 
-## Owner decision gate
+## Owner-approved decisions
+Use an app-owned ignored runtime copy of the approved loopback-only Valhalla
+configuration, changing only `mjolnir.tile_dir` to the validated active graph.
+Preserve the source config and explicit CLI overrides. Use the existing default
+activation roots `data/package-activation` and `data/routing-activation`, with
+CLI overrides; relative paths resolve from the process working directory. A
+bundle without orthography is valid and starts with that layer unavailable.
+The demo launcher must not inject component overrides that mask activation.
+Explicit vector paths are validated independently and remain usable if bundle
+metadata stalls; the separately activated graph is also checked independently.
+A bundle is skipped when all component paths are overridden. Bundle/vector and
+routing checks run in independent cancellable helpers; a stalled check cannot
+discard the other result. Fixture-only routing does not read the routing graph.
+An explicit `--valhalla-config` remains untouched and is passed through as-is;
+if it does not name the active graph, readiness reports installed but unselected.
 
-Before implementation, approve one routing-config strategy:
+## Ordered implementation slices
 
-1. **Recommended:** create an ignored, app-owned runtime copy of an approved
-   loopback-only Valhalla config, changing only `mjolnir.tile_dir` to the
-   validated active routing graph path. The source config remains untouched.
-2. Require the operator to provide a Valhalla config that already targets the
-   active graph, and expose an explicit mismatch state when it does not.
-
-Also confirm the supported activation-root location and whether a map/search
-bundle with no optional orthography remains valid for normal startup.
-
-## Ordered implementation slices after approval
-
-1. Add a pure resolver for an active bundle pointer that returns validated
-   vector, raster, search, and optional orthography paths. Explicit CLI paths
-   retain priority over the resolved bundle paths.
+1. Snapshot the active bundle pointer and validate its metadata once. Resolve
+   vector, raster, search, and optional orthography paths from that snapshot;
+   existing consumers independently validate each component, preserving degraded
+   operation and vector/raster compatibility. Explicit CLI paths take priority.
 2. Feed those resolved paths into the existing map, search, and Unit 11
    readiness boundaries without blocking the UI thread. Test active, missing,
    corrupt, and rollback-pointer states.

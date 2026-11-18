@@ -38,7 +38,7 @@ Theme implementation must use Qt 5.15.13-compatible QML and must not depend on Q
 - **Maneuver list:** a scrollable panel keeps the active maneuver visibly distinct and allows the map to remain usable.
 - **Navigation banner:** a prominent top banner shows the next maneuver and distance while navigation simulation is active.
 - **Map actions:** zoom, recenter, and navigation controls are grouped consistently and remain reachable without covering essential route content.
-- **Status:** online/offline state, missing data, service startup, and benchmark recording have concise visible indicators.
+- **Status:** online/offline state, missing data, service startup, and benchmark recording have concise visible indicators. Routing readiness distinguishes a graph not checked in fixture mode from a graph that could not be checked.
 - **Layer state:** the layer menu distinguishes local vector, manually selected offline raster, automatic raster fallback, loading, and package failure. Raster warns that views above z16 are overzoomed at lower resolution; switching never hides attribution or route/navigation overlays.
 
 The minimum supported window is 900x580. At that size the route panel scrolls

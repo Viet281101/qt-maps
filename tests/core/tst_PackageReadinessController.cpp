@@ -26,6 +26,28 @@ private slots:
         QCOMPARE(routingItem.value(QStringLiteral("role")).toString(), QStringLiteral("routing"));
         QVERIFY(!routingItem.value(QStringLiteral("required")).toBool());
         QVERIFY(!routingItem.value(QStringLiteral("available")).toBool());
+        QCOMPARE(routingItem.value(QStringLiteral("reason")).toString(),
+                 QStringLiteral("disabled"));
+    }
+
+    void routingSelectionStateIsNotOverwrittenByWorker()
+    {
+        qtmaps::core::PackageReadinessController controller(
+            QStringLiteral("/definitely-missing/vector"), QString(), QString(), QString());
+        controller.setRoutingState(QStringLiteral("installed"));
+        QTRY_COMPARE(controller.state(), QStringLiteral("error"));
+        QCOMPARE(controller.items().at(4).toMap().value(QStringLiteral("reason")).toString(),
+                 QStringLiteral("installed"));
+        QVERIFY(!controller.items().at(4).toMap().value(QStringLiteral("available")).toBool());
+        controller.setRoutingState(QStringLiteral("selected"));
+        QCOMPARE(controller.items().at(4).toMap().value(QStringLiteral("reason")).toString(),
+                 QStringLiteral("selected"));
+        QVERIFY(controller.items().at(4).toMap().value(QStringLiteral("available")).toBool());
+        controller.setRoutingState(QStringLiteral("unavailable"));
+        QVERIFY(!controller.items().at(4).toMap().value(QStringLiteral("available")).toBool());
+        controller.setRoutingState(QStringLiteral("unverified"));
+        QCOMPARE(controller.items().at(4).toMap().value(QStringLiteral("reason")).toString(),
+                 QStringLiteral("unverified"));
     }
 
     void timeoutIgnoresLateValidationResult()

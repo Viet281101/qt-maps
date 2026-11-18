@@ -64,6 +64,7 @@ public:
     void stopBackend();
     void forceStopBackend();
     bool backendRunning() const;
+    ValhallaServiceManager::State backendState() const;
     qint64 backendProcessId() const;
 
 signals:

@@ -19,6 +19,7 @@ public:
     virtual bool isRunning() const = 0;
     virtual QString baseUrl() const = 0;
     virtual QString errorMessage() const = 0;
+    virtual bool startupTimedOut() const { return false; }
 
 signals:
     void runningChanged();
