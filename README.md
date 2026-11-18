@@ -1,5 +1,9 @@
 # QtMaps
 
+![Code size](https://img.shields.io/github/languages/code-size/Viet281101/qt-maps?style=plastic&color=blue)
+![Languages](https://img.shields.io/github/languages/count/Viet281101/qt-maps?style=plastic&color=blue)
+![Created at](https://img.shields.io/badge/created%20at-october%202026-brightgreen?style=plastic)
+
 **A local-first desktop map and navigation demo for Hanoi, Vietnam.**
 
 QtMaps combines Qt/QML, local map data, car routing, and simulated navigation.

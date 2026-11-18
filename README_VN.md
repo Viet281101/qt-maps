@@ -1,5 +1,9 @@
 # QtMaps
 
+![Code size](https://img.shields.io/github/languages/code-size/Viet281101/qt-maps?style=plastic&color=blue)
+![Languages](https://img.shields.io/github/languages/count/Viet281101/qt-maps?style=plastic&color=blue)
+![Created at](https://img.shields.io/badge/created%20at-october%202026-brightgreen?style=plastic)
+
 **Bản demo bản đồ và dẫn đường desktop, ưu tiên chạy local cho Hà Nội.**
 
 QtMaps kết hợp Qt/QML, dữ liệu bản đồ local, tìm đường ô tô và dẫn đường mô
