@@ -18,7 +18,7 @@ public:
     // Validation uses the existing map, raster, orthography, and search validators.
     static bool validateCandidate(const QString &bundlePath, MapSearchBundleContract *contract,
                                   QString *errorMessage);
-    // Revalidate the active bundle before returning its absolute component paths.
+    // Snapshot and validate bundle metadata; consumers validate each component.
     static bool resolveActiveBundle(const QString &activationRoot, ActiveBundlePaths *paths,
                                     QString *errorMessage);
     // Activation only switches local pointers after a validated candidate is supplied.

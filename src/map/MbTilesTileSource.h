@@ -22,11 +22,13 @@ public:
     bool isRunning() const override;
     QString baseUrl() const override;
     QString errorMessage() const override;
+    bool startupTimedOut() const override;
 
 private:
-    QThread workerThread_;
+    QThread *workerThread_ = nullptr;
     MbTilesTileSourceWorker *worker_ = nullptr;
     bool running_ = false;
+    bool startupTimedOut_ = false;
     QString baseUrl_;
     QString errorMessage_;
 };

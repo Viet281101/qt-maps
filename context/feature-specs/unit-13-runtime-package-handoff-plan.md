@@ -3,9 +3,11 @@
 ## Status
 
 Owner approved implementation on 2026-11-17; implemented locally and isolated
-review passed, but subsequent [PR #70](https://github.com/Viet281101/qt-maps/pull/70)
-review found startup, pointer-race and degraded-mode defects that must be fixed
-before merge. Functional evidence is in `docs/rehearsal/unit-13-runtime-handoff-20261117.md`.
+review found startup, pointer-race and degraded-mode defects. Local fixes and
+self-contained tests are in [PR #70](https://github.com/Viet281101/qt-maps/pull/70).
+Initial validation is cancellable, and vector tile-source startup has a bounded,
+responsive event loop with timeout-safe worker ownership. Independent review
+remains necessary before merge. Evidence is in `docs/rehearsal/unit-13-runtime-handoff-20261117.md`.
 No data generation, download, benchmark, Valhalla rebuild, or source
 configuration rewrite is authorized.
 
@@ -38,9 +40,10 @@ if it does not name the active graph, readiness reports installed but unselected
 
 ## Ordered implementation slices
 
-1. Add a pure resolver for an active bundle pointer that returns validated
-   vector, raster, search, and optional orthography paths. Explicit CLI paths
-   retain priority over the resolved bundle paths.
+1. Snapshot the active bundle pointer and validate its metadata once. Resolve
+   vector, raster, search, and optional orthography paths from that snapshot;
+   existing consumers independently validate each component, preserving degraded
+   operation and vector/raster compatibility. Explicit CLI paths take priority.
 2. Feed those resolved paths into the existing map, search, and Unit 11
    readiness boundaries without blocking the UI thread. Test active, missing,
    corrupt, and rollback-pointer states.

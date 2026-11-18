@@ -1,12 +1,31 @@
 #include "core/OfflinePackageContract.h"
 #include "core/OfflinePackageInstaller.h"
+#include "map/MapPackageManifest.h"
+#include "map/RasterPackageManifest.h"
+#include "search/PlaceSearchController.h"
+#include <QCryptographicHash>
 #include <QFile>
+#include <QJsonArray>
 #include <QJsonDocument>
+#include <QProcess>
+#include <QProcessEnvironment>
+#include <QSqlDatabase>
+#include <QSqlQuery>
 #include <QTemporaryDir>
+#include <QUuid>
 #include <QtTest>
 
+#include "../fixtures/MapPackageFixture.h"
+#include "../fixtures/SearchPackageFixture.h"
+#include <atomic>
+#include <functional>
 #include <limits>
+#include <sys/stat.h>
+#include <thread>
+#include <unistd.h>
+
 namespace {
+
 bool writeJson(const QString &p, const QJsonObject &o)
 {
     QFile f(p);
@@ -76,38 +95,189 @@ private slots:
                  root.path() + QStringLiteral("/first"));
     }
 
-    void resolvesAndRollsBackProvisionedBundles()
+    void resolvesAndRollsBackBundlesWithoutExternalData()
     {
-        const QString fixtureRoot = qEnvironmentVariable("QTMAPS_UNIT13_FIXTURE_ROOT");
-        if (fixtureRoot.isEmpty())
-            QSKIP("Set QTMAPS_UNIT13_FIXTURE_ROOT for local provisioned-data verification");
-        QTemporaryDir activation;
-        QVERIFY(activation.isValid());
-        QString error;
+        QTemporaryDir root;
+        QVERIFY(root.isValid());
+        const QString first = root.path() + QStringLiteral("/first");
+        const QString second = root.path() + QStringLiteral("/second");
+        QVERIFY(QDir().mkpath(first));
+        QVERIFY(QDir().mkpath(second));
+        const QJsonObject metadata{
+            {"schema_version", "qtmaps-local-map-search-bundle-v1"},
+            {"bundle_id", "synthetic"},
+            {"components",
+             QJsonObject{{"vector", "vector"}, {"raster", "raster"}, {"search", "search"}}},
+            {"source", QJsonObject{{"name", "synthetic"}, {"retrieved_on", "2026-11-18"}}},
+            {"attribution", "OpenStreetMap"},
+            {"installed_size_bytes", 0}};
+        QVERIFY(writeJson(first + QStringLiteral("/bundle.json"), metadata));
+        QVERIFY(writeJson(second + QStringLiteral("/bundle.json"), metadata));
         qtmaps::core::MapSearchBundleContract contract;
-        const QString first = fixtureRoot + QStringLiteral("/bundle-one");
-        const QString second = fixtureRoot + QStringLiteral("/bundle-two");
-        QVERIFY2(qtmaps::core::OfflinePackageInstaller::validateCandidate(first, &contract, &error),
-                 qPrintable(error));
-        QVERIFY(qtmaps::core::OfflinePackageInstaller::activateValidatedBundle(
-            first, contract, activation.path(), &error));
-        QVERIFY2(
-            qtmaps::core::OfflinePackageInstaller::validateCandidate(second, &contract, &error),
-            qPrintable(error));
-        QVERIFY(qtmaps::core::OfflinePackageInstaller::activateValidatedBundle(
-            second, contract, activation.path(), &error));
+        QString error;
+        QVERIFY(qtmaps::core::MapSearchBundleContract::loadAndValidate(first, &contract, &error));
+        const QString activation = root.path() + QStringLiteral("/activation");
+        QVERIFY(qtmaps::core::OfflinePackageInstaller::activateValidatedBundle(first, contract,
+                                                                               activation, &error));
+        QVERIFY(qtmaps::core::OfflinePackageInstaller::activateValidatedBundle(second, contract,
+                                                                               activation, &error));
         qtmaps::core::ActiveBundlePaths paths;
-        QVERIFY2(qtmaps::core::OfflinePackageInstaller::resolveActiveBundle(activation.path(),
-                                                                            &paths, &error),
-                 qPrintable(error));
+        QVERIFY2(
+            qtmaps::core::OfflinePackageInstaller::resolveActiveBundle(activation, &paths, &error),
+            qPrintable(error));
         QCOMPARE(paths.vector, second + QStringLiteral("/vector"));
         QVERIFY(paths.orthography.isEmpty());
-        QVERIFY(qtmaps::core::OfflinePackageInstaller::rollback(activation.path(), &error));
-        QVERIFY2(qtmaps::core::OfflinePackageInstaller::resolveActiveBundle(activation.path(),
-                                                                            &paths, &error),
-                 qPrintable(error));
+        QVERIFY(qtmaps::core::OfflinePackageInstaller::rollback(activation, &error));
+        QVERIFY2(
+            qtmaps::core::OfflinePackageInstaller::resolveActiveBundle(activation, &paths, &error),
+            qPrintable(error));
         QCOMPARE(paths.vector, first + QStringLiteral("/vector"));
         QCOMPARE(paths.search, first + QStringLiteral("/search"));
+        // Missing optional search does not alter the vector path; each consumer validates
+        // independently.
+        QVERIFY(!QFileInfo::exists(paths.search));
+    }
+
+    void validatesRealSyntheticComponentsAndKeepsMapWhenSearchBreaks()
+    {
+        QTemporaryDir root;
+        QVERIFY(root.isValid());
+        const QString vector = createPackage(root);
+        const QString raster = createRasterPackage(root);
+        const QString search = createSearchPackage(&root);
+        QVERIFY(!vector.isEmpty());
+        QVERIFY(!raster.isEmpty());
+        QVERIFY(!search.isEmpty());
+        bindRasterToVector(raster, vector);
+        const QString bundle = root.path() + QStringLiteral("/bundle");
+        QVERIFY(QDir().mkpath(bundle));
+        QVERIFY(QFile::link(vector, bundle + "/vector"));
+        QVERIFY(QFile::link(raster, bundle + "/raster"));
+        QVERIFY(QFile::link(search, bundle + "/search"));
+        QVERIFY(writeJson(
+            bundle + "/bundle.json",
+            {{"schema_version", "qtmaps-local-map-search-bundle-v1"},
+             {"bundle_id", "synthetic-full"},
+             {"components",
+              QJsonObject{{"vector", "vector"}, {"raster", "raster"}, {"search", "search"}}},
+             {"source", QJsonObject{{"name", "fixture"}, {"retrieved_on", "2026-11-18"}}},
+             {"attribution", "OpenStreetMap"},
+             {"installed_size_bytes", 0}}));
+        qtmaps::core::MapSearchBundleContract contract;
+        QString error;
+        QVERIFY2(
+            qtmaps::core::OfflinePackageInstaller::validateCandidate(bundle, &contract, &error),
+            qPrintable(error));
+        const QString activation = root.path() + QStringLiteral("/activation");
+        QVERIFY(qtmaps::core::OfflinePackageInstaller::activateValidatedBundle(bundle, contract,
+                                                                               activation, &error));
+        QVERIFY(QFile::remove(search + "/manifest.json"));
+        QFile metadataFile(bundle + "/bundle.json");
+        QVERIFY(metadataFile.open(QIODevice::ReadOnly));
+        QJsonObject metadata = QJsonDocument::fromJson(metadataFile.readAll()).object();
+        metadataFile.close();
+        QJsonObject components = metadata.value("components").toObject();
+        components.insert("orthography", "broken-orthography");
+        metadata.insert("components", components);
+        QVERIFY(writeJson(bundle + "/bundle.json", metadata));
+        qtmaps::core::ActiveBundlePaths paths;
+        QVERIFY2(
+            qtmaps::core::OfflinePackageInstaller::resolveActiveBundle(activation, &paths, &error),
+            qPrintable(error));
+        qtmaps::map::MapPackageManifest vectorManifest;
+        qtmaps::map::RasterPackageManifest rasterManifest;
+        QVERIFY2(
+            qtmaps::map::MapPackageManifest::loadAndValidate(paths.vector, &vectorManifest, &error),
+            qPrintable(error));
+        QVERIFY2(qtmaps::map::RasterPackageManifest::loadAndValidate(paths.raster, &rasterManifest,
+                                                                     &error, paths.vector),
+                 qPrintable(error));
+        QVERIFY(!qtmaps::search::PlaceSearchController::validatePackage(paths.search, &error));
+        QVERIFY(!qtmaps::map::RasterPackageManifest::loadAndValidateOrthography(
+            paths.orthography, &rasterManifest, &error));
+        // A blocked vector file must be cancellable before the synchronous map loader starts.
+        const QString glyph = vector + QStringLiteral("/glyphs/Noto Sans Regular/0-255.pbf");
+        QVERIFY(QFile::remove(glyph));
+        QCOMPARE(::mkfifo(QFile::encodeName(glyph).constData(), 0600), 0);
+        QProcess process;
+        QProcessEnvironment environment = QProcessEnvironment::systemEnvironment();
+        environment.insert(QStringLiteral("QT_QPA_PLATFORM"), QStringLiteral("offscreen"));
+        environment.insert(QStringLiteral("QT_QUICK_BACKEND"), QStringLiteral("software"));
+        process.setProcessEnvironment(environment);
+        process.setProcessChannelMode(QProcess::MergedChannels);
+        process.start(QCoreApplication::applicationDirPath() + QStringLiteral("/qtmaps"),
+                      {QStringLiteral("--unit03-local-map"),
+                       QStringLiteral("--routing-fixture-only"),
+                       QStringLiteral("--bundle-activation-root"), activation,
+                       QStringLiteral("--disable-instrumentation"), QStringLiteral("--exit-after"),
+                       QStringLiteral("1")});
+        QVERIFY(process.waitForStarted(3000));
+        if (!process.waitForFinished(6000)) {
+            process.kill();
+            process.waitForFinished();
+            QFAIL("Blocked vector startup did not respond to exit-after");
+        }
+        QCOMPARE(process.exitStatus(), QProcess::NormalExit);
+        QCOMPARE(process.exitCode(), 0);
+    }
+
+    void pointerSwitchNeverMixesBundleAndMetadata()
+    {
+        QTemporaryDir root;
+        QVERIFY(root.isValid());
+        const QString first = root.path() + QStringLiteral("/first");
+        const QString second = root.path() + QStringLiteral("/second");
+        const QString activation = root.path() + QStringLiteral("/activation");
+        QVERIFY(QDir().mkpath(first));
+        QVERIFY(QDir().mkpath(second));
+        QVERIFY(QDir().mkpath(activation));
+        auto metadata = [](const QString &component) {
+            return QJsonObject{
+                {"schema_version", "qtmaps-local-map-search-bundle-v1"},
+                {"bundle_id", component},
+                {"components",
+                 QJsonObject{{"vector", component}, {"raster", "raster"}, {"search", "search"}}},
+                {"source", QJsonObject{{"name", "fixture"}, {"retrieved_on", "2026-11-18"}}},
+                {"attribution", "OpenStreetMap"},
+                {"installed_size_bytes", 0}};
+        };
+        QVERIFY(writeJson(first + "/bundle.json", metadata("vector-first")));
+        QVERIFY(writeJson(second + "/bundle.json", metadata("vector-second")));
+        const QByteArray current = QFile::encodeName(activation + "/current");
+        const QByteArray staged = QFile::encodeName(activation + "/next");
+        const QByteArray firstBytes = QFile::encodeName(first);
+        const QByteArray secondBytes = QFile::encodeName(second);
+        QCOMPARE(::symlink(firstBytes.constData(), current.constData()), 0);
+        std::atomic<bool> stop{false};
+        std::atomic<bool> switchFailed{false};
+        std::thread switcher([&]() {
+            bool useFirst = false;
+            while (!stop.load()) {
+                const QByteArray &target = useFirst ? firstBytes : secondBytes;
+                if (::symlink(target.constData(), staged.constData()) != 0 ||
+                    ::rename(staged.constData(), current.constData()) != 0) {
+                    switchFailed = true;
+                    break;
+                }
+                useFirst = !useFirst;
+            }
+        });
+        bool consistent = true;
+        QString error;
+        for (int i = 0; i < 500; ++i) {
+            qtmaps::core::ActiveBundlePaths paths;
+            if (!qtmaps::core::OfflinePackageInstaller::resolveActiveBundle(activation, &paths,
+                                                                            &error) ||
+                (paths.vector != first + "/vector-first" &&
+                 paths.vector != second + "/vector-second")) {
+                consistent = false;
+                break;
+            }
+        }
+        stop = true;
+        switcher.join();
+        QVERIFY(!switchFailed.load());
+        QVERIFY2(consistent, qPrintable(error));
     }
 
     void rejectsMissingAndCorruptActiveBundle()

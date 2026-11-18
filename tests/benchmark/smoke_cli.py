@@ -44,6 +44,46 @@ def selected_qt_runtime(environment: dict[str, str]) -> tuple[Path, Path]:
     return archdata, plugin_root
 
 
+def check_runtime_handoff(app: Path, environment: dict[str, str], root: Path):
+    """Exercise metadata startup and cancellation with disposable local inputs."""
+    with tempfile.TemporaryDirectory(prefix="qtmaps-runtime-handoff-") as directory:
+        tmp = Path(directory)
+        bundle = tmp / "bundle"
+        bundle.mkdir()
+        (bundle / "bundle.json").write_text(json.dumps({
+            "schema_version": "qtmaps-local-map-search-bundle-v1",
+            "bundle_id": "synthetic",
+            "components": {"vector": "vector", "raster": "raster", "search": "search"},
+            "source": {"name": "fixture", "retrieved_on": "2026-11-18"},
+            "attribution": "OpenStreetMap", "installed_size_bytes": 0,
+        }), encoding="utf-8")
+        for component in ("vector", "raster"):
+            (bundle / component).mkdir()
+        activation = tmp / "activation"
+        activation.mkdir()
+        (activation / "current").symlink_to(bundle, target_is_directory=True)
+        override = tmp / "explicit-vector"
+        command = [str(app), "--unit03-local-map", "--routing-fixture-only",
+                   "--bundle-activation-root", str(activation), "--map-package", str(override),
+                   "--disable-instrumentation", "--exit-after", "2"]
+        result = subprocess.run(command, cwd=root, env=environment, text=True,
+                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=12)
+        log = result.stdout
+        if f"vector= {override}" not in log or f"raster= {bundle / 'raster'}" not in log or \
+           f"search= {bundle / 'search'}" not in log:
+            raise SystemExit(f"bundle/CLI startup paths are incorrect: {log}")
+        # A blocked metadata read must not prevent a probe or timed startup from exiting.
+        (bundle / "bundle.json").unlink()
+        os.mkfifo(bundle / "bundle.json")
+        for mode in ("--blank-probe", "--unit03-local-map"):
+            command = [str(app), mode, "--routing-fixture-only", "--bundle-activation-root",
+                       str(activation), "--disable-instrumentation", "--exit-after", "1"]
+            result = subprocess.run(command, cwd=root, env=environment, text=True,
+                                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=6)
+            if result.returncode != 0:
+                raise SystemExit(f"{mode} did not cancel blocked startup: {result.stdout}")
+
+
 def main():
     if len(sys.argv) != 3:
         raise SystemExit("usage: smoke_cli.py APP REPOSITORY_ROOT")
@@ -70,6 +110,7 @@ def main():
             ),
         }
     )
+    check_runtime_handoff(app, environment, root)
     with tempfile.TemporaryDirectory(prefix="qtmaps-benchmark-smoke-") as directory:
         output = Path(directory) / "startup.csv"
         command = [

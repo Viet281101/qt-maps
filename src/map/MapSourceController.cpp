@@ -49,6 +49,13 @@ bool MapSourceController::start(const QString &packagePath, const QString &diagn
     if (fallbackReason_.isEmpty()) {
         fallbackReason_ = QStringLiteral("Vector package validation or startup failed");
     }
+    // A timed-out vector cannot safely be re-read by raster compatibility checks.
+    if (vectorSource_ && vectorSource_->startupTimedOut()) {
+        layerMode_ = QStringLiteral("error");
+        mapStatusText_ = QStringLiteral("Không thể mở bản đồ: kiểm tra dữ liệu cục bộ");
+        emit stateChanged();
+        return true;
+    }
     if (!rasterPackagePath_.isEmpty()) {
         activateRaster(true);
         return true;

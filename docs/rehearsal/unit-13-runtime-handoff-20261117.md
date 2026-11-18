@@ -44,3 +44,21 @@ A separate direct-GPU functional review captured map and Settings frames at the
 supported sizes; the 900x580 Settings label was fixed and visually rechecked in
 `generated/unit-13-visual-final-20261117/`. This is not a benchmark and does not
 replace a separate clean-target transfer test.
+
+## Review fixes verified on 2026-11-18
+
+Activation pointers are resolved to one stable bundle or graph snapshot before
+metadata is read. Component consumers validate independently so a missing
+search package does not replace the vector or raster paths. A cancellable helper
+resolves startup metadata and prevalidates vector data; probe-only modes skip it,
+and a 10-second timeout
+fails closed. Synthetic tests run by default and cover bundle resolution and
+rollback, concurrent pointer changes, CLI precedence, and blocked startup.
+The blocked-I/O timeout and an unavailable search with a healthy local map were
+also checked manually. A fresh local route still returned 7,294 m / 14 maneuvers.
+The vector tile-source loader also has a bounded responsive startup. A synthetic
+FIFO test checked its timeout, event processing, worker detachment and the rule
+that raster fallback must not reread a vector package that timed out. Qt 5.15.18
+Release tests passed 25/25, and the direct-GPU functional visual review captured
+vector, raster, orthography and Settings frames in
+`generated/unit-13-review-fixes-final-20261118/`; this is not a benchmark.

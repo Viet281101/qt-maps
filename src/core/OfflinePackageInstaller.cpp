@@ -71,10 +71,15 @@ bool OfflinePackageInstaller::resolveActiveBundle(const QString &activationRoot,
     }
     *paths = ActiveBundlePaths{};
     const QString current = linkPath(activationRoot, QStringLiteral("current"));
+    const QString snapshot = QFileInfo(current).canonicalFilePath();
     MapSearchBundleContract contract;
-    if (!validateCandidate(current, &contract, errorMessage))
+    if (snapshot.isEmpty() ||
+        !MapSearchBundleContract::loadAndValidate(snapshot, &contract, errorMessage)) {
+        if (snapshot.isEmpty() && errorMessage)
+            *errorMessage = QStringLiteral("Active bundle is missing or unreadable");
         return false;
-    const QDir root(QFileInfo(current).canonicalFilePath());
+    }
+    const QDir root(snapshot);
     paths->vector = root.filePath(contract.vectorPath);
     paths->raster = root.filePath(contract.rasterPath);
     paths->search = root.filePath(contract.searchPath);
@@ -258,11 +263,15 @@ bool OfflinePackageInstaller::rollbackRoutingGraph(const QString &activationRoot
 QString OfflinePackageInstaller::activeRoutingGraphPath(const QString &activationRoot,
                                                         QString *errorMessage)
 {
-    const QString contractPath = linkPath(activationRoot, QStringLiteral("routing-current.json"));
+    const QString current = linkPath(activationRoot, QStringLiteral("routing-current.json"));
+    const QString snapshot = QFileInfo(current).canonicalFilePath();
     RoutingGraphActivationContract contract;
-    if (!validateRoutingGraph(contractPath, &contract, errorMessage))
+    if (snapshot.isEmpty() || !validateRoutingGraph(snapshot, &contract, errorMessage)) {
+        if (snapshot.isEmpty() && errorMessage)
+            *errorMessage = QStringLiteral("Active routing contract is missing or unreadable");
         return QString();
-    return QDir(QFileInfo(contractPath).canonicalPath()).filePath(contract.graphPath);
+    }
+    return QDir(QFileInfo(snapshot).canonicalPath()).filePath(contract.graphPath);
 }
 
 namespace {

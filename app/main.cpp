@@ -8,8 +8,13 @@
 #include <QFileInfo>
 #include <QGeoServiceProvider>
 #include <QGuiApplication>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QProcess>
 #include <QQmlApplicationEngine>
+#include <QQmlComponent>
 #include <QQmlContext>
+#include <QQuickView>
 #include <QQuickWindow>
 #include <QStringList>
 #include <QTemporaryDir>
@@ -18,6 +23,7 @@
 #include <QVariantMap>
 
 #include <algorithm>
+#include <cstdio>
 #include <functional>
 #include <memory>
 
@@ -34,6 +40,7 @@
 #include "diagnostics/SimulatedNavigationController.h"
 #include "map/BoundedCameraController.h"
 #include "map/DirectoryTileSource.h"
+#include "map/MapPackageManifest.h"
 #include "map/MapSourceController.h"
 #include "map/MbTilesTileSource.h"
 #include "perf/PerformanceMonitor.h"
@@ -88,6 +95,127 @@ QPair<qint64, qint64> processMemoryKiB()
     return {pssKiB, rssKiB};
 }
 
+std::unique_ptr<QQuickView> makeStartupView()
+{
+    auto view = std::unique_ptr<QQuickView>(new QQuickView);
+    view->setTitle(QStringLiteral("QtMaps — đang kiểm tra dữ liệu cục bộ"));
+    view->setResizeMode(QQuickView::SizeRootObjectToView);
+    auto *component = new QQmlComponent(view->engine(), view.get());
+    component->setData(
+        "import QtQuick 2.12\nRectangle { width: 460; height: 120; color: '#1c2936'; "
+        "Text { anchors.centerIn: parent; color: 'white'; font.pixelSize: 16; "
+        "text: 'Đang kiểm tra dữ liệu cục bộ…' } }",
+        QUrl());
+    if (QObject *item = component->create())
+        view->setContent(QUrl(), component, item);
+    return view;
+}
+
+struct StartupResolution
+{
+    qtmaps::core::ActiveBundlePaths bundle;
+    QString bundleError, graph, graphError, vectorError;
+    bool hasBundle = false, hasGraph = false, bundleValid = false, cancelled = false;
+    bool startupFailed = false, vectorChecked = false, vectorOk = false;
+};
+
+StartupResolution resolveStartup(const QString &bundleRoot, const QString &graphRoot,
+                                 const QString &explicitVector, bool vectorProvided,
+                                 int exitAfterSeconds)
+{
+    StartupResolution result;
+    auto &activeBundle = result.bundle;
+    auto &bundleError = result.bundleError;
+    auto &activeGraph = result.graph;
+    auto &graphError = result.graphError;
+    auto &hasBundle = result.hasBundle;
+    auto &hasGraph = result.hasGraph;
+    auto &bundleValid = result.bundleValid;
+    // A separate helper makes even blocked filesystem operations cancellable.
+    // The startup view remains responsive while the local event loop runs.
+    QProcess resolver;
+    resolver.setProgram(QCoreApplication::applicationFilePath());
+    resolver.setArguments({QStringLiteral("--internal-resolve-startup"),
+                           QStringLiteral("--bundle-activation-root"), bundleRoot,
+                           QStringLiteral("--routing-activation-root"), graphRoot});
+    if (vectorProvided)
+        resolver.setArguments(resolver.arguments() +
+                              QStringList{QStringLiteral("--map-package"), explicitVector});
+    QEventLoop resolutionLoop;
+    QTimer timeout;
+    timeout.setSingleShot(true);
+    bool timedOut = false, cancelled = false, displayed = false;
+    auto startupView = makeStartupView();
+    QObject::connect(startupView.get(), &QWindow::visibleChanged, &resolutionLoop,
+                     [&](bool visible) {
+                         if (!visible && displayed && resolutionLoop.isRunning()) {
+                             cancelled = true;
+                             resolutionLoop.quit();
+                         }
+                     });
+    QObject::connect(&resolver, qOverload<int, QProcess::ExitStatus>(&QProcess::finished),
+                     &resolutionLoop, &QEventLoop::quit);
+    QObject::connect(&resolver, &QProcess::errorOccurred, &resolutionLoop, &QEventLoop::quit);
+    QObject::connect(&timeout, &QTimer::timeout, &resolutionLoop, [&]() {
+        timedOut = true;
+        resolutionLoop.quit();
+    });
+    if (exitAfterSeconds > 0) {
+        const int milliseconds = exitAfterSeconds * 1000;
+        QTimer::singleShot(milliseconds, &resolutionLoop, [&]() {
+            cancelled = true;
+            resolutionLoop.quit();
+        });
+    }
+    QTimer::singleShot(150, &resolutionLoop, [&]() {
+        if (resolver.state() != QProcess::NotRunning && startupView->rootObject()) {
+            displayed = true;
+            startupView->show();
+        }
+    });
+    resolver.start();
+    timeout.start(10000);
+    resolutionLoop.exec();
+    timeout.stop();
+    startupView->hide();
+    if (resolver.state() != QProcess::NotRunning) {
+        resolver.kill();
+        resolver.waitForFinished(1000);
+    }
+    if (cancelled) {
+        result.cancelled = true;
+        return result;
+    }
+    QJsonParseError parseError;
+    const QJsonDocument document =
+        QJsonDocument::fromJson(resolver.readAllStandardOutput(), &parseError);
+    if (timedOut || resolver.exitStatus() != QProcess::NormalExit || resolver.exitCode() != 0 ||
+        parseError.error != QJsonParseError::NoError || !document.isObject()) {
+        // Fail closed instead of selecting unrelated legacy paths after a failed lookup.
+        result.startupFailed = true;
+        hasBundle = hasGraph = true;
+        bundleError = graphError = timedOut ? QStringLiteral("Startup data check timed out")
+                                            : QStringLiteral("Startup data check failed");
+    } else {
+        const QJsonObject object = document.object();
+        hasBundle = object.value("hasBundle").toBool();
+        bundleValid = object.value("bundleValid").toBool();
+        bundleError = object.value("bundleError").toString();
+        activeBundle.vector = object.value("vector").toString();
+        activeBundle.raster = object.value("raster").toString();
+        activeBundle.search = object.value("search").toString();
+        activeBundle.orthography = object.value("orthography").toString();
+        hasGraph = object.value("hasGraph").toBool();
+        activeGraph = object.value("graph").toString();
+        graphError = object.value("graphError").toString();
+        result.vectorChecked = object.value("vectorChecked").toBool();
+        result.vectorOk = object.value("vectorOk").toBool();
+        result.vectorError = object.value("vectorError").toString();
+    }
+
+    return result;
+}
+
 } // namespace
 
 int main(int argc, char *argv[])
@@ -101,6 +229,9 @@ int main(int argc, char *argv[])
 
     QCommandLineParser parser;
     parser.setApplicationDescription(QStringLiteral("QtMaps Qt 5.15 diagnostic application"));
+    QCommandLineOption resolveStartupOption(QStringLiteral("internal-resolve-startup"));
+    resolveStartupOption.setFlags(QCommandLineOption::HiddenFromHelp);
+    parser.addOption(resolveStartupOption);
     parser.addHelpOption();
     parser.addVersionOption();
     parser.addOption({QStringLiteral("mapboxgl-probe"),
@@ -211,6 +342,50 @@ int main(int argc, char *argv[])
                       QStringLiteral("non-geographic Hanoi XYZ grid z10-z14")});
     parser.process(application);
 
+    // Internal, short-lived helper: the parent can cancel it even if storage I/O stalls.
+    if (parser.isSet(QStringLiteral("internal-resolve-startup"))) {
+        const QString bundleRoot = parser.value(QStringLiteral("bundle-activation-root"));
+        const QString graphRoot = parser.value(QStringLiteral("routing-activation-root"));
+        const QFileInfo bundlePointer(QDir(bundleRoot).filePath(QStringLiteral("current")));
+        const QFileInfo graphPointer(
+            QDir(graphRoot).filePath(QStringLiteral("routing-current.json")));
+        const bool hasBundle = bundlePointer.exists() || bundlePointer.isSymLink();
+        const bool hasGraph = graphPointer.exists() || graphPointer.isSymLink();
+        qtmaps::core::ActiveBundlePaths paths;
+        QString bundleError, graphError, graph;
+        const bool valid = hasBundle && qtmaps::core::OfflinePackageInstaller::resolveActiveBundle(
+                                            bundleRoot, &paths, &bundleError);
+        QString vectorError;
+        QString vectorPath = parser.value(QStringLiteral("map-package"));
+        if (hasBundle && !parser.isSet(QStringLiteral("map-package")))
+            vectorPath = valid ? paths.vector : QString();
+        const bool vectorChecked = !vectorPath.isEmpty();
+        qtmaps::map::MapPackageManifest vectorManifest;
+        const bool vectorOk = vectorChecked && qtmaps::map::MapPackageManifest::loadAndValidate(
+                                                   vectorPath, &vectorManifest, &vectorError);
+        if (hasGraph)
+            graph = qtmaps::core::OfflinePackageInstaller::activeRoutingGraphPath(graphRoot,
+                                                                                  &graphError);
+        const QJsonObject result{{"hasBundle", hasBundle},
+                                 {"bundleValid", valid},
+                                 {"bundleError", bundleError},
+                                 {"vector", paths.vector},
+                                 {"raster", paths.raster},
+                                 {"search", paths.search},
+                                 {"orthography", paths.orthography},
+                                 {"hasGraph", hasGraph},
+                                 {"graph", graph},
+                                 {"graphError", graphError},
+                                 {"vectorChecked", vectorChecked},
+                                 {"vectorOk", vectorOk},
+                                 {"vectorError", vectorError}};
+        const QByteArray bytes = QJsonDocument(result).toJson(QJsonDocument::Compact);
+        return std::fwrite(bytes.constData(), 1, static_cast<size_t>(bytes.size()), stdout) ==
+                       static_cast<size_t>(bytes.size())
+                   ? 0
+                   : 4;
+    }
+
     if (parser.isSet(QStringLiteral("install-local-bundle"))) {
         qtmaps::core::MapSearchBundleContract contract;
         QString error;
@@ -269,42 +444,49 @@ int main(int argc, char *argv[])
         probeProvider(QStringLiteral("mapboxgl"));
     }
 
-    // Bundle checks include checksums and must run outside the GUI thread. The
-    // startup event loop stays responsive while the worker resolves paths.
     qtmaps::core::ActiveBundlePaths activeBundle;
-    QString bundleError;
-    QString activeGraph;
-    QString graphError;
+    QString bundleError, activeGraph, graphError;
     const QString bundleRoot = parser.value(QStringLiteral("bundle-activation-root"));
     const QString graphRoot = parser.value(QStringLiteral("routing-activation-root"));
-    const QFileInfo bundlePointer(QDir(bundleRoot).filePath(QStringLiteral("current")));
-    const QFileInfo graphPointer(QDir(graphRoot).filePath(QStringLiteral("routing-current.json")));
-    const bool hasBundle = bundlePointer.exists() || bundlePointer.isSymLink();
-    const bool hasGraph = graphPointer.exists() || graphPointer.isSymLink();
-    bool bundleValid = false;
-    QEventLoop resolutionLoop;
-    QThread *resolutionThread = QThread::create([&]() {
-        if (hasBundle)
-            bundleValid = qtmaps::core::OfflinePackageInstaller::resolveActiveBundle(
-                bundleRoot, &activeBundle, &bundleError);
-        if (hasGraph)
-            activeGraph = qtmaps::core::OfflinePackageInstaller::activeRoutingGraphPath(
-                graphRoot, &graphError);
-    });
-    QObject::connect(resolutionThread, &QThread::finished, &resolutionLoop, &QEventLoop::quit);
-    resolutionThread->start();
-    resolutionLoop.exec();
-    resolutionThread->wait();
-    delete resolutionThread;
+    bool hasBundle = false, hasGraph = false, bundleValid = false;
+    bool startupFailed = false, vectorChecked = false, vectorOk = false;
+    QString vectorError;
+    if (useUnit03LocalMap) {
+        const int exitAfter = parser.isSet(QStringLiteral("exit-after"))
+                                  ? std::max(1, parser.value(QStringLiteral("exit-after")).toInt())
+                                  : 0;
+        const StartupResolution resolved =
+            resolveStartup(bundleRoot, graphRoot, parser.value(QStringLiteral("map-package")),
+                           parser.isSet(QStringLiteral("map-package")), exitAfter);
+        if (resolved.cancelled)
+            return 0;
+        activeBundle = resolved.bundle;
+        bundleError = resolved.bundleError;
+        activeGraph = resolved.graph;
+        graphError = resolved.graphError;
+        hasBundle = resolved.hasBundle;
+        hasGraph = resolved.hasGraph;
+        bundleValid = resolved.bundleValid;
+        startupFailed = resolved.startupFailed;
+        vectorChecked = resolved.vectorChecked;
+        vectorOk = resolved.vectorOk;
+        vectorError = resolved.vectorError;
+    }
     if (hasBundle && !bundleValid)
         qWarning().noquote() << "Active bundle is invalid:" << bundleError;
     if (hasGraph && activeGraph.isEmpty())
         qWarning().noquote() << "Active routing graph is invalid:" << graphError;
+    std::unique_ptr<QTemporaryDir> unavailableBundle;
+    if ((hasBundle && !bundleValid) || startupFailed || (vectorChecked && !vectorOk))
+        unavailableBundle.reset(new QTemporaryDir);
     const auto packagePath = [&](const QString &option, const QString &resolved) {
         if (parser.isSet(option) || !hasBundle)
             return parser.value(option);
         // A corrupt active bundle must not silently select an unrelated legacy package.
-        return bundleValid ? resolved : bundlePointer.absoluteFilePath();
+        return bundleValid
+                   ? resolved
+                   : (unavailableBundle && unavailableBundle->isValid() ? unavailableBundle->path()
+                                                                        : QString());
     };
     const QString vectorPackage = packagePath(QStringLiteral("map-package"), activeBundle.vector);
     const QString rasterPackage =
@@ -341,13 +523,28 @@ int main(int argc, char *argv[])
         vectorPackage, rasterPackage, searchPackage, orthographyPackage, nullptr,
         parser.value(QStringLiteral("routing-activation-root")));
 
-    if (useUnit03LocalMap &&
-        !mapSourceController.start(vectorPackage,
-                                   parser.value(QStringLiteral("diagnostic-raster-root")),
-                                   parser.isSet(QStringLiteral("force-vector-failure")))) {
-        qCritical().noquote() << "Unit 03 map startup failed:"
-                              << mapSourceController.fallbackReason();
-        return 3;
+    const QString vectorStartupPackage =
+        (startupFailed || (vectorChecked && !vectorOk))
+            ? (unavailableBundle && unavailableBundle->isValid() ? unavailableBundle->path()
+                                                                 : QString())
+            : vectorPackage;
+    if (vectorChecked && !vectorOk)
+        qWarning().noquote() << "Vector package is invalid:" << vectorError;
+    if (useUnit03LocalMap) {
+        auto startupView = makeStartupView();
+        QTimer::singleShot(150, startupView.get(), [&]() {
+            if (startupView->rootObject())
+                startupView->show();
+        });
+        const bool started = mapSourceController.start(
+            vectorStartupPackage, parser.value(QStringLiteral("diagnostic-raster-root")),
+            parser.isSet(QStringLiteral("force-vector-failure")));
+        startupView->hide();
+        if (!started) {
+            qCritical().noquote() << "Unit 03 map startup failed:"
+                                  << mapSourceController.fallbackReason();
+            return 3;
+        }
     }
     QVariantMap metadata;
     metadata.insert(QStringLiteral("scenario"), useBenchmarkScenario
