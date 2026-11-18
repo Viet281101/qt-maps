@@ -220,7 +220,9 @@ fixture-backed or simulated presentation.
    Valhalla compatibility, and a portable ZIP. 14C reuses 14A smoke assertions
    in Linux CI and adds Windows software-only build/bundle checks. Reviewer mode,
    Windows acceptance status, test access, format and deadline need owner decisions.
-   No implementation or benchmark is claimed. See
+   Planning PR #72 and issue #71 are `In Progress` in Project #6 with P1 and
+   After Demo; PR uses the Post-demo stabilization milestone. No implementation
+   or benchmark is claimed. See
    `context/feature-specs/unit-14-clean-offline-target-plan.md`.
 
 ## Risks and decisions requiring the owner
