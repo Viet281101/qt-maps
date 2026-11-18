@@ -21,6 +21,8 @@ Item {
         if (item.role === "orthography")
             return qsTr("Ảnh trực giao chưa khả dụng; cần gói dữ liệu được cấp phép và hợp lệ.")
         if (item.role === "routing") {
+            if (item.reason === "disabled") return qsTr("Graph chưa được kiểm tra trong chế độ này.")
+            if (item.reason === "unverified") return qsTr("Không thể kiểm tra graph; hãy kiểm tra dữ liệu cục bộ.")
             if (item.reason === "installed") return qsTr("Graph đã cài nhưng chưa được cấu hình chọn.")
             if (item.reason === "unavailable") return qsTr("Graph đã chọn nhưng Valhalla chưa sẵn sàng.")
             if (item.reason === "invalid") return qsTr("Graph định tuyến đã cài không hợp lệ.")

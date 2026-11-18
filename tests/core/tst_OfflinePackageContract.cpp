@@ -33,6 +33,24 @@ bool writeJson(const QString &p, const QJsonObject &o)
     QFile f(p);
     return f.open(QIODevice::WriteOnly) && f.write(QJsonDocument(o).toJson()) > 0;
 }
+
+QProcessEnvironment runtimeEnvironment()
+{
+    QProcessEnvironment environment = QProcessEnvironment::systemEnvironment();
+    environment.insert("QT_QPA_PLATFORM", "offscreen");
+    environment.insert("QT_QUICK_BACKEND", "software");
+    QString maplibre = qEnvironmentVariable("QTMAPS_MAPLIBRE_INSTALL");
+    if (maplibre.isEmpty())
+        maplibre = QDir(QCoreApplication::applicationDirPath())
+                       .absoluteFilePath("../generated/unit-01b/maplibre-install-qt51518");
+    environment.insert("LD_LIBRARY_PATH",
+                       maplibre + "/lib:" + environment.value("LD_LIBRARY_PATH"));
+    environment.insert("QT_PLUGIN_PATH",
+                       maplibre + "/plugins:" + QLibraryInfo::location(QLibraryInfo::PluginsPath));
+    environment.insert("QML2_IMPORT_PATH",
+                       maplibre + "/qml:" + QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath));
+    return environment;
+}
 } // namespace
 class OfflinePackageContractTest final : public QObject
 {
@@ -256,20 +274,7 @@ private slots:
             config, {{"mjolnir", QJsonObject{{"tile_dir", tiles}}},
                      {"httpd", QJsonObject{{"service",
                                             QJsonObject{{"listen", "tcp://127.0.0.1:18002"}}}}}}));
-        QProcessEnvironment environment = QProcessEnvironment::systemEnvironment();
-        environment.insert("QT_QPA_PLATFORM", "offscreen");
-        environment.insert("QT_QUICK_BACKEND", "software");
-        QString maplibre = qEnvironmentVariable("QTMAPS_MAPLIBRE_INSTALL");
-        if (maplibre.isEmpty())
-            maplibre = QDir(QCoreApplication::applicationDirPath())
-                           .absoluteFilePath("../generated/unit-01b/maplibre-install-qt51518");
-        environment.insert("LD_LIBRARY_PATH",
-                           maplibre + "/lib:" + environment.value("LD_LIBRARY_PATH"));
-        environment.insert("QT_PLUGIN_PATH", maplibre + "/plugins:" +
-                                                 QLibraryInfo::location(QLibraryInfo::PluginsPath));
-        environment.insert("QML2_IMPORT_PATH",
-                           maplibre +
-                               "/qml:" + QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath));
+        const QProcessEnvironment environment = runtimeEnvironment();
         auto check = [&](bool allOverrides) {
             QProcess process;
             process.setProcessEnvironment(environment);
@@ -320,6 +325,78 @@ private slots:
                 QVERIFY(!output.contains("Startup data check timed out"));
             } else {
                 QVERIFY(output.contains("Startup data check timed out"));
+            }
+        };
+        check(true);
+        check(false);
+    }
+
+    void stalledRoutingDoesNotDiscardValidBundle()
+    {
+        QTemporaryDir root;
+        QVERIFY(root.isValid());
+        const QString vector = createPackage(root);
+        QVERIFY(!vector.isEmpty());
+        const QString bundle = root.path() + QStringLiteral("/bundle");
+        const QString activation = root.path() + QStringLiteral("/activation");
+        const QString routing = root.path() + QStringLiteral("/routing");
+        QVERIFY(QDir().mkpath(bundle));
+        QVERIFY(QDir().mkpath(activation));
+        QVERIFY(QDir().mkpath(routing));
+        QVERIFY(QFile::link(vector, bundle + "/vector"));
+        QVERIFY(writeJson(
+            bundle + "/bundle.json",
+            {{"schema_version", "qtmaps-local-map-search-bundle-v1"},
+             {"bundle_id", "valid-bundle"},
+             {"components",
+              QJsonObject{{"vector", "vector"}, {"raster", "raster"}, {"search", "search"}}},
+             {"source", QJsonObject{{"name", "fixture"}, {"retrieved_on", "2026-11-18"}}},
+             {"attribution", "OpenStreetMap"},
+             {"installed_size_bytes", 0}}));
+        QVERIFY(QFile::link(bundle, activation + "/current"));
+        QCOMPARE(::mkfifo(QFile::encodeName(routing + "/routing-current.json").constData(), 0600),
+                 0);
+        auto check = [&](bool fixtureOnly) {
+            QProcess process;
+            process.setProcessEnvironment(runtimeEnvironment());
+            process.setProcessChannelMode(QProcess::MergedChannels);
+            QStringList args{"--unit03-local-map",        "--routing-demo",
+                             "--bundle-activation-root",  activation,
+                             "--routing-activation-root", routing,
+                             "--disable-instrumentation"};
+            if (fixtureOnly)
+                args << "--routing-fixture-only";
+            process.start(QCoreApplication::applicationDirPath() + "/qtmaps", args);
+            QVERIFY(process.waitForStarted(3000));
+            QElapsedTimer elapsed;
+            elapsed.start();
+            QByteArray output;
+            const QByteArray mode = fixtureOnly ? "probeMode= unit04-routing-fixture"
+                                                : "probeMode= unit04-routing-valhalla";
+            while (elapsed.elapsed() < 17000 && process.state() != QProcess::NotRunning) {
+                process.waitForReadyRead(200);
+                output += process.readAll();
+                if (output.contains(mode))
+                    break;
+            }
+            const qint64 totalMs = elapsed.elapsed();
+            if (process.state() != QProcess::NotRunning) {
+                process.terminate();
+                if (!process.waitForFinished(3000)) {
+                    process.kill();
+                    process.waitForFinished();
+                }
+            }
+            output += process.readAll();
+            QVERIFY2(output.contains(mode), output.constData());
+            QVERIFY2(output.contains(QFile::encodeName(bundle + "/vector")), output.constData());
+            QVERIFY(!output.contains("Active bundle is invalid"));
+            if (fixtureOnly) {
+                QVERIFY2(totalMs < 7000, "Fixture mode must skip the blocked routing graph");
+                QVERIFY(!output.contains("Routing data check timed out"));
+            } else {
+                QVERIFY2(output.contains("Routing data check timed out"), output.constData());
+                QVERIFY(output.contains("Routing graph check unavailable"));
             }
         };
         check(true);

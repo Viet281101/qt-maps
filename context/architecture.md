@@ -73,8 +73,10 @@ These directories describe intended ownership. Application-code directories are 
   approved loopback-only Valhalla configuration; its source stays untouched.
   The bundle resolver snapshots and validates metadata; existing component
   consumers validate their own data, keeping optional failures independent.
-  A cancellable local helper resolves startup metadata and prevalidates vector
-  data while a startup window remains responsive. Vector tile-source startup
+  Cancellable, independent local helpers resolve bundle/vector and routing
+  metadata while a startup window remains responsive; fixture-only routing
+  skips graph resolution. Readiness consumes the isolated routing result and
+  never repeats graph I/O on its general package worker. Vector tile-source startup
   uses a bounded event loop; a worker stuck in I/O is detached and cleaned up
   if it returns, rather than blocking the UI or being forcibly terminated.
   There is no runtime downloader,

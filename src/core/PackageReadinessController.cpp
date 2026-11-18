@@ -102,9 +102,12 @@ public slots:
             !OfflinePackageInstaller::activeRoutingGraphPath(routingActivationRoot_, &error)
                  .isEmpty();
         const QString routingPointer =
-            QDir(routingActivationRoot_).filePath(QStringLiteral("routing-current.json"));
+            routingActivationRoot_.isEmpty()
+                ? QString()
+                : QDir(routingActivationRoot_).filePath(QStringLiteral("routing-current.json"));
         const QFileInfo pointer(routingPointer);
-        const QString reason = routingOk ? QStringLiteral("installed")
+        const QString reason = routingActivationRoot_.isEmpty() ? QStringLiteral("disabled")
+                               : routingOk                      ? QStringLiteral("installed")
                                : (pointer.exists() || pointer.isSymLink())
                                    ? QStringLiteral("invalid")
                                    : QStringLiteral("missing");

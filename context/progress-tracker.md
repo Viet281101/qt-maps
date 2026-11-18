@@ -219,8 +219,8 @@ fixture-backed or simulated presentation.
    checks passed. GPU visual review fixed and rechecked the Settings label. See
    `docs/rehearsal/unit-13-runtime-handoff-20261117.md`. PR #70 and #69 are
    In Progress, P1 / After Demo. Pointer snapshots, degraded mode and synthetic
-   CLI vector overrides and separate graph selection survive a blocked bundle;
-   repeated vector-start timeouts clear stale status and URL; tests pass.
+   Independent checks preserve healthy data on timeout; fixture mode skips graph
+   I/O. Release and isolated review passed 25/25; next: independent PR review.
 6. **Unit 14 — clean-target offline delivery (proposed).** See
    `context/feature-specs/unit-14-clean-offline-target-plan.md`; target selection,
    transfers and network changes require the owner’s approval.

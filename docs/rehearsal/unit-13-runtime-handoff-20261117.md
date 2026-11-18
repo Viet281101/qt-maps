@@ -69,3 +69,14 @@ Synthetic integration tests verify that a valid explicit vector remains usable
 when bundle metadata blocks, that the separately activated graph remains
 selected, and that all four explicit component paths skip the unused bundle. A repeated vector-start timeout now clears the prior running
 state and URL. Both tests exercise the real affected startup boundaries.
+
+## Routing isolation review check
+
+Synthetic tests exercise a graph contract blocked on a FIFO: fixture mode skips
+graph I/O, while live-routing mode times out the graph helper without discarding
+a healthy map bundle. The reverse case also verifies that a blocked bundle does
+not discard a separately validated graph or explicit vector override. Routing
+readiness distinguishes an unchecked graph from one that could not be checked.
+Qt 5.15.18 Release tests passed 25/25, the real local route still returned
+7,294 m / 14 maneuvers, and a direct-GPU functional review captured Settings
+in `generated/unit-13-routing-isolation-20261118/`. No benchmark was run.

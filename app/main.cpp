@@ -117,128 +117,147 @@ struct StartupResolution
     QString bundleError, graph, graphError, vectorError;
     bool hasBundle = false, hasGraph = false, bundleValid = false, cancelled = false;
     bool startupFailed = false, vectorChecked = false, vectorOk = false;
+    bool graphUnverified = false;
 };
 
 StartupResolution resolveStartup(const QString &bundleRoot, const QString &graphRoot,
                                  const QString &explicitVector, bool vectorProvided,
-                                 bool skipBundle, int exitAfterSeconds)
+                                 bool skipBundle, bool checkGraph, int exitAfterSeconds)
 {
     StartupResolution result;
-    auto &activeBundle = result.bundle;
-    auto &bundleError = result.bundleError;
-    auto &activeGraph = result.graph;
-    auto &graphError = result.graphError;
-    auto &hasBundle = result.hasBundle;
-    auto &hasGraph = result.hasGraph;
-    auto &bundleValid = result.bundleValid;
-    // A separate helper makes even blocked filesystem operations cancellable.
-    // The startup view remains responsive while the local event loop runs.
-    QProcess resolver;
-    resolver.setProgram(QCoreApplication::applicationFilePath());
-    resolver.setArguments({QStringLiteral("--internal-resolve-startup"),
-                           QStringLiteral("--bundle-activation-root"), bundleRoot,
-                           QStringLiteral("--routing-activation-root"), graphRoot});
+    QProcess bundleResolver;
+    bundleResolver.setProgram(QCoreApplication::applicationFilePath());
+    bundleResolver.setArguments({QStringLiteral("--internal-resolve-startup"),
+                                 QStringLiteral("--bundle-activation-root"), bundleRoot});
     if (vectorProvided)
-        resolver.setArguments(resolver.arguments() +
-                              QStringList{QStringLiteral("--map-package"), explicitVector});
+        bundleResolver.setArguments(bundleResolver.arguments() +
+                                    QStringList{QStringLiteral("--map-package"), explicitVector});
     if (skipBundle)
-        resolver.setArguments(resolver.arguments() +
-                              QStringList{QStringLiteral("--internal-skip-bundle")});
-    QEventLoop resolutionLoop;
+        bundleResolver.setArguments(bundleResolver.arguments() +
+                                    QStringList{QStringLiteral("--internal-skip-bundle")});
+    QProcess graphResolver;
+    if (checkGraph) {
+        graphResolver.setProgram(QCoreApplication::applicationFilePath());
+        graphResolver.setArguments({QStringLiteral("--internal-resolve-startup"),
+                                    QStringLiteral("--internal-routing-only"),
+                                    QStringLiteral("--routing-activation-root"), graphRoot});
+    }
+
+    QEventLoop loop;
     QTimer timeout;
     timeout.setSingleShot(true);
     bool timedOut = false, cancelled = false, displayed = false;
     auto startupView = makeStartupView();
-    QObject::connect(startupView.get(), &QWindow::visibleChanged, &resolutionLoop,
-                     [&](bool visible) {
-                         if (!visible && displayed && resolutionLoop.isRunning()) {
-                             cancelled = true;
-                             resolutionLoop.quit();
-                         }
-                     });
-    QObject::connect(&resolver, qOverload<int, QProcess::ExitStatus>(&QProcess::finished),
-                     &resolutionLoop, &QEventLoop::quit);
-    QObject::connect(&resolver, &QProcess::errorOccurred, &resolutionLoop, &QEventLoop::quit);
-    QObject::connect(&timeout, &QTimer::timeout, &resolutionLoop, [&]() {
+    auto finished = [&]() {
+        if (bundleResolver.state() == QProcess::NotRunning &&
+            (!checkGraph || graphResolver.state() == QProcess::NotRunning))
+            loop.quit();
+    };
+    QObject::connect(startupView.get(), &QWindow::visibleChanged, &loop, [&](bool visible) {
+        if (!visible && displayed && loop.isRunning()) {
+            cancelled = true;
+            loop.quit();
+        }
+    });
+    QObject::connect(&bundleResolver, qOverload<int, QProcess::ExitStatus>(&QProcess::finished),
+                     &loop, finished);
+    QObject::connect(&bundleResolver, &QProcess::errorOccurred, &loop, finished);
+    if (checkGraph) {
+        QObject::connect(&graphResolver, qOverload<int, QProcess::ExitStatus>(&QProcess::finished),
+                         &loop, finished);
+        QObject::connect(&graphResolver, &QProcess::errorOccurred, &loop, finished);
+    }
+    QObject::connect(&timeout, &QTimer::timeout, &loop, [&]() {
         timedOut = true;
-        resolutionLoop.quit();
+        loop.quit();
     });
     if (exitAfterSeconds > 0) {
-        const int milliseconds = exitAfterSeconds * 1000;
-        QTimer::singleShot(milliseconds, &resolutionLoop, [&]() {
+        QTimer::singleShot(exitAfterSeconds * 1000, &loop, [&]() {
             cancelled = true;
-            resolutionLoop.quit();
+            loop.quit();
         });
     }
-    QTimer::singleShot(150, &resolutionLoop, [&]() {
-        if (resolver.state() != QProcess::NotRunning && startupView->rootObject()) {
+    QTimer::singleShot(150, &loop, [&]() {
+        if ((bundleResolver.state() != QProcess::NotRunning ||
+             (checkGraph && graphResolver.state() != QProcess::NotRunning)) &&
+            startupView->rootObject()) {
             displayed = true;
             startupView->show();
         }
     });
-    resolver.start();
+    bundleResolver.start();
+    if (checkGraph)
+        graphResolver.start();
+    QTimer::singleShot(0, &loop, finished);
     timeout.start(10000);
-    resolutionLoop.exec();
+    loop.exec();
     timeout.stop();
     startupView->hide();
-    if (resolver.state() != QProcess::NotRunning) {
-        resolver.kill();
-        resolver.waitForFinished(1000);
+    const bool bundleDone = bundleResolver.state() == QProcess::NotRunning &&
+                            bundleResolver.exitStatus() == QProcess::NormalExit &&
+                            bundleResolver.exitCode() == 0;
+    const bool graphDone = checkGraph && graphResolver.state() == QProcess::NotRunning &&
+                           graphResolver.exitStatus() == QProcess::NormalExit &&
+                           graphResolver.exitCode() == 0;
+    for (QProcess *process : {&bundleResolver, &graphResolver}) {
+        if (process->state() != QProcess::NotRunning) {
+            process->kill();
+            process->waitForFinished(1000);
+        }
     }
     if (cancelled) {
         result.cancelled = true;
         return result;
     }
-    // The helper reports an explicit vector separately before reading bundle
-    // metadata, so an unrelated stuck bundle cannot discard a valid override.
-    QJsonObject object;
-    QJsonObject explicitVectorResult;
-    QJsonObject routingResult;
-    for (const QByteArray &line : resolver.readAllStandardOutput().split('\n')) {
+
+    QJsonObject bundleObject, vectorProgress;
+    for (const QByteArray &line : bundleResolver.readAllStandardOutput().split('\n')) {
         const QJsonDocument document = QJsonDocument::fromJson(line);
         if (!document.isObject())
             continue;
-        const QJsonObject message = document.object();
-        if (message.value(QStringLiteral("phase")) == QStringLiteral("explicit-vector"))
-            explicitVectorResult = message;
-        else if (message.value(QStringLiteral("phase")) == QStringLiteral("routing"))
-            routingResult = message;
+        const QJsonObject object = document.object();
+        if (object.value(QStringLiteral("phase")) == QStringLiteral("explicit-vector"))
+            vectorProgress = object;
         else
-            object = message;
+            bundleObject = object;
     }
-    if (timedOut || resolver.exitStatus() != QProcess::NormalExit || resolver.exitCode() != 0 ||
-        object.isEmpty()) {
-        // Fail closed for unknown components, while preserving a verified override.
-        result.startupFailed = true;
-        hasBundle = hasGraph = true;
-        bundleError = graphError = timedOut ? QStringLiteral("Startup data check timed out")
-                                            : QStringLiteral("Startup data check failed");
-        if (vectorProvided && !explicitVectorResult.isEmpty()) {
-            result.vectorChecked = explicitVectorResult.value("vectorChecked").toBool();
-            result.vectorOk = explicitVectorResult.value("vectorOk").toBool();
-            result.vectorError = explicitVectorResult.value("vectorError").toString();
-        }
-        if (!routingResult.isEmpty()) {
-            hasGraph = routingResult.value("hasGraph").toBool();
-            activeGraph = routingResult.value("graph").toString();
-            graphError = routingResult.value("graphError").toString();
-        }
+    if (bundleDone && !bundleObject.isEmpty()) {
+        result.hasBundle = bundleObject.value("hasBundle").toBool();
+        result.bundleValid = bundleObject.value("bundleValid").toBool();
+        result.bundleError = bundleObject.value("bundleError").toString();
+        result.bundle.vector = bundleObject.value("vector").toString();
+        result.bundle.raster = bundleObject.value("raster").toString();
+        result.bundle.search = bundleObject.value("search").toString();
+        result.bundle.orthography = bundleObject.value("orthography").toString();
+        result.vectorChecked = bundleObject.value("vectorChecked").toBool();
+        result.vectorOk = bundleObject.value("vectorOk").toBool();
+        result.vectorError = bundleObject.value("vectorError").toString();
     } else {
-        hasBundle = object.value("hasBundle").toBool();
-        bundleValid = object.value("bundleValid").toBool();
-        bundleError = object.value("bundleError").toString();
-        activeBundle.vector = object.value("vector").toString();
-        activeBundle.raster = object.value("raster").toString();
-        activeBundle.search = object.value("search").toString();
-        activeBundle.orthography = object.value("orthography").toString();
-        hasGraph = object.value("hasGraph").toBool();
-        activeGraph = object.value("graph").toString();
-        graphError = object.value("graphError").toString();
-        result.vectorChecked = object.value("vectorChecked").toBool();
-        result.vectorOk = object.value("vectorOk").toBool();
-        result.vectorError = object.value("vectorError").toString();
+        result.startupFailed = true;
+        result.hasBundle = true;
+        result.bundleError = timedOut ? QStringLiteral("Startup data check timed out")
+                                      : QStringLiteral("Startup data check failed");
+        if (vectorProvided && !vectorProgress.isEmpty()) {
+            result.vectorChecked = vectorProgress.value("vectorChecked").toBool();
+            result.vectorOk = vectorProgress.value("vectorOk").toBool();
+            result.vectorError = vectorProgress.value("vectorError").toString();
+        }
     }
-
+    if (checkGraph) {
+        const QJsonDocument graphDocument =
+            QJsonDocument::fromJson(graphResolver.readAllStandardOutput());
+        if (graphDone && graphDocument.isObject()) {
+            const QJsonObject graph = graphDocument.object();
+            result.hasGraph = graph.value("hasGraph").toBool();
+            result.graph = graph.value("graph").toString();
+            result.graphError = graph.value("graphError").toString();
+        } else {
+            result.hasGraph = true;
+            result.graphUnverified = true;
+            result.graphError = timedOut ? QStringLiteral("Routing data check timed out")
+                                         : QStringLiteral("Routing data check failed");
+        }
+    }
     return result;
 }
 
@@ -261,6 +280,9 @@ int main(int argc, char *argv[])
     QCommandLineOption skipBundleOption(QStringLiteral("internal-skip-bundle"));
     skipBundleOption.setFlags(QCommandLineOption::HiddenFromHelp);
     parser.addOption(skipBundleOption);
+    QCommandLineOption routingOnlyOption(QStringLiteral("internal-routing-only"));
+    routingOnlyOption.setFlags(QCommandLineOption::HiddenFromHelp);
+    parser.addOption(routingOnlyOption);
     parser.addHelpOption();
     parser.addVersionOption();
     parser.addOption({QStringLiteral("mapboxgl-probe"),
@@ -375,6 +397,22 @@ int main(int argc, char *argv[])
     if (parser.isSet(QStringLiteral("internal-resolve-startup"))) {
         const QString bundleRoot = parser.value(QStringLiteral("bundle-activation-root"));
         const QString graphRoot = parser.value(QStringLiteral("routing-activation-root"));
+        if (parser.isSet(QStringLiteral("internal-routing-only"))) {
+            const QFileInfo graphPointer(
+                QDir(graphRoot).filePath(QStringLiteral("routing-current.json")));
+            const bool hasGraph = graphPointer.exists() || graphPointer.isSymLink();
+            QString error, graph;
+            if (hasGraph)
+                graph = qtmaps::core::OfflinePackageInstaller::activeRoutingGraphPath(graphRoot,
+                                                                                      &error);
+            const QJsonObject result{
+                {"hasGraph", hasGraph}, {"graph", graph}, {"graphError", error}};
+            const QByteArray bytes = QJsonDocument(result).toJson(QJsonDocument::Compact);
+            return std::fwrite(bytes.constData(), 1, static_cast<size_t>(bytes.size()), stdout) ==
+                           static_cast<size_t>(bytes.size())
+                       ? 0
+                       : 4;
+        }
         const bool vectorProvided = parser.isSet(QStringLiteral("map-package"));
         QString vectorPath = parser.value(QStringLiteral("map-package"));
         QString vectorError;
@@ -396,23 +434,6 @@ int main(int argc, char *argv[])
                 std::fflush(stdout) != 0)
                 return 4;
         }
-        const QFileInfo graphPointer(
-            QDir(graphRoot).filePath(QStringLiteral("routing-current.json")));
-        const bool hasGraph = graphPointer.exists() || graphPointer.isSymLink();
-        QString graphError, graph;
-        if (hasGraph)
-            graph = qtmaps::core::OfflinePackageInstaller::activeRoutingGraphPath(graphRoot,
-                                                                                  &graphError);
-        const QJsonObject routingProgress{{"phase", "routing"},
-                                          {"hasGraph", hasGraph},
-                                          {"graph", graph},
-                                          {"graphError", graphError}};
-        const QByteArray routingBytes =
-            QJsonDocument(routingProgress).toJson(QJsonDocument::Compact) + '\n';
-        if (std::fwrite(routingBytes.constData(), 1, static_cast<size_t>(routingBytes.size()),
-                        stdout) != static_cast<size_t>(routingBytes.size()) ||
-            std::fflush(stdout) != 0)
-            return 4;
         const QFileInfo bundlePointer(QDir(bundleRoot).filePath(QStringLiteral("current")));
         const bool hasBundle = !parser.isSet(QStringLiteral("internal-skip-bundle")) &&
                                (bundlePointer.exists() || bundlePointer.isSymLink());
@@ -435,9 +456,6 @@ int main(int argc, char *argv[])
                                  {"raster", paths.raster},
                                  {"search", paths.search},
                                  {"orthography", paths.orthography},
-                                 {"hasGraph", hasGraph},
-                                 {"graph", graph},
-                                 {"graphError", graphError},
                                  {"vectorChecked", vectorChecked},
                                  {"vectorOk", vectorOk},
                                  {"vectorError", vectorError}};
@@ -512,6 +530,7 @@ int main(int argc, char *argv[])
     const QString graphRoot = parser.value(QStringLiteral("routing-activation-root"));
     bool hasBundle = false, hasGraph = false, bundleValid = false;
     bool startupFailed = false, vectorChecked = false, vectorOk = false;
+    bool graphUnverified = false;
     QString vectorError;
     if (useUnit03LocalMap) {
         const int exitAfter = parser.isSet(QStringLiteral("exit-after"))
@@ -523,13 +542,15 @@ int main(int argc, char *argv[])
                                            parser.isSet(QStringLiteral("orthography-package"));
         const StartupResolution resolved = resolveStartup(
             bundleRoot, graphRoot, parser.value(QStringLiteral("map-package")),
-            parser.isSet(QStringLiteral("map-package")), allComponentsProvided, exitAfter);
+            parser.isSet(QStringLiteral("map-package")), allComponentsProvided,
+            useRoutingDemo && !parser.isSet(QStringLiteral("routing-fixture-only")), exitAfter);
         if (resolved.cancelled)
             return 0;
         activeBundle = resolved.bundle;
         bundleError = resolved.bundleError;
         activeGraph = resolved.graph;
         graphError = resolved.graphError;
+        graphUnverified = resolved.graphUnverified;
         hasBundle = resolved.hasBundle;
         hasGraph = resolved.hasGraph;
         bundleValid = resolved.bundleValid;
@@ -541,7 +562,9 @@ int main(int argc, char *argv[])
     if (hasBundle && !bundleValid)
         qWarning().noquote() << "Active bundle is invalid:" << bundleError;
     if (hasGraph && activeGraph.isEmpty())
-        qWarning().noquote() << "Active routing graph is invalid:" << graphError;
+        qWarning().noquote() << (graphUnverified ? "Routing graph check unavailable:"
+                                                 : "Active routing graph is invalid:")
+                             << graphError;
     std::unique_ptr<QTemporaryDir> unavailableBundle;
     if ((hasBundle && !bundleValid) || startupFailed || (vectorChecked && !vectorOk))
         unavailableBundle.reset(new QTemporaryDir);
@@ -587,7 +610,7 @@ int main(int argc, char *argv[])
     qtmaps::core::AppPreferences appPreferences(&engine);
     qtmaps::core::PackageReadinessController packageReadiness(
         vectorPackage, rasterPackage, searchPackage, orthographyPackage, nullptr,
-        parser.value(QStringLiteral("routing-activation-root")));
+        QString()); // Routing state comes from the isolated startup resolver.
 
     const bool verifiedVectorOverride =
         parser.isSet(QStringLiteral("map-package")) && vectorChecked && vectorOk;
@@ -758,7 +781,8 @@ int main(int argc, char *argv[])
         QDir::current().absoluteFilePath(parser.value(QStringLiteral("valhalla-config")));
     QString selectedConfig = originalConfig;
     bool graphSelected = false;
-    QString routingState = !hasGraph               ? QStringLiteral("missing")
+    QString routingState = graphUnverified         ? QStringLiteral("unverified")
+                           : !hasGraph             ? QStringLiteral("missing")
                            : activeGraph.isEmpty() ? QStringLiteral("invalid")
                                                    : QStringLiteral("installed");
     const bool launchValhalla =
@@ -786,7 +810,8 @@ int main(int argc, char *argv[])
                !parser.isSet(QStringLiteral("valhalla-config"))) {
         canLaunch = false;
     }
-    packageReadiness.setRoutingState(routingState);
+    if (launchValhalla)
+        packageReadiness.setRoutingState(routingState);
     QObject::connect(&routingController, &qtmaps::routing::RoutingController::stateChanged,
                      &packageReadiness, [&]() {
                          if (!graphSelected)
