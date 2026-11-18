@@ -217,9 +217,12 @@ fixture-backed or simulated presentation.
    BUILD PASS: Qt 5.15.18 Release tests and isolated review both passed 25/25.
    Valid/rollback, CLI override, child-config and 7,294 m / 14-maneuver route
    checks passed. GPU visual review fixed and rechecked the Settings label. See
-   `docs/rehearsal/unit-13-runtime-handoff-20261117.md`. [PR #70](https://github.com/Viet281101/qt-maps/pull/70)
-   targets `main` and closes #69 on merge; both are P1 / After Demo / In
-   Progress in Project #6, milestone Post-demo stabilization. Next: review.
+   `docs/rehearsal/unit-13-runtime-handoff-20261117.md`. PR #70 and #69 are
+   In Progress, P1 / After Demo; review found pre-merge startup, pointer-race
+   and degraded-mode defects. Fix and verify them before merge.
+6. **Unit 14 — clean-target offline delivery (proposed).** See
+   `context/feature-specs/unit-14-clean-offline-target-plan.md`; target selection,
+   transfers and network changes require the owner’s approval.
 
 ## Risks and decisions requiring the owner
 

@@ -3,8 +3,9 @@
 ## Status
 
 Owner approved implementation on 2026-11-17; implemented locally and isolated
-review passed; [PR #70](https://github.com/Viet281101/qt-maps/pull/70)
-tracks the review. Functional evidence is in `docs/rehearsal/unit-13-runtime-handoff-20261117.md`.
+review passed, but subsequent [PR #70](https://github.com/Viet281101/qt-maps/pull/70)
+review found startup, pointer-race and degraded-mode defects that must be fixed
+before merge. Functional evidence is in `docs/rehearsal/unit-13-runtime-handoff-20261117.md`.
 No data generation, download, benchmark, Valhalla rebuild, or source
 configuration rewrite is authorized.
 
