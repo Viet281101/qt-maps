@@ -17,13 +17,14 @@ It labels local, fixture-backed, and incomplete behavior honestly.
 | --- | --- |
 | Hanoi vector map | Bounded local data with Vietnamese labels |
 | Raster fallback | Local generated recovery fallback |
+| Place search | Local Hanoi OSM/FTS5 package; labelled fixture fallback |
 | Car routing | Local Valhalla service for the Hanoi graph |
 | Navigation | Deterministic replay, maneuvers, and re-routing flow |
 | Performance | Release FPS, CPU, and memory instrumentation |
 
 The data covers a **bounded Hanoi area**, not nationwide Vietnam. Live traffic,
-GPS, voice guidance, mobile/web, hosted services, POI search, and long soak
-testing are not product capabilities yet.
+GPS, voice guidance, mobile/web, hosted services, nationwide POI search, and
+long soak testing are not product capabilities yet.
 
 ## Quick start
 

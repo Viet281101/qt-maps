@@ -55,14 +55,14 @@ For this milestone, breadth, nationwide high-detail coverage, a complete data-ge
 
 ### Routing and Navigation
 
-- Two-point car routing using a local routing service, with Valhalla currently proposed.
+- Two-point car routing using the local Valhalla service; current graph evidence is bounded to Hanoi and nationwide acceptance remains open.
 - Road costing configured to prefer appropriate `trunk`, `primary`, and `secondary` roads; behavior depends on actual Vietnam OSM coverage and tags.
 - Route geometry, maneuver list, navigation banner, camera following, map rotation, simulated GPS/NMEA playback, and re-routing.
 - Polyline decoding must use the precision declared by the selected engine: Valhalla uses precision 6; OSRM would use precision 5.
 
 ### Search
 
-- Offline place and address search using a proposed project-built SQLite FTS5 index.
+- Offline place search uses a project-built SQLite FTS5 index for bounded Hanoi data with labelled fixture fallback; broader address and nationwide coverage remain future work.
 
 ### Offline Operation
 

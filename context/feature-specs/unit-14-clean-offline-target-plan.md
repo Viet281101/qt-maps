@@ -2,10 +2,12 @@
 
 ## Status
 
-Proposed follow-up to Unit 13. This is a decision and verification plan, not
-authorization to install software, change network settings, download or generate
-data, copy protected datasets, or run performance benchmarks. Resolve Unit 13's
-review findings and complete its review and merge before starting this unit.
+Proposed follow-up tracked by [#71](https://github.com/Viet281101/qt-maps/issues/71).
+Unit 13 merged as `5858e3d` on 2026-11-18. The owner selected a separate Linux
+machine as the target type on 2026-11-18; the specific machine, access and the
+other decisions below remain open. This plan does not authorize installing software,
+changing network settings, downloading or generating data, copying protected
+datasets, or running performance benchmarks.
 
 ## Objective and motivation
 
@@ -18,9 +20,9 @@ actual target and coverage and distinguish real data, simulation and fixtures.
 
 ## Decisions and prerequisites
 
-- The owner selects and authorizes an isolated clean Linux target, access method,
-  destination paths, and how the offline condition will be established and
-  independently verified without disrupting existing networks or user data.
+- The owner selected a separate Linux machine; identify and authorize the exact
+  clean target, access method, destination paths, and how the offline condition
+  will be established and verified without disrupting networks or user data.
 - Inventory the approved Qt 5.15.18, MapLibre runtime, Valhalla executable and
   config, SQLite/FTS5 support, fonts, system libraries, and licenses. Record the
   required origin and transfer method. Installation, transfers and dependency

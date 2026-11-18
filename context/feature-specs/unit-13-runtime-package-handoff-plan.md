@@ -2,14 +2,12 @@
 
 ## Status
 
-Owner approved implementation on 2026-11-17; implemented locally and isolated
-review found startup, pointer-race and degraded-mode defects. Local fixes and
-self-contained tests are in [PR #70](https://github.com/Viet281101/qt-maps/pull/70).
-Initial validation is cancellable, and vector tile-source startup has a bounded,
-responsive event loop with timeout-safe worker ownership. Independent review
-remains necessary before merge. Evidence is in `docs/rehearsal/unit-13-runtime-handoff-20261117.md`.
-No data generation, download, benchmark, Valhalla rebuild, or source
-configuration rewrite is authorized.
+Owner-approved implementation merged in [PR #70](https://github.com/Viet281101/qt-maps/pull/70)
+as `5858e3d` on 2026-11-18. Issue #69 is closed and both Project #6 items are
+`Done`. Functional evidence and limitations are in
+`docs/rehearsal/unit-13-runtime-handoff-20261117.md`. A separate clean-target
+transfer and offline walkthrough remain proposed in Unit 14. The i915 benchmark
+freeze remains in effect.
 
 ## Objective
 
@@ -20,12 +18,12 @@ the running Valhalla configuration.
 
 ## Problem to solve
 
-Unit 12 validates and atomically activates local map/search and routing-graph
-contracts. The app currently accepts those pointers for readiness reporting,
-but normal map/search command-line defaults and `valhalla.json` retain their
-own paths. A routing graph package can therefore be valid without being the
-graph used by a route request. Unit 13 closes this handoff gap; it must not
-describe metadata activation as live routing activation before that happens.
+Before Unit 13, Unit 12 validated and atomically activated local map/search
+and routing-graph contracts. The app accepted those pointers for readiness
+reporting, but normal map/search defaults and `valhalla.json` retained their
+own paths. A routing graph package could therefore be valid without being the
+graph used by a route request. Unit 13 closes this handoff gap and distinguishes
+metadata activation from the graph selected for live routing.
 
 ## Owner-approved decisions
 Use an app-owned ignored runtime copy of the approved loopback-only Valhalla

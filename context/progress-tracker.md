@@ -18,8 +18,8 @@ benchmark artifacts remain ignored.
   readiness controller validates vector, raster, search, and orthography
   packages off the UI thread; shows a compact settings/readiness panel; and
   persists the Vietnamese/English preference. Local Release tests passed
-  24/24 on 2026-11-17. The live Issue/Project fields still require a separate
-  GitHub-state check before this file treats them as closed or `Done`.
+  24/24 on 2026-11-17. Issue #64 is closed; both issue and PR are `Done`
+  in Project #6, verified on 2026-11-18.
 - The active GitHub milestone is `Post-demo stabilization` with no due date.
 - [PR #53](https://github.com/Viet281101/qt-maps/pull/53) merged as `15d198a`
   on 2026-11-15 and closed #16. Project #6 records both items as `Done`.
@@ -34,14 +34,13 @@ benchmark artifacts remain ignored.
   and loopback boundaries. The app keeps one readable app-owned OSM attribution
   pill, retains route/puck/map items across layer switches, and rejects
   incompatible raster/vector packages.
-- Fixture-backed routing and navigation provide endpoint entry, route geometry,
-  maneuvers, simulated movement, re-routing presentation, bounded camera
-  follow, and explicit simulation labels. The navigation banner is the sole
-  owner of the active instruction while replay is running.
-- Bounded local place search supplies Hoàn Kiếm, Thái Hà, and Ba Đình with
-  debounced idle/loading/ready/empty states and explicit A/B endpoint actions.
-  It is visibly labelled as fixture data. The SQLite FTS5 capability is proven,
-  but wider coverage and all remote geocoding remain deferred.
+- Local Valhalla routing with fixture fallback and simulated navigation provide
+  endpoint entry, route geometry, maneuvers, re-routing, bounded camera follow,
+  and explicit simulation labels. The navigation banner owns the active replay
+  instruction; nationwide routing acceptance remains open.
+- Local Hanoi OSM search uses a validated SQLite FTS5 package with debounced
+  states and A/B endpoint actions. A visibly labelled fixture is used when the
+  package is unavailable; wider coverage and remote geocoding remain deferred.
 - The local-only `qtmaps_visual_review` harness captures production QML in
   vector and forced-raster modes at 900x580, 1366x768, and 1920x1080. Its
   latest #53 review drives the actual search input and verifies the popover,
@@ -210,20 +209,15 @@ fixture-backed or simulated presentation.
    merged as `ed78ed0` on 2026-11-17 and automatically closed #65. Both
    Project #6 items are `Done`; a clean-target repeat remains deployment
    evidence, not pending Unit 12 implementation work.
-5. **Unit 13 — runtime handoff ([#69](https://github.com/Viet281101/qt-maps/issues/69), implemented locally).**
-   Activated bundle paths feed the runtime; explicit CLI paths win and
-   orthography is optional. A private Valhalla config selects the validated
-   graph; an explicit config is preserved and mismatches remain visible.
-   BUILD PASS: Qt 5.15.18 Release tests and isolated review both passed 25/25.
-   Valid/rollback, CLI override, child-config and 7,294 m / 14-maneuver route
-   checks passed. GPU visual review fixed and rechecked the Settings label. See
-   `docs/rehearsal/unit-13-runtime-handoff-20261117.md`. PR #70 and #69 are
-   In Progress, P1 / After Demo. Pointer snapshots, degraded mode and synthetic
-   Independent checks preserve healthy data on timeout; fixture mode skips graph
-   I/O. Release and isolated review passed 25/25; next: independent PR review.
-6. **Unit 14 — clean-target offline delivery (proposed).** See
-   `context/feature-specs/unit-14-clean-offline-target-plan.md`; target selection,
-   transfers and network changes require the owner’s approval.
+5. **Unit 13 — runtime handoff ([#69](https://github.com/Viet281101/qt-maps/issues/69), completed).** PR #70 merged as `5858e3d` on 2026-11-18; #69 is closed
+   and both Project #6 items are `Done`. Activation roots feed map/search and
+   routing, preserving CLI overrides and error states. BUILD PASS: Qt 5.15.18
+   Release tests passed 25/25 on merged `main` on 2026-11-18; prior isolated
+   review also passed. See `docs/rehearsal/unit-13-runtime-handoff-20261117.md`.
+6. **Unit 14 — clean-target offline delivery ([#71](https://github.com/Viet281101/qt-maps/issues/71), proposed).** Project #6: Todo, P1, After Demo; milestone Post-demo stabilization.
+   The owner selected a separate Linux machine; exact target, access,
+   destination/cleanup, offline setup, transfer permissions and storage budget
+   remain open. See `context/feature-specs/unit-14-clean-offline-target-plan.md`.
 
 ## Risks and decisions requiring the owner
 
