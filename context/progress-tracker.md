@@ -95,12 +95,8 @@ fixture-backed or simulated presentation.
 - Direct-GPU visual captures completed on the Intel HD 520 for the supported
   viewports and vector/raster states. This is functional-layout evidence, not
   a performance benchmark.
-- Current ignored compatible packages are `hanoi-20261114-v3-r3` and
-  `hanoi-raster-20261115-v3-r4`; each has the v2 glyph revision and matching
-  v3 manifests.
-- Environment documentation was synchronized on 2026-11-15: system Qt 5.15.18
-  is the production baseline, while Qt 5.15.13 remains comparison-only. The
-  checked `make QT_EXPECTED_VERSION=5.15.18 requirements` preflight passes.
+- Compatible ignored vector/raster packages retain matching v3 manifests.
+- Qt 5.15.18 requirements preflight passes; Qt 5.15.13 is comparison-only.
 
 ## Unit 09 — Offline search integration (completed locally 2026-11-15)
 
@@ -220,9 +216,12 @@ fixture-backed or simulated presentation.
    The owner will test a company Windows 11 laptop only after completion with a
    CI-produced v1.0+ Windows artifact, if one exists. The v1.0 gate also needs
    nationwide real routing, real-route replay and reference-laptop Release/soak
-   evidence after the i915 freeze lifts. Planning PR #72 and issue #71 are
-   `In Progress`, P1, After Demo in Project #6, with Post-demo stabilization
-   milestone. No implementation or benchmark is claimed. See
+   evidence after the i915 freeze lifts. Planning #71/#72 are done. Unit 14A
+   issue #74 and draft PR #73 are `In Progress`, P1, After Demo in Project #6,
+   with Post-demo stabilization milestone. PR #73 begins 14A: read-only runtime
+   preflight passed on a local fixture and Qt 5.15.18 Release tests passed
+   25/25 on 2026-11-19. Clean-target installation/offline smoke remain open;
+   see `docs/rehearsal/unit-14a-preflight-20261119.md`. No benchmark is claimed. See
    `context/feature-specs/unit-14-clean-offline-target-plan.md`.
 
 ## Risks and decisions requiring the owner
