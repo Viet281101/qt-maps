@@ -216,9 +216,9 @@ fixture-backed or simulated presentation.
    The owner will test a company Windows 11 laptop only after completion with a
    CI-produced v1.0+ Windows artifact, if one exists. The v1.0 gate also needs
    nationwide real routing, real-route replay and reference-laptop Release/soak
-   evidence after the i915 freeze lifts. Planning PR #72 and issue #71 are
-   `In Progress`, P1, After Demo in Project #6, with Post-demo stabilization
-   milestone. Unit 14A has started on a separate branch: read-only runtime
+   evidence after the i915 freeze lifts. Planning PR #72 is merged; issue #71
+   and draft PR #73 are `In Progress`, P1, After Demo in Project #6, with
+   Post-demo stabilization milestone. PR #73 begins 14A: read-only runtime
    preflight passed on a local fixture and Qt 5.15.18 Release tests passed
    25/25 on 2026-11-19. Clean-target installation/offline smoke remain open;
    see `docs/rehearsal/unit-14a-preflight-20261119.md`. No benchmark is claimed. See
