@@ -17,13 +17,14 @@ phỏng. Dữ liệu local, fixture và phần chưa hoàn chỉnh đều đư�
 | --- | --- |
 | Bản đồ vector Hà Nội | Dữ liệu local giới hạn, có nhãn tiếng Việt |
 | Raster fallback | Fallback local để kiểm tra phục hồi nguồn |
+| Tìm địa điểm | Gói OSM/FTS5 local cho Hà Nội; fallback fixture có nhãn |
 | Tìm đường ô tô | Valhalla local cho graph Hà Nội |
 | Dẫn đường | Replay xác định trước, chỉ dẫn và re-route |
 | Hiệu năng | FPS, CPU và RAM từ Release build |
 
 Dữ liệu chỉ phủ **một vùng Hà Nội giới hạn**, không phải toàn quốc. GPS thật,
 giao thông trực tuyến, voice guidance, mobile/web, dịch vụ hosted, tìm kiếm
-POI và soak test dài chưa phải tính năng sản phẩm.
+POI toàn quốc và soak test dài chưa phải tính năng sản phẩm.
 
 ## Bắt đầu nhanh
 

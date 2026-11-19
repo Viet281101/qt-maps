@@ -20,7 +20,7 @@
 | Vector pipeline | Planetiler v0.10.2 to versioned MBTiles package | Committed for Unit 03 | Generate bounded Hanoi vector tiles and manifest |
 | Tile access | In-process `TileSource`; loopback HTTP plus `QSqlDatabase` on a worker thread | Committed for Unit 03 | Serve validated MBTiles/resources on a random `127.0.0.1` port |
 | Routing | Valhalla child process | Committed and verified in Unit 04 | Offline route and maneuvers behind a fixture-compatible route contract |
-| Search | SQLite FTS5 index | Proposed | Offline geocoding/search |
+| Search | SQLite FTS5 index | Committed for bounded Hanoi Unit 09 | Local place search with labelled fixture fallback |
 | Position simulation | QtPositioning selected-route replay | Committed for Unit 05 D1-D3 | Simulated GPS progress, guidance, and camera following over the current route |
 | Performance | completed-map-frame metrics plus Linux `/proc` process-tree CSV loggers | Unit 02 implemented aggregate v3; Unit 06 detailed sampling approved | Capture FPS/frame time plus per-process and tree PSS, RSS, threads, and dual-normalized CPU |
 
@@ -60,7 +60,7 @@ These directories describe intended ownership. Application-code directories are 
   defines nor emits the product style.
 - **Raster MBTiles**: ignored immutable `data/raster-packages/hanoi-raster-<yyyymmdd>-v3-r*/` packages contain locally rendered PNG tiles plus a checksummed manifest. The runtime binds raster to the exact active vector manifest SHA-256 and data version as well as the map-package schema, style contract/revision, source PBF checksum, bounds, and zoom range; incompatible packages are rejected and regenerated with the matching vector package.
 - **Routing graph**: generated Valhalla graph tiles, versioned by source extract and build configuration outside Git.
-- **Geocoding database**: proposed SQLite database with FTS5 tables generated from selected source data.
+- **Place-search database**: ignored, versioned Hanoi SQLite/FTS5 packages under `data/search-packages/`, with provenance, attribution and checksums; opened read-only after validation. Broader coverage remains unapproved.
 - **Orthography files or tiles**: bounded by the agreed region, zoom range, license, and attribution requirements.
 - **Local package delivery**: an operator-provisioned, versioned bundle outside
   Git contains the compatible vector/raster pair, search package, and any
@@ -68,7 +68,7 @@ These directories describe intended ownership. Application-code directories are 
   a staged integrity check and atomically activates it while retaining one
   previous valid bundle for rollback. The routing graph is a separately
   provisioned and activated artifact because its coverage, size, and lifecycle
-  differ. The approved Unit 13 target resolves activated runtime paths with
+  differ. Unit 13 resolves activated runtime paths with
   CLI overrides and selects the graph using an ignored app-owned copy of the
   approved loopback-only Valhalla configuration; its source stays untouched.
   The bundle resolver snapshots and validates metadata; existing component
