@@ -220,7 +220,8 @@ fixture-backed or simulated presentation.
    25/25 on 2026-11-19. Owner approved real Hanoi packages/graph/Sentinel for
    a 4-vCPU, 8 GiB, ~60 GB Ubuntu 26.04 llvmpipe VM. The one-command installer
    passed host network-namespace staging/activation/search/rollback checks;
-   clean VM GUI and real-route proof remain open. See
+   a 7480 container passed real-route/owner smoke, but not VM proof. KVM works;
+   7.6 GiB host RAM blocks an 8 GiB guest. Clean VM/rollback remain open. See
    `docs/rehearsal/unit-14a-clean-vm-runbook.md`. No benchmark. See
    `context/feature-specs/unit-14-clean-offline-target-plan.md`.
 

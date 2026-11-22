@@ -4,6 +4,12 @@ Status: script and staging validated on the development host; **clean VM executi
 
 On the development host, the 2026-11-22 stage was copied and installed inside a temporary bubblewrap namespace with no network interface and a writable ignored `generated/` tree. Checksums, Unit 12 activation, Unit 13 bundle/vector startup resolution, 9,094 real FTS5 rows, same-content rollback pointer mechanics and rejected missing-bundle activation passed. This is a host simulation, **not** a fresh Ubuntu image, real-route response or GUI proof. A true prior-version rollback requires a second approved bundle.
 
+## Laptop 7480 preflight (2026-11-23; not VM acceptance)
+
+SSH inspection on `viet-anh-Latitude-7480` found Ubuntu 24.04.4, 181 GB free disk, VT-x flags, loaded `kvm_intel`/`kvm`, and a usable `/dev/kvm` (`KVM_GET_API_VERSION=12` as the target user). QEMU is not installed. Physical RAM is 8,011,244 kB (about 7.6 GiB), so the requested 8 GiB guest cannot be allocated safely alongside the host. No VM or clean snapshot has been created; the owner must choose a smaller guest or a host with more RAM before proceeding.
+
+A separate Ubuntu 26.04 Docker container on that laptop had Qt 5.15.18, `--network none`, no default route, llvmpipe and the approved real-data stage with verified SHA-256. The installer passed activation, 9,094 FTS5 rows, same-content rollback and missing-bundle rejection. MapLibre showed the Hanoi vector map, and Valhalla 3.9.1 returned a non-fixture 7,294 m route with 14 maneuvers. The owner manually exercised the container app and reported the functions working; zoom felt slightly jerky under software rendering. This is qualitative feedback, not a performance result. The container had no clean VM snapshot or distinct-version rollback and does **not** close Unit 14A.
+
 ## Build and snapshot the VM
 
 1. Obtain an authorized Ubuntu 26.04 Desktop ISO and verify its published checksum. On the host, create a dedicated 60 GB qcow2 disk, e.g. `qemu-img create -f qcow2 qtmaps-14a.qcow2 60G`. Install Ubuntu in QEMU/KVM with 4 vCPU, 8 GiB RAM, a standard virtual display without 3D acceleration and no passthrough. `virt-manager` may be used with the same settings. Leave 3D acceleration unchecked.
