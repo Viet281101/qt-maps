@@ -4,7 +4,7 @@ set -euo pipefail
 # Unit 14A: prepare on the Linux source; install on a clean, offline VM.
 die() { printf 'Unit 14A: %s\n' "$*" >&2; exit 1; }
 usage() {
-    printf 'Usage:\n  %s prepare STAGE APP MAPLIBRE VALHALLA_SITE VALHALLA_CONFIG VECTOR RASTER SEARCH ORTHOGRAPHY GRAPH_TILES\n  %s install STAGE DEST\n  %s run DEST\n' "$0" "$0" "$0" >&2
+    printf 'Usage:\n  %s prepare STAGE APP MAPLIBRE VALHALLA_SITE VALHALLA_CONFIG VECTOR RASTER SEARCH ORTHOGRAPHY GRAPH_TILES [BUNDLE_ID]\n  %s install STAGE DEST\n  %s verify-rollback OLDER_STAGE DEST\n  %s run DEST\n' "$0" "$0" "$0" "$0" >&2
     exit 2
 }
 [[ $# -ge 1 ]] || usage
@@ -13,9 +13,11 @@ shift
 
 case "$mode" in
 prepare)
-    [[ $# -eq 10 ]] || usage
+    [[ $# -eq 10 || $# -eq 11 ]] || usage
     stage="$1"; app="$2"; maplibre="$3"; site="$4"; config="$5"
     vector="$6"; raster="$7"; search="$8"; ortho="$9"; graph="${10}"
+    bundle_id="${11:-hanoi-unit14a}"
+    [[ "$bundle_id" =~ ^[a-zA-Z0-9._-]+$ ]] || die 'bundle ID must use letters, numbers, dots, underscores or hyphens'
     [[ ! -e "$stage" ]] || die "stage already exists: $stage"
     [[ -x "$app" && -d "$maplibre/lib" && -d "$maplibre/plugins" && -d "$maplibre/qml" ]] || die 'app/MapLibre input missing'
     [[ -x "$site/valhalla/bin/valhalla_service" && -d "$site/pyvalhalla.libs" && -f "$config" ]] || die 'Valhalla input missing'
@@ -35,7 +37,7 @@ prepare)
     cp -a "$search" "$stage/data/bundle/search"
     cp -a "$ortho" "$stage/data/bundle/orthography"
     cp -a "$graph" "$stage/data/graph/tiles"
-    python3 - "$stage" <<'PY'
+    python3 - "$stage" "$bundle_id" <<'PY'
 import hashlib, json, pathlib, sys
 root = pathlib.Path(sys.argv[1])
 bundle = root / 'data/bundle'
@@ -47,7 +49,7 @@ assert 'OpenStreetMap' in search['attribution'] and 'ODbL' in search['attributio
 assert 'Copernicus Sentinel' in ortho['attribution']
 size = lambda p: sum(f.stat().st_size for f in p.rglob('*') if f.is_file())
 contract = dict(schema_version='qtmaps-local-map-search-bundle-v1',
-                bundle_id='hanoi-unit14a', components=dict(vector='vector', raster='raster',
+                bundle_id=sys.argv[2], components=dict(vector='vector', raster='raster',
                 search='search', orthography='orthography'),
                 source=dict(name='owner-approved local Hanoi packages', retrieved_on=search['source']['retrieved_on']),
                 attribution=vector['attribution'] + '; ' + ortho['attribution'],
@@ -88,6 +90,7 @@ install)
     export LD_LIBRARY_PATH="$dest/runtime/maplibre/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
     export QT_PLUGIN_PATH="$dest/runtime/maplibre/plugins:/usr/lib/x86_64-linux-gnu/qt5/plugins"
     export QML2_IMPORT_PATH="$dest/runtime/maplibre/qml:/usr/lib/x86_64-linux-gnu/qt5/qml"
+    export QT_QPA_PLATFORM=offscreen
     "$app" --install-local-bundle "$dest/data/bundle" --bundle-activation-root "$dest/activation/bundle"
     "$app" --activate-routing-graph "$dest/data/graph/routing.json" --routing-activation-root "$dest/activation/routing"
     "$app" --internal-resolve-startup --bundle-activation-root "$dest/activation/bundle" --routing-activation-root "$dest/activation/routing" > "$dest/metadata/startup.json"
@@ -120,6 +123,47 @@ PY
     fi
     [[ ! -e "$smoke/failure/current" ]] || die 'invalid bundle altered activation root'
     printf 'Installed at %s. Run: %s run %s\n' "$dest" "$0" "$dest"
+    ;;
+verify-rollback)
+    [[ $# -eq 2 ]] || usage
+    older="$(realpath -- "$1")"; dest="$(realpath -- "$2")"
+    [[ -f "$older/metadata/SHA256SUMS" && -x "$dest/app/qtmaps" ]] || die 'older stage or installed app missing'
+    [[ -z "$(ip -4 route show default)" && -z "$(ip -6 route show default)" ]] || die 'target still has a default route'
+    (cd "$older" && sha256sum -c metadata/SHA256SUMS >/dev/null) || die 'older stage checksum failed'
+    python3 - "$older/data/bundle" "$dest/data/bundle" <<'PY'
+import json, pathlib, sys
+old, new = (pathlib.Path(p) for p in sys.argv[1:])
+def read(root, name): return json.loads((root / name).read_text())
+old_bundle, new_bundle = read(old, 'bundle.json'), read(new, 'bundle.json')
+old_raster, new_raster = read(old, 'raster/manifest.json'), read(new, 'raster/manifest.json')
+old_ortho, new_ortho = read(old, 'orthography/manifest.json'), read(new, 'orthography/manifest.json')
+if old_bundle['bundle_id'] == new_bundle['bundle_id'] or old_raster['package_id'] == new_raster['package_id'] or old_ortho['package_id'] == new_ortho['package_id']:
+    raise SystemExit('Unit 14A: rollback requires distinct bundle, raster and orthography versions')
+print('Rollback versions:', old_bundle['bundle_id'], old_raster['package_id'], old_ortho['package_id'], '->', new_bundle['bundle_id'], new_raster['package_id'], new_ortho['package_id'])
+PY
+    proof="$dest/metadata/rollback-two-version"
+    [[ ! -e "$proof" ]] || die "rollback proof already exists: $proof"
+    export LD_LIBRARY_PATH="$dest/runtime/maplibre/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+    export QT_PLUGIN_PATH="$dest/runtime/maplibre/plugins:/usr/lib/x86_64-linux-gnu/qt5/plugins"
+    export QML2_IMPORT_PATH="$dest/runtime/maplibre/qml:/usr/lib/x86_64-linux-gnu/qt5/qml"
+    export QT_QPA_PLATFORM=offscreen
+    app="$dest/app/qtmaps"
+    "$app" --install-local-bundle "$older/data/bundle" --bundle-activation-root "$proof"
+    [[ "$(realpath -- "$proof/current")" == "$older/data/bundle" ]] || die 'older version not active'
+    "$app" --install-local-bundle "$dest/data/bundle" --bundle-activation-root "$proof"
+    [[ "$(realpath -- "$proof/current")" == "$dest/data/bundle" ]] || die 'newer version not active'
+    [[ "$(realpath -- "$proof/previous")" == "$older/data/bundle" ]] || die 'previous version not retained'
+    "$app" --rollback-local-bundle --bundle-activation-root "$proof"
+    [[ "$(realpath -- "$proof/current")" == "$older/data/bundle" ]] || die 'rollback did not restore older version'
+    [[ "$(realpath -- "$proof/previous")" == "$dest/data/bundle" ]] || die 'rollback did not retain newer version'
+    "$app" --internal-resolve-startup --bundle-activation-root "$proof" --routing-activation-root "$dest/activation/routing" > "$dest/metadata/rollback-two-version-startup.json"
+    python3 - "$dest/metadata/rollback-two-version-startup.json" <<'PY'
+import json, sys
+x=json.load(open(sys.argv[1]))
+if not x.get('bundleValid') or not x.get('vectorOk'):
+    raise SystemExit('Unit 14A: rolled-back startup validation failed')
+print('Distinct-version rollback and restart resolution passed')
+PY
     ;;
 run)
     [[ $# -eq 1 ]] || usage

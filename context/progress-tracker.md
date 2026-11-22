@@ -221,7 +221,7 @@ fixture-backed or simulated presentation.
    a 4-vCPU, 8 GiB, ~60 GB Ubuntu 26.04 llvmpipe VM. The one-command installer
    passed host network-namespace staging/activation/search/rollback checks;
    a 7480 container passed real-route/owner smoke, but not VM proof. KVM works;
-   7.6 GiB host RAM blocks an 8 GiB guest. Clean VM/rollback remain open. See
+   owner approved 6 GiB/2 vCPU on 7480. Clean VM/rollback remain open. See
    `docs/rehearsal/unit-14a-clean-vm-runbook.md`. No benchmark. See
    `context/feature-specs/unit-14-clean-offline-target-plan.md`.
 
