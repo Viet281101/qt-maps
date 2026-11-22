@@ -324,6 +324,10 @@ int main(int argc, char *argv[])
         {QStringLiteral("activate-routing-graph"),
          QStringLiteral("Validate and atomically activate a local routing graph contract"),
          QStringLiteral("path")});
+    parser.addOption({QStringLiteral("rollback-local-bundle"),
+                      QStringLiteral("Restore the previous validated map/search bundle")});
+    parser.addOption({QStringLiteral("rollback-routing-graph"),
+                      QStringLiteral("Restore the previous routing graph activation")});
     parser.addOption({QStringLiteral("diagnostic-raster-root"),
                       QStringLiteral("Local diagnostic raster fallback directory"),
                       QStringLiteral("path"), QStringLiteral("generated/diagnostic-tiles")});
@@ -490,6 +494,26 @@ int main(int argc, char *argv[])
             return 4;
         }
         qInfo().noquote() << "Unit 12 routing graph activated:" << contract.graphId;
+        return 0;
+    }
+    if (parser.isSet(QStringLiteral("rollback-local-bundle"))) {
+        QString error;
+        if (!qtmaps::core::OfflinePackageInstaller::rollback(
+                parser.value(QStringLiteral("bundle-activation-root")), &error)) {
+            qCritical().noquote() << "Unit 14A bundle rollback failed:" << error;
+            return 4;
+        }
+        qInfo() << "Unit 14A bundle rollback completed";
+        return 0;
+    }
+    if (parser.isSet(QStringLiteral("rollback-routing-graph"))) {
+        QString error;
+        if (!qtmaps::core::OfflinePackageInstaller::rollbackRoutingGraph(
+                parser.value(QStringLiteral("routing-activation-root")), &error)) {
+            qCritical().noquote() << "Unit 14A routing graph rollback failed:" << error;
+            return 4;
+        }
+        qInfo() << "Unit 14A routing graph rollback completed";
         return 0;
     }
 

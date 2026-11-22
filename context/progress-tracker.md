@@ -84,9 +84,7 @@ fixture-backed or simulated presentation.
 
 ## Current verified evidence
 
-- PR #59 merged as `0c7964d` and closed #58: the QSQLITE FTS5 spike creates and
-  queries an external-content Vietnamese fixture schema locally; Release tests
-  passed 19/19.
+- PR #59 closed the QSQLITE FTS5 spike (#58); Release tests passed 19/19.
 - The #61 fixture-only package builder validates Hanoi bounds and PBF provenance,
   emits a checksummed FTS5 SQLite package under the 20 MiB cap, and passed the
   isolated Release review with 20/20 tests.
@@ -95,7 +93,6 @@ fixture-backed or simulated presentation.
 - Direct-GPU visual captures completed on the Intel HD 520 for the supported
   viewports and vector/raster states. This is functional-layout evidence, not
   a performance benchmark.
-- Compatible ignored vector/raster packages retain matching v3 manifests.
 - Qt 5.15.18 requirements preflight passes; Qt 5.15.13 is comparison-only.
 
 ## Unit 09 — Offline search integration (completed locally 2026-11-15)
@@ -220,8 +217,11 @@ fixture-backed or simulated presentation.
    issue #74 and draft PR #73 are `In Progress`, P1, After Demo in Project #6,
    with Post-demo stabilization milestone. PR #73 begins 14A: read-only runtime
    preflight passed on a local fixture and Qt 5.15.18 Release tests passed
-   25/25 on 2026-11-19. Clean-target installation/offline smoke remain open;
-   see `docs/rehearsal/unit-14a-preflight-20261119.md`. No benchmark is claimed. See
+   25/25 on 2026-11-19. Owner approved real Hanoi packages/graph/Sentinel for
+   a 4-vCPU, 8 GiB, ~60 GB Ubuntu 26.04 llvmpipe VM. The one-command installer
+   passed host network-namespace staging/activation/search/rollback checks;
+   clean VM GUI and real-route proof remain open. See
+   `docs/rehearsal/unit-14a-clean-vm-runbook.md`. No benchmark. See
    `context/feature-specs/unit-14-clean-offline-target-plan.md`.
 
 ## Risks and decisions requiring the owner
