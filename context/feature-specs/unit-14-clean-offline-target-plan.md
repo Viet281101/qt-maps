@@ -10,7 +10,7 @@ Tracked by [#71](https://github.com/Viet281101/qt-maps/issues/71) and planning [
 - **Bundle inventory:** QtMaps Release executable; Qt 5.15.18 libraries, QML imports and platform/SQLite/Qt Location/MapLibre 3.0.0 plugins; compiler and transitive ELF libraries, fonts and notices; pinned pyvalhalla environment with `valhalla_service` and loopback config; compatible vector/raster/search packages and optional permitted orthography; separate Valhalla graph; Unit 12/13 manifests, checksums, activation CLI and launcher. Derive minimal system packages from `ldd` plus clean-image checks. Separate immutable data from writable activation/config/logs.
 - **Completion:** Script checks hashes/disk space, activates local inputs and launches via activation roots. Fresh target evidence records image/version, disabled network, local search, real route/maneuvers, restart, rollback and failure states. Map/layer GUI proof requires a suitable display; headless service checks alone are insufficient. Record fixture or unavailable states honestly.
 - **Dependencies/risks:** Unit 12/13 contracts, legal dataset/runtime transfer, storage, display and shared-library closure; VM rendering may not work reliably. No GPU benchmark is part of this unit.
-- **Owner decisions recorded 2026-11-22:** Transfer real Hanoi vector/raster, 9,094-place FTS5, Hanoi graph and Sentinel-2 L2A z12–z15 with OSM/ODbL and Copernicus attribution. Use a minimal Ubuntu 26.04 Desktop VM on the dev host, 4 vCPU/8 GiB/~60 GB, llvmpipe only, no 3D acceleration or passthrough; snapshot before transfer and prove network isolation. A physical second machine remains optional. Exact Qt/MapLibre/Valhalla redistribution permissions and any target software installation remain to be recorded before execution.
+- **Owner decisions and result:** Real Hanoi vector/raster, 9,094-place FTS5, Hanoi graph and Sentinel-2 L2A z12–z15 were approved with OSM/ODbL and Copernicus attribution. Because the dev i915 freeze remains, the clean VM ran on laptop 7480; the owner approved 2 vCPU/6 GiB/~60 GB instead of 4 vCPU/8 GiB. The [2026-11-24 VM evidence](../../docs/rehearsal/unit-14a-7480-vm-results.md) records the clean snapshot, software rendering, disabled network and passing functional smoke. A physical second-machine confirmation and public runtime/data redistribution approval remain separate.
 
 ### 14C — CI and release provenance (Linux required, 2–4 days after 14A)
 
@@ -51,8 +51,8 @@ Smoke: verify CI artifact hash and version; open app (2 min), offline search (2)
 | Level | Risk | Response |
 | --- | --- | --- |
 | Critical | v1.0 performance/soak evidence is blocked by i915 freeze. | Owner decides when to lift freeze; preserve benchmark gate and release claim. |
-| High | Clean Linux bundle may miss runtime libraries or authorized data. | 14A fresh-target inventory, checksums, license and offline smoke. |
 | High | Nationwide graph generation and real-route navigation may exceed RAM/time or reveal integration defects. | Measure graph build and test actual routes separately from 14A. |
+| Medium, resolved for Ubuntu 26.04.1 Desktop | Clean Linux bundle may miss runtime libraries or authorized data. | 14A VM passed inventory, checksums and offline smoke; preserve this image baseline in CI. Release notices/distribution rights remain open. |
 | Medium | Linux CI may prove only fixtures or lose release artifacts through retention. | Separate real-data evidence; pin sources and approve retention. |
 | Low for v1.0 | Windows native build or corporate policy may block later trial. | Timeboxed readiness, optional Windows CI, ZIP/WSL2 or video fallback after v1.0. |
 

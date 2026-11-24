@@ -1,12 +1,12 @@
 # Unit 14A clean Ubuntu 26.04 VM operator runbook
 
-Status: script and staging validated on the development host; **clean VM execution and visual/real-route smoke are pending**. This is functional work only. Do not enable 3D acceleration, GPU passthrough, or benchmark tools while the i915 freeze remains.
+Status: **clean Ubuntu 26.04.1 VM smoke passed on laptop 7480 on 2026-11-24**. See the [dated VM results and evidence](unit-14a-7480-vm-results.md). This is functional work only. Do not enable 3D acceleration, GPU passthrough, or benchmark tools while the i915 freeze remains.
 
-On the development host, the 2026-11-22 stage was copied and installed inside a temporary bubblewrap namespace with no network interface and a writable ignored `generated/` tree. Checksums, Unit 12 activation, Unit 13 bundle/vector startup resolution, 9,094 real FTS5 rows, same-content rollback pointer mechanics and rejected missing-bundle activation passed. This is a host simulation, **not** a fresh Ubuntu image, real-route response or GUI proof. A true prior-version rollback requires a second approved bundle.
+On the development host, the 2026-11-22 stage was copied and installed inside a temporary bubblewrap namespace with no network interface and a writable ignored `generated/` tree. Checksums, Unit 12 activation, Unit 13 bundle/vector startup resolution, 9,094 real FTS5 rows, same-content rollback pointer mechanics and rejected missing-bundle activation passed. This was a host simulation, **not** the fresh Ubuntu image, real-route response or GUI proof. The later VM trial used a second approved bundle for distinct-version rollback.
 
 ## Laptop 7480 preflight (2026-11-23; not VM acceptance)
 
-SSH inspection on `viet-anh-Latitude-7480` found Ubuntu 24.04.4, 181 GB free disk, VT-x flags, loaded `kvm_intel`/`kvm`, and a usable `/dev/kvm` (`KVM_GET_API_VERSION=12` as the target user). QEMU was not installed at preflight. Physical RAM is 8,011,244 kB (about 7.6 GiB), so the requested 8 GiB guest cannot be allocated safely alongside the host. The owner approved a **6 GiB, 2-vCPU** VM on this laptop (2 physical cores/4 threads), with the host QtMaps/Supabase containers stopped before launch. Record this deviation; OOM or swap-related failures are resource failures, not bundle failures. No VM or clean snapshot existed at preflight.
+SSH inspection on `viet-anh-Latitude-7480` found Ubuntu 24.04.4, 181 GB free disk, VT-x flags, loaded `kvm_intel`/`kvm`, and a usable `/dev/kvm` (`KVM_GET_API_VERSION=12` as the target user). QEMU 8.2.2 was subsequently installed. Physical RAM is 8,011,244 kB (about 7.6 GiB), so the requested 8 GiB guest cannot be allocated safely alongside the host. The owner approved a **6 GiB, 2-vCPU** VM on this laptop (2 physical cores/4 threads), with host containers stopped before launch. OOM or swap-related failures are resource failures, not bundle failures. This trial had no such failure.
 
 A separate Ubuntu 26.04 Docker container on that laptop had Qt 5.15.18, `--network none`, no default route, llvmpipe and the approved real-data stage with verified SHA-256. The installer passed activation, 9,094 FTS5 rows, same-content rollback and missing-bundle rejection. MapLibre showed the Hanoi vector map, and Valhalla 3.9.1 returned a non-fixture 7,294 m route with 14 maneuvers. The owner manually exercised the container app and reported the functions working; zoom felt slightly jerky under software rendering. This is qualitative feedback, not a performance result. The container had no clean VM snapshot or distinct-version rollback and does **not** close Unit 14A.
 
@@ -16,6 +16,22 @@ A separate Ubuntu 26.04 Docker container on that laptop had Qt 5.15.18, `--netwo
 2. After the minimum desktop install, before copying QtMaps or data, power off and create the clean snapshot: `qemu-img snapshot -c clean qtmaps-14a.qcow2` (or a named virt-manager snapshot). Record ISO hash, Ubuntu build, VM settings and snapshot name. Do not take a snapshot while the guest is writing the disk.
 3. With temporary network access if needed, provision **only** the candidate runtime packages below in the guest, record `dpkg-query -W`, then shut down and snapshot the provisioned base separately. The clean snapshot remains unchanged. After any failed attempt, revert to the clean snapshot before trying a corrected package set; log the missing library/plugin/font symptom and the added package. Never repair an already failed guest in place.
 4. Copy the staged payload and `tools/unit14a-deliver.sh` by an approved shared folder, USB image or SCP. Disconnect the shared/network transport. Boot with virtual NIC detached or isolated, then inside the guest record `ip -4 route`, `ip -6 route`, `ip -br addr` and `ip -4 route show default`/`ip -6 route show default` (both default-route outputs must be empty). Do not change host networking.
+
+The 7480 VM was launched with `-machine q35,accel=kvm -smp 2 -m 6144 -display gtk,gl=off -vga std -nic none`, a read-only 9p transfer with tag `qtmaps` and writable evidence share tagged `qtmaps_evidence`. After provisioning and before smoke, mount and inspect them in the guest:
+
+```bash
+sudo mkdir -p /mnt/qtmaps /mnt/evidence
+sudo mount -t 9p -o trans=virtio,version=9p2000.L,ro qtmaps /mnt/qtmaps
+sudo mount -t 9p -o trans=virtio,version=9p2000.L qtmaps_evidence /mnt/evidence
+ip -br addr; ip -4 route; ip -6 route
+(cd /mnt/qtmaps/new && sha256sum -c metadata/SHA256SUMS)
+(cd /mnt/qtmaps/older && sha256sum -c metadata/SHA256SUMS)
+bash /mnt/qtmaps/unit14a-deliver.sh install /mnt/qtmaps/new /home/qtmaps14a/QtMaps-14A
+bash /mnt/qtmaps/unit14a-deliver.sh verify-rollback /mnt/qtmaps/older /home/qtmaps14a/QtMaps-14A
+bash /mnt/qtmaps/unit14a-deliver.sh run /home/qtmaps14a/QtMaps-14A
+```
+
+Install is the single provisioning command for the prebuilt stage; the separate rollback and GUI commands are acceptance checks. During the actual 7480 run, thin `offline-install.sh`, `offline-rollback.sh` and `offline-run.sh` wrappers ran these commands while teeing logs to `/mnt/evidence`. Record hashes and network state **before** launching the GUI.
 
 ## Prepare on source, install with one VM command
 
@@ -45,7 +61,7 @@ Transfer both stages and verify their SHA-256 on the VM. After installing the ne
 
 1. Confirm offline evidence and Settings readiness. Open the map; verify local Hanoi vector and attribution. Switch to raster fallback, then Sentinel-2 orthography (z12–z15); record visible content, source and attribution. If llvmpipe cannot render, mark GUI proof blocked, not passed.
 2. Search for two known Hanoi places; confirm result source says local OSM and no fixture fallback. Select A/B and request a route. Record Valhalla local readiness, graph ID/path, route geometry, nonzero distance and maneuvers. If it falls back to fixture, mark real route failed. Start simulated replay and confirm camera/maneuver progression and re-route behavior.
-3. Exit and run the launcher again; ensure Settings, map, search and route still work offline. Inspect `metadata/startup.json` and `metadata/failure.log`. The installer tests rollback pointer mechanics in an isolated root using the same real bundle twice; a true previous-version recovery remains unverified until a second approved version exists. Do not present this same-content test as a rollback of changed data.
+3. Exit and run the launcher again; ensure Settings, map, search and route still work offline. Inspect `metadata/startup.json` and `metadata/failure.log`. The installer tests same-content rollback mechanics; `verify-rollback` above tests a **different** approved real bundle version. Both use the same Hanoi graph, so graph rollback is only a same-content pointer check.
 4. Record date, VM image/snapshot, Ubuntu/Qt/MapLibre/Valhalla versions, package IDs/checksums, `ip` outputs, each check's pass/fail, screenshot paths and limitations. The screenshot review is functional evidence, not an FPS/RAM/CPU measurement.
 
 ## Size and dependency inventory from the development host
@@ -63,4 +79,4 @@ The 2026-11-22 real-data stage contains 393 hashed files and 509,179,106 bytes (
 | Valhalla service and bundled wheel libraries | 251,213,002 |
 | QtMaps executable | 1,249,016 |
 
-The host `ldd` inventory for app, Valhalla and MapLibre (with its library directory on `LD_LIBRARY_PATH`) resolves the common C/C++, GL/X11/XCB, ICU/Harfbuzz/Freetype, Qt Core/Gui/Qml/Quick/Location/Positioning/Network/SQL and Valhalla bundled libraries. Candidate top-level Ubuntu packages for a minimal guest are `libqt5location5`, `libqt5location5-plugins`, `libqt5positioning5`, `libqt5sql5-sqlite`, `qml-module-qtlocation`, `qml-module-qtpositioning`, `qml-module-qtquick2`, `qml-module-qtquick-window2`, `libgl1-mesa-dri`, `libgl1`, `fonts-noto-core`, `python3`, `iproute2` and `coreutils`, plus apt-resolved dependencies. This is a **candidate**, not a verified minimal set: inspect `ldd` and missing QML imports on the clean image and record the exact added packages. Qt 5.15.18 must be verified in that image; no Qt runtime is bundled in the current stage. Headless `ldd` cannot establish llvmpipe/Qt plugin loading.
+The host `ldd` inventory for app, Valhalla and MapLibre (with its library directory on `LD_LIBRARY_PATH`) resolves common C/C++, GL/X11/XCB, ICU/Harfbuzz/Freetype, Qt Core/Gui/Qml/Quick/Location/Positioning/Network/SQL and Valhalla bundled libraries. The candidate top-level Ubuntu packages are `libqt5location5`, `libqt5location5-plugins`, `libqt5positioning5`, `libqt5sql5-sqlite`, `qml-module-qtlocation`, `qml-module-qtpositioning`, `qml-module-qtquick2`, `qml-module-qtquick-window2`, `libgl1-mesa-dri`, `libgl1`, `fonts-noto-core`, `python3`, `iproute2` and `coreutils`, plus apt-resolved dependencies. On the clean Ubuntu 26.04.1 Desktop VM this set succeeded with 33 newly installed packages and no further missing library/plugin/font package; see the [exact list and ldd inventory](unit-14a-7480-vm-results.md). It is an observed sufficient set, not a universal minimum. Qt 5.15.18 was verified in the guest; no Qt runtime is bundled in this stage.

@@ -1,0 +1,49 @@
+qt.qpa.plugin: Could not find the Qt platform plugin "wayland" in ""
+availableServiceProviders= itemsoverlay,osm,esri,mapbox,here,maplibre
+providerConstructionProbe=skipped for localhost-only vector mode
+Runtime packages: vector= /home/qtmaps14a/QtMaps-14A/data/bundle/vector raster= /home/qtmaps14a/QtMaps-14A/data/bundle/raster search= /home/qtmaps14a/QtMaps-14A/data/bundle/search orthography= /home/qtmaps14a/QtMaps-14A/data/bundle/orthography
+Routing runtime config: /tmp/QtMaps-HmxpFZ/valhalla.json active graph: /home/qtmaps14a/QtMaps-14A/data/graph/tiles selected: true
+probeMode= unit04-routing-valhalla
+qml: routing mapReady=true error=0 errorString=
+2026-11-23 16:11:50.656509826 [31;1m[ERROR][0m (stat):  No such file or directory
+2026-11-23 16:11:50.658640588 [33;1m[WARN][0m Tile extract could not be loaded
+2026-11-23 16:11:50.659002419 [33;1m[WARN][0m (stat):  No such file or directory
+2026-11-23 16:11:50.659103967 [33;1m[WARN][0m Traffic tile extract could not be loaded
+2026-11-23 16:11:50.657085406 [31;1m[ERROR][0m (stat):  No such file or directory
+2026-11-23 16:11:50.659526672 [33;1m[WARN][0m Tile extract could not be loaded
+2026-11-23 16:11:50.659599022 [33;1m[WARN][0m (stat):  No such file or directory
+2026-11-23 16:11:50.659606358 [33;1m[WARN][0m Traffic tile extract could not be loaded
+2026-11-23 16:11:50.657219399 [31;1m[ERROR][0m (stat):  No such file or directory
+2026-11-23 16:11:50.661764823 [33;1m[WARN][0m Tile extract could not be loaded
+2026-11-23 16:11:50.661819626 [33;1m[WARN][0m (stat):  No such file or directory
+2026-11-23 16:11:50.661824834 [33;1m[WARN][0m Traffic tile extract could not be loaded
+2026-11-23 16:11:50.657362028 [31;1m[ERROR][0m (stat):  No such file or directory
+2026-11-23 16:11:50.667616678 [33;1m[WARN][0m Tile extract could not be loaded
+2026-11-23 16:11:50.667674776 [33;1m[WARN][0m (stat):  No such file or directory
+2026-11-23 16:11:50.667683418 [33;1m[WARN][0m Traffic tile extract could not be loaded
+Threaded rendering is not optimal in the MapLibre Native plugin.
+[ INFO ]  "{unknown}[General]: GPU Identifier: llvmpipe (LLVM 21.1.8, 256 bits)"
+0 2026/11/23 16:11:51.717924 GET /status HTTP/1.1
+2026-11-23 16:11:51.720486515 [32;1m[INFO][0m Got Loki Request 0
+2026-11-23 16:11:51.723074257 [32;1m[INFO][0m Got Thor Request 0
+2026-11-23 16:11:51.724609227 [32;1m[INFO][0m Got Odin Request 0
+0 2026/11/23 16:11:51.724913 200 387
+QTMAPS_BENCHMARK_EVENT  {"elapsed_ms":2716,"event":"backend_ready","scenario":"","timestamp_utc":"2026-11-23T16:11:51.790Z"}
+1 2026/11/23 16:11:51.802641 GET /route?json=%7B%22costing%22:%22auto%22,%22directions_options%22:%7B%22language%22:%22vi-VN%22,%22units%22:%22kilometers%22%7D,%22language%22:%22vi-VN%22,%22locations%22:[%7B%22lat%22:21.0285,%22lon%22:105.8542%7D,%7B%22lat%22:21.0116,%22lon%22:105.8197%7D],%22units%22:%22kilometers%22%7D HTTP/1.1
+2026-11-23 16:11:51.802827252 [32;1m[INFO][0m Got Loki Request 1
+2026-11-23 16:11:52.208675016 [32;1m[INFO][0m Got Thor Request 1
+2026-11-23 16:11:52.287575506 [32;1m[INFO][0m algorithm::bidirectional_a*
+2026-11-23 16:11:52.463592231 [32;1m[INFO][0m Got Odin Request 1
+1 2026/11/23 16:11:52.471177 200 10211
+Valhalla route applied: 7294 m, 523.659 s, 14 maneuvers
+qml: routing mapReady=true error=0 errorString=
+qml: routing mapReady=true error=0 errorString=
+qml: routing mapReady=true error=0 errorString=
+Threaded rendering is not optimal in the MapLibre Native plugin.
+2 2026/11/23 16:20:38.137587 GET /route?json=%7B%22costing%22:%22auto%22,%22directions_options%22:%7B%22language%22:%22vi-VN%22,%22units%22:%22kilometers%22%7D,%22language%22:%22vi-VN%22,%22locations%22:[%7B%22lat%22:21.032303,%22lon%22:105.850692%7D,%7B%22lat%22:21.0116,%22lon%22:105.8197%7D],%22units%22:%22kilometers%22%7D HTTP/1.1
+2026-11-23 16:20:38.137654606 [32;1m[INFO][0m Got Loki Request 2
+2026-11-23 16:20:38.317319153 [32;1m[INFO][0m Got Thor Request 2
+2026-11-23 16:20:38.370467145 [32;1m[INFO][0m algorithm::bidirectional_a*
+2026-11-23 16:20:38.489460615 [32;1m[INFO][0m Got Odin Request 2
+2 2026/11/23 16:20:38.492004 200 7829
+Valhalla route applied: 6021 m, 439.195 s, 11 maneuvers

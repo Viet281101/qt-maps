@@ -214,15 +214,14 @@ fixture-backed or simulated presentation.
    CI-produced v1.0+ Windows artifact, if one exists. The v1.0 gate also needs
    nationwide real routing, real-route replay and reference-laptop Release/soak
    evidence after the i915 freeze lifts. Planning #71/#72 are done. Unit 14A
-   issue #74 and draft PR #73 are `In Progress`, P1, After Demo in Project #6,
-   with Post-demo stabilization milestone. PR #73 begins 14A: read-only runtime
-   preflight passed on a local fixture and Qt 5.15.18 Release tests passed
-   25/25 on 2026-11-19. Owner approved real Hanoi packages/graph/Sentinel for
-   a 4-vCPU, 8 GiB, ~60 GB Ubuntu 26.04 llvmpipe VM. The one-command installer
-   passed host network-namespace staging/activation/search/rollback checks;
-   a 7480 container passed real-route/owner smoke, but not VM proof. KVM works;
-   owner approved 6 GiB/2 vCPU on 7480. Clean VM/rollback remain open. See
-   `docs/rehearsal/unit-14a-clean-vm-runbook.md`. No benchmark. See
+   issue #74 and PR #73 cover 14A. On 2026-11-24 an Ubuntu 26.04.1
+   **clean-snapshot VM** on laptop 7480 passed offline real-data install,
+   vector/raster/Sentinel display, 9,094-place search, Valhalla route and
+   replay/re-route, restart, missing-bundle rejection and distinct-version
+   raster/Sentinel rollback. Owner approved the 6 GiB/2-vCPU deviation; Qt
+   5.15.18 and 33 added system packages were recorded. No benchmark was run.
+   Evidence and release-license limitation: `docs/rehearsal/unit-14a-7480-vm-results.md`.
+   Next: 14C Linux CI in a separate PR after reviewing 14A. See
    `context/feature-specs/unit-14-clean-offline-target-plan.md`.
 
 ## Risks and decisions requiring the owner
