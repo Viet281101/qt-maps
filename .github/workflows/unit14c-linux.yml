@@ -1,0 +1,163 @@
+name: Unit 14C Linux offline
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  linux-26:
+    name: Release build, tests and isolated fixture smoke
+    runs-on: ubuntu-26.04
+    timeout-minutes: 90
+    env:
+      QT_QPA_PLATFORM: offscreen
+      QT_QUICK_BACKEND: software
+      LIBGL_ALWAYS_SOFTWARE: "1"
+      GALLIUM_DRIVER: llvmpipe
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Pin target userland and install build dependencies
+        run: |
+          set -euo pipefail
+          . /etc/os-release
+          test "$VERSION_ID" = 26.04
+          test "$(getconf GNU_LIBC_VERSION)" = "glibc 2.43"
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            cmake ninja-build ccache g++ git curl xz-utils osmium-tool \
+            qtbase5-dev qtdeclarative5-dev qtlocation5-dev qtpositioning5-dev \
+            qtbase5-private-dev qtdeclarative5-private-dev libicu-dev \
+            libqt5location5-plugins libqt5sql5-sqlite \
+            qml-module-qtlocation qml-module-qtpositioning \
+            qml-module-qtquick2 qml-module-qtquick-window2 \
+            libgl1-mesa-dri fonts-noto-core python3-fonttools python3-pil
+          test "$(/usr/bin/qmake -query QT_VERSION)" = 5.15.18
+          echo "Ubuntu $VERSION_ID; $(getconf GNU_LIBC_VERSION); Qt $(/usr/bin/qmake -query QT_VERSION)"
+
+      - name: Prepare pinned Qt private headers for MapLibre
+        run: |
+          set -euo pipefail
+          mkdir -p generated/ci/qt-source
+          curl --fail --location --retry 3 \
+            --output generated/ci/qtlocation-5.15.18.tar.xz \
+            https://download.qt.io/archive/qt/5.15/5.15.18/submodules/qtlocation-everywhere-opensource-src-5.15.18.tar.xz
+          echo "ea2ed52b085989fe38d0e7f9080da4104d4707d60d8d3b5f5a478b9bec325a3c  generated/ci/qtlocation-5.15.18.tar.xz" | sha256sum -c -
+          tar -xf generated/ci/qtlocation-5.15.18.tar.xz -C generated/ci/qt-source
+          python tools/ci/make_qt_private_overlay.py \
+            generated/ci/qt-source/qtlocation-everywhere-src-5.15.18 \
+            generated/ci/qt-private
+
+      - name: Build MapLibre Native Qt v3.0.0 against Qt 5.15.18
+        run: |
+          set -euo pipefail
+          git clone --recurse-submodules --shallow-submodules --branch v3.0.0 \
+            https://github.com/maplibre/maplibre-native-qt.git generated/ci/maplibre-src
+          test "$(git -C generated/ci/maplibre-src rev-parse HEAD)" = d929c783737120787b43417d9ef05da88da75dfd
+          make QT_EXPECTED_VERSION=5.15.18 \
+            MAPLIBRE_SRC=generated/ci/maplibre-src \
+            MAPLIBRE_BUILD_NEW=generated/ci/maplibre-build \
+            MAPLIBRE_INSTALL_NEW=generated/ci/maplibre-install \
+            QT_PRIVATE_OVERLAY=generated/ci/qt-private \
+            MAPLIBRE_BUILD_KEEP_GOING=0 maplibre-qt51518
+
+      - name: Build Release and run non-benchmark tests
+        run: |
+          set -euo pipefail
+          make QT_EXPECTED_VERSION=5.15.18 \
+            MAPLIBRE_INSTALL=generated/ci/maplibre-install build
+          env QTMAPS_QML_RUNTIME=/usr/lib/x86_64-linux-gnu/qt5 \
+            QTMAPS_MAPLIBRE_INSTALL="$PWD/generated/ci/maplibre-install" \
+            QT_PLUGIN_PATH=/usr/lib/x86_64-linux-gnu/qt5/plugins \
+            ctest --test-dir build-qt515 --output-on-failure \
+            -E '^qtmaps_benchmark_cli_smoke$'
+
+      - name: Build pinned Valhalla wheel and synthetic fixture
+        run: |
+          set -euo pipefail
+          python -m venv generated/ci/valhalla-venv
+          generated/ci/valhalla-venv/bin/python -m pip install --require-hashes \
+            -r tools/routing/requirements-valhalla.txt
+          site="$(generated/ci/valhalla-venv/bin/python -c 'import site; print(site.getsitepackages()[0])')"
+          generated/ci/valhalla-venv/bin/python tools/ci/make_unit14_fixture.py \
+            --output generated/ci/fixture --valhalla-site "$site"
+          pbf_sha="$(sha256sum generated/ci/fixture/graph-build/synthetic-ci.osm.pbf | cut -d' ' -f1)"
+          ./tools/unit14a-deliver.sh prepare generated/ci/stage \
+            build-qt515/qtmaps generated/ci/maplibre-install "$site" \
+            generated/ci/fixture/graph-build/valhalla.json \
+            generated/ci/fixture/vector generated/ci/fixture/raster \
+            generated/ci/fixture/search - generated/ci/fixture/graph-build/tiles \
+            ci-synthetic-fixture "$pbf_sha" ci-synthetic-graph
+
+      - name: Package short-lived CI fixture artifact and notices
+        run: |
+          set -euo pipefail
+          root=generated/ci/artifact-root
+          out=generated/ci/artifact-output
+          mkdir -p "$root/LICENSES/MapLibre" "$out"
+          cp -al generated/ci/stage "$root/stage"
+          cp tools/unit14a-deliver.sh "$root/install.sh"
+          cp LICENSE "$root/LICENSES/QtMaps-MIT.txt"
+          cp -a generated/ci/maplibre-src/LICENSES/. "$root/LICENSES/MapLibre/"
+          site="$(generated/ci/valhalla-venv/bin/python -c 'import site; print(site.getsitepackages()[0])')"
+          cp "$site/pyvalhalla-3.9.1.dist-info/licenses/COPYING" "$root/LICENSES/pyvalhalla-COPYING"
+          cp "$site/pyvalhalla-3.9.1.dist-info/sboms/auditwheel.cdx.json" "$root/LICENSES/pyvalhalla-auditwheel.cdx.json"
+          cat > "$root/LICENSES/NOTICE" <<'EOF'
+          CI fixture only; not a v1.0 release. Qt 5.15.18 and fonts are supplied
+          by Ubuntu 26.04 packages and their notices remain in /usr/share/doc.
+          MapLibre and pyvalhalla notices are included here for review.
+          The map package contract's OSM attribution field is required by the
+          current validator; map pixels and places in this artifact are synthetic.
+          No Copernicus imagery or protected Hanoi data is included.
+          Third-party wheel library notice review remains open before release.
+          EOF
+          python - "$root/manifest.json" <<'PY'
+          import json, os, pathlib, subprocess, sys
+          root = pathlib.Path(sys.argv[1])
+          root.write_text(json.dumps({
+              "kind": "synthetic-ci-fixture",
+              "target": "ubuntu-26.04-x86_64",
+              "source_commit": os.environ["GITHUB_SHA"],
+              "qt": subprocess.check_output(["/usr/bin/qmake", "-query", "QT_VERSION"], text=True).strip(),
+              "maplibre_native_qt": "3.0.0",
+              "valhalla": "3.9.1",
+              "search_rows": 1,
+              "orthography": "omitted",
+              "real_hanoi_proof": "PR #73 VM report; not this fixture",
+              "benchmark": "none",
+          }, indent=2) + "\n")
+          PY
+          archive=qtmaps-unit14c-linux-26.04-fixture.tar.gz
+          tar --sort=name --owner=0 --group=0 --numeric-owner \
+            --mtime="@$(git show -s --format=%ct HEAD)" -C "$root" -cf - . \
+            | gzip -n > "$out/$archive"
+          (cd "$out" && sha256sum "$archive" > SHA256SUMS)
+          cp "$root/manifest.json" "$out/manifest.json"
+          du -h "$out/$archive"
+
+      - name: Smoke extracted artifact in clean, networkless Ubuntu 26.04
+        run: |
+          set -euo pipefail
+          docker build -f tools/ci/unit14c-runtime.Dockerfile \
+            -t qtmaps-unit14c-runtime .
+          docker run --rm --network none --cap-drop ALL \
+            --mount type=bind,src="$PWD/generated/ci/artifact-output",dst=/input,readonly \
+            --mount type=bind,src="$PWD/tools/ci/smoke_unit14c_archive.sh",dst=/smoke.sh,readonly \
+            qtmaps-unit14c-runtime bash /smoke.sh \
+            /input/qtmaps-unit14c-linux-26.04-fixture.tar.gz /input/SHA256SUMS
+
+      - name: Retain text provenance only
+        uses: actions/upload-artifact@v4
+        with:
+          name: qtmaps-unit14c-linux-26.04-provenance
+          path: |
+            generated/ci/artifact-output/manifest.json
+            generated/ci/artifact-output/SHA256SUMS
+          retention-days: 1
+          if-no-files-found: error
