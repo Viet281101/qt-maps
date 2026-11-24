@@ -60,7 +60,8 @@ jobs:
           git clone --recurse-submodules --shallow-submodules --branch v3.0.0 \
             https://github.com/maplibre/maplibre-native-qt.git generated/ci/maplibre-src
           test "$(git -C generated/ci/maplibre-src rev-parse HEAD)" = d929c783737120787b43417d9ef05da88da75dfd
-          make QT_EXPECTED_VERSION=5.15.18 \
+          env PATH="/usr/bin:/bin:$PATH" make PYTHON=/usr/bin/python3 \
+            QT_EXPECTED_VERSION=5.15.18 \
             MAPLIBRE_SRC=generated/ci/maplibre-src \
             MAPLIBRE_BUILD_NEW=generated/ci/maplibre-build \
             MAPLIBRE_INSTALL_NEW=generated/ci/maplibre-install \
@@ -70,7 +71,8 @@ jobs:
       - name: Build Release and run non-benchmark tests
         run: |
           set -euo pipefail
-          make QT_EXPECTED_VERSION=5.15.18 \
+          env PATH="/usr/bin:/bin:$PATH" make PYTHON=/usr/bin/python3 \
+            QT_EXPECTED_VERSION=5.15.18 \
             MAPLIBRE_INSTALL=generated/ci/maplibre-install build
           env QTMAPS_QML_RUNTIME=/usr/lib/x86_64-linux-gnu/qt5 \
             QTMAPS_MAPLIBRE_INSTALL="$PWD/generated/ci/maplibre-install" \
