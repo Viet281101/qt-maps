@@ -214,7 +214,8 @@ fixture-backed or simulated presentation.
    CI-produced v1.0+ Windows artifact, if one exists. The v1.0 gate also needs
    nationwide real routing, real-route replay and reference-laptop Release/soak
    evidence after the i915 freeze lifts. Planning #71/#72 are done. Unit 14A
-   issue #74 and PR #73 cover 14A. On 2026-11-24 an Ubuntu 26.04.1
+   issue #74 and review-ready PR #73 cover 14A; #74 stays open until merge.
+   On 2026-11-24 an Ubuntu 26.04.1
    **clean-snapshot VM** on laptop 7480 passed offline real-data install,
    vector/raster/Sentinel display, 9,094-place search, Valhalla route and
    replay/re-route, restart, missing-bundle rejection and distinct-version
