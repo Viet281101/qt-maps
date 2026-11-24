@@ -221,9 +221,9 @@ fixture-backed or simulated presentation.
    raster/Sentinel rollback. Owner approved the 6 GiB/2-vCPU deviation; Qt
    5.15.18 and 33 added system packages were recorded. No benchmark was run.
    Evidence and release-license limit: `docs/rehearsal/unit-14a-7480-vm-results.md`.
-   MapLibre requires GLIBC_2.43; Ubuntu 26.04 only
-   (`docs/rehearsal/unit-14-glibc-distro-scope-20261124.md`). Unit 14C #77
+   MapLibre requires GLIBC_2.43; Ubuntu 26.04 only (`docs/rehearsal/unit-14-glibc-distro-scope-20261124.md`). Unit 14C #77
    has local fixture smoke; hosted CI pending (`docs/rehearsal/unit-14c-linux-ci-20261124.md`).
+   14B inventory: `docs/rehearsal/unit-14b-windows-readiness-20261124.md` (Windows proof deferred).
 
 ## Risks and decisions requiring the owner
 

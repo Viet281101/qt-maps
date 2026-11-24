@@ -22,7 +22,7 @@ Tracked by [#71](https://github.com/Viet281101/qt-maps/issues/71) and planning [
 ### 14B — Windows readiness (lightweight, no date or v1.0 dependency)
 
 - **Goal:** Record porting differences and avoid new Linux-only assumptions. When adjacent Linux work touches portable boundaries, isolate easy `prctl`/signal, `/proc`, shell-path and filesystem assumptions if software-only tests can verify the change. No Windows executable or Windows hardware proof is promised in Unit 14.
-- **Completion:** A short inventory identifies platform-specific code and unresolved Qt/MapLibre/Valhalla, FTS5, activation-path, localhost and firewall checks. Any actual code change belongs to a separately scoped implementation PR with tests. Defer Windows CI bundle creation and native graphics validation until after v1.0, using CI output only for the company-laptop trial.
+- **Completion:** The [14B source inventory and company-laptop checklist](../../docs/rehearsal/unit-14b-windows-readiness-20261124.md) identify platform-specific code and unresolved Qt/MapLibre/Valhalla, FTS5, activation-path, localhost and firewall checks. Any actual code change belongs to a separately scoped implementation PR with tests. Defer Windows CI bundle creation and native graphics validation until after v1.0, using CI output only for the company-laptop trial.
 - **Dependencies/risks:** No Windows machine needed for inventory; Linux cannot prove Windows ABI, plugin/DLL closure, OpenGL, policy or installer behavior. Timebox to 0.5–1.5 days of documentation/inspection, with no v1.0 gate.
 - **Owner decisions:** Later ZIP versus installer, permissible runtime/data distribution and whether to commission Windows CI after v1.0.
 
