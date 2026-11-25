@@ -77,7 +77,11 @@ for path in sorted(root.rglob('*')):
     if path.is_symlink():
         raise SystemExit(f'unsafe stage symlink: {path}')
     if path.is_file() and path.relative_to(root).as_posix() != 'metadata/SHA256SUMS':
-        entries.append(f'{hashlib.sha256(path.read_bytes()).hexdigest()}  {path.relative_to(root).as_posix()}')
+        digest = hashlib.sha256()
+        with path.open('rb') as source:
+            for chunk in iter(lambda: source.read(1024 * 1024), b''):
+                digest.update(chunk)
+        entries.append(f'{digest.hexdigest()}  {path.relative_to(root).as_posix()}')
 (root / 'metadata/SHA256SUMS').write_text('\n'.join(entries) + '\n')
 print('Hashed staged files:', len(entries))
 PY
@@ -90,8 +94,8 @@ install)
     [[ -d "$stage" && -f "$stage/metadata/SHA256SUMS" ]] || die 'staging manifest missing'
     [[ ! -e "$dest" ]] || die "destination already exists; refusing overwrite: $dest"
     [[ -z "$(ip -4 route show default)" && -z "$(ip -6 route show default)" ]] || die 'VM still has a default route; disable outbound networking first'
-    (cd "$stage" && sha256sum -c metadata/SHA256SUMS >/dev/null) || die 'stage checksum failed'
     [[ -z "$(find "$stage" -type l -print -quit)" ]] || die 'stage contains symlinks'
+    (cd "$stage" && sha256sum -c metadata/SHA256SUMS >/dev/null) || die 'stage checksum failed'
     needed="$(du -sb "$stage" | cut -f1)"
     available="$(df -B1 --output=avail "$(dirname "$dest")" | tail -n1 | tr -d ' ')"
     (( available > needed * 2 )) || die 'insufficient space for stage copy and rollback'
@@ -113,14 +117,18 @@ if not o.get('bundleValid') or not o.get('vectorOk'):
 print('Startup metadata: bundle and vector valid; GUI/route smoke still required')
 PY
     python3 - "$dest/data/bundle/search/places.sqlite" "$dest/data/bundle/search/manifest.json" <<'PY'
-import json, sqlite3, sys
+import json, re, sqlite3, sys
 c = sqlite3.connect('file:' + sys.argv[1] + '?mode=ro', uri=True)
 n = c.execute('select count(*) from places').fetchone()[0]
-c.execute('select rowid from places_fts limit 1').fetchone()
 expected = json.load(open(sys.argv[2], encoding='utf-8'))['places']['count']
 if expected < 1 or n != expected:
     raise SystemExit(f'Unit 14A: search manifest expects {expected} rows, found {n}')
-print('Local FTS5 search rows:', n)
+name = c.execute('select name from places order by id limit 1').fetchone()[0]
+terms = re.findall(r'\w+', name, re.UNICODE)
+if not terms or not c.execute('select rowid from places_fts where places_fts match ? limit 1',
+                              (terms[0],)).fetchone():
+    raise SystemExit('Unit 14A: FTS5 MATCH returned no indexed place')
+print('Local FTS5 search rows and MATCH:', n, terms[0])
 PY
     # Exercise rollback in an isolated activation root without changing the active bundle.
     smoke="$dest/metadata/rollback-smoke"
@@ -141,6 +149,7 @@ verify-rollback)
     older="$(realpath -- "$1")"; dest="$(realpath -- "$2")"
     [[ -f "$older/metadata/SHA256SUMS" && -x "$dest/app/qtmaps" ]] || die 'older stage or installed app missing'
     [[ -z "$(ip -4 route show default)" && -z "$(ip -6 route show default)" ]] || die 'target still has a default route'
+    [[ -z "$(find "$older" -type l -print -quit)" ]] || die 'older stage contains symlinks'
     (cd "$older" && sha256sum -c metadata/SHA256SUMS >/dev/null) || die 'older stage checksum failed'
     python3 - "$older/data/bundle" "$dest/data/bundle" <<'PY'
 import json, pathlib, sys
