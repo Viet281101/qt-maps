@@ -222,7 +222,7 @@ fixture-backed or simulated presentation.
    raster/Sentinel rollback. Owner approved the 6 GiB/2-vCPU deviation; Qt
    5.15.18 and 33 added system packages were recorded. No benchmark was run.
    Evidence and release-license limitation: `docs/rehearsal/unit-14a-7480-vm-results.md`.
-   Next: 14C Linux CI in a separate PR after reviewing 14A. See
+   Installer now streams hashes and probes FTS5 MATCH. Next: 14C CI. See
    `context/feature-specs/unit-14-clean-offline-target-plan.md`.
 
 ## Risks and decisions requiring the owner
