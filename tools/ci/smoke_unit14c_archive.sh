@@ -50,13 +50,20 @@ bash ../install.sh install "$PWD" /proof/installed
 test -f /proof/installed/metadata/startup.json
 python3 - <<'PY'
 import json
+import sqlite3
 from pathlib import Path
 root = Path('/proof/installed')
 o = json.loads((root / 'metadata/startup.json').read_text())
 assert o['bundleValid'] and o['vectorOk'], o
 assert not o.get('orthography'), o
 assert not (root / 'metadata/rollback-smoke/failure/current').exists()
-print('Activation, optional orthography absence and controlled failure: passed')
+database = root / 'data/bundle/search/places.sqlite'
+with sqlite3.connect(f'file:{database}?mode=ro', uri=True) as search:
+    hit = search.execute(
+        'SELECT p.source_id FROM places_fts f JOIN places p ON p.id = f.rowid '
+        'WHERE places_fts MATCH ?', ('Synthetic',)).fetchone()
+assert hit == ('synthetic-1',), hit
+print('Activation, FTS5 MATCH, optional orthography absence and controlled failure: passed')
 PY
 
 export QT_QPA_PLATFORM=offscreen

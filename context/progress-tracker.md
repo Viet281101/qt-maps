@@ -220,9 +220,9 @@ fixture-backed or simulated presentation.
    raster/Sentinel rollback. Owner approved 6 GiB/2 vCPU; Qt 5.15.18 and 33
    added system packages were recorded. No benchmark was run.
    Evidence and release-license limit: `docs/rehearsal/unit-14a-7480-vm-results.md`.
-   MapLibre requires GLIBC_2.43; Ubuntu 26.04 only (`docs/rehearsal/unit-14-glibc-distro-scope-20261124.md`). Unit 14C #77
-   passed hosted Ubuntu 26.04 CI (24/24 software tests and networkless fixture
-   smoke); #77 stays open until merge (`docs/rehearsal/unit-14c-linux-ci-20261124.md`).
+   Installer streams hashes and checks FTS5 MATCH. MapLibre needs GLIBC_2.43;
+   Ubuntu 26.04 only (`docs/rehearsal/unit-14-glibc-distro-scope-20261124.md`).
+   Unit 14C #77 passed hosted CI (24/24 tests, networkless fixture smoke); issue open until merge (`docs/rehearsal/unit-14c-linux-ci-20261124.md`).
    14B inventory: `docs/rehearsal/unit-14b-windows-readiness-20261124.md` (Windows proof deferred).
 
 ## Risks and decisions requiring the owner
