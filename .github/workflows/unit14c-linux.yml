@@ -38,7 +38,7 @@ jobs:
             libqt5location5-plugins libqt5sql5-sqlite \
             qml-module-qtlocation qml-module-qtpositioning \
             qml-module-qtquick2 qml-module-qtquick-window2 \
-            libgl1-mesa-dri fonts-noto-core python3-fonttools python3-pil
+            libgl1-mesa-dri fonts-noto-core python3-fonttools python3-pil python3-numpy
           test "$(/usr/bin/qmake -query QT_VERSION)" = 5.15.18
           echo "Ubuntu $VERSION_ID; $(getconf GNU_LIBC_VERSION); Qt $(/usr/bin/qmake -query QT_VERSION)"
 
@@ -75,7 +75,7 @@ jobs:
           env PATH="/usr/bin:/bin:$PATH" make PYTHON=/usr/bin/python3 \
             QT_EXPECTED_VERSION=5.15.18 \
             MAPLIBRE_INSTALL=generated/ci/maplibre-install build
-          env QTMAPS_QML_RUNTIME=/usr/lib/x86_64-linux-gnu/qt5 \
+          env PATH="/usr/bin:/bin:$PATH" QTMAPS_QML_RUNTIME=/usr/lib/x86_64-linux-gnu/qt5 \
             QTMAPS_MAPLIBRE_INSTALL="$PWD/generated/ci/maplibre-install" \
             QT_PLUGIN_PATH=/usr/lib/x86_64-linux-gnu/qt5/plugins \
             ctest --test-dir build-qt515 --output-on-failure \
