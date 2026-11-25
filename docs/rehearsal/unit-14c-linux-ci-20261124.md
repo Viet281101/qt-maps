@@ -1,6 +1,6 @@
 # Unit 14C — Linux CI and offline fixture harness
 
-Status: [GitHub Actions run #45550719417](https://github.com/Viet281101/qt-maps/actions/runs/45550719417) passed on 2026-11-25 for [#77](https://github.com/Viet281101/qt-maps/issues/77). This workflow does not publish a v1.0 release or claim real-data/GUI/performance acceptance.
+Status: [GitHub Actions run #45621830851](https://github.com/Viet281101/qt-maps/actions/runs/45621830851) passed on 2026-11-25 for [#77](https://github.com/Viet281101/qt-maps/issues/77). This workflow does not publish a v1.0 release or claim real-data/GUI/performance acceptance.
 
 ## Job contract
 
@@ -24,4 +24,4 @@ The job retains only text `manifest.json` and `SHA256SUMS` for one day as PR evi
 
 Run #45550719417 built MapLibre v3.0.0 and QtMaps Release with Qt 5.15.18 on Ubuntu 26.04. **24/24 non-benchmark CTests passed.** The synthetic graph builder returned a route; the archived bundle passed checksum and ELF dependency checks, installer activation, controlled missing-bundle failure, restart resolution, and a route with maneuvers inside a fresh container started with `--network none --cap-drop ALL`. Optional orthography absence was verified. Only the 583-byte text provenance artifact was uploaded for one day; no binary bundle or protected Hanoi data was published. The run is CI proof of software-only packaging, not a GUI, real-Hanoi or performance measurement.
 
-Two earlier hosted attempts exposed missing `lrelease` and Python `numpy` in the test interpreter; the workflow now installs `qttools5-dev-tools` and runs CTest with the distro Python packages. The subsequent review added a direct FTS5 `MATCH` smoke and streamed stage hashing; verify those changes against the current PR check. Keep #77 open until its PR merges; v1.0 release remains gated separately by the Unit 14 plan.
+Two earlier hosted attempts exposed missing `lrelease` and Python `numpy` in the test interpreter; the workflow now installs `qttools5-dev-tools` and runs CTest with the distro Python packages. The review run #45621830851 again passed 24/24 non-benchmark tests and the isolated archive smoke, including a real FTS5 `MATCH` lookup. It also verified the streamed stage hashing change inherited from 14A. Keep #77 open until its PR merges; v1.0 release remains gated separately by the Unit 14 plan.
