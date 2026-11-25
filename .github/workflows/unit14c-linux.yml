@@ -2,6 +2,9 @@ name: Unit 14C Linux offline
 
 on:
   pull_request:
+    paths-ignore:
+      - 'docs/**'
+      - 'context/**'
   workflow_dispatch:
 
 permissions:
