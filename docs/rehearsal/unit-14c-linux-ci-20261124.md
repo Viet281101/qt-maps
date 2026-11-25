@@ -1,6 +1,6 @@
 # Unit 14C — Linux CI and offline fixture harness
 
-Status: implementation branch for [#77](https://github.com/Viet281101/qt-maps/issues/77); **GitHub-hosted run pending**. This workflow does not publish a v1.0 release or claim real-data/GUI/performance acceptance.
+Status: [GitHub Actions run #45550719417](https://github.com/Viet281101/qt-maps/actions/runs/45550719417) passed on 2026-11-25 for [#77](https://github.com/Viet281101/qt-maps/issues/77). This workflow does not publish a v1.0 release or claim real-data/GUI/performance acceptance.
 
 ## Job contract
 
@@ -20,4 +20,8 @@ The job retains only text `manifest.json` and `SHA256SUMS` for one day as PR evi
 - On laptop 7480, the fixture stage was installed inside an Ubuntu 26.04.1 container with `--network none`. The same installer accepted the one-row FTS5 package, activated the synthetic graph, rejected a missing bundle and passed same-content pointer rollback. A separately packaged archive was extracted in a clean, networkless container: hashes and app/MapLibre/service `ldd` closure passed, startup resolved after restart, orthography was absent as declared, and the installed synthetic graph returned a route with maneuvers. No GUI or benchmark ran.
 - The local Release build completed. Five focused software-only CTests passed: search, package contract, FTS5, route navigation and Valhalla runtime. A broader `make test` invocation was interrupted after `qtmaps_benchmark_cli_smoke` timed out; that test starts the app in a benchmark scenario and is deliberately excluded from the CI workflow. The failed/aborted invocation is **not** counted as a passing full suite.
 
-The remaining validation is a successful GitHub Actions run from this exact branch. If the hosted MapLibre build, package download or 24 non-benchmark tests fail, keep #77 open and resolve the recorded failure before marking 14C complete.
+## Hosted result on 2026-11-25
+
+Run #45550719417 built MapLibre v3.0.0 and QtMaps Release with Qt 5.15.18 on Ubuntu 26.04. **24/24 non-benchmark CTests passed.** The synthetic graph builder returned a route; the archived bundle passed checksum and ELF dependency checks, installer activation, controlled missing-bundle failure, restart resolution, and a route with maneuvers inside a fresh container started with `--network none --cap-drop ALL`. Optional orthography absence was verified. Only the 583-byte text provenance artifact was uploaded for one day; no binary bundle or protected Hanoi data was published. The run is CI proof of software-only packaging, not a GUI, real-Hanoi or performance measurement.
+
+Two earlier hosted attempts exposed missing `lrelease` and Python `numpy` in the test interpreter; the workflow now installs `qttools5-dev-tools` and runs CTest with the distro Python packages. This result makes the 14C PR review-ready. Keep #77 open until its PR merges; v1.0 release remains gated separately by the Unit 14 plan.
