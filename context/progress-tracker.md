@@ -221,9 +221,9 @@ fixture-backed or simulated presentation.
    raster/Sentinel rollback. Owner approved the 6 GiB/2-vCPU deviation; Qt
    5.15.18 and 33 added system packages were recorded. No benchmark was run.
    Evidence and release-license limit: `docs/rehearsal/unit-14a-7480-vm-results.md`.
-   ABI scan found MapLibre requires GLIBC_2.43; only Ubuntu 26.04 is committed
-   (`docs/rehearsal/unit-14-glibc-distro-scope-20261124.md`). Next: 14C Linux
-   CI in a separate PR; see `context/feature-specs/unit-14-clean-offline-target-plan.md`.
+   Installer streams hashes and probes FTS5 MATCH. MapLibre requires GLIBC_2.43;
+   Ubuntu 26.04 only (`docs/rehearsal/unit-14-glibc-distro-scope-20261124.md`).
+   Next: 14C CI; see `context/feature-specs/unit-14-clean-offline-target-plan.md`.
 
 ## Risks and decisions requiring the owner
 
