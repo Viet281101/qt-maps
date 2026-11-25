@@ -84,9 +84,7 @@ fixture-backed or simulated presentation.
 
 ## Current verified evidence
 
-- PR #59 merged as `0c7964d` and closed #58: the QSQLITE FTS5 spike creates and
-  queries an external-content Vietnamese fixture schema locally; Release tests
-  passed 19/19.
+- PR #59 closed the QSQLITE FTS5 spike (#58); Release tests passed 19/19.
 - The #61 fixture-only package builder validates Hanoi bounds and PBF provenance,
   emits a checksummed FTS5 SQLite package under the 20 MiB cap, and passed the
   isolated Release review with 20/20 tests.
@@ -95,12 +93,7 @@ fixture-backed or simulated presentation.
 - Direct-GPU visual captures completed on the Intel HD 520 for the supported
   viewports and vector/raster states. This is functional-layout evidence, not
   a performance benchmark.
-- Current ignored compatible packages are `hanoi-20261114-v3-r3` and
-  `hanoi-raster-20261115-v3-r4`; each has the v2 glyph revision and matching
-  v3 manifests.
-- Environment documentation was synchronized on 2026-11-15: system Qt 5.15.18
-  is the production baseline, while Qt 5.15.13 remains comparison-only. The
-  checked `make QT_EXPECTED_VERSION=5.15.18 requirements` preflight passes.
+- Qt 5.15.18 requirements preflight passes; Qt 5.15.13 is comparison-only.
 
 ## Unit 09 — Offline search integration (completed locally 2026-11-15)
 
@@ -220,9 +213,16 @@ fixture-backed or simulated presentation.
    The owner will test a company Windows 11 laptop only after completion with a
    CI-produced v1.0+ Windows artifact, if one exists. The v1.0 gate also needs
    nationwide real routing, real-route replay and reference-laptop Release/soak
-   evidence after the i915 freeze lifts. Planning PR #72 and issue #71 are
-   `In Progress`, P1, After Demo in Project #6, with Post-demo stabilization
-   milestone. No implementation or benchmark is claimed. See
+   evidence after the i915 freeze lifts. Planning #71/#72 are done. Unit 14A
+   issue #74 and review-ready PR #73 cover 14A; #74 stays open until merge.
+   On 2026-11-24 an Ubuntu 26.04.1
+   **clean-snapshot VM** on laptop 7480 passed offline real-data install,
+   vector/raster/Sentinel display, 9,094-place search, Valhalla route and
+   replay/re-route, restart, missing-bundle rejection and distinct-version
+   raster/Sentinel rollback. Owner approved the 6 GiB/2-vCPU deviation; Qt
+   5.15.18 and 33 added system packages were recorded. No benchmark was run.
+   Evidence and release-license limitation: `docs/rehearsal/unit-14a-7480-vm-results.md`.
+   Installer now streams hashes and probes FTS5 MATCH. Next: 14C CI. See
    `context/feature-specs/unit-14-clean-offline-target-plan.md`.
 
 ## Risks and decisions requiring the owner

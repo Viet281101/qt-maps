@@ -1,0 +1,5 @@
+Rollback versions: hanoi-unit14a-v1 hanoi-raster-20261114-v3-r3 hanoi-orthography-20261115-s2-l2a-v1 -> hanoi-unit14a hanoi-raster-20261115-v3-r4 hanoi-orthography-20261115-s2-l2a-v2
+Unit 12 bundle activated: hanoi-unit14a-v1
+Unit 12 bundle activated: hanoi-unit14a
+Unit 14A bundle rollback completed
+Distinct-version rollback and restart resolution passed

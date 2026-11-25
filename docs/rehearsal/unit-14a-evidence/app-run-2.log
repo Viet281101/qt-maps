@@ -1,0 +1,45 @@
+qt.qpa.plugin: Could not find the Qt platform plugin "wayland" in ""
+availableServiceProviders= here,osm,itemsoverlay,esri,maplibre,mapbox
+providerConstructionProbe=skipped for localhost-only vector mode
+Runtime packages: vector= /home/qtmaps14a/QtMaps-14A/data/bundle/vector raster= /home/qtmaps14a/QtMaps-14A/data/bundle/raster search= /home/qtmaps14a/QtMaps-14A/data/bundle/search orthography= /home/qtmaps14a/QtMaps-14A/data/bundle/orthography
+Routing runtime config: /tmp/QtMaps-JkPpnQ/valhalla.json active graph: /home/qtmaps14a/QtMaps-14A/data/graph/tiles selected: true
+probeMode= unit04-routing-valhalla
+qml: routing mapReady=true error=0 errorString=
+Threaded rendering is not optimal in the MapLibre Native plugin.
+[ INFO ]  "{unknown}[General]: GPU Identifier: llvmpipe (LLVM 21.1.8, 256 bits)"
+2026-11-24 12:25:04.086068642 [31;1m[ERROR][0m (stat):  No such file or directory
+2026-11-24 12:25:04.086178081 [33;1m[WARN][0m Tile extract could not be loaded
+2026-11-24 12:25:04.086210054 [33;1m[WARN][0m (stat):  No such file or directory
+2026-11-24 12:25:04.086214382 [33;1m[WARN][0m Traffic tile extract could not be loaded
+2026-11-24 12:25:04.088197791 [31;1m[ERROR][0m (stat):  No such file or directory
+2026-11-24 12:25:04.088212333 [33;1m[WARN][0m Tile extract could not be loaded
+2026-11-24 12:25:04.088226276 [33;1m[WARN][0m (stat):  No such file or directory
+2026-11-24 12:25:04.088229630 [33;1m[WARN][0m Traffic tile extract could not be loaded
+2026-11-24 12:25:04.089847229 [31;1m[ERROR][0m (stat):  No such file or directory
+2026-11-24 12:25:04.089861466 [33;1m[WARN][0m Tile extract could not be loaded
+2026-11-24 12:25:04.089874069 [33;1m[WARN][0m (stat):  No such file or directory
+2026-11-24 12:25:04.089877375 [33;1m[WARN][0m Traffic tile extract could not be loaded
+2026-11-24 12:25:04.090665473 [31;1m[ERROR][0m (stat):  No such file or directory
+2026-11-24 12:25:04.090672602 [33;1m[WARN][0m Tile extract could not be loaded
+2026-11-24 12:25:04.090684333 [33;1m[WARN][0m (stat):  No such file or directory
+2026-11-24 12:25:04.090687622 [33;1m[WARN][0m Traffic tile extract could not be loaded
+0 2026/11/24 12:25:04.286258 GET /status HTTP/1.1
+2026-11-24 12:25:04.288899862 [32;1m[INFO][0m Got Loki Request 0
+2026-11-24 12:25:04.289673511 [32;1m[INFO][0m Got Thor Request 0
+2026-11-24 12:25:04.290053495 [32;1m[INFO][0m Got Odin Request 0
+0 2026/11/24 12:25:04.290245 200 387
+QTMAPS_BENCHMARK_EVENT  {"elapsed_ms":2499,"event":"backend_ready","scenario":"","timestamp_utc":"2026-11-24T12:25:04.328Z"}
+1 2026/11/24 12:25:04.333369 GET /route?json=%7B%22costing%22:%22auto%22,%22directions_options%22:%7B%22language%22:%22vi-VN%22,%22units%22:%22kilometers%22%7D,%22language%22:%22vi-VN%22,%22locations%22:[%7B%22lat%22:21.0285,%22lon%22:105.8542%7D,%7B%22lat%22:21.0116,%22lon%22:105.8197%7D],%22units%22:%22kilometers%22%7D HTTP/1.1
+2026-11-24 12:25:04.333551085 [32;1m[INFO][0m Got Loki Request 1
+2026-11-24 12:25:04.835573666 [32;1m[INFO][0m Got Thor Request 1
+2026-11-24 12:25:04.896169701 [32;1m[INFO][0m algorithm::bidirectional_a*
+2026-11-24 12:25:05.022642477 [32;1m[INFO][0m Got Odin Request 1
+1 2026/11/24 12:25:05.027463 200 10211
+Valhalla route applied: 7294 m, 523.659 s, 14 maneuvers
+2 2026/11/24 12:32:04.255051 GET /route?json=%7B%22costing%22:%22auto%22,%22directions_options%22:%7B%22language%22:%22vi-VN%22,%22units%22:%22kilometers%22%7D,%22language%22:%22vi-VN%22,%22locations%22:[%7B%22lat%22:21.02723478636817,%22lon%22:105.84967239322677%7D,%7B%22lat%22:21.0116,%22lon%22:105.8197%7D],%22units%22:%22kilometers%22%7D HTTP/1.1
+2026-11-24 12:32:04.255203226 [32;1m[INFO][0m Got Loki Request 2
+2026-11-24 12:32:04.405113950 [32;1m[INFO][0m Got Thor Request 2
+2026-11-24 12:32:04.441153762 [32;1m[INFO][0m algorithm::bidirectional_a*
+2026-11-24 12:32:04.594626810 [32;1m[INFO][0m Got Odin Request 2
+2 2026/11/24 12:32:04.596585 200 8575
+Valhalla route applied: 6204 m, 453.07 s, 12 maneuvers

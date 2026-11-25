@@ -1,0 +1,14 @@
+Snapshot list:
+ID        TAG               VM SIZE                DATE     VM CLOCK     ICOUNT
+1         clean                 0 B 2026-11-23 22:42:55 00:00:00.000          0
+2         provisioned           0 B 2026-11-23 22:59:03 00:00:00.000          0
+image: /home/viet-anh/QtMaps-14A-vm/qtmaps-14a.qcow2
+file format: qcow2
+virtual size: 60 GiB (64424509440 bytes)
+disk size: 7.46 GiB
+cluster_size: 65536
+Snapshot list:
+ID        TAG               VM SIZE                DATE     VM CLOCK     ICOUNT
+1         clean                 0 B 2026-11-23 22:42:55 00:00:00.000          0
+No errors were found on the image.
+116751/983040 = 11.88% allocated, 3.54% fragmented, 0.00% compressed clusters
