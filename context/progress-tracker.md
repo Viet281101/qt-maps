@@ -220,9 +220,9 @@ fixture-backed or simulated presentation.
    were recorded. No benchmark was run. Evidence and redistribution limits:
    `docs/rehearsal/unit-14a-7480-vm-results.md`. Installer streams hashes and
    probes FTS5 MATCH. MapLibre requires GLIBC_2.43; Ubuntu 26.04 only
-   (`docs/rehearsal/unit-14-glibc-distro-scope-20261124.md`). Unit 14C #77
-   passed hosted CI (24/24 tests, networkless fixture smoke); issue open until
-   merge (`docs/rehearsal/unit-14c-linux-ci-20261124.md`).
+   (`docs/rehearsal/unit-14-glibc-distro-scope-20261124.md`). Unit 14C PR #78
+   merged after hosted CI passed 24/24 tests and networkless fixture smoke
+   (`docs/rehearsal/unit-14c-linux-ci-20261124.md`).
    14B inventory: `docs/rehearsal/unit-14b-windows-readiness-20261124.md` (Windows proof deferred).
 
 ## Risks and decisions requiring the owner
