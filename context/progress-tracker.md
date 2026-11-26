@@ -157,9 +157,18 @@ simulated presentation.
   and [PR #70](https://github.com/Viet281101/qt-maps/pull/70).
   #15 is open solely for its short Release performance observation after the
   i915 freeze. Unit 14 issues #71/#74/#75/#77/#79 are closed and `Done`.
-- **Now — V1-A:** Build and measure a nationwide Valhalla graph from the
-  approved uncropped Vietnam PBF; verify real national/provincial routes and
-  explicit failures. Keep generated data outside Git.
+- **Now — V1-A:** The 2026-11-26 preflight verified the uncropped PBF SHA-256
+  `4e5243c3116dc089a298f4cd7218e1257adf4b48355e42936360df5ce3200d43`,
+  Valhalla native 3.9.1, about 10 GiB available RAM and 102 GiB free disk.
+  The two-worker Valhalla 3.9.1 build finished in 6:01.84, peak RSS 4,242,968
+  KiB, producing 734 graph tiles (1,164,439,264 bytes). Four frozen routes
+  returned real geometry and maneuvers; an out-of-coverage request returned an
+  explicit error. National roads were observed, while provincial-road
+  traversal and app activation remain to verify. See
+  `docs/routing/v1-a-national-graph-20261126.md`. Generated data remains outside
+  Git. The Qt 5.15.18 Release suite passed 25/25 after provisioned map/runtime
+  paths were linked into the isolated worktree. PR #82 carries V1-A
+  implementation and the remaining release gates.
 - **Next — V1-B:** Prove guidance, replay, arrival and re-route end to end from
   real Valhalla routes using that graph, with simulated position labelled.
 - **In parallel — V1-C:** Prepare licensed Linux CI release candidate,
