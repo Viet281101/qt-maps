@@ -25,10 +25,10 @@ nonempty encoded geometry and maneuvers:
 | Hue–Da Nang | 94.746 km | 23 | QL.1 |
 | Ho Chi Minh City–Can Tho | 161.770 km | 18 | QL.91B |
 | Thai Nguyen–Bac Kan | 87.902 km | 13 | QL.3, QL.37 |
+| Thu Dau Mot–Di An (supplemental provincial probe) | 17.905 km | 18 | ĐT.743A / Đường tỉnh 743A |
 
 A request from (0, 0) to (0.01, 0.01) returned `No suitable edges near
-location` with no route. The national-road observations are positive, but
-this first matrix has **not yet established provincial-road traversal**.
-Next inspect a targeted provincial route and then activate this graph through
-the Unit 12/13 application path for V1-B. Do not represent this CLI proof as
+location` with no route. The supplemental route establishes provincial-road traversal from the
+maneuver road names. Next activate this graph through the Unit 12/13
+application path for V1-B. Do not represent this CLI proof as
 end-to-end application navigation evidence.

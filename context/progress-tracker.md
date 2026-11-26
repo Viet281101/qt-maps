@@ -162,9 +162,9 @@ simulated presentation.
   Valhalla native 3.9.1, about 10 GiB available RAM and 102 GiB free disk.
   The two-worker Valhalla 3.9.1 build finished in 6:01.84, peak RSS 4,242,968
   KiB, producing 734 graph tiles (1,164,439,264 bytes). Four frozen routes
-  returned real geometry and maneuvers; an out-of-coverage request returned an
-  explicit error. National roads were observed, while provincial-road
-  traversal and app activation remain to verify. See
+  returned real geometry and maneuvers; a supplemental Thu Dau Mot–Di An route
+  returned ĐT.743A and an out-of-coverage request returned an explicit error.
+  App activation remains to verify. See
   `docs/routing/v1-a-national-graph-20261126.md`. Generated data remains outside
   Git. The Qt 5.15.18 Release suite passed 25/25 after provisioned map/runtime
   paths were linked into the isolated worktree. PR #82 carries V1-A
