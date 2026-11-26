@@ -210,8 +210,7 @@ fixture-backed or simulated presentation.
 6. **Unit 14 — Linux offline delivery and CI ([#71](https://github.com/Viet281101/qt-maps/issues/71), proposed).**
    Do 14A clean Linux target first, then mandatory 14C Linux CI. 14B is light
    Windows readiness outside the v1.0 critical path; native Windows is optional.
-   The owner will test a company Windows 11 laptop only after completion with a
-   CI-produced v1.0+ Windows artifact, if one exists. The v1.0 gate also needs
+   Owner tests company Windows 11 only after v1.0 with a CI-produced Windows artifact, if available. The v1.0 gate also needs
    nationwide real routing, real-route replay and reference-laptop Release/soak
    evidence after the i915 freeze lifts. Planning #71/#72 are done. Unit 14A
    PR #73 merged; the clean Ubuntu 26.04.1 VM on laptop 7480 passed offline
@@ -221,9 +220,10 @@ fixture-backed or simulated presentation.
    were recorded. No benchmark was run. Evidence and redistribution limits:
    `docs/rehearsal/unit-14a-7480-vm-results.md`. Installer streams hashes and
    probes FTS5 MATCH. MapLibre requires GLIBC_2.43; Ubuntu 26.04 only
-   (`docs/rehearsal/unit-14-glibc-distro-scope-20261124.md`). Unit 14C #77
-   passed hosted CI (24/24 tests, networkless fixture smoke); issue open until
-   merge (`docs/rehearsal/unit-14c-linux-ci-20261124.md`).
+   (`docs/rehearsal/unit-14-glibc-distro-scope-20261124.md`). Unit 14C PR #78
+   merged after hosted CI passed 24/24 tests and networkless fixture smoke
+   (`docs/rehearsal/unit-14c-linux-ci-20261124.md`).
+   14B inventory: `docs/rehearsal/unit-14b-windows-readiness-20261124.md` (Windows proof deferred).
 
 ## Risks and decisions requiring the owner
 
