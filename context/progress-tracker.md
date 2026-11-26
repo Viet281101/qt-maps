@@ -168,8 +168,9 @@ simulated presentation.
 - **Blocked — V1-D:** Run locked reference-laptop Release FPS/frame-time,
   process-tree RAM/CPU, orthography observation and 30–60 minute soak only after
   the owner lifts the i915 freeze. Then V1-E reviews all gates and tags v1.0.
-  Exact criteria, estimates and dependencies: [#81](https://github.com/Viet281101/qt-maps/issues/81)
-  and `context/feature-specs/v1-linux-release-completion-plan.md`.
+  Exact criteria, estimates and dependencies: [#81](https://github.com/Viet281101/qt-maps/issues/81),
+  [PR #82](https://github.com/Viet281101/qt-maps/pull/82) (`In Progress`, P1,
+  After Demo in Project #6), and `context/feature-specs/v1-linux-release-completion-plan.md`.
 
 ## Risks and decisions requiring the owner
 
