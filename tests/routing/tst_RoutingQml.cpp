@@ -581,7 +581,11 @@ private slots:
         banner->setProperty("remainingDurationSeconds", 121.0);
         QObject *nextInstruction =
             banner->findChild<QObject *>(QStringLiteral("nextInstructionText"));
+        QObject *simulatedPosition =
+            banner->findChild<QObject *>(QStringLiteral("simulatedPositionLabel"));
         QVERIFY(nextInstruction);
+        QVERIFY(simulatedPosition);
+        QCOMPARE(simulatedPosition->property("text").toString(), QStringLiteral("Vị trí mô phỏng"));
         QVERIFY(nextInstruction->property("font").value<QFont>().pixelSize() >= 13);
 
         QCOMPARE(banner->property("primaryText").toString(), QStringLiteral("Rẽ trái"));

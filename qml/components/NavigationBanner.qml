@@ -61,6 +61,18 @@ Rectangle {
     border.width: 2
 
     Text {
+        objectName: "simulatedPositionLabel"
+        anchors.top: parent.top
+        anchors.right: parent.right
+        anchors.topMargin: Theme.spaceSm
+        anchors.rightMargin: Theme.spaceLg
+        text: qsTr("Vị trí mô phỏng")
+        color: Theme.textSecondary
+        font.family: Theme.fontFamily
+        font.pixelSize: Theme.fontSizeCaption
+    }
+
+    Text {
         id: directionIcon
         anchors.left: parent.left
         anchors.top: parent.top

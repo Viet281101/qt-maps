@@ -169,14 +169,20 @@ simulated presentation.
   Git. The Qt 5.15.18 Release suite passed 25/25 after provisioned map/runtime
   paths were linked into the isolated worktree. PR #82 carries V1-A
   implementation and the remaining release gates.
-- **V1-B in progress:** Unit 12 activated the nationwide graph and Unit 13
+- **V1-B functional review completed:** Unit 12 activated the nationwide graph and Unit 13
   selected it through a private runtime config changing only `mjolnir.tile_dir`.
   The Release app's Valhalla child returned a real 7,294 m route with 14
   maneuvers. An opt-in Qt Test parsed a real Hue–Da Nang response, checked
   replay/maneuver progression, simulated deviation, replacement route and
   arrival. The regular Release suite passed 25/25. See
-  `docs/routing/v1-b-real-route-replay-20261126.md`. Visual camera/rotation
-  acceptance remains open because the headless run had no OpenGL context.
+  `docs/routing/v1-b-real-route-replay-20261126.md`. Direct-rendering
+  functional captures at supported viewports show route, camera rotation,
+  simulated puck and banner from a real Valhalla route; the banner now labels
+  the simulated position. Further GUI captures show Valhalla re-route and
+  arrival. The long Hue–Da Nang replay passed at the controller boundary;
+  Hanoi was used for GUI review within detailed map coverage. This is not
+  benchmark evidence. Next: V1-C release candidate preparation, subject to
+  redistribution and artifact-retention decisions.
 - **In parallel — V1-C:** Prepare licensed Linux CI release candidate,
   provenance, checksums, notices and clean offline artifact smoke; distribution
   and retention need owner decisions before publication.

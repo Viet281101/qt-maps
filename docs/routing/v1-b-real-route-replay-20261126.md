@@ -21,9 +21,25 @@ arrival at the destination. The opt-in test passed in 401 ms. The ordinary
 Qt 5.15.18 Release suite passed 25/25 with that test skipped when graph
 environment variables are absent.
 
-The app run used the offscreen software backend to avoid GPU benchmark activity.
-MapLibre reported no OpenGL context, so this run does not prove visual camera
-follow, rotation, route rendering, or banner layout. Those remain V1-B
-functional visual acceptance work. Position remains explicitly simulated;
-there is no live GNSS claim. The routing graph, activation pointer and runtime
-config remain outside Git.
+The initial app run used the offscreen software backend and could not prove
+visual camera behavior. A subsequent local-only direct-rendering functional
+review extended `qtmaps_visual_review` to start the real Valhalla backend and
+wait for a `Valhalla local` route before capturing the production QML. The
+review completed with exit 0 and captured vector navigation at 900×580,
+1366×768 and 1920×1080, plus raster navigation at 1366×768 and the existing
+layer views. The final run additionally triggered a simulated deviation,
+waited for Valhalla's replacement route and resumed replay, then advanced to
+arrival. Inspection of the ignored frames under
+`generated/v1-b-real-visual-20261126-reroute/` showed the route, progressed
+puck, rotated map, replacement guidance, green arrival banner and legible
+attribution without overlap.
+The banner now explicitly says `Vị trí mô phỏng` even with the route panel
+collapsed. The harness asserts that the real route source, active replay and
+visible banner are present. It stops the Valhalla child before exit.
+
+This is functional visual evidence, not FPS/CPU/RAM benchmark or soak evidence.
+The long Hue–Da Nang replay and its replacement route were checked at the
+controller boundary with a real nationwide Valhalla response. The GUI review
+used a real Hanoi route from that nationwide graph to stay inside the installed
+detailed map coverage. Position remains simulated, with no live GNSS claim.
+The routing graph, activation pointer and raw screenshots remain outside Git.
