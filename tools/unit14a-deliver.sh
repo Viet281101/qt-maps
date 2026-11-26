@@ -4,7 +4,7 @@ set -euo pipefail
 # Unit 14A: prepare on the Linux source; install on a clean, offline VM.
 die() { printf 'Unit 14A: %s\n' "$*" >&2; exit 1; }
 usage() {
-    printf 'Usage:\n  %s prepare STAGE APP MAPLIBRE VALHALLA_SITE VALHALLA_CONFIG VECTOR RASTER SEARCH ORTHOGRAPHY GRAPH_TILES [BUNDLE_ID]\n  %s install STAGE DEST\n  %s verify-rollback OLDER_STAGE DEST\n  %s run DEST\n' "$0" "$0" "$0" "$0" >&2
+    printf 'Usage:\n  %s prepare STAGE APP MAPLIBRE VALHALLA_SITE VALHALLA_CONFIG VECTOR RASTER SEARCH ORTHOGRAPHY_OR_DASH GRAPH_TILES [BUNDLE_ID [GRAPH_SOURCE_SHA256 [GRAPH_ID]]]\n  %s install STAGE DEST\n  %s verify-rollback OLDER_STAGE DEST\n  %s run DEST\n' "$0" "$0" "$0" "$0" >&2
     exit 2
 }
 [[ $# -ge 1 ]] || usage
@@ -13,18 +13,23 @@ shift
 
 case "$mode" in
 prepare)
-    [[ $# -eq 10 || $# -eq 11 ]] || usage
+    [[ $# -ge 10 && $# -le 13 ]] || usage
     stage="$1"; app="$2"; maplibre="$3"; site="$4"; config="$5"
     vector="$6"; raster="$7"; search="$8"; ortho="$9"; graph="${10}"
     bundle_id="${11:-hanoi-unit14a}"
+    graph_source_sha256="${12:-04d37da6a99d95364a5aecbbd643fa56467c7659bfee84bc0a6f7b9865e9ae73}"
+    graph_id="${13:-hanoi-unit14a}"
     [[ "$bundle_id" =~ ^[a-zA-Z0-9._-]+$ ]] || die 'bundle ID must use letters, numbers, dots, underscores or hyphens'
+    [[ "$graph_id" =~ ^[a-zA-Z0-9._-]+$ && "$graph_source_sha256" =~ ^[0-9a-f]{64}$ ]] || die 'graph ID or source SHA-256 is invalid'
     [[ ! -e "$stage" ]] || die "stage already exists: $stage"
     [[ -x "$app" && -d "$maplibre/lib" && -d "$maplibre/plugins" && -d "$maplibre/qml" ]] || die 'app/MapLibre input missing'
     [[ -x "$site/valhalla/bin/valhalla_service" && -d "$site/pyvalhalla.libs" && -f "$config" ]] || die 'Valhalla input missing'
-    for directory in "$vector" "$raster" "$search" "$ortho" "$graph"; do
+    for directory in "$vector" "$raster" "$search" "$graph"; do
         [[ -d "$directory" ]] || die "data directory missing: $directory"
     done
-    [[ -f "$vector/manifest.json" && -f "$raster/manifest.json" && -f "$search/manifest.json" && -f "$ortho/manifest.json" ]] || die 'data manifest missing'
+    [[ "$ortho" == - || -d "$ortho" ]] || die "orthography directory missing: $ortho"
+    [[ -f "$vector/manifest.json" && -f "$raster/manifest.json" && -f "$search/manifest.json" ]] || die 'data manifest missing'
+    [[ "$ortho" == - || -f "$ortho/manifest.json" ]] || die 'orthography manifest missing'
     [[ -n "$(find "$graph" -type f -name '*.gph' -print -quit)" ]] || die 'graph has no tiles'
     mkdir -p "$stage/app" "$stage/runtime/valhalla/valhalla" "$stage/data/bundle" "$stage/data/graph" "$stage/metadata" "$stage/generated/unit-04/valhalla"
     cp -a "$app" "$stage/app/qtmaps"
@@ -35,30 +40,36 @@ prepare)
     cp -a "$vector" "$stage/data/bundle/vector"
     cp -a "$raster" "$stage/data/bundle/raster"
     cp -a "$search" "$stage/data/bundle/search"
-    cp -a "$ortho" "$stage/data/bundle/orthography"
+    if [[ "$ortho" != - ]]; then cp -a "$ortho" "$stage/data/bundle/orthography"; fi
     cp -a "$graph" "$stage/data/graph/tiles"
-    python3 - "$stage" "$bundle_id" <<'PY'
+    python3 - "$stage" "$bundle_id" "$graph_source_sha256" "$graph_id" <<'PY'
 import hashlib, json, pathlib, sys
 root = pathlib.Path(sys.argv[1])
 bundle = root / 'data/bundle'
 vector = json.loads((bundle / 'vector/manifest.json').read_text())
 search = json.loads((bundle / 'search/manifest.json').read_text())
-ortho = json.loads((bundle / 'orthography/manifest.json').read_text())
 assert 'OpenStreetMap' in vector['attribution'] and 'ODbL' in vector['attribution']
 assert 'OpenStreetMap' in search['attribution'] and 'ODbL' in search['attribution']
-assert 'Copernicus Sentinel' in ortho['attribution']
+ortho_path = bundle / 'orthography/manifest.json'
+ortho = json.loads(ortho_path.read_text()) if ortho_path.exists() else None
+if ortho:
+    assert 'Copernicus Sentinel' in ortho['attribution']
 size = lambda p: sum(f.stat().st_size for f in p.rglob('*') if f.is_file())
+components = dict(vector='vector', raster='raster', search='search')
+if ortho:
+    components['orthography'] = 'orthography'
+source_name = ('redistributable synthetic CI fixture' if sys.argv[2].startswith('ci-')
+               else 'owner-approved local Hanoi packages')
 contract = dict(schema_version='qtmaps-local-map-search-bundle-v1',
-                bundle_id=sys.argv[2], components=dict(vector='vector', raster='raster',
-                search='search', orthography='orthography'),
-                source=dict(name='owner-approved local Hanoi packages', retrieved_on=search['source']['retrieved_on']),
-                attribution=vector['attribution'] + '; ' + ortho['attribution'],
+                bundle_id=sys.argv[2], components=components,
+                source=dict(name=source_name, retrieved_on=search['source']['retrieved_on']),
+                attribution=vector['attribution'] + ('; ' + ortho['attribution'] if ortho else ''),
                 installed_size_bytes=size(bundle))
 (bundle / 'bundle.json').write_text(json.dumps(contract, indent=2) + '\n')
 graph = root / 'data/graph'
 graph_contract = dict(schema_version='qtmaps-routing-graph-activation-v1',
-                      graph_id='hanoi-unit14a', graph_path='tiles',
-                      source_pbf_sha256='04d37da6a99d95364a5aecbbd643fa56467c7659bfee84bc0a6f7b9865e9ae73',
+                      graph_id=sys.argv[4], graph_path='tiles',
+                      source_pbf_sha256=sys.argv[3],
                       attribution=vector['attribution'], installed_size_bytes=size(graph))
 (graph / 'routing.json').write_text(json.dumps(graph_contract, indent=2) + '\n')
 entries = []
@@ -105,18 +116,19 @@ if not o.get('bundleValid') or not o.get('vectorOk'):
     raise SystemExit('Unit 14A: startup validation failed')
 print('Startup metadata: bundle and vector valid; GUI/route smoke still required')
 PY
-    python3 - "$dest/data/bundle/search/places.sqlite" <<'PY'
-import re, sqlite3, sys
+    python3 - "$dest/data/bundle/search/places.sqlite" "$dest/data/bundle/search/manifest.json" <<'PY'
+import json, re, sqlite3, sys
 c = sqlite3.connect('file:' + sys.argv[1] + '?mode=ro', uri=True)
 n = c.execute('select count(*) from places').fetchone()[0]
-if n != 9094:
-    raise SystemExit(f'Unit 14A: expected 9094 real Hanoi search rows, found {n}')
+expected = json.load(open(sys.argv[2], encoding='utf-8'))['places']['count']
+if expected < 1 or n != expected:
+    raise SystemExit(f'Unit 14A: search manifest expects {expected} rows, found {n}')
 name = c.execute('select name from places order by id limit 1').fetchone()[0]
 terms = re.findall(r'\w+', name, re.UNICODE)
 if not terms or not c.execute('select rowid from places_fts where places_fts match ? limit 1',
                               (terms[0],)).fetchone():
     raise SystemExit('Unit 14A: FTS5 MATCH returned no indexed place')
-print('Real Hanoi FTS5 search rows and MATCH:', n, terms[0])
+print('Local FTS5 search rows and MATCH:', n, terms[0])
 PY
     # Exercise rollback in an isolated activation root without changing the active bundle.
     smoke="$dest/metadata/rollback-smoke"
