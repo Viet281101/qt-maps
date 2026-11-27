@@ -181,8 +181,8 @@ simulated presentation.
   the simulated position. Further GUI captures show Valhalla re-route and
   arrival. The long Hue–Da Nang replay passed at the controller boundary;
   Hanoi was used for GUI review within detailed map coverage. This is not
-  benchmark evidence. Next: V1-C release candidate preparation, subject to
-  redistribution and artifact-retention decisions.
+  benchmark evidence. Next: V1-C release candidate preparation and its
+  remaining notice and clean-target GUI checks.
 - **Now — V1-C:** The existing Unit 14C synthetic CI archive is being extended
   with an operator runbook and hashed V1-A/V1-B/14A evidence tied to its source
   commit. Its clean, networkless Ubuntu 26.04 fixture smoke passed in
