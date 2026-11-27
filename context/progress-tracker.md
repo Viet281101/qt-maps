@@ -192,8 +192,13 @@ simulated presentation.
   verification. A local real-data stage (1,498,646,440 bytes) passed the
   same installer and networkless Ubuntu 26.04 container check: 9,094 FTS5
   rows, activated national graph, Hanoi–Hai Phong and Thu Dau Mot–Di An routes.
-  An internal candidate archive and its extraction smoke are next. Exact
-  internal channel and transitive runtime notices remain open before release.
+  Exact internal channel and transitive runtime notices remain open before release.
+  The ignored internal archive tied to commit `3016987` is 543,496,479 bytes,
+  SHA-256 `26cb328c7b670c888e03ab71310acf82f4843d5591e335152db47e612fec3f45`.
+  Its full extraction, installer, restart, FTS5 and two real-route smoke passed
+  inside networkless Ubuntu 26.04 with capabilities dropped. See
+  `docs/packaging/v1-c-preparation-20261127.md`. A clean-target GUI repeat
+  from this exact archive and exact runtime-notice review remain open.
 - **Blocked — V1-D:** Run locked reference-laptop Release FPS/frame-time,
   process-tree RAM/CPU, orthography observation and 30–60 minute soak only after
   the owner lifts the i915 freeze. Then V1-E reviews all gates and tags v1.0.
