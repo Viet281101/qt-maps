@@ -185,11 +185,15 @@ simulated presentation.
   redistribution and artifact-retention decisions.
 - **Now — V1-C:** The existing Unit 14C synthetic CI archive is being extended
   with an operator runbook and hashed V1-A/V1-B/14A evidence tied to its source
-  commit. The manifest explicitly marks it review-only; the binary archive
-  remains within CI. The existing clean, networkless Ubuntu 26.04 fixture
-  smoke checks the new evidence hashes. Hosted CI verification is pending.
-  A real-data release candidate and publication require owner decisions on
-  runtime/data redistribution, transfer channel and artifact retention.
+  commit. Its clean, networkless Ubuntu 26.04 fixture smoke passed in
+  [run #45921465230](https://github.com/Viet281101/qt-maps/actions/runs/45921465230).
+  The owner approved a public synthetic runtime preview retained seven days;
+  real data and graph transfer internally. That preview upload is pending CI
+  verification. A local real-data stage (1,498,646,440 bytes) passed the
+  same installer and networkless Ubuntu 26.04 container check: 9,094 FTS5
+  rows, activated national graph, Hanoi–Hai Phong and Thu Dau Mot–Di An routes.
+  An internal candidate archive and its extraction smoke are next. Exact
+  internal channel and transitive runtime notices remain open before release.
 - **Blocked — V1-D:** Run locked reference-laptop Release FPS/frame-time,
   process-tree RAM/CPU, orthography observation and 30–60 minute soak only after
   the owner lifts the i915 freeze. Then V1-E reviews all gates and tags v1.0.
@@ -207,8 +211,10 @@ simulated presentation.
    higher-resolution coverage still needs a separate decision.
 3. Offline Hanoi search is integrated with bounded coverage; any broader data
    coverage or package expansion requires a separate decision.
-4. National graph resource limits and runtime/data redistribution rights are
-   unresolved; the v1.0 plan records their preflight and owner decisions.
+4. The national graph build fits this host. The owner approved a public
+   synthetic runtime preview with seven-day retention and internal real-data
+   transfer. The exact internal channel, final runtime notices and release
+   review date still need decisions/checks.
 
 ## Working rules
 

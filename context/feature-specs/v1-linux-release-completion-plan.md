@@ -22,6 +22,8 @@ The V1-A route matrix is frozen before building the nationwide graph: Hanoi–Ha
 
 Owner decisions needed: (1) actual submission/review date; (2) authorized runtime/data redistribution and delivery channel, including Qt/MapLibre/Valhalla and OSM/Copernicus notices; (3) CI artifact size, cost and retention; (4) safe build host/resource ceiling if the nationwide graph exceeds the dev machine; (5) when the i915 freeze may be lifted. Do not infer approval from this plan. A failed locked performance threshold requires remediation or an explicit release-scope decision before tagging.
 
+V1-C decisions recorded on 2026-11-27: the owner permits a public CI preview containing runtime and synthetic fixture data, retained for seven days within GitHub defaults. Real datasets and the graph use an internal transfer. The exact internal channel/recipients, final transitive notices, release review date and i915 clearance remain open. This approval does not make the synthetic preview a v1.0 release.
+
 ## Risks, highest first
 
 | Risk | Mitigation |

@@ -136,7 +136,8 @@ jobs:
                     for name in files}
           root.write_text(json.dumps({
               "kind": "synthetic-ci-fixture",
-              "publication_status": "review-only; binary archive not uploaded",
+              "publication_status": "synthetic CI preview; not a v1.0 release",
+              "artifact_retention_days": 7,
               "target": "ubuntu-26.04-x86_64",
               "source_commit": os.environ["GITHUB_SHA"],
               "qt": subprocess.check_output(["/usr/bin/qmake", "-query", "QT_VERSION"], text=True).strip(),
@@ -168,12 +169,13 @@ jobs:
             qtmaps-unit14c-runtime bash /smoke.sh \
             /input/qtmaps-unit14c-linux-26.04-fixture.tar.gz /input/SHA256SUMS
 
-      - name: Retain text provenance only
+      - name: Retain synthetic CI preview for seven days
         uses: actions/upload-artifact@v4
         with:
-          name: qtmaps-unit14c-linux-26.04-provenance
+          name: qtmaps-unit14c-linux-26.04-synthetic-preview
           path: |
+            generated/ci/artifact-output/qtmaps-unit14c-linux-26.04-fixture.tar.gz
             generated/ci/artifact-output/manifest.json
             generated/ci/artifact-output/SHA256SUMS
-          retention-days: 1
+          retention-days: 7
           if-no-files-found: error

@@ -3,8 +3,14 @@
 Target: Ubuntu 26.04 x86-64, Qt 5.15.18. The CI archive currently contains a
 **synthetic fixture** for offline packaging checks; it is not the v1.0 release
 and cannot establish nationwide or GUI acceptance. Do not distribute the
-real OSM/Sentinel packages, graph, or runtime bundle until the project owner
-has approved the exact channel, recipients, notices and retention period.
+real OSM/Sentinel packages or graph until the internal channel and recipients
+are settled. Runtime redistribution still needs a complete notice inventory
+for the exact packaged binaries before any v1.0 release claim.
+
+The owner approved a public synthetic CI preview containing the runtime,
+retained for seven days under GitHub's default artifact limits. This does not
+authorize including real map/search/imagery or routing graph data in that
+preview. The real data/graph will use a separate internal transfer.
 
 For the CI fixture, verify the adjacent `SHA256SUMS`, extract the archive, read
 `manifest.json` and `LICENSES/NOTICE`, then use `install.sh install STAGE DEST`
