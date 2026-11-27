@@ -189,7 +189,8 @@ simulated presentation.
   [run #45921465230](https://github.com/Viet281101/qt-maps/actions/runs/45921465230).
   The owner approved a public synthetic runtime preview retained seven days;
   real data and graph transfer internally. That preview upload is pending CI
-  verification. A local real-data stage (1,498,646,440 bytes) passed the
+  notice review; CI retains only text provenance for seven days meanwhile.
+  A local real-data stage (1,498,646,440 bytes) passed the
   same installer and networkless Ubuntu 26.04 container check: 9,094 FTS5
   rows, activated national graph, Hanoi–Hai Phong and Thu Dau Mot–Di An routes.
   Exact internal channel and transitive runtime notices remain open before release.
@@ -199,6 +200,10 @@ simulated presentation.
   inside networkless Ubuntu 26.04 with capabilities dropped. See
   `docs/packaging/v1-c-preparation-20261127.md`. A clean-target GUI repeat
   from this exact archive and exact runtime-notice review remain open.
+  `docs/packaging/v1-c-runtime-notice-inventory.md` records the current
+  blocker: the pyvalhalla SBOM lists 44 components but supplies no per-component
+  license fields for 50 bundled native library files. Public binary upload is
+  held until this inventory is reconciled.
 - **Blocked — V1-D:** Run locked reference-laptop Release FPS/frame-time,
   process-tree RAM/CPU, orthography observation and 30–60 minute soak only after
   the owner lifts the i915 freeze. Then V1-E reviews all gates and tags v1.0.

@@ -136,7 +136,7 @@ jobs:
                     for name in files}
           root.write_text(json.dumps({
               "kind": "synthetic-ci-fixture",
-              "publication_status": "synthetic CI preview; not a v1.0 release",
+              "publication_status": "review-only; binary upload awaits runtime notice review",
               "artifact_retention_days": 7,
               "target": "ubuntu-26.04-x86_64",
               "source_commit": os.environ["GITHUB_SHA"],
@@ -169,12 +169,11 @@ jobs:
             qtmaps-unit14c-runtime bash /smoke.sh \
             /input/qtmaps-unit14c-linux-26.04-fixture.tar.gz /input/SHA256SUMS
 
-      - name: Retain synthetic CI preview for seven days
+      - name: Retain text provenance for seven days
         uses: actions/upload-artifact@v4
         with:
-          name: qtmaps-unit14c-linux-26.04-synthetic-preview
+          name: qtmaps-unit14c-linux-26.04-provenance
           path: |
-            generated/ci/artifact-output/qtmaps-unit14c-linux-26.04-fixture.tar.gz
             generated/ci/artifact-output/manifest.json
             generated/ci/artifact-output/SHA256SUMS
           retention-days: 7

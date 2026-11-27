@@ -8,9 +8,11 @@ are settled. Runtime redistribution still needs a complete notice inventory
 for the exact packaged binaries before any v1.0 release claim.
 
 The owner approved a public synthetic CI preview containing the runtime,
-retained for seven days under GitHub's default artifact limits. This does not
-authorize including real map/search/imagery or routing graph data in that
-preview. The real data/graph will use a separate internal transfer.
+retained for seven days under GitHub's default artifact limits. Binary upload
+waits for an exact runtime notice inventory; until then CI retains only text
+manifest and hashes for seven days. This approval does not include real
+map/search/imagery or routing graph data. Those use a separate internal
+transfer.
 
 For the CI fixture, verify the adjacent `SHA256SUMS`, extract the archive, read
 `manifest.json` and `LICENSES/NOTICE`, then use `install.sh install STAGE DEST`

@@ -13,8 +13,9 @@ SHA256SUMS, selected runtime license texts, and hashed copies of the 14A,
 V1-A and V1-B reports with its synthetic executable stage. Its networkless
 Ubuntu 26.04 smoke checks those hashes after extraction. The earlier text-only
 provenance revision passed [run #45921465230](https://github.com/Viet281101/qt-maps/actions/runs/45921465230).
-The seven-day binary-preview upload is in the subsequent hosted run; record
-its result before considering that part accepted. The synthetic graph and
+The owner authorized a seven-day public binary preview, but its upload remains
+gated by the exact runtime/transitive notice review. CI retains only text
+provenance for seven days until that review is complete. The synthetic graph and
 one-row search fixture do not prove real-data behavior.
 
 ## Internal real-data archive
