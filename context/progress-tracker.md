@@ -183,9 +183,13 @@ simulated presentation.
   Hanoi was used for GUI review within detailed map coverage. This is not
   benchmark evidence. Next: V1-C release candidate preparation, subject to
   redistribution and artifact-retention decisions.
-- **In parallel — V1-C:** Prepare licensed Linux CI release candidate,
-  provenance, checksums, notices and clean offline artifact smoke; distribution
-  and retention need owner decisions before publication.
+- **Now — V1-C:** The existing Unit 14C synthetic CI archive is being extended
+  with an operator runbook and hashed V1-A/V1-B/14A evidence tied to its source
+  commit. The manifest explicitly marks it review-only; the binary archive
+  remains within CI. The existing clean, networkless Ubuntu 26.04 fixture
+  smoke checks the new evidence hashes. Hosted CI verification is pending.
+  A real-data release candidate and publication require owner decisions on
+  runtime/data redistribution, transfer channel and artifact retention.
 - **Blocked — V1-D:** Run locked reference-laptop Release FPS/frame-time,
   process-tree RAM/CPU, orthography observation and 30–60 minute soak only after
   the owner lifts the i915 freeze. Then V1-E reviews all gates and tags v1.0.

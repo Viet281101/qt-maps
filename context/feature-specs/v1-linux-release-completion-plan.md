@@ -1,6 +1,6 @@
 # Linux v1.0 completion plan
 
-Status: proposed execution sequence after Unit 14 merged, tracked by [#81](https://github.com/Viet281101/qt-maps/issues/81). Ubuntu 26.04 x86-64 is the committed release target; Windows readiness does not gate v1.0. Estimates are engineering days, excluding graph runtime, owner review, hardware repair and distribution approval. The [Unit 14 plan](unit-14-clean-offline-target-plan.md) owns the release gate and artifact contract.
+Status: execution in progress in [PR #82](https://github.com/Viet281101/qt-maps/pull/82), tracked by [#81](https://github.com/Viet281101/qt-maps/issues/81). V1-A and V1-B functional evidence is recorded; V1-C preparation is active. Ubuntu 26.04 x86-64 is the committed release target; Windows readiness does not gate v1.0. Estimates are engineering days, excluding graph runtime, owner review, hardware repair and distribution approval. The [Unit 14 plan](unit-14-clean-offline-target-plan.md) owns the release gate and artifact contract.
 
 ## Sequence and acceptance
 

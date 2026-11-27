@@ -106,9 +106,13 @@ jobs:
           set -euo pipefail
           root=generated/ci/artifact-root
           out=generated/ci/artifact-output
-          mkdir -p "$root/LICENSES/MapLibre" "$out"
+          mkdir -p "$root/LICENSES/MapLibre" "$root/operator" "$root/evidence" "$out"
           cp -al generated/ci/stage "$root/stage"
           cp tools/unit14a-deliver.sh "$root/install.sh"
+          cp docs/packaging/linux-v1-operator.md "$root/operator/README.md"
+          cp docs/rehearsal/unit-14a-7480-vm-results.md "$root/evidence/unit-14a-real-hanoi.md"
+          cp docs/routing/v1-a-national-graph-20261126.md "$root/evidence/v1-a-national-graph.md"
+          cp docs/routing/v1-b-real-route-replay-20261126.md "$root/evidence/v1-b-real-route-replay.md"
           cp LICENSE "$root/LICENSES/QtMaps-MIT.txt"
           cp -a generated/ci/maplibre-src/LICENSES/. "$root/LICENSES/MapLibre/"
           site="$(generated/ci/valhalla-venv/bin/python -c 'import site; print(site.getsitepackages()[0])')"
@@ -124,10 +128,15 @@ jobs:
           Third-party wheel library notice review remains open before release.
           EOF
           python - "$root/manifest.json" <<'PY'
-          import json, os, pathlib, subprocess, sys
+          import hashlib, json, os, pathlib, subprocess, sys
           root = pathlib.Path(sys.argv[1])
+          files = ['operator/README.md', 'evidence/unit-14a-real-hanoi.md',
+                   'evidence/v1-a-national-graph.md', 'evidence/v1-b-real-route-replay.md']
+          review = {name: hashlib.sha256((root.parent / name).read_bytes()).hexdigest()
+                    for name in files}
           root.write_text(json.dumps({
               "kind": "synthetic-ci-fixture",
+              "publication_status": "review-only; binary archive not uploaded",
               "target": "ubuntu-26.04-x86_64",
               "source_commit": os.environ["GITHUB_SHA"],
               "qt": subprocess.check_output(["/usr/bin/qmake", "-query", "QT_VERSION"], text=True).strip(),
@@ -137,14 +146,15 @@ jobs:
               "orthography": "omitted",
               "real_hanoi_proof": "PR #73 VM report; not this fixture",
               "benchmark": "none",
+              "review_files_sha256": review,
           }, indent=2) + "\n")
           PY
           archive=qtmaps-unit14c-linux-26.04-fixture.tar.gz
           tar --sort=name --owner=0 --group=0 --numeric-owner \
             --mtime="@$(git show -s --format=%ct HEAD)" -C "$root" -cf - . \
             | gzip -n > "$out/$archive"
-          (cd "$out" && sha256sum "$archive" > SHA256SUMS)
           cp "$root/manifest.json" "$out/manifest.json"
+          (cd "$out" && sha256sum "$archive" manifest.json > SHA256SUMS)
           du -h "$out/$archive"
 
       - name: Smoke extracted artifact in clean, networkless Ubuntu 26.04

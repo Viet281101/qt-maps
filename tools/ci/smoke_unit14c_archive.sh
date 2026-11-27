@@ -22,10 +22,17 @@ cd /proof/archive
 test -f manifest.json
 python3 - <<'PY'
 import json
+import hashlib
+from pathlib import Path
 o = json.load(open('manifest.json'))
 assert o['kind'] == 'synthetic-ci-fixture', o
 assert o['target'] == 'ubuntu-26.04-x86_64', o
 assert o['search_rows'] == 1, o
+assert len(o['source_commit']) == 40, o
+assert o['publication_status'] == 'review-only; binary archive not uploaded', o
+for name, expected in o['review_files_sha256'].items():
+    assert name.startswith(('operator/', 'evidence/')), name
+    assert hashlib.sha256(Path(name).read_bytes()).hexdigest() == expected, name
 print('Artifact scope:', o['kind'], o['target'])
 PY
 test -f LICENSES/NOTICE
