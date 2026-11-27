@@ -22,7 +22,7 @@ The V1-A route matrix is frozen before building the nationwide graph: Hanoi–Ha
 
 Owner decisions needed: (1) actual submission/review date; (2) authorized runtime/data redistribution and delivery channel, including Qt/MapLibre/Valhalla and OSM/Copernicus notices; (3) CI artifact size, cost and retention; (4) safe build host/resource ceiling if the nationwide graph exceeds the dev machine; (5) when the i915 freeze may be lifted. Do not infer approval from this plan. A failed locked performance threshold requires remediation or an explicit release-scope decision before tagging.
 
-V1-C decisions recorded on 2026-11-27: the owner permits a public CI preview containing runtime and synthetic fixture data, retained for seven days within GitHub defaults. Real datasets and the graph use an internal transfer. The exact internal channel/recipients, final transitive notices, release review date and i915 clearance remain open. This approval does not make the synthetic preview a v1.0 release.
+V1-C decisions recorded on 2026-11-27: the owner permits a public CI preview containing runtime and synthetic fixture data, retained for seven days within GitHub defaults. Real datasets and the graph stay local for direct handoff to the project owner only, with checksum verification; no shared drive or remote artifact service. Final transitive notices, release review date and i915 clearance remain open. This approval does not make the synthetic preview a v1.0 release.
 
 ## Risks, highest first
 
@@ -30,6 +30,6 @@ V1-C decisions recorded on 2026-11-27: the owner permits a public CI preview con
 | --- | --- |
 | i915 freeze prevents the required reference benchmark and soak, so v1.0 cannot be tagged under the current gate. | Prepare V1-A/B/C now; run V1-D only after explicit owner clearance. |
 | Nationwide graph build may exceed available RAM/disk/time or reveal route-quality gaps. | Measure preflight and build resources; keep original PBF and record failures before choosing a larger host. |
-| Runtime/data redistribution rights and retention are undecided. | Inventory licenses/notices and prepare a candidate; publish only after owner decision. |
+| Exact runtime and transitive notices remain unreviewed. | Reconcile the packaged binaries with licenses/notices before public binary upload or release. |
 | Real-route replay may expose guidance or re-route defects not seen with Hanoi/fixtures. | Verify several real routes and separate service, UI and replay failures. |
 | Ubuntu ABI or clean-target drift may break the release candidate. | Pin Ubuntu 26.04 and repeat archive extraction/offline smoke on a clean target. |

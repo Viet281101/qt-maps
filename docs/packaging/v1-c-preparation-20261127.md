@@ -3,7 +3,7 @@
 The owner approved a public CI preview containing Qt/MapLibre/Valhalla runtime
 with only synthetic fixture data, retained seven days under GitHub's artifact
 limits. Real map/search/orthography data and the nationwide graph are limited
-to internal transfer. The exact transfer channel/recipients remain to be named.
+to local storage and direct handoff to the project owner only.
 Neither artifact is a v1.0 release.
 
 ## Synthetic CI preview
@@ -34,7 +34,9 @@ manifest into an ignored `.tar.zst` tied to commit `3016987`. The archive is
 543,496,479 bytes with SHA-256
 `26cb328c7b670c888e03ab71310acf82f4843d5591e335152db47e612fec3f45`.
 It remains local at `generated/v1-c-internal-candidate-20261127/` in the main
-workspace. It has not been uploaded or transferred.
+workspace. It has not been uploaded or transferred. At handoff, verify its
+SHA-256 against the adjacent `SHA256SUMS` and deliver it directly to the owner;
+do not use a shared drive or remote artifact service.
 
 `tools/ci/smoke_v1c_internal_archive.sh` verified the adjacent checksums,
 extracted the archive inside Ubuntu 26.04, verified the embedded manifest,

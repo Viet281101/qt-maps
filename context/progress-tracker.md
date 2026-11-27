@@ -188,12 +188,12 @@ simulated presentation.
   commit. Its clean, networkless Ubuntu 26.04 fixture smoke passed in
   [run #45921465230](https://github.com/Viet281101/qt-maps/actions/runs/45921465230).
   The owner approved a public synthetic runtime preview retained seven days;
-  real data and graph transfer internally. That preview upload is pending CI
+  real data and graph stay local for direct handoff to the owner only. That preview upload is pending CI
   notice review; CI retains only text provenance for seven days meanwhile.
   A local real-data stage (1,498,646,440 bytes) passed the
   same installer and networkless Ubuntu 26.04 container check: 9,094 FTS5
   rows, activated national graph, Hanoi–Hai Phong and Thu Dau Mot–Di An routes.
-  Exact internal channel and transitive runtime notices remain open before release.
+  The direct owner handoff channel is settled; transitive runtime notices remain open before release.
   The ignored internal archive tied to commit `3016987` is 543,496,479 bytes,
   SHA-256 `26cb328c7b670c888e03ab71310acf82f4843d5591e335152db47e612fec3f45`.
   Its full extraction, installer, restart, FTS5 and two real-route smoke passed
@@ -223,7 +223,7 @@ simulated presentation.
    coverage or package expansion requires a separate decision.
 4. The national graph build fits this host. The owner approved a public
    synthetic runtime preview with seven-day retention and internal real-data
-   transfer. The exact internal channel, final runtime notices and release
+   handoff to the owner only. Final runtime notices and release
    review date still need decisions/checks.
 
 ## Working rules

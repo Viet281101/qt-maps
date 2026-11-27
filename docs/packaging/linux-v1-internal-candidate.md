@@ -3,6 +3,9 @@
 This archive is for owner-approved internal review on Ubuntu 26.04 x86-64.
 It contains real Hanoi map/search/orthography data and the nationwide Vietnam
 routing graph; it must not be uploaded to public CI or a public release.
+Keep it on the local machine and hand it directly to the project owner only.
+Verify the archive SHA-256 against the adjacent `SHA256SUMS` at handoff; do
+not copy it to a shared drive or remote artifact service.
 The position source remains simulated. The candidate has not passed the
 reference-laptop benchmark/soak gate and is not v1.0.
 
