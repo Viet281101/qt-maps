@@ -13,6 +13,8 @@ SHA256SUMS, selected runtime license texts, and hashed copies of the 14A,
 V1-A and V1-B reports with its synthetic executable stage. Its networkless
 Ubuntu 26.04 smoke checks those hashes after extraction. The earlier text-only
 provenance revision passed [run #45921465230](https://github.com/Viet281101/qt-maps/actions/runs/45921465230).
+The text-provenance-only workflow also passed [run #45926277701](https://github.com/Viet281101/qt-maps/actions/runs/45926277701)
+on commit `f6389b9`; subsequent commits only changed documentation.
 The owner authorized a seven-day public binary preview, but its upload remains
 gated by the exact runtime/transitive notice review. CI retains only text
 provenance for seven days until that review is complete. The synthetic graph and
@@ -55,5 +57,35 @@ or data failure.
 The container smoke did not render GUI, demonstrate real-data imagery on a
 clean target, or measure FPS/RAM/CPU. The earlier clean VM GUI proof used the
 Hanoi graph; V1-B direct-rendering review on the development laptop used the
-nationwide graph. A clean Ubuntu 26.04 GUI run from this exact candidate and
+nationwide graph. A clean Desktop VM/physical-target GUI run from this exact candidate and
 an exact transitive-runtime notice review remain before V1-C can close.
+
+## Offline GUI proof from the exact archive — 2026-11-28
+
+Using the same local archive and its checked SHA-256, a fresh Ubuntu 26.04
+container extracted and installed the candidate with `--network none`,
+`--cap-drop ALL`, a 6 GiB memory limit and llvmpipe/Xvfb. The added
+`tools/ci/unit14c-gui.Dockerfile` and `tools/ci/smoke_v1c_internal_gui.sh`
+reproduce this local-only run. The script passed archive, installer, FTS5 and
+two real-route checks, then started the actual Qt Quick window. The log
+reported the active national graph selected, map readiness without an error,
+and a Valhalla route of 7,294 m with 14 maneuvers. Visual inspection of the
+1440×900 screenshot confirmed the Hanoi vector map, blue route, guidance
+panel, Valhalla readiness and OSM attribution. The ignored local screenshot
+is `generated/v1-c-gui-smoke-20261128-verified/gui.png` in the main workspace;
+SHA-256 `759cdffd79fcf95417bdb0e3713d441a2d95aeaf9ed221e0720b98dbac55537b`.
+No data archive or screenshot was uploaded.
+
+From the PR worktree, build `qtmaps-v1c-runtime` with
+`tools/ci/unit14c-runtime.Dockerfile`, then build `qtmaps-v1c-gui` with
+`tools/ci/unit14c-gui.Dockerfile`. Run the GUI image with the candidate
+directory mounted read-only at `/input`, a local writable directory at
+`/output`, and the three smoke scripts mounted at `/gui-smoke.sh`,
+`/smoke-archive.sh` and `/smoke-stage.sh`. Use `--network none --cap-drop ALL
+--memory 6g --shm-size 256m` and execute `bash /gui-smoke.sh`. Keep the output
+directory local; with all capabilities dropped, it must be writable by the
+container process.
+
+This is clean-container functional GUI evidence with software rendering. It
+does not replace a clean Desktop VM/physical-target run, reference-laptop
+benchmark or soak. Exact transitive-runtime notices also remain open.

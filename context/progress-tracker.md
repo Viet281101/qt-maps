@@ -198,12 +198,17 @@ simulated presentation.
   SHA-256 `26cb328c7b670c888e03ab71310acf82f4843d5591e335152db47e612fec3f45`.
   Its full extraction, installer, restart, FTS5 and two real-route smoke passed
   inside networkless Ubuntu 26.04 with capabilities dropped. See
-  `docs/packaging/v1-c-preparation-20261127.md`. A clean-target GUI repeat
+  `docs/packaging/v1-c-preparation-20261127.md`. A clean Desktop/physical-target GUI repeat
   from this exact archive and exact runtime-notice review remain open.
   `docs/packaging/v1-c-runtime-notice-inventory.md` records the current
   blocker: the pyvalhalla SBOM lists 44 components but supplies no per-component
   license fields for 50 bundled native library files. Public binary upload is
   held until this inventory is reconciled.
+  The text-only CI run #45926277701 passed. On 2026-11-28, the exact local
+  archive also passed offline Ubuntu 26.04 container GUI smoke with llvmpipe:
+  national graph selected, Hanoi vector map and 7,294 m/14-maneuver Valhalla
+  route visible. See the V1-C preparation report; clean Desktop/physical-target
+  acceptance and notices remain open.
 - **Blocked — V1-D:** Run locked reference-laptop Release FPS/frame-time,
   process-tree RAM/CPU, orthography observation and 30–60 minute soak only after
   the owner lifts the i915 freeze. Then V1-E reviews all gates and tags v1.0.
