@@ -2,9 +2,11 @@
 
 **Result:** a local, unshipped Valhalla 3.9.1 `valhalla_service` build without
 data tools routed on the existing Vietnam national graph and matched the pinned
-wheel for the same request. Its resolved library closure did not contain
-`libspatialite`, `librttopo` or GEOS. This narrows the runtime notice problem;
-it does not approve a binary upload or replace the release candidate.
+wheel for the same request. It also served a real route to the QtMaps GUI in a
+networkless Ubuntu 26.04 software-rendered container. Its resolved library
+closure did not contain `libspatialite`, `librttopo` or GEOS. This narrows the
+runtime notice problem; it does not approve a binary upload or replace the
+release candidate.
 
 The exploratory build used Ubuntu 26.04/glibc 2.43 in Docker, with networking
 disabled for the checks. Source revisions were Valhalla 3.9.1
@@ -33,6 +35,28 @@ graph, `valhalla_service` returned a route for 21.025,105.845 to
 `--cap-drop ALL`. Optional traffic/tile-extract lookup warned because no
 extract was configured; the graph route succeeded.
 
+## Offline QtMaps GUI substitution smoke
+
+A local test copied only the new `valhalla_service` and `libprime_server` into
+an installation extracted from the exact internal real-data archive; the
+archive itself was not changed. Ubuntu 26.04 packages supplied the remaining
+runtime libraries. The original archive hash, stage hashes, installer, FTS5
+and two real routes passed before substitution. With `--network none`,
+`--cap-drop ALL`, 6 GiB limit and Xvfb/llvmpipe, `ldd` on the substituted
+service resolved every library and listed neither `librttopo` nor
+`libspatialite`. Its CLI route returned 1.315 km/133.593 s/six maneuvers.
+
+QtMaps then selected the installed national graph, reported map readiness,
+and applied a 7,294 m/523.659 s/14-maneuver Valhalla route. Visual review of
+the 1440×900 screenshot showed the vector map, route line, guidance panel and
+OSM attribution. The ignored local evidence is under
+`generated/v1-c-valhalla-runtime-prototype/gui-run/`; the screenshot SHA-256 is
+`c4816e00ba88d051587d624d4e494fc963422b6d26c4cfe5e8f2b9574514e775`.
+The GUI test did not repeat navigation replay, re-route or arrival with the
+substituted service. The candidate still contains the original wheel files,
+so this smoke does not establish the dependency closure of a replacement
+distribution archive.
+
 The build recipe, logs, test configuration, response and exported binaries
 remain only under the ignored local directory
 `generated/v1-c-valhalla-runtime-prototype/` in the main workspace. No
@@ -40,7 +64,8 @@ replacement binary or graph was committed or uploaded.
 
 Before substituting this runtime in V1-C, package the exact service and
 prime_server binary with their source notices, enumerate all other shipped
-shared objects and applicable notices, then repeat offline archive smoke and
-QtMaps GUI/navigation checks on the replacement. The graph-building wheel can
-stay internal. The final artifact must still be tied to its reviewed source
+shared objects and applicable notices, and remove the unused wheel from the
+public artifact. Then repeat offline archive smoke and QtMaps navigation
+checks on that replacement archive. The graph-building wheel can stay
+internal. The final artifact must still be tied to its reviewed source
 commit. V1-D remains gated by the owner's i915 benchmark freeze.

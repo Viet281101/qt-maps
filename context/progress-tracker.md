@@ -200,7 +200,9 @@ simulated presentation.
   A [separate Valhalla runtime prototype](../docs/packaging/v1-c-valhalla-runtime-prototype-20261128.md)
   without data tools built on Ubuntu 26.04; its dependency closure omitted
   SpatiaLite/librttopo and a national-graph route matched the pinned wheel.
-  It has not replaced the candidate or passed QtMaps GUI/notice review.
+  A networkless QtMaps GUI substitution smoke also applied a real 7,294 m
+  route. The original archive still contains the wheel, and final replacement
+  packaging, navigation replay and notice review remain open.
 - **Blocked — V1-D:** Run locked reference-laptop Release FPS/frame-time,
   process-tree RAM/CPU, orthography observation and 30–60 minute soak only after
   the owner lifts the i915 freeze. Then V1-E reviews all gates and tags v1.0.

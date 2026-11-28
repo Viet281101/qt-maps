@@ -63,8 +63,9 @@ A separate Valhalla **runtime** build without data tools has now passed a
 national-graph CLI route check. The [Valhalla 3.9.1 CMake source](https://raw.githubusercontent.com/valhalla/valhalla/3.9.1/CMakeLists.txt)
 finds SpatiaLite under `ENABLE_DATA_TOOLS`, while `valhalla_service` is
 included in the tool targets. The [local prototype report](v1-c-valhalla-runtime-prototype-20261128.md)
-records the exact source revisions, flags, binary hashes, dependency closure
-and matching route result. It has **not** been substituted into the candidate
-or checked through the QtMaps GUI. The internal graph-building wheel could
-remain separate. Any shipped replacement must pass offline extraction and GUI
-smoke, and its complete binary notices must be reviewed.
+records the exact source revisions, flags, binary hashes, dependency closure,
+matching route result and local GUI substitution smoke. The archive tested
+still contains the original wheel, so it is **not** a replacement distribution
+candidate. The internal graph-building wheel could remain separate. Any
+shipped replacement must remove unused wheel files, pass offline extraction
+and navigation smoke, and have complete binary notices reviewed.
