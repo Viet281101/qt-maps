@@ -1,6 +1,8 @@
-# Unit 14 — Linux offline delivery, CI, Windows readiness (proposed)
+# Unit 14 — Linux offline delivery, CI, Windows readiness (completed)
 
 Tracked by [#71](https://github.com/Viet281101/qt-maps/issues/71) and planning [PR #72](https://github.com/Viet281101/qt-maps/pull/72). Linux is the v1.0 acceptance platform. Native Windows 11 is desirable, **not a v1.0 gate**. The owner will try the company Windows 11 laptop only after project completion and CI release v1.0 or later, using a CI-produced Windows artifact if one exists. Company policy may prevent that trial. No Windows target or date is committed. The i915 freeze remains: no GPU/OpenGL/MapLibre benchmark or soak now. Estimates below are engineering days, excluding external access and review delays.
+
+Unit 14A/14C/14B merged in PRs #73/#78/#80. The remaining v1.0 gates and next execution order are in the [Linux v1.0 completion plan](v1-linux-release-completion-plan.md).
 
 ## Order: 14A now → 14C Linux → v1.0; 14B readiness alongside spare capacity
 

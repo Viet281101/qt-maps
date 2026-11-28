@@ -30,12 +30,13 @@ class VisualReviewController final : public QObject
 public:
     VisualReviewController(QQuickWindow *window, QObject *root,
                            qtmaps::map::MapSourceController *mapSource,
+                           qtmaps::routing::RoutingController *routing,
                            qtmaps::routing::RouteNavigationController *navigation,
-                           const QString &outputDirectory, int settleMilliseconds,
+                           const QString &outputDirectory, int settleMilliseconds, bool realRoute,
                            QObject *parent = nullptr) :
-        QObject(parent), window_(window), root_(root), mapSource_(mapSource),
+        QObject(parent), window_(window), root_(root), mapSource_(mapSource), routing_(routing),
         navigation_(navigation), outputDirectory_(outputDirectory),
-        settleMilliseconds_(settleMilliseconds)
+        settleMilliseconds_(settleMilliseconds), realRoute_(realRoute)
     {}
 
     void start()
@@ -125,13 +126,28 @@ private:
     void captureVectorRoute(QObject *map)
     {
         capture(QStringLiteral("vector-route-900x580"), [this, map]() {
-            if (!QMetaObject::invokeMethod(root_, "calculateRequestedRoute")) {
-                fail(QStringLiteral("Cannot recalculate the production route"));
-                return;
+            if (realRoute_) {
+                navigation_->start();
+                navigation_->advanceBySeconds(75.0);
+                QMetaObject::invokeMethod(root_, "recenterNavigation");
+                capture(QStringLiteral("real-route-navigation-900x580"), [this, map]() {
+                    navigation_->stop();
+                    recalculateRoute(map);
+                });
+            } else {
+                recalculateRoute(map);
             }
-            capture(QStringLiteral("vector-route-recalculated-900x580"),
-                    [this, map]() { captureLayerMenu(map); });
         });
+    }
+
+    void recalculateRoute(QObject *map)
+    {
+        if (!QMetaObject::invokeMethod(root_, "calculateRequestedRoute")) {
+            fail(QStringLiteral("Cannot recalculate the production route"));
+            return;
+        }
+        capture(QStringLiteral("vector-route-recalculated-900x580"),
+                [this, map]() { captureLayerMenu(map); });
     }
 
     void captureLayerMenu(QObject *map)
@@ -171,19 +187,84 @@ private:
             capture(QStringLiteral("vector-rotation-1366x768"), [this, map]() {
                 QMetaObject::invokeMethod(root_, "fitRouteWithPanelPadding");
                 capture(QStringLiteral("vector-route-fit-1366x768"), [this]() {
+                    if (realRoute_ &&
+                        navigation_->sourceLabel() != QLatin1String("Valhalla local")) {
+                        fail(QStringLiteral("Expected a real Valhalla route for visual review"));
+                        return;
+                    }
                     navigation_->start();
                     navigation_->advanceBySeconds(75.0);
                     QMetaObject::invokeMethod(root_, "recenterNavigation");
-                    capture(QStringLiteral("vector-navigation-recenter-1366x768"), [this]() {
-                        resize(QSize(1920, 1080));
-                        capture(QStringLiteral("vector-route-1920x1080"), [this]() {
-                            mapReadyAttempts_ = 0;
-                            mapSource_->activateRaster();
-                            waitForRaster();
-                        });
-                    });
+                    if (realRoute_) {
+                        QObject *banner =
+                            root_->findChild<QObject *>(QStringLiteral("navigationBanner"));
+                        QObject *map = root_->findChild<QObject *>(QStringLiteral("routingMap"));
+                        if (!banner || !banner->property("visible").toBool() || !map ||
+                            !navigation_->active()) {
+                            fail(QStringLiteral("Real-route navigation UI did not become active"));
+                            return;
+                        }
+                        qInfo().noquote() << "real_route_visual_state"
+                                          << "source=" << navigation_->sourceLabel()
+                                          << "maneuver=" << navigation_->currentManeuverIndex()
+                                          << "map_bearing=" << map->property("bearing").toDouble()
+                                          << "puck_bearing=" << navigation_->bearing();
+                    }
+                    capture(realRoute_ ? QStringLiteral("real-route-navigation-1366x768")
+                                       : QStringLiteral("vector-navigation-recenter-1366x768"),
+                            [this]() {
+                                if (realRoute_)
+                                    captureRealReroute();
+                                else
+                                    continueVector1920();
+                            });
                 });
             });
+        });
+    }
+
+    void captureRealReroute()
+    {
+        reroutePending_ = true;
+        QObject::connect(
+            routing_, &qtmaps::routing::RoutingController::rerouteSucceeded, this, [this]() {
+                if (!reroutePending_)
+                    return;
+                reroutePending_ = false;
+                if (navigation_->sourceLabel() != QLatin1String("Valhalla local") ||
+                    !navigation_->running()) {
+                    fail(QStringLiteral("Real Valhalla reroute did not resume replay"));
+                    return;
+                }
+                navigation_->advanceBySeconds(30.0);
+                QMetaObject::invokeMethod(root_, "recenterNavigation");
+                capture(QStringLiteral("real-route-rerouted-1366x768"), [this]() {
+                    navigation_->advanceBySeconds(routing_->route().durationSeconds);
+                    QObject *banner =
+                        root_->findChild<QObject *>(QStringLiteral("navigationBanner"));
+                    if (!navigation_->arrived() || !banner ||
+                        !banner->property("arrived").toBool()) {
+                        fail(QStringLiteral("Real-route arrival banner did not appear"));
+                        return;
+                    }
+                    capture(QStringLiteral("real-route-arrival-1366x768"),
+                            [this]() { continueVector1920(); });
+                });
+            });
+        navigation_->simulateDeviation();
+        QTimer::singleShot(10000, this, [this]() {
+            if (reroutePending_)
+                fail(QStringLiteral("Timed out waiting for real Valhalla reroute"));
+        });
+    }
+
+    void continueVector1920()
+    {
+        resize(QSize(1920, 1080));
+        capture(QStringLiteral("vector-route-1920x1080"), [this]() {
+            mapReadyAttempts_ = 0;
+            mapSource_->activateRaster();
+            waitForRaster();
         });
     }
 
@@ -254,9 +335,16 @@ private:
             setCamera(map, QGeoCoordinate(21.0245, 105.8382), 15.0, 0.0);
             capture(QStringLiteral("orthography-route-1366x768"), [this, map]() {
                 resize(QSize(1920, 1080));
-                capture(QStringLiteral("orthography-route-1920x1080"), []() {
+                capture(QStringLiteral("orthography-route-1920x1080"), [this]() {
                     qInfo() << "visual_review_result=captured";
-                    QCoreApplication::exit(0);
+                    if (realRoute_) {
+                        QObject::connect(routing_,
+                                         &qtmaps::routing::RoutingController::backendStopped, this,
+                                         []() { QCoreApplication::exit(0); });
+                        routing_->stopBackend();
+                    } else {
+                        QCoreApplication::exit(0);
+                    }
                 });
             });
         });
@@ -271,10 +359,13 @@ private:
     QQuickWindow *window_ = nullptr;
     QObject *root_ = nullptr;
     qtmaps::map::MapSourceController *mapSource_ = nullptr;
+    qtmaps::routing::RoutingController *routing_ = nullptr;
     qtmaps::routing::RouteNavigationController *navigation_ = nullptr;
     QString outputDirectory_;
     int settleMilliseconds_ = 500;
     int mapReadyAttempts_ = 0;
+    bool realRoute_ = false;
+    bool reroutePending_ = false;
 };
 
 } // namespace
@@ -302,9 +393,25 @@ int main(int argc, char *argv[])
     parser.addOption({QStringLiteral("settle-ms"),
                       QStringLiteral("Render settle interval before each capture"),
                       QStringLiteral("milliseconds"), QStringLiteral("2500")});
+    parser.addOption({QStringLiteral("real-route-service"),
+                      QStringLiteral("Native Valhalla executable for local real-route review"),
+                      QStringLiteral("path")});
+    parser.addOption({QStringLiteral("real-route-config"),
+                      QStringLiteral("Local Valhalla config selecting the approved graph"),
+                      QStringLiteral("path")});
+    parser.addOption({QStringLiteral("real-route-port"),
+                      QStringLiteral("Matching loopback Valhalla port"), QStringLiteral("port"),
+                      QStringLiteral("18012")});
     parser.process(application);
 
     const QString outputDirectory = parser.value(QStringLiteral("output"));
+    const bool realRoute = parser.isSet(QStringLiteral("real-route-service")) &&
+                           parser.isSet(QStringLiteral("real-route-config"));
+    if (parser.isSet(QStringLiteral("real-route-service")) !=
+        parser.isSet(QStringLiteral("real-route-config"))) {
+        qCritical() << "Real-route review needs both service and config";
+        return 2;
+    }
     bool settleOk = false;
     const int settleMilliseconds = parser.value(QStringLiteral("settle-ms")).toInt(&settleOk);
     if (outputDirectory.isEmpty() || !settleOk || settleMilliseconds < 250 ||
@@ -345,6 +452,13 @@ int main(int argc, char *argv[])
                              navigation.clearRoute();
                          }
                      });
+    if (realRoute) {
+        QObject::connect(&navigation,
+                         &qtmaps::routing::RouteNavigationController::deviationDetected, &routing,
+                         &qtmaps::routing::RoutingController::requestReroute);
+        QObject::connect(&routing, &qtmaps::routing::RoutingController::rerouteSucceeded,
+                         &navigation, &qtmaps::routing::RouteNavigationController::start);
+    }
 
     QQmlApplicationEngine engine;
     qtmaps::core::AppPreferences appPreferences(&engine);
@@ -365,7 +479,7 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty(QStringLiteral("shutdownCoordinator"), &shutdown);
     engine.rootContext()->setContextProperty(QStringLiteral("benchmarkScenarioController"),
                                              &benchmark);
-    engine.rootContext()->setContextProperty(QStringLiteral("routingFixtureOnly"), true);
+    engine.rootContext()->setContextProperty(QStringLiteral("routingFixtureOnly"), !realRoute);
     engine.rootContext()->setContextProperty(QStringLiteral("instrumentationEnabled"), false);
     engine.rootContext()->setContextProperty(QStringLiteral("vectorStyleUrl"),
                                              mapSource.activeStyleUrl());
@@ -379,13 +493,29 @@ int main(int argc, char *argv[])
         return 5;
     }
     benchmark.attachWindow(window);
-    if (!routing.routeAvailable()) {
+    if (!realRoute && !routing.routeAvailable()) {
         routing.calculateFixtureRoute();
     }
 
-    VisualReviewController review(window, engine.rootObjects().constFirst(), &mapSource,
+    VisualReviewController review(window, engine.rootObjects().constFirst(), &mapSource, &routing,
                                   &navigation, QDir::cleanPath(outputDirectory), settleMilliseconds,
-                                  &application);
-    QTimer::singleShot(0, &review, [&review]() { review.start(); });
+                                  realRoute, &application);
+    bool reviewStarted = false;
+    if (realRoute) {
+        QObject::connect(&routing, &qtmaps::routing::RoutingController::routeChanged, &review,
+                         [&routing, &review, &reviewStarted]() {
+                             if (!reviewStarted && routing.routeAvailable() &&
+                                 routing.sourceLabel() == QLatin1String("Valhalla local")) {
+                                 reviewStarted = true;
+                                 review.start();
+                             }
+                         });
+        routing.startBackend(
+            parser.value(QStringLiteral("real-route-service")),
+            parser.value(QStringLiteral("real-route-config")),
+            static_cast<quint16>(parser.value(QStringLiteral("real-route-port")).toUShort()));
+    } else {
+        QTimer::singleShot(0, &review, [&review]() { review.start(); });
+    }
     return application.exec();
 }

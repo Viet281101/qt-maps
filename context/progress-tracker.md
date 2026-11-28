@@ -20,6 +20,9 @@ benchmark artifacts remain ignored.
   persists the Vietnamese/English preference. Local Release tests passed
   24/24 on 2026-11-17. Issue #64 is closed; both issue and PR are `Done`
   in Project #6, verified on 2026-11-18.
+- Unit 14A/14C/14B merged in PRs #73/#78/#80; #71/#74/#75/#77/#79 are `Done`.
+  Linux v1.0 remains gated by nationwide routing, real-route replay, release
+  rights and the reference benchmark after the i915 freeze.
 - The active GitHub milestone is `Post-demo stabilization` with no due date.
 - [PR #53](https://github.com/Viet281101/qt-maps/pull/53) merged as `15d198a`
   on 2026-11-15 and closed #16. Project #6 records both items as `Done`.
@@ -46,22 +49,15 @@ benchmark artifacts remain ignored.
   latest #53 review drives the actual search input and verifies the popover,
   connection pill, route, and navigation framing do not overlap.
 
-## Original baseline requirements: remaining acceptance work
+## Original baseline requirements: acceptance status
 
-The first management-demo slice is complete, but the following work remains
-before the original product requirements can be described as complete. These
-items deliberately distinguish real local data and routing from the existing
-fixture-backed or simulated presentation.
+The first management-demo slice and clean Linux delivery are complete. The
+remaining gates distinguish real nationwide routing from fixture-backed or
+simulated presentation.
 
-1. **Local map delivery and offline proof.** Make the approved raster, vector,
-   orthography, and search packages reproducibly available on a clean target
-   machine without a network connection. Record package versions, manifests,
-   checksums, attribution, setup steps, and the supported coverage/zoom bounds.
-   Demonstrate selecting each installed layer with networking disabled. The
-   current app validates developer-provisioned local packages. Unit 12 now
-   uses owner-provisioned explicit local imports, manual updates, one retained
-   rollback bundle, and no runtime downloader; routing graphs remain separate
-   artifacts.
+1. **Local map delivery and offline proof — completed in Unit 14A.** A clean
+   Ubuntu 26.04 VM passed real Hanoi vector/raster/orthography/search, route,
+   restart and rollback offline. Coverage remains bounded; see its VM report.
 2. **Real nationwide car routing.** Build and retain evidence for a Valhalla
    graph from the approved uncropped Geofabrik Vietnam PBF, including input
    hash, tool/version configuration, graph-build duration, and peak RAM. Wire
@@ -151,79 +147,68 @@ fixture-backed or simulated presentation.
   on 2026-11-17.
 
 ## Next delivery plan
-1. **#9 rehearsal and #1 handoff — completed.** PR #54 merged as `6e11910` on
-   2026-11-15; #9 and #1 are closed and their Project #6 items are `Done`.
-   The clean-start preflight, route/search/navigation operator checklist, and
-   clean exit passed. Evidence and management-facing limits are in
-   `docs/rehearsal/demo-handoff.md` and
-   `docs/reports/weekly-report-2026-11-15.md`; no benchmark was added.
-2. **#15 — licensed orthography integration (P1).** The owner approved the
-   Sentinel-2 Level-2A 10 m regional RGB source, Hanoi-only bounds, z12–z15,
-   100 MiB package cap, required attribution, offline-only runtime, and explicit
-   unavailable/failure UX on 2026-11-15. PR #55 merged as `37534a7`. The exact
-   contract and provisioning gate are in
-   `context/feature-specs/15_orthography-decision-gate.md`. The first offline
-   package/manifest contract now has a compact synthetic fixture and focused
-   tests; it records complete coverage and provenance but does not process real
-   imagery. PR #57 merged as `631d713`. Unit 10's complete integration merged
-   in PR #63, including review-gate and functional visual evidence. Keep #15 open for the separately
-   approved performance observation while the i915 freeze remains active.
-3. **#64 — readiness and preferences (P1, completed).** PR #66 merged as
-   `5436b2d`; the 2026-11-17 Release test gate passed 24/24. Issue #64 is
-   closed and both the issue and PR are `Done` in Project #6, verified on
-   2026-11-17.
-4. **Unit 12 — local package delivery ([#65](https://github.com/Viet281101/qt-maps/issues/65)).** The owner approved local-file provisioning:
-   map/search bundles are explicitly imported and manually updated; the
-   compatible vector/raster pair and search package activate together; permitted
-   orthography remains optional; routing graphs are separate local artifacts;
-   and QtMaps has no runtime downloader. Slice 1 is implemented locally as
-   `OfflinePackageContract`: it validates safe, complete map/search bundle and
-   routing-graph activation metadata without replacing existing package
-   validators; its focused Qt 5.15.18 Release test passed on 2026-11-17.
-   Slice 2 is also implemented locally: `OfflinePackageInstaller` validates
-   the candidate with those validators, atomically switches local `current`
-   and `previous` pointers, and supports explicit rollback without copying or
-   downloading owner-provided data. Focused activation/rollback tests passed
-   on 2026-11-17. Slice 3 is also implemented locally: a separate routing
-   graph contract validates non-empty graph storage, activates
-   `routing-current.json`, and reports the graph path without modifying
-   Valhalla runtime configuration. Focused tests passed on 2026-11-17. Slice 4
-   is implemented locally: the existing off-UI-thread readiness worker reports
-   routing activation as an optional Offline routing item in Settings with
-   recovery guidance, and `--routing-activation-root` supplies the local
-   pointer directory. The Unit 12 spec now includes the clean offline operator
-   checklist. Its explicit activation CLI validated and activated the local
-   owner-provisioned map/search bundle and routing graph on 2026-11-17; the
-   headless local-only walkthrough returned a Valhalla route of 7,294 m with
-   14 maneuvers. Evidence is in
-   `docs/rehearsal/unit-12-offline-walkthrough-20261117.md`; it is functional
-   evidence, not a benchmark or clean-target transfer test. Full Qt 5.15.18
-   Release tests passed 25/25 on 2026-11-17. [PR #67](https://github.com/Viet281101/qt-maps/pull/67)
-   merged as `ed78ed0` on 2026-11-17 and automatically closed #65. Both
-   Project #6 items are `Done`; a clean-target repeat remains deployment
-   evidence, not pending Unit 12 implementation work.
-5. **Unit 13 — runtime handoff ([#69](https://github.com/Viet281101/qt-maps/issues/69), completed).** PR #70 merged as `5858e3d` on 2026-11-18; #69 is closed
-   and both Project #6 items are `Done`. Activation roots feed map/search and
-   routing, preserving CLI overrides and error states. BUILD PASS: Qt 5.15.18
-   Release tests passed 25/25 on merged `main` on 2026-11-18; prior isolated
-   review also passed. See `docs/rehearsal/unit-13-runtime-handoff-20261117.md`.
-6. **Unit 14 — Linux offline delivery and CI ([#71](https://github.com/Viet281101/qt-maps/issues/71), proposed).**
-   Do 14A clean Linux target first, then mandatory 14C Linux CI. 14B is light
-   Windows readiness outside the v1.0 critical path; native Windows is optional.
-   Owner tests company Windows 11 only after v1.0 with a CI-produced Windows artifact, if available. The v1.0 gate also needs
-   nationwide real routing, real-route replay and reference-laptop Release/soak
-   evidence after the i915 freeze lifts. Planning #71/#72 are done. Unit 14A
-   PR #73 merged; the clean Ubuntu 26.04.1 VM on laptop 7480 passed offline
-   real-data install, vector/raster/Sentinel, 9,094-place FTS5 search,
-   Valhalla route, replay/re-route, restart, failure and distinct-version
-   rollback. Owner approved 6 GiB/2 vCPU; Qt 5.15.18 and 33 added packages
-   were recorded. No benchmark was run. Evidence and redistribution limits:
-   `docs/rehearsal/unit-14a-7480-vm-results.md`. Installer streams hashes and
-   probes FTS5 MATCH. MapLibre requires GLIBC_2.43; Ubuntu 26.04 only
-   (`docs/rehearsal/unit-14-glibc-distro-scope-20261124.md`). Unit 14C PR #78
-   merged after hosted CI passed 24/24 tests and networkless fixture smoke
-   (`docs/rehearsal/unit-14c-linux-ci-20261124.md`).
-   14B inventory: `docs/rehearsal/unit-14b-windows-readiness-20261124.md` (Windows proof deferred).
+
+- **Completed baseline:** Implementation for Units 09–14 is merged. Unit 14A real-data clean VM
+  evidence is in `docs/rehearsal/unit-14a-7480-vm-results.md`; Unit 14C Linux
+  CI passed 24/24 non-benchmark tests and networkless synthetic fixture smoke
+  in [run #45760887328](https://github.com/Viet281101/qt-maps/actions/runs/45760887328).
+  Unit 14B records Windows readiness only; native Windows remains optional.
+  Unit 12/13 activation evidence: [PR #67](https://github.com/Viet281101/qt-maps/pull/67)
+  and [PR #70](https://github.com/Viet281101/qt-maps/pull/70).
+  #15 is open solely for its short Release performance observation after the
+  i915 freeze. Unit 14 issues #71/#74/#75/#77/#79 are closed and `Done`.
+- **Now — V1-A:** The 2026-11-26 preflight verified the uncropped PBF SHA-256
+  `4e5243c3116dc089a298f4cd7218e1257adf4b48355e42936360df5ce3200d43`,
+  Valhalla native 3.9.1, about 10 GiB available RAM and 102 GiB free disk.
+  The two-worker Valhalla 3.9.1 build finished in 6:01.84, peak RSS 4,242,968
+  KiB, producing 734 graph tiles (1,164,439,264 bytes). Four frozen routes
+  returned real geometry and maneuvers; a supplemental Thu Dau Mot–Di An route
+  returned ĐT.743A and an out-of-coverage request returned an explicit error.
+  App activation remains to verify. See
+  `docs/routing/v1-a-national-graph-20261126.md`. Generated data remains outside
+  Git. The Qt 5.15.18 Release suite passed 25/25 after provisioned map/runtime
+  paths were linked into the isolated worktree. PR #82 carries V1-A
+  implementation and the remaining release gates.
+- **V1-B functional review completed:** Unit 12 activated the nationwide graph and Unit 13
+  selected it through a private runtime config changing only `mjolnir.tile_dir`.
+  The Release app's Valhalla child returned a real 7,294 m route with 14
+  maneuvers. An opt-in Qt Test parsed a real Hue–Da Nang response, checked
+  replay/maneuver progression, simulated deviation, replacement route and
+  arrival. The regular Release suite passed 25/25. See
+  `docs/routing/v1-b-real-route-replay-20261126.md`. Direct-rendering
+  functional captures at supported viewports show route, camera rotation,
+  simulated puck and banner from a real Valhalla route; the banner now labels
+  the simulated position. Further GUI captures show Valhalla re-route and
+  arrival. The long Hue–Da Nang replay passed at the controller boundary;
+  Hanoi was used for GUI review within detailed map coverage. This is not
+  benchmark evidence. Next: V1-C release candidate preparation and its
+  remaining notice and clean-target GUI checks.
+- **Now — V1-C:** CI synthetic fixture and seven-day text provenance passed
+  [run #46117342845](https://github.com/Viet281101/qt-maps/actions/runs/46117342845).
+  The owner approved a public runtime preview but binary upload is disabled
+  pending the [exact notice audit](../docs/packaging/v1-c-runtime-notice-inventory.md):
+  the wheel SBOM has no license fields and the staged Valhalla service directly
+  needs GPL-2+-claimed `librttopo`. Real data/graph stay local for direct owner
+  handoff. The 543,496,479-byte archive tied to `3016987` (SHA-256
+  `26cb328c7b670c888e03ab71310acf82f4843d5591e335152db47e612fec3f45`)
+  passed container smoke and, on 2026-11-28, a clean offline Ubuntu 26.04.1
+  Desktop VM on Dell 7480: 1,092 hashes, 9,094 FTS5 rows, national graph,
+  vector/raster/orthography/search, real 7,294 m/14-maneuver route, simulated
+  replay/arrival and restart. See the [Dell report](../docs/packaging/v1-c-dell-7480-vm-20261128.md).
+  V1-C functional target check passed; exact runtime distribution review and
+  final-commit artifact remain open. No real data or screenshots were uploaded.
+  A [separate Valhalla runtime prototype](../docs/packaging/v1-c-valhalla-runtime-prototype-20261128.md)
+  without data tools built on Ubuntu 26.04; its dependency closure omitted
+  SpatiaLite/librttopo and a national-graph route matched the pinned wheel.
+  A networkless QtMaps GUI substitution smoke also applied a real 7,294 m
+  route. The original archive still contains the wheel, and final replacement
+  packaging, navigation replay and notice review remain open.
+- **Blocked — V1-D:** Run locked reference-laptop Release FPS/frame-time,
+  process-tree RAM/CPU, orthography observation and 30–60 minute soak only after
+  the owner lifts the i915 freeze. Then V1-E reviews all gates and tags v1.0.
+  Exact criteria, estimates and dependencies: [#81](https://github.com/Viet281101/qt-maps/issues/81),
+  [PR #82](https://github.com/Viet281101/qt-maps/pull/82) (`In Progress`, P1,
+  After Demo in Project #6), and `context/feature-specs/v1-linux-release-completion-plan.md`.
 
 ## Risks and decisions requiring the owner
 
@@ -235,6 +220,10 @@ fixture-backed or simulated presentation.
    higher-resolution coverage still needs a separate decision.
 3. Offline Hanoi search is integrated with bounded coverage; any broader data
    coverage or package expansion requires a separate decision.
+4. The national graph build fits this host. The owner approved a public
+   synthetic runtime preview with seven-day retention and internal real-data
+   handoff to the owner only. Final runtime notices and release
+   review date still need decisions/checks.
 
 ## Working rules
 

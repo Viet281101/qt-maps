@@ -1,8 +1,13 @@
 #include <QtTest>
 
 #include "routing/RouteNavigationController.h"
+#include "routing/ValhallaRouteParser.h"
 
 #include <QElapsedTimer>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QProcess>
 #include <QSignalSpy>
 
 using qtmaps::routing::Route;
@@ -38,6 +43,59 @@ class RouteNavigationTest final : public QObject
     Q_OBJECT
 
 private slots:
+    void realNationwideRouteReplayOptIn()
+    {
+        const QByteArray service = qgetenv("QTMAPS_REAL_GRAPH_SERVICE");
+        const QByteArray config = qgetenv("QTMAPS_REAL_GRAPH_CONFIG");
+        if (service.isEmpty() || config.isEmpty())
+            QSKIP("Set QTMAPS_REAL_GRAPH_SERVICE and QTMAPS_REAL_GRAPH_CONFIG for local proof");
+
+        const auto fetchRoute = [&](const QGeoCoordinate &origin,
+                                    const QGeoCoordinate &destination) {
+            QJsonArray locations;
+            for (const QGeoCoordinate &point : {origin, destination})
+                locations.append(
+                    QJsonObject{{"lat", point.latitude()}, {"lon", point.longitude()}});
+            const QJsonObject request{{"locations", locations}, {"costing", "auto"}};
+            QProcess process;
+            process.start(
+                QString::fromUtf8(service),
+                {QString::fromUtf8(config), QStringLiteral("route"),
+                 QString::fromUtf8(QJsonDocument(request).toJson(QJsonDocument::Compact))});
+            if (!process.waitForFinished(120000) || process.exitCode() != 0)
+                return qtmaps::routing::RouteParseResult{};
+            return qtmaps::routing::ValhallaRouteParser::parse(
+                process.readAllStandardOutput(), qtmaps::routing::RouteSource::Valhalla);
+        };
+
+        const auto first =
+            fetchRoute(QGeoCoordinate(16.4637, 107.5909), QGeoCoordinate(16.0544, 108.2022));
+        QVERIFY2(first.ok(), qPrintable(first.error));
+        QVERIFY(first.route.maneuvers.size() > 2);
+        RouteNavigationController navigation;
+        navigation.setRoute(first.route, QStringLiteral("Valhalla local"));
+        QVERIFY(navigation.routeAvailable());
+        QCOMPARE(navigation.sourceLabel(), QStringLiteral("Valhalla local"));
+        navigation.start();
+        navigation.advanceBySeconds(first.route.durationSeconds / 2.0);
+        QVERIFY(navigation.running());
+        QVERIFY(navigation.travelledMeters() > 0);
+        QVERIFY(navigation.currentManeuverIndex() > 0);
+        const QGeoCoordinate destination = first.route.polyline.constLast();
+        QSignalSpy deviation(&navigation, &RouteNavigationController::deviationDetected);
+        navigation.simulateDeviation();
+        QCOMPARE(deviation.size(), 1);
+        const QGeoCoordinate offRoute = deviation.takeFirst().at(0).value<QGeoCoordinate>();
+        QVERIFY(navigation.distanceFromRouteMeters(offRoute) > 40.0);
+        const auto replacement = fetchRoute(offRoute, destination);
+        QVERIFY2(replacement.ok(), qPrintable(replacement.error));
+        navigation.setRoute(replacement.route, QStringLiteral("Valhalla local"));
+        navigation.start();
+        navigation.advanceBySeconds(replacement.route.durationSeconds);
+        QVERIFY(navigation.arrived());
+        QVERIFY(navigation.coordinate().distanceTo(destination) < 25.0);
+    }
+
     void rejectsStartWithoutRoute()
     {
         RouteNavigationController controller;

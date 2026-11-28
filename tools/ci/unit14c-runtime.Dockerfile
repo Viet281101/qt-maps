@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libqt5location5 libqt5location5-plugins libqt5positioning5 \
     libqt5sql5-sqlite qml-module-qtlocation qml-module-qtpositioning \
     qml-module-qtquick2 qml-module-qtquick-window2 \
-    libgl1-mesa-dri libgl1 fonts-noto-core python3 iproute2 coreutils \
+    libgl1-mesa-dri libgl1 fonts-noto-core python3 iproute2 coreutils zstd \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /proof

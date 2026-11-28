@@ -81,7 +81,8 @@ attribution.
   ahead. The simulated-position puck uses a high-contrast blue circle with a
   white outline and stays above route labels and endpoints. Camera follow places
   the puck at 68% of the viewport height to preserve forward road context beneath
-  the top banner.
+  the top banner. The banner explicitly labels the position as simulated even
+  when the route panel is collapsed.
 - Camera following and map rotation must have an obvious exit/recenter action.
 - Re-routing must preserve the last valid route until a replacement succeeds or clearly report that no route is available.
 - During re-routing, keep the navigation camera, travelled segment, current-position puck, and last valid route. The destination marker remains part of the route even when camera-follow framing places it outside the viewport.
