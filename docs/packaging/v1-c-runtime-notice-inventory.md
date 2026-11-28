@@ -13,10 +13,20 @@ distribution requirements have been satisfied.
 | OSM and Copernicus data | Package manifests include source/hash and ODbL/Copernicus attribution. | Keep the real data and graph on the approved internal channel, separate from public CI. |
 
 The pinned pyvalhalla wheel contains 50 native files under `pyvalhalla.libs`.
-Its CycloneDX SBOM lists 44 components (including repeated entries) and zero
+Its CycloneDX SBOM lists 44 entries (38 unique component names, including
+repeated entries) and zero
 components with a `licenses` field. It names dependencies such as OpenSSL,
 libcurl, PROJ, libtiff, libxml2, ZeroMQ and LuaJIT, but does not by itself
 provide the exact license texts or notices for each bundled binary. The
 current draft `LICENSES/NOTICE` says this review is open. A public runtime
 archive must wait until the exact binary-to-notice mapping is reviewed and
 included; a synthetic-data label alone does not close this gap.
+
+The exact `pyvalhalla.libs` directory also contains seven files whose component
+names do not appear among the SBOM's 38 unique names: `libfreexl`, `libgeos`,
+`libgeos_c`, `libprime_server`, `librttopo`, `libspatialite` and `libsqlite3`.
+The two GEOS files represent one component family. This comparison is based on
+the filenames in the pinned wheel and the SBOM component `name` fields; it
+does not establish the origin or applicable license of these binaries. Review
+their exact provenance and notices alongside the RPM-derived components before
+enabling any public binary upload.

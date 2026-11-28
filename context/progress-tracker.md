@@ -209,6 +209,8 @@ simulated presentation.
   national graph selected, Hanoi vector map and 7,294 m/14-maneuver Valhalla
   route visible. See the V1-C preparation report; clean Desktop/physical-target
   acceptance and notices remain open.
+  Wheel audit also found seven native files across six component families
+  absent from the 44-entry CycloneDX SBOM; see the notice inventory.
 - **Blocked — V1-D:** Run locked reference-laptop Release FPS/frame-time,
   process-tree RAM/CPU, orthography observation and 30–60 minute soak only after
   the owner lifts the i915 freeze. Then V1-E reviews all gates and tags v1.0.
