@@ -183,34 +183,20 @@ simulated presentation.
   Hanoi was used for GUI review within detailed map coverage. This is not
   benchmark evidence. Next: V1-C release candidate preparation and its
   remaining notice and clean-target GUI checks.
-- **Now — V1-C:** The existing Unit 14C synthetic CI archive is being extended
-  with an operator runbook and hashed V1-A/V1-B/14A evidence tied to its source
-  commit. Its clean, networkless Ubuntu 26.04 fixture smoke passed in
-  [run #45921465230](https://github.com/Viet281101/qt-maps/actions/runs/45921465230).
-  The owner approved a public synthetic runtime preview retained seven days;
-  real data and graph stay local for direct handoff to the owner only. That preview upload is pending CI
-  notice review; CI retains only text provenance for seven days meanwhile.
-  A local real-data stage (1,498,646,440 bytes) passed the
-  same installer and networkless Ubuntu 26.04 container check: 9,094 FTS5
-  rows, activated national graph, Hanoi–Hai Phong and Thu Dau Mot–Di An routes.
-  The direct owner handoff channel is settled; transitive runtime notices remain open before release.
-  The ignored internal archive tied to commit `3016987` is 543,496,479 bytes,
-  SHA-256 `26cb328c7b670c888e03ab71310acf82f4843d5591e335152db47e612fec3f45`.
-  Its full extraction, installer, restart, FTS5 and two real-route smoke passed
-  inside networkless Ubuntu 26.04 with capabilities dropped. See
-  `docs/packaging/v1-c-preparation-20261127.md`. A clean Desktop/physical-target GUI repeat
-  from this exact archive and exact runtime-notice review remain open.
-  `docs/packaging/v1-c-runtime-notice-inventory.md` records the current
-  blocker: the pyvalhalla SBOM lists 44 components but supplies no per-component
-  license fields for 50 bundled native library files. Public binary upload is
-  held until this inventory is reconciled.
-  The text-only CI run #45926277701 passed. On 2026-11-28, the exact local
-  archive also passed offline Ubuntu 26.04 container GUI smoke with llvmpipe:
-  national graph selected, Hanoi vector map and 7,294 m/14-maneuver Valhalla
-  route visible. See the V1-C preparation report; clean Desktop/physical-target
-  acceptance and notices remain open.
-  Wheel audit also found seven native files across six component families
-  absent from the 44-entry CycloneDX SBOM; see the notice inventory.
+- **Now — V1-C:** CI synthetic fixture and seven-day text provenance passed
+  [run #46117342845](https://github.com/Viet281101/qt-maps/actions/runs/46117342845).
+  The owner approved a public runtime preview but binary upload is disabled
+  pending the [exact notice audit](../docs/packaging/v1-c-runtime-notice-inventory.md):
+  the wheel SBOM has no license fields and the staged Valhalla service directly
+  needs GPL-2+-claimed `librttopo`. Real data/graph stay local for direct owner
+  handoff. The 543,496,479-byte archive tied to `3016987` (SHA-256
+  `26cb328c7b670c888e03ab71310acf82f4843d5591e335152db47e612fec3f45`)
+  passed container smoke and, on 2026-11-28, a clean offline Ubuntu 26.04.1
+  Desktop VM on Dell 7480: 1,092 hashes, 9,094 FTS5 rows, national graph,
+  vector/raster/orthography/search, real 7,294 m/14-maneuver route, simulated
+  replay/arrival and restart. See the [Dell report](../docs/packaging/v1-c-dell-7480-vm-20261128.md).
+  V1-C functional target check passed; exact runtime distribution review and
+  final-commit artifact remain open. No real data or screenshots were uploaded.
 - **Blocked — V1-D:** Run locked reference-laptop Release FPS/frame-time,
   process-tree RAM/CPU, orthography observation and 30–60 minute soak only after
   the owner lifts the i915 freeze. Then V1-E reviews all gates and tags v1.0.

@@ -30,3 +30,41 @@ the filenames in the pinned wheel and the SBOM component `name` fields; it
 does not establish the origin or applicable license of these binaries. Review
 their exact provenance and notices alongside the RPM-derived components before
 enabling any public binary upload.
+
+### Directly linked library requiring distribution review — 2026-11-28
+
+`readelf -d` on the **staged** `runtime/valhalla/valhalla/bin/valhalla_service`
+lists `librttopo-099fd867.so.1.1.0` directly in `DT_NEEDED`, as well as
+`libspatialite`, `libprime_server` and `libgeos_c`. The staged `librttopo`,
+`libspatialite` and `libprime_server` hashes match the pinned local wheel.
+The [librttopo upstream mirror README](https://gitlab.com/rttopo/rttopo/-/raw/master/README.md)
+states GNU GPL version 2 or later. The upstream project pages identify
+[GEOS as LGPL](https://libgeos.org/),
+[FreeXL](https://www.gaia-gis.it/fossil/freexl/index) and
+[SpatiaLite](https://www.gaia-gis.it/fossil/libspatialite/home) as offering
+MPL 1.1/GPL 2+/LGPL 2.1+ alternatives, and
+[SQLite](https://www.sqlite.org/copyright.html) as public domain. The
+[prime_server upstream COPYING](https://raw.githubusercontent.com/kevinkreiser/prime_server/master/COPYING)
+contains a permissive source/binary redistribution notice. These pages
+establish upstream project claims, not the exact build flags, selected
+license path or complete notices of the packaged wheel. In particular, the
+SpatiaLite [GCP module note](https://www.gaia-gis.it/fossil/libspatialite/info/4b3c909885)
+describes an additional GPL condition if that optional module is enabled;
+the wheel build configuration has not been established.
+
+**Public runtime binary upload remains disabled.** Before enabling it, review
+the exact `librttopo` and other bundled library versions, source and notices,
+the combined distribution's license obligations, and whether a differently
+built Valhalla runtime can avoid unwanted dependencies. Owner permission to
+bundle a runtime is not a substitute for that review. No claim of legal
+compliance or incompatibility is made from the `DT_NEEDED` observation alone.
+
+One technical route to investigate is a separate Valhalla **runtime** build
+without its data tools. The [Valhalla 3.9.1 CMake source](https://raw.githubusercontent.com/valhalla/valhalla/3.9.1/CMakeLists.txt)
+finds SpatiaLite under `ENABLE_DATA_TOOLS`, while `valhalla_service` is
+included in the tool targets. A build with `ENABLE_DATA_TOOLS=OFF`,
+`ENABLE_TOOLS=ON` and `ENABLE_SERVICES=ON` might remove the SpatiaLite/
+librttopo dependency from the shipped service; this has **not** been built or
+verified. The internal graph-building runtime could remain separate. Any
+replacement must pass the same national-graph routes, application GUI and
+offline extraction smoke, and its complete binary notices must be reviewed.

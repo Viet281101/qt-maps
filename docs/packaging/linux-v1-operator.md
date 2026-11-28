@@ -27,6 +27,8 @@ checksums/provenance, and the clean-target GUI checklist in
 `docs/rehearsal/unit-14a-7480-vm-results.md`. The nationwide graph and
 navigation evidence is in `docs/routing/v1-a-national-graph-20261126.md` and
 `docs/routing/v1-b-real-route-replay-20261126.md`. A final v1.0 handoff must
+also review the exact archive's Dell 7480 offline GUI result in
+`docs/packaging/v1-c-dell-7480-vm-20261128.md`, then
 add the reference-laptop benchmark and soak report after the i915 freeze is
 explicitly lifted, then record every gate against the tagged commit.
 

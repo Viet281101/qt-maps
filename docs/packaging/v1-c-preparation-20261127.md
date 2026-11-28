@@ -89,3 +89,9 @@ container process.
 This is clean-container functional GUI evidence with software rendering. It
 does not replace a clean Desktop VM/physical-target run, reference-laptop
 benchmark or soak. Exact transitive-runtime notices also remain open.
+
+The subsequent [Dell 7480 clean Desktop VM report](v1-c-dell-7480-vm-20261128.md)
+records that the same checked archive passed offline GUI, real-route,
+search, layer, replay, arrival and restart checks on the owner's VM. The
+container result above remains supplemental; public binary upload still
+awaits exact runtime notice review.
