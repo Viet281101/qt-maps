@@ -59,12 +59,12 @@ built Valhalla runtime can avoid unwanted dependencies. Owner permission to
 bundle a runtime is not a substitute for that review. No claim of legal
 compliance or incompatibility is made from the `DT_NEEDED` observation alone.
 
-One technical route to investigate is a separate Valhalla **runtime** build
-without its data tools. The [Valhalla 3.9.1 CMake source](https://raw.githubusercontent.com/valhalla/valhalla/3.9.1/CMakeLists.txt)
+A separate Valhalla **runtime** build without data tools has now passed a
+national-graph CLI route check. The [Valhalla 3.9.1 CMake source](https://raw.githubusercontent.com/valhalla/valhalla/3.9.1/CMakeLists.txt)
 finds SpatiaLite under `ENABLE_DATA_TOOLS`, while `valhalla_service` is
-included in the tool targets. A build with `ENABLE_DATA_TOOLS=OFF`,
-`ENABLE_TOOLS=ON` and `ENABLE_SERVICES=ON` might remove the SpatiaLite/
-librttopo dependency from the shipped service; this has **not** been built or
-verified. The internal graph-building runtime could remain separate. Any
-replacement must pass the same national-graph routes, application GUI and
-offline extraction smoke, and its complete binary notices must be reviewed.
+included in the tool targets. The [local prototype report](v1-c-valhalla-runtime-prototype-20261128.md)
+records the exact source revisions, flags, binary hashes, dependency closure
+and matching route result. It has **not** been substituted into the candidate
+or checked through the QtMaps GUI. The internal graph-building wheel could
+remain separate. Any shipped replacement must pass offline extraction and GUI
+smoke, and its complete binary notices must be reviewed.
